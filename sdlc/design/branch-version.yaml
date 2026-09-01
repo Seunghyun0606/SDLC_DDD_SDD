@@ -1,95 +1,61 @@
 schema_version: 1
 session_namespace: SDLC_DESIGN_SESSION_FIRST
-branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.8-sixw-devspec-sop-extraction-v0.1
-branch_version: sixw-devspec-sop-extraction-v0.1.0
-parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.7-p0-agent-drift-contract-v0.1
-parent_commit: 25c681694b9a6524fe9c0fc2f0439b2fcd43a921
+branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.8-requirements-sixw-devspec-pilot-v0.1
+branch_version: requirements-sixw-devspec-pilot-v0.1.0
+parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.8-sixw-devspec-sop-extraction-v0.1
+parent_commit: 213c4fdb1e06b206cbc65959531da62e0cf3e9d1
 main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
 candidate_design_version: v1.5.8-rc.1
-status: SIX_W_DEVELOPER_SPEC_SOP_EXTRACTION_VALIDATED
+status: REQUIREMENTS_SIX_W_DEVSPEC_PILOT_VALIDATED
 merge_to_main: false
-purpose: 업무 분석/설계에 6하원칙 업무 시나리오 계약을 도입하고 개발자가 구현 가능한 수준으로 기능/프로그램 상세 명세를 강화하며 SOP/PPTX/XLSX 등 다양한 업무문서를 구조 보존 Evidence와 사전 Prompt 기반 Skill로 추출하는 계약 검증
-capabilities:
-  six_w_business_scenario:
-    responsibility: CORE_COMMON
-    status: IMPLEMENTED_VALIDATED
-    contract: sdlc/design/contracts/business-scenario-sixw-contract.json
-    stages: [PROCESS, DESIGN, PROGRAM]
-    missing_dimension_policy: OPEN_NOT_INVENTED
-  developer_specification:
-    responsibility: CORE_COMMON_FORMAT_WITH_PROJECT_EVIDENCE
-    status: IMPLEMENTED_VALIDATED
-    contract: sdlc/design/contracts/developer-spec-contract.json
-    dimensions: 11
-    legacy_program_dor_fields: 17
-    legacy_program_dor_preserved: true
-    ready_requires_developer_detail_zero_open_when_present: true
-  sop_semantic_extraction:
-    responsibility: CORE_COMMON_SEMANTIC_EXTRACTION
-    status: IMPLEMENTED_VALIDATED
-    skill: .cursor/skills/sop-extract/SKILL.md
-    contract: sdlc/design/contracts/sop-extraction-contract.json
-    output_template: sdlc/templates/core/sop-extraction-result.md
-    auto_business_truth_promotion: false
-  document_structure_extraction:
-    contract: sdlc/design/contracts/br-document-extraction-contract.json
-    schema_version: 2
-    structured_content_supported: true
-    format_specific_parser_status: PROJECT_OR_TOOL_ADAPTER_REQUIRED
-  starter_kits:
-    greenfield_developer_evidence_guidance: ENHANCED
-    brownfield_developer_evidence_guidance: ENHANCED
-project_specific_boundaries:
-  - UI/Menu/Design System actual values require project evidence or approved design
-  - Query/Table/Mapper actual values require source or project DB evidence in Brownfield
-  - Common Code actual values require project dictionary/source/reference API evidence
-  - Integration actual targets/contracts require project evidence
-  - PDF/DOCX/PPTX/XLSX/OCR parsing remains Adapter/Tool responsibility
+purpose: 첨부 요구사항목록.xlsx 142건을 v1.5.8 6W 업무 시나리오 및 Developer-ready 상세설계 계약으로 실제 평가하여 요구사항만으로 확정 가능한 정보와 추가 Project/SOP/Source Evidence가 필요한 영역을 검증
+pilot:
+  source_requirements: 142
+  external_ids:
+    - REQ_TM_FL001..039
+    - REQ_TM_TE001..103
+  actual_application_source: NOT_PROVIDED
+  ui_spec: NOT_PROVIDED
+  db_schema: NOT_PROVIDED
+  common_code_dictionary: NOT_PROVIDED
+  interface_contract: NOT_PROVIDED
+  six_w:
+    who: {explicit: 4, partial: 29, open: 109}
+    when: {explicit: 1, partial: 43, open: 98}
+    where: {explicit: 0, partial: 142, open: 0}
+    what: {explicit: 133, partial: 9, open: 0}
+    how: {explicit: 0, partial: 142, open: 0}
+    why: {explicit: 1, partial: 84, open: 57}
+    no_open_count: 1
+  developer_detail:
+    field_catalog_open: 142
+    data_query_open: 142
+    common_code_open: 142
+    exception_error_open: 142
+    authorization_open: 109
+    authorization_partial: 33
+    integration_partial: 25
+    developer_ready: 0
+  representative_cases:
+    - REQ_TM_FL001
+    - REQ_TM_FL003
+    - REQ_TM_FL018
+    - REQ_TM_FL030
+    - REQ_TM_TE018
+    - REQ_TM_TE080
+    - REQ_TM_TE100
+  assessment:
+    six_w_gap_detection: PASS
+    developer_detail_gap_detection: PASS
+    requirement_only_developer_ready: FAIL_EXPECTED
+    project_evidence_required: true
 validation:
-  previous_combined_unittest_count: 78
-  v1_5_8_tests_added: 14
-  combined_unittest_count: 92
-  combined_unittest_result: PASS
-  mermaid_markdown_files_checked: 100
-  mermaid_docs_quality: PASS
-  initial_ci:
-    worklist_sync_quality_run: 201
-    worklist_sync_quality_result: FAILURE_COMMON_CODE_TERM_ASSERTION
-    docs_quality_run: 87
-    docs_quality_result: SUCCESS
-  implementation_validation_head: 519484c97b7a9f1a2ad54ac89e5e9840e240204c
-  implementation_validation_ci:
-    worklist_sync_quality_run: 203
-    worklist_sync_quality_result: SUCCESS
-    docs_quality_run: 88
-    docs_quality_result: SUCCESS
-new_design_gaps:
-  - id: GAP-BIZ-001
-    priority: CORE
-    status: IMPLEMENTED_VALIDATED
-    title: Six-W Business Scenario Contract
-  - id: GAP-DEV-001
-    priority: CORE
-    status: IMPLEMENTED_VALIDATED
-    title: Developer-ready Functional and Program Specification Contract
-  - id: GAP-SOP-001
-    priority: CORE
-    status: IMPLEMENTED_VALIDATED
-    title: Prompt-driven SOP Semantic Extraction Skill
-  - id: GAP-BR-002
-    priority: PROJECT_OR_TOOL
-    status: DESIGNED_NOT_IMPLEMENTED
-    title: Format-specific Document Extraction Adapters
-enhancement_gaps:
-  - id: GAP-UI-001
-    priority: P2
-    status: IDENTIFIED_NOT_IMPLEMENTED
-    title: UI Wireframe and Design System Integration
-  - id: GAP-DB-001
-    priority: P2
-    status: IDENTIFIED_NOT_IMPLEMENTED
-    title: Query Plan and Index Optimization Automation
-verdict: SIX_W_BUSINESS_SCENARIO_PASS / DEVELOPER_SPEC_FORMAT_PASS / SOP_SEMANTIC_EXTRACTION_PASS / FORMAT_ADAPTER_IMPLEMENTATION_PENDING
-next_step: 실제 Greenfield/Brownfield Pilot에서 6W→Functional Design→Program Spec의 정보 충실도와 프로젝트별 SOP/Source Evidence가 상세 명세 OPEN을 얼마나 해소하는지 검증한다
-updated_at: 2026-09-01T23:49:00+09:00
+  inherited_unittest_count: 92
+  inherited_unittest_result: PASS
+  pilot_changes_core_code: false
+  pilot_evidence: sdlc/validation/requirements-sixw-devspec-pilot-v0.1.json
+  pilot_report: sdlc/design/validations/2026-09-01_v1.5.8_Requirements_6W_DevSpec_Pilot.md
+verdict: STRUCTURAL_IMPROVEMENT_PASS / REQUIREMENT_ONLY_DEVELOPER_READY_FAIL / PROJECT_EVIDENCE_REQUIRED
+next_step: 동일 요구사항에 SOP/정책 문서와 실제 Brownfield Source 또는 승인된 Greenfield UI/Data/Interface 설계를 추가한 후 OPEN 감소율과 Developer READY 전환 가능성을 비교 검증한다
+updated_at: 2026-09-02T00:05:00+09:00
