@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "originals_root": "sdlc/input/br/originals",
+  "manifest_path": "sdlc/input/br/manifest.yaml",
+  "preserve_original_files": true,
+  "require_source_hash": true,
+  "non_blocking_missing_metadata": true,
+  "text_unavailable_status": "EXTRACTION_REQUIRED",
+  "conflict_status": "BR_CONFLICT",
+  "allowed_document_types": ["POLICY","CONTRACT","MANUAL","PROCEDURE","MEETING_MINUTES","EMAIL","TICKET","SPREADSHEET","SLIDE","PDF","OTHER"],
+  "authority_values": ["APPROVED","CONTRACTUAL","OFFICIAL","REFERENCE","DRAFT","UNKNOWN"],
+  "minimum_manifest_fields": ["document_id","path"],
+  "recommended_manifest_fields": ["title","document_type","authority","lifecycle_status","owner","effective_from","scope","related_process","related_system","locator_hint"]
+}
