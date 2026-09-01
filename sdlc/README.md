@@ -21,6 +21,29 @@ flowchart LR
 
 미확정 사항이 있어도 업무 프로세스는 계속 진행할 수 있다. 위험한 운영 DB 변경, 충돌난 Source write 같은 **특정 실행행위만** Execution Guard 대상으로 둔다.
 
+## P0 Runtime Core 기준
+
+현재 P0 재설계 Branch에서는 `/work`의 Stage/Skill/Capability 선택 기준을 `sdlc/config/stage-routing.yaml`로 단일화한다.
+
+```text
+현재 Stage
+→ Stage Routing
+→ Skill / Agent Level / Input Contract
+→ 필요한 Provider Evidence 후보
+→ Expected Output
+→ Next Stage
+```
+
+호출자가 모든 `requested_capabilities`를 미리 만들어 주는 것을 기본 전제로 하지 않는다.
+
+읽기 Provider가 없거나 PARTIAL이어도 관련 Evidence를 `OPEN`으로 남기고 비위험 Workflow는 계속할 수 있다. 반면 `test.execute` 같은 Side-effect Capability는 해당 Stage가 허용하고 이번 실행에서 명시적으로 요청된 경우에만 실행한다.
+
+다음 Agent로 넘기는 표준 Handoff는 `sdlc/templates/stage-input-pack.yaml` v2이며 RQ/FR/BR/PROC/FTR/PGM/ART/SYMBOL/DATA/INT/AC/TC/TASK/CR/KNOWLEDGE/SOURCE 관계를 보존한다.
+
+Stack-specific Source 분석은 `sdlc/adapters/analyzers/` 아래 Adapter 경계로 분리한다. Core Runtime이 Java/MyBatis/Table prefix/Pilot ID를 직접 해석하는 구조를 신규 Runtime 표준으로 사용하지 않는다.
+
+상세 계약: `sdlc/design/contracts/p0-runtime-core-redesign.md`
+
 ## 역할별 시작점
 
 | 역할 | 먼저 볼 것 | 주 동작 |
