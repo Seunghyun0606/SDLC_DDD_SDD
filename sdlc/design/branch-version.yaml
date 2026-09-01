@@ -7,7 +7,7 @@ design_baseline: v1.5.1
 candidate_design_version: v1.6.0-rc.1
 status: IMPLEMENTATION_IN_PROGRESS
 merge_to_main: false
-purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고, Customer Projection·Canonical 갱신·저수준 Agent 결과 검증을 실행 가능한 Runtime으로 연결한다.
+purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고, Customer Projection·Canonical 갱신·저수준 Agent 결과 검증·Project Impact Adapter 경계를 실행 가능한 Runtime으로 연결한다.
 principles:
   same_business_information_written_once: true
   single_active_requirement_artifact: true
@@ -31,29 +31,31 @@ principles:
   agent_stage_semantic_fingerprint_supported: true
   agent_validator_claims_llm_determinism: false
   project_adapter_boundary_preserved: true
+  project_adapter_default_enabled: false
+  project_adapter_is_core_required: false
   reverse_capability_name: SOURCE_DRIFT_AND_REVERSE_REVIEW_CANDIDATE
 changes_in_scope:
   - requirement and requirement-analysis active artifact consolidation
-  - requirement-analysis legacy compatibility view
-  - developer-spec-contract ownership split
-  - program-spec implementation-delta template
+  - developer-spec-contract ownership split and program-spec implementation-delta template
   - single-table 17-item program readiness
   - simplified open-resolution human view
   - setup five-question fast path with legacy preset-id compatibility
-  - customer document 8-to-3 active-view consolidation
-  - internal Markdown and Canonical JSON customer projection runtime
+  - customer document 8-to-3 active-view consolidation and projection runtime
   - existing RQ-CAND-0001 workflow customer projection replay
   - minimal canonical JSON store and delta apply runtime
   - work/change canonical dry-run and apply execution path
-  - canonical revision conflict, idempotency, relation integrity and business-truth guard tests
-  - low-level Agent Stage Result Envelope in existing agent-execution contract
-  - agent stage result validator and semantic fingerprint comparison
-  - work/change stage-result validation before canonical apply
+  - low-level Agent Stage Result Envelope and validator
+  - semantic fingerprint comparison for repeated Agent outputs
+  - Java/Spring/MyBatis static Project Impact Adapter pilot
+  - AS-IS to TO-BE adapter change-impact replay
+  - IMPACT Stage explicit opt-in adapter execution path
   - validator and regression-test alignment
 not_in_scope_yet:
   - actual LLM or Agent repeated-generation determinism validation
   - automatic stage artifact to canonical delta generation
-  - Java/Spring/MyBatis project impact adapter implementation
+  - production repository Java/Spring/MyBatis adapter validation
+  - full Java AST/type resolution and Spring runtime/proxy analysis
+  - JPA/JDBC/stored-procedure/event/external-interface/config/build semantic adapters
   - semantic reverse program-spec regeneration
 validation:
   source_review: COMPLETED_BY_DIRECT_FILE_INSPECTION
@@ -61,49 +63,48 @@ validation:
   customer_projection_existing_workflow_replay: PASS_GITHUB_CI
   canonical_runtime_behavioral_validation: PASS_GITHUB_CI
   post_agent_stage_result_validation: PASS_GITHUB_CI
+  java_spring_mybatis_adapter_pilot: PASS_SIMULATED_FIXTURE_GITHUB_CI
+  java_spring_mybatis_production_repository_validation: PENDING
   actual_llm_generation_repeatability: PENDING
-  agent_stage_result_checks:
-    artifact_exists_and_is_repo_relative: true
-    unresolved_template_placeholder_rejected: true
-    stage_matches_delta_stage: true
-    artifact_matches_delta_source_artifact: true
-    quality_fail_is_not_executable: true
-    stale_canonical_revision_is_not_executable: true
-    idempotent_canonical_replay_is_executable: true
-    volatile_timestamps_ignored_in_semantic_fingerprint: true
-    semantic_content_change_detected: true
-  canonical_runtime_checks:
-    create_store_on_apply: true
-    revision_advances: true
-    dry_run_does_not_write: true
-    stale_revision_preserves_store: true
-    idempotent_replay_preserves_store: true
-    relation_endpoints_fail_closed: true
-    all_or_nothing: true
-    confirmed_business_field_overwrite_blocked: true
-    confirmed_business_status_downgrade_blocked: true
-    provenance_can_attach_without_truth_change: true
-    delete_is_unsupported: true
+  adapter_pilot:
+    adapter_id: JAVA_SPRING_MYBATIS_STATIC_PILOT_V0_1
+    implementation: sdlc/custom/project/adapters/impact/java_spring_mybatis.py
+    core_required: false
+    default_enabled: false
+    fixture_kind: SIMULATED_SOURCE_FIXTURE
+    as_is_result:
+      nodes: 12
+      edges: 15
+      coverage_gaps: 9
+      completion_status: PARTIAL_COVERAGE_GAPS
+      business_impact_confirmed: false
+    as_is_to_be_checks:
+      new_controller_symbol_detected: true
+      new_service_symbol_detected: true
+      new_service_mapper_calls_detected: true
+      existing_call_relations_preserved: true
+      mapper_statement_set_unchanged: true
+      data_asset_set_unchanged: true
+      data_read_write_edges_unchanged: true
+    explicit_opt_in_required: true
+    unsupported_runtime_patterns_reported: true
   draft_pull_request: 51
   pull_request_base: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.9-open-resolution-workbook-v0.1
   github_ci:
-    prior_failure:
-      head: dcaf0077e595c3ef1a3fd12b768247d01fb69d9b
-      result: FAILURE
-      cause: setup_starter_preset_ids_removed_by_fast_path_refactor
-      failing_tests: 1
-      total_tests: 117
-    latest_behavioral_head: d70a91fc126752459faf910233a9d41d317173ef
+    latest_behavioral_head: 03432b6a79151bd2ba54d5f619ed4dce07e38680
     worklist_sync_quality: PASS
-    unittest_count: 153
+    unittest_count: 170
     unittest_result: PASS
     canonical_behavioral_test_count: 15
     agent_stage_result_behavioral_test_count: 11
     agent_runtime_wiring_test_count: 4
+    java_spring_mybatis_adapter_test_count: 15
+    impact_adapter_wiring_test_count: 2
+    customer_projection_replay_test_count: 5
     mermaid_markdown_files_checked: 112
     mermaid_result: PASS
     docs_quality: PASS
   self_assessment_is_not_validation: true
 verdict: RC_IMPLEMENTATION_NOT_YET_VALIDATED
-next_step: Post-Agent Stage Result 검증과 semantic comparison 경계는 CI에서 검증했다. 다음 P0는 실제 Java/Spring/MyBatis Brownfield Project Adapter Pilot이며, 실제 LLM 반복 생성 안정성은 별도 실험이 가능할 때 검증한다.
-updated_at: 2026-09-02T02:19:00+09:00
+next_step: Simulated fixture 기반 Java/Spring/MyBatis Project Adapter 수직 슬라이스는 CI에서 검증했다. 다음 P0는 Source 변경에서 Program Spec 갱신 후보를 안전하게 만드는 semantic reverse candidate/diff이며, 실제 Production Repository와 실제 LLM 반복 생성 검증은 별도 입력이 확보될 때 수행한다.
+updated_at: 2026-09-02T02:30:00+09:00
