@@ -1,0 +1,107 @@
+version: 1
+status: DECISION_REQUIRED
+
+profiles:
+  LITE:
+    target:
+      - small_project
+      - simple_greenfield
+      - low_risk_change
+    human_artifacts:
+      worklist: MUST
+      requirement_customer_view: MUST
+      engineering_design: MUST
+      program_spec: CONDITIONAL_L2_ONLY
+      implementation_result: MUST
+      test_verification: MUST
+      separate_6w: OFF
+      separate_process_analysis: CONDITIONAL
+      separate_impact_analysis: CONDITIONAL
+    internal_capabilities:
+      canonical_trace: MUST
+      source_analysis: CONDITIONAL_BROWNFIELD
+      stage_input_pack: MUST
+      knowledge_promotion: LIGHT
+      stale_propagation: DIRECT_RELATION_ONLY
+      action_permission: OFF
+      target_write_proof: RISKY_WRITE_ONLY
+      work_unit_recovery: OFF
+      semantic_merge: OFF
+      advanced_telemetry: OFF
+
+  STANDARD:
+    target:
+      - normal_customer_project
+      - brownfield_enhancement
+      - mixed_feature_delivery
+    human_artifacts:
+      worklist: MUST
+      requirement_customer_view: MUST
+      engineering_design: MUST
+      program_spec: CONDITIONAL_L2_ONLY
+      implementation_result: MUST
+      test_verification: MUST
+      separate_6w: OPTIONAL
+      separate_process_analysis: CONDITIONAL
+      separate_impact_analysis: MUST
+    internal_capabilities:
+      canonical_trace: MUST
+      source_analysis: CONDITIONAL_BROWNFIELD
+      stage_input_pack: MUST
+      knowledge_promotion: MUST
+      stale_propagation: MUST
+      action_permission: RISKY_ACTION_ONLY
+      target_write_proof: RISKY_WRITE_ONLY
+      work_unit_recovery: OFF
+      semantic_merge: OPTIONAL
+      advanced_telemetry: BASIC
+
+  ENTERPRISE:
+    target:
+      - high_risk
+      - parallel_delivery
+      - regulated_or_audited
+      - large_brownfield
+    human_artifacts:
+      worklist: MUST
+      requirement_customer_view: MUST
+      engineering_design: MUST
+      program_spec: CONFIGURABLE_L1_L2
+      implementation_result: MUST
+      test_verification: MUST
+      separate_6w: OPTIONAL
+      separate_process_analysis: CONDITIONAL
+      separate_impact_analysis: MUST
+    internal_capabilities:
+      canonical_trace: MUST
+      source_analysis: CONDITIONAL_BROWNFIELD
+      stage_input_pack: MUST
+      knowledge_promotion: MUST
+      stale_propagation: MUST
+      action_permission: MUST
+      target_write_proof: MUST
+      work_unit_recovery: MUST
+      semantic_merge: MUST
+      advanced_telemetry: MUST
+      deterministic_validators: MUST
+
+selection_rules:
+  default_profile: STANDARD
+  prefer_lite_when:
+    - blast_radius_low
+    - one_or_two_programs
+    - no_external_interface
+    - no_security_critical_change
+    - no_parallel_write
+  require_enterprise_candidate_when:
+    - high_blast_radius
+    - security_critical
+    - regulated_audit_required
+    - parallel_write_same_program
+    - complex_recovery_required
+
+principles:
+  - human_artifact_count_should_not_scale_with_internal_guard_count
+  - internal_only_artifacts_must_not_be_required_customer_input
+  - disabled_artifact_must_not_break_canonical_trace
+  - profile_change_requires_impact_review_not_core_rewrite
