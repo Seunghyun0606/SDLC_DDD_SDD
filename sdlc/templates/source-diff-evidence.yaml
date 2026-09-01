@@ -1,0 +1,27 @@
+version: 1
+source_diff_evidence:
+  metadata:
+    change_id: FILL_ME
+    source_revision_before: FILL_ME
+    source_revision_after: FILL_ME
+    before_root: FILL_ME
+    after_root: FILL_ME
+
+  changed_files: []
+
+  changed_symbols: []
+  added_mapper_statement_ids: []
+  removed_mapper_statement_ids: []
+  added_table_names: []
+  removed_table_names: []
+
+  signals:
+    - signal: FILL_ME
+      evidence: FILL_ME
+
+  direct_program_ids: []
+
+  validation:
+    changed_file_hashes_present: PENDING
+    direct_relation_check: PENDING
+    signal_evidence_check: PENDING
