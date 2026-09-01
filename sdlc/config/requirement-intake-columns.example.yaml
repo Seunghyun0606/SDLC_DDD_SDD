@@ -1,0 +1,59 @@
+schema_version: 1
+profile: korean-two-row-requirement-list
+source_type: xlsx
+header:
+  rows: 2
+  effective_row: 2
+  preserve_group_header_row: true
+mapping:
+  - source_label: No
+    key: source_sequence
+    required: false
+  - source_label: Level1
+    key: level1
+    required: true
+  - source_label: Level2
+    key: level2
+    required: true
+  - source_label: 요구사항 ID
+    key: external_requirement_id
+    required: true
+  - source_label: 요구사항명
+    key: source_requirement_name
+    required: true
+  - source_label: 요구사항
+    key: source_requirement_text
+    required: true
+  - source_label: 시작일
+    key: planned_start
+    required: false
+  - source_label: 종료일
+    key: planned_end
+    required: false
+  - source_label: 담당자
+    key: assignee
+    required: false
+canonical_mapping:
+  rq_candidate_group_key:
+    - level1
+    - level2
+    - source_requirement_name
+  fr_candidate_from: source_requirement_text
+  preserve_external_id_on: FR
+  generate_internal_display_id: true
+  preserve_raw_text: true
+  normalized_text_is_derived: true
+  semantic_auto_merge: false
+  near_duplicate_status: GROUPING_REVIEW
+provenance:
+  preserve_file_name: true
+  preserve_sheet_name: true
+  preserve_row_number: true
+  preserve_source_hash: true
+missing_business_context:
+  current_problem: OPEN
+  desired_result: INFERRED_CANDIDATE
+  create_alert: true
+pm_fields:
+  assignee_optional: true
+  schedule_optional: true

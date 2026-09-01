@@ -2,29 +2,43 @@ schema_version: 1
 session_namespace: SDLC_DESIGN_SESSION_FIRST
 session_base_branch: SDLC_DESIGN_SESSION_FIRST/base
 session_base_commit: bd14bf588efb95371e7c8f5f5a1515536b8cadf8
-branch: SDLC_DESIGN_SESSION_FIRST/feature/phase-0.5-worklist-sync
-legacy_branch: feature/phase-0.5-worklist-sync
-branch_version: phase0.5-worklist-v0.1.0
-historical_base_branch: main
-historical_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
+branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.1-requirements-pilot-v0.1
+legacy_branch: validation/v1.5.1-requirements-pilot-v0.1
+branch_version: requirements-pilot-v0.1.0
+parent_branch: SDLC_DESIGN_SESSION_FIRST/feature/phase-0.5-worklist-sync
+parent_commit: ecd8ef63d84c3c6f9d1306b3c692c0d33ada94d5
+main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
-status: IMPLEMENTED_VALIDATED
+candidate_design_version: v1.5.2-rc.1
+status: VALIDATED_WITH_GAPS
 merge_to_main: false
 branch_policy:
   create_new_branches_under_session_namespace: true
   direct_commit_to_main: false
   preserve_legacy_branches_as_history: true
-purpose: 전체작업목록 MD-XLSX 양방향 동기화 PoC 구현 및 검증
+purpose: 실제 요구사항목록 142건을 이용한 단계별 SDLC 설계 실행가능성 검증
+input:
+  file: 요구사항목록.xlsx
+  records: 142
+  external_id_ranges:
+    - REQ_TM_FL001..REQ_TM_FL039
+    - REQ_TM_TE001..REQ_TM_TE103
 scope:
-  - sync_worklist.py
-  - 전체작업목록.xlsx
-  - round-trip tests
-  - sync conflict handling
+  - requirement batch intake
+  - RQ-FR grouping
+  - external requirement id traceability
+  - stage-by-stage feasibility
+  - PM optional tracking
+  - Brownfield discovery prerequisites
 validation:
-  unit_tests: 6
-  unit_tests_result: PASS
-  xlsx_independent_read: PASS
-  github_actions_worklist_sync: PASS
-  mermaid_docs_quality: PASS
-next_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.1-requirements-pilot-v0.1
+  stage_result: CONDITIONAL_PASS
+  docs_quality_ci: PASS
+  worklist_sync_ci: PASS
+  blocking_design_gaps: 3
+  major_gaps:
+    - GAP-RI-001 external requirement id traceability
+    - GAP-RI-002 bulk requirement intake
+    - GAP-RI-003 RQ-FR grouping contract
+next_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.2-requirement-intake-poc-v0.2
+next_candidate: v1.5.2-rc.1
 updated_at: 2026-09-01T17:43:00+09:00
