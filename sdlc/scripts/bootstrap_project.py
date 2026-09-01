@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
 """Executable /setup bootstrap for first-time Greenfield/Brownfield adoption.
 
-The bootstrap deliberately creates only the files the runtime consumes:
-- sdlc/config/project-profile.yaml
-- sdlc/config/source-profile.yaml
-- sdlc/config/agent-provider.json
-- sdlc/canonical/store.json
-- sdlc/runtime/setup/setup-result.json
-
-It does not invent business facts and does not modify Core templates/contracts.
+The bootstrap creates only runtime-consumed project files. It discovers technical facts
+conservatively, never treats Git existence alone as Brownfield Source evidence, never
+invents business facts, and keeps missing information OPEN.
 """
 from __future__ import annotations
 
@@ -45,7 +40,6 @@ def _text(path: Path, limit: int = 500_000) -> str:
 
 
 def _detect(root: Path) -> dict[str, Any]:
-    names = {p.name for p in root.iterdir()} if root.is_dir() else set()
     pom = root / "pom.xml"
     gradles = [root / "build.gradle", root / "build.gradle.kts"]
     package = root / "package.json"
@@ -54,6 +48,8 @@ def _detect(root: Path) -> dict[str, Any]:
     source_roots = [name for name in source_candidates if (root / name).exists()]
     test_candidates = ["tests", "test", "src/test"]
     test_roots = [name for name in test_candidates if (root / name).exists()]
+    resource_candidates = ["src/main/resources", "resources", "config"]
+    resource_roots = [name for name in resource_candidates if (root / name).exists()]
 
     language = "OPEN"
     framework = "OPEN"
@@ -73,10 +69,10 @@ def _detect(root: Path) -> dict[str, Any]:
             signals.append("MYBATIS")
         if re.search(r"spring-data-jpa|hibernate|jakarta\.persistence|javax\.persistence", build_text, re.I):
             signals.append("JPA")
-            unsupported.append("JPA 정밀 relation은 포함 Pilot Adapter의 완전 지원 범위가 아님")
+            unsupported.append("JPA 정밀 relation은 Extended Java Adapter도 정적 후보 수준이므로 Coverage Gap 검토 필요")
         if re.search(r"kafka", build_text, re.I):
             signals.append("KAFKA")
-            unsupported.append("Kafka topic/consumer/producer 정밀 lineage는 추가 Adapter/Tool 검토 필요")
+            unsupported.append("Kafka runtime topology/schema는 Source 정적 분석만으로 확정할 수 없어 Tool Evidence가 필요")
         if pom.is_file():
             if (root / "mvnw").exists():
                 build_commands, test_commands = ["./mvnw -q -DskipTests package"], ["./mvnw test"]
@@ -99,19 +95,18 @@ def _detect(root: Path) -> dict[str, Any]:
         elif re.search(r'"next"\s*:', data):
             framework = "Next.js"
         build_commands, test_commands = ["npm run build"], ["npm test -- --runInBand"]
-        unsupported.append("JavaScript/TypeScript Source relation 분석 Adapter는 현재 Core 배포에 포함되지 않음")
+        unsupported.append("JavaScript/TypeScript Source relation 분석 Adapter는 현재 배포에 포함되지 않음")
     elif pyproject.is_file() or any(root.rglob("*.py")):
         language = "Python"
-        framework = "OPEN"
         test_commands = ["python -m pytest"] if (root / "tests").exists() else []
-        unsupported.append("Python Source relation 분석 Adapter는 현재 Core 배포에 포함되지 않음")
+        unsupported.append("Python Source relation 분석 Adapter는 현재 배포에 포함되지 않음")
 
     schema_files = list(root.rglob("schema.sql"))[:20] + list(root.rglob("*.ddl"))[:20]
     if schema_files:
         database = "SQL_SCHEMA_PRESENT"
         signals.append("DB_SCHEMA_FILE")
 
-    brownfield_signals = bool(source_roots or pom.is_file() or package.is_file() or pyproject.is_file() or ".git" in names)
+    brownfield_signals = bool(source_roots or pom.is_file() or package.is_file() or pyproject.is_file() or schema_files)
     return {
         "detected_mode": "BROWNFIELD" if brownfield_signals else "GREENFIELD",
         "language": language,
@@ -119,6 +114,7 @@ def _detect(root: Path) -> dict[str, Any]:
         "database": database,
         "source_roots": source_roots,
         "test_roots": test_roots,
+        "resource_roots": resource_roots,
         "build_commands": build_commands,
         "test_commands": test_commands,
         "signals": sorted(set(signals)),
@@ -130,12 +126,12 @@ def _yaml_quote(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)
 
 
-def _write_if_missing(path: Path, text: str, *, force: bool) -> str:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists() and not force:
-        return "EXISTING_KEPT"
-    path.write_text(text if text.endswith("\n") else text + "\n", encoding="utf-8")
-    return "CREATED" if not path.exists() else "WRITTEN"
+def _yaml_list(lines: list[str], indent: str, key: str, values: list[str]) -> None:
+    if not values:
+        lines.append(f"{indent}{key}: []")
+        return
+    lines.append(f"{indent}{key}:")
+    lines.extend(f"{indent}  - {_yaml_quote(str(value))}" for value in values)
 
 
 def _project_yaml(name: str, mode: str, delivery: str, customer: str, reverse: str, detected: dict[str, Any]) -> str:
@@ -165,37 +161,27 @@ source_profile:
   path: sdlc/config/source-profile.yaml
 agent_provider:
   path: sdlc/config/agent-provider.json
+customization:
+  overlay_order:
+    - core
+    - project_overlay
+    - local_override
 """
 
 
 def _source_yaml(detected: dict[str, Any], mode: str) -> str:
-    roots = detected["source_roots"] or (["src"] if mode == "BROWNFIELD" else [])
-    tests = detected["test_roots"] or (["tests"] if mode == "BROWNFIELD" else [])
-    lines = ["schema_version: 1", "source:", "  roots:"]
-    if roots:
-        lines.extend(f"    - {_yaml_quote(x)}" for x in roots)
-    else:
-        lines.append("    []")
-    lines.append("  test_roots:")
-    if tests:
-        lines.extend(f"    - {_yaml_quote(x)}" for x in tests)
-    else:
-        lines.append("    []")
+    lines = ["schema_version: 1", "source:"]
+    _yaml_list(lines, "  ", "roots", list(detected["source_roots"]))
+    _yaml_list(lines, "  ", "test_roots", list(detected["test_roots"]))
+    _yaml_list(lines, "  ", "resource_roots", list(detected.get("resource_roots", [])))
     lines += [
-        "  resource_roots:", "    - src/main/resources" if (Path("src/main/resources")) else "    []",
         "  excludes:", "    - .git/**", "    - build/**", "    - target/**", "    - node_modules/**",
         "  existing_assets_first: true", "  static_analysis_first: true", "  full_repository_llm_scan: false",
-        "build:", "  commands:",
+        "build:",
     ]
-    if detected["build_commands"]:
-        lines.extend(f"    - {_yaml_quote(x)}" for x in detected["build_commands"])
-    else:
-        lines.append("    []")
-    lines += ["test:", "  commands:"]
-    if detected["test_commands"]:
-        lines.extend(f"    - {_yaml_quote(x)}" for x in detected["test_commands"])
-    else:
-        lines.append("    []")
+    _yaml_list(lines, "  ", "commands", list(detected["build_commands"]))
+    lines.append("test:")
+    _yaml_list(lines, "  ", "commands", list(detected["test_commands"]))
     lines += [
         "evidence:", "  hash_algorithm: sha256", "  preserve_file_path: true", "  preserve_symbol_locator: true",
         "  preserve_source_hash: true", "  observed_not_confirmed_business_truth: true",
@@ -242,7 +228,7 @@ def bootstrap(
     source_path = root / "sdlc/config/source-profile.yaml"
     provider_path = root / "sdlc/config/agent-provider.json"
     store_path = root / "sdlc/canonical/store.json"
-    writes = {}
+    writes: dict[str, str] = {}
 
     def write_text(path: Path, content: str) -> str:
         existed = path.exists()
@@ -262,6 +248,14 @@ def bootstrap(
     else:
         writes[str(store_path.relative_to(root))] = "EXISTING_KEPT"
 
+    parsed_project = CONFIG.load_config(project_path)
+    parsed_source = CONFIG.load_config(source_path)
+    if CONFIG.project_mode(parsed_project) != resolved_mode:
+        raise ValueError("generated project-profile mode did not round-trip")
+    expected_roots = sorted(set([*detected["source_roots"], *detected["test_roots"], *detected.get("resource_roots", [])]))
+    if CONFIG.source_roots(parsed_source) != expected_roots:
+        raise ValueError("generated source-profile roots did not round-trip")
+
     validation = None
     validator = root / "sdlc/scripts/validate_harness_structure.py"
     if validate and validator.is_file():
@@ -271,8 +265,8 @@ def bootstrap(
     provider_ready = bool(provider["enabled"] and provider["command"])
     adapter = "NONE"
     if resolved_mode in {"BROWNFIELD", "HYBRID"}:
-        if detected["language"] == "Java" and "SPRING" in detected["signals"] and "MYBATIS" in detected["signals"]:
-            adapter = "JAVA_SPRING_MYBATIS_STATIC_PILOT_V0_1"
+        if detected["language"] == "Java" and "SPRING" in detected["signals"]:
+            adapter = "JAVA_SPRING_ENTERPRISE_STATIC_V0_2" if any(x in detected["signals"] for x in ["JPA", "KAFKA"]) else "JAVA_SPRING_MYBATIS_STATIC_PILOT_V0_1" if "MYBATIS" in detected["signals"] else "JAVA_SPRING_ENTERPRISE_STATIC_V0_2"
         else:
             adapter = "PROJECT_ADAPTER_REQUIRED_OR_CORE_PARTIAL"
     open_items = []
@@ -284,9 +278,11 @@ def bootstrap(
     if resolved_mode in {"BROWNFIELD", "HYBRID"} and not detected["source_roots"]:
         open_items.append("실제 Source root")
 
+    structure_ok = validation is None or validation["exit_code"] == 0
+    status = "READY_FOR_PLAN" if provider_ready and structure_ok else "HARNESS_VALIDATION_FAILED" if not structure_ok else "CONFIGURED_PROVIDER_REQUIRED"
     report = {
         "schema_version": 1,
-        "status": "READY_FOR_PLAN" if provider_ready else "CONFIGURED_PROVIDER_REQUIRED",
+        "status": status,
         "project_name": name,
         "mode": resolved_mode,
         "delivery_profile": delivery,
