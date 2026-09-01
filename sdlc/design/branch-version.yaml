@@ -29,7 +29,7 @@ changes_in_scope:
   - program-spec implementation-delta template
   - single-table 17-item program readiness
   - simplified open-resolution human view
-  - setup five-question fast path
+  - setup five-question fast path with legacy preset-id compatibility
   - customer document 8-to-3 active-view consolidation
   - legacy eight customer document type aliases
   - internal Markdown and Canonical JSON customer projection runtime
@@ -55,8 +55,21 @@ validation:
     unresolved_placeholder_absent: true
   draft_pull_request: 51
   pull_request_base: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.9-open-resolution-workbook-v0.1
-  github_ci_result: NO_PULL_REQUEST_WORKFLOW_RUN_FOUND
+  github_ci:
+    prior_failure:
+      head: dcaf0077e595c3ef1a3fd12b768247d01fb69d9b
+      result: FAILURE
+      cause: setup_starter_preset_ids_removed_by_fast_path_refactor
+      failing_tests: 1
+      total_tests: 117
+    regression_fix_head: 40d28487a6240637df728b1402fd0aab310238ae
+    worklist_sync_quality: PASS
+    unittest_count: 117
+    unittest_result: PASS
+    mermaid_markdown_files_checked: 111
+    mermaid_result: PASS
+    docs_quality: PASS
   self_assessment_is_not_validation: true
 verdict: RC_IMPLEMENTATION_NOT_YET_VALIDATED
-next_step: Draft PR #51에서 전체 회귀 테스트/CI 실행 경로를 확보하고, 실제 Greenfield/Brownfield 내부 산출물을 입력한 고객 Projection Pilot과 저수준 Agent behavioral validation을 수행한 뒤 PASS/VALIDATED 승격 여부를 판단한다.
-updated_at: 2026-09-02T01:42:45+09:00
+next_step: CI 회귀는 통과했다. 실제 Greenfield/Brownfield 내부 산출물 묶음을 입력한 Customer Projection Pilot과 저수준 Agent behavioral validation을 수행한 뒤 RC 검증 범위를 확대한다.
+updated_at: 2026-09-02T01:48:00+09:00
