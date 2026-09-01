@@ -1,0 +1,108 @@
+conformance_suite:
+  suite_id: P07-SUBPROCESS-TEST
+  adapter:
+    module: sdlc.adapters.reference.subprocess_test
+    config:
+      cwd: ${SUITE_DIR}/fixtures/tests
+      timeout_seconds: 2
+      max_timeout_seconds: 5
+      max_output_chars: 10000
+  cases:
+    - case_id: TEST-DISCOVER-OK
+      request:
+        provider_request:
+          request_id: P07-TST-001
+          provider_type: TEST
+          operation: test.discover
+          project_context: {project_id: GENERIC-TEST, mode: GREENFIELD, stage: TEST}
+          target: {target_type: WORK_UNIT, target_id: GENERIC-WORK-2}
+          write_intent: false
+          extensions: {patterns: ['*_case.py']}
+      expected:
+        equals:
+          provider_response.status: OK
+          provider_response.evidence.0.truth: OBSERVED
+        min_length:
+          provider_response.outputs.0.test_files: 3
+    - case_id: TEST-PASS-OK
+      request:
+        provider_request:
+          request_id: P07-TST-002
+          provider_type: TEST
+          operation: test.execute
+          project_context: {project_id: GENERIC-TEST, mode: GREENFIELD, stage: TEST}
+          target: {target_type: WORK_UNIT, target_id: GENERIC-WORK-2}
+          write_intent: false
+          extensions:
+            command: ['${PYTHON}', 'pass_case.py']
+            timeout_seconds: 1
+      expected:
+        equals:
+          provider_response.status: OK
+          provider_response.outputs.0.test_status: PASSED
+          provider_response.outputs.0.exit_code: 0
+    - case_id: TEST-FAIL-IS-NOT-PROVIDER-ERROR
+      request:
+        provider_request:
+          request_id: P07-TST-003
+          provider_type: TEST
+          operation: test.execute
+          project_context: {project_id: GENERIC-TEST, mode: GREENFIELD, stage: TEST}
+          target: {target_type: WORK_UNIT, target_id: GENERIC-WORK-2}
+          write_intent: false
+          extensions:
+            command: ['${PYTHON}', 'fail_case.py']
+            timeout_seconds: 1
+      expected:
+        equals:
+          provider_response.status: OK
+          provider_response.outputs.0.test_status: FAILED
+          provider_response.outputs.0.exit_code: 3
+    - case_id: TEST-TIMEOUT-BLOCKED
+      request:
+        provider_request:
+          request_id: P07-TST-004
+          provider_type: TEST
+          operation: test.execute
+          project_context: {project_id: GENERIC-TEST, mode: GREENFIELD, stage: TEST}
+          target: {target_type: WORK_UNIT, target_id: GENERIC-WORK-2}
+          write_intent: false
+          extensions:
+            command: ['${PYTHON}', 'sleep_case.py']
+            timeout_seconds: 0.1
+      expected:
+        equals:
+          provider_response.status: BLOCKED
+          provider_response.open_items.0.code: ADAPTER_TIMEOUT
+          provider_response.retryable: true
+    - case_id: TEST-COMMAND-NOT-FOUND-BLOCKED
+      request:
+        provider_request:
+          request_id: P07-TST-005
+          provider_type: TEST
+          operation: test.execute
+          project_context: {project_id: GENERIC-TEST, mode: GREENFIELD, stage: TEST}
+          target: {target_type: WORK_UNIT, target_id: GENERIC-WORK-2}
+          write_intent: false
+          extensions:
+            command: ['command-that-does-not-exist-p07']
+            timeout_seconds: 1
+      expected:
+        equals:
+          provider_response.status: BLOCKED
+          provider_response.open_items.0.code: TEST_COMMAND_NOT_FOUND
+          provider_response.retryable: false
+    - case_id: TEST-UNSUPPORTED-BLOCKED
+      request:
+        provider_request:
+          request_id: P07-TST-006
+          provider_type: TEST
+          operation: test.coverage.export
+          project_context: {project_id: GENERIC-TEST, mode: GREENFIELD, stage: TEST}
+          target: {target_type: WORK_UNIT, target_id: GENERIC-WORK-2}
+          write_intent: false
+          extensions: {}
+      expected:
+        equals:
+          provider_response.status: BLOCKED
+          provider_response.open_items.0.code: UNSUPPORTED_OPERATION
