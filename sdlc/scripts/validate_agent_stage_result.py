@@ -178,7 +178,7 @@ def validate_stage_result(result: dict, root: Path, *, store_path: Path | None =
         store = APPLY.load_store(store_path)
         apply_result, _ = APPLY.apply_delta(store, delta)
         canonical_check = apply_result
-        if apply_result["status"] not in {"APPLIED", "IDEMPOTENT"}:
+        if apply_result["status"] not in {"APPLIED", "IDEMPOTENT", "NO_CHANGE"}:
             errors.append(_error(
                 "CANONICAL_APPLY_NOT_EXECUTABLE",
                 "canonical delta cannot be applied to the current store",
