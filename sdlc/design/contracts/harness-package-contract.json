@@ -1,5 +1,5 @@
 {
-  "schema_version": 11,
+  "schema_version": 12,
   "candidate_design": "v1.6.0-rc.1",
   "core_required_files": [
     ".cursor/rules/00-core.mdc",
@@ -44,7 +44,8 @@
     "sdlc/config/impact-adapter-profile.example.yaml",
     "sdlc/custom/project/adapters/impact/README.md",
     "sdlc/design/contracts/source-drift-contract.json",
-    "sdlc/scripts/detect_source_drift.py"
+    "sdlc/scripts/detect_source_drift.py",
+    "sdlc/scripts/generate_program_spec_reverse_candidate.py"
   ],
   "overlay_precedence": ["core", "preset", "project_profile", "project_overlay", "domain_overlay", "local_override"],
   "customization_roots": ["sdlc/custom/project", "sdlc/custom/domain"],
@@ -168,19 +169,36 @@
     "stage_result_validator": "sdlc/scripts/validate_agent_stage_result.py",
     "machine_verifiable_output": true,
     "semantic_repeatability_check": true,
-    "validator_does_not_claim_llm_determinism": true
+    "validator_does_not_claim_llm_determinism": true,
+    "repeatability_experiment_runner": "sdlc/scripts/run_agent_repeatability_experiment.py",
+    "repeatability_profile": "sdlc/config/agent-repeatability-profile.example.json",
+    "actual_provider_execution_required_for_empirical_pass": true,
+    "repeatability_runner_is_validation_utility_not_core_stage_runtime": true
   },
   "brownfield_impact": {
     "contract": "sdlc/design/contracts/brownfield-impact-contract.json",
     "project_adapter_profile": "sdlc/config/impact-adapter-profile.example.yaml",
     "common_graph_and_coverage_is_core": true,
-    "project_specific_relation_resolution_requires_separate_adapter": true
+    "project_specific_relation_resolution_requires_separate_adapter": true,
+    "public_repository_pilot_validator": "sdlc/scripts/validate_public_brownfield_pilot.py",
+    "public_repository_pilot_is_validation_only": true
   },
   "source_drift_reverse": {
     "contract": "sdlc/design/contracts/source-drift-contract.json",
     "script": "sdlc/scripts/detect_source_drift.py",
+    "program_spec_reverse_candidate_script": "sdlc/scripts/generate_program_spec_reverse_candidate.py",
     "capability_name": "SOURCE_DRIFT_AND_REVERSE_REVIEW_CANDIDATE",
+    "program_spec_candidate_is_implementation_delta_only": true,
+    "program_spec_candidate_requires_review": true,
     "auto_rewrite_artifact": false,
     "auto_update_business_truth": false
+  },
+  "validation_pilots": {
+    "greenfield_real_requirement_runner": "sdlc/scripts/run_greenfield_e2e_pilot.py",
+    "greenfield_real_requirement_seed": "sdlc/validation/pilot/greenfield/REQ_TM_FL001-seed.json",
+    "greenfield_materializes_user_artifact_count": 6,
+    "greenfield_human_usability_not_measured": true,
+    "public_brownfield_workflow": ".github/workflows/public-brownfield-pilot.yml",
+    "greenfield_workflow": ".github/workflows/greenfield-e2e-pilot.yml"
   }
 }
