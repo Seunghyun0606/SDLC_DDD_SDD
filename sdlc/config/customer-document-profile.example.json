@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "customer": "example-customer",
+  "project": "example-project",
+  "language": "ko-KR",
+  "display": {
+    "show_internal_ids": false,
+    "show_source_hash": false,
+    "show_confidence_status": false,
+    "technical_detail_location": "APPENDIX",
+    "first_use_expand_abbreviation": true
+  },
+  "default_optional_sections": ["범위와_제외범위","결정_필요사항"],
+  "document_overrides": {
+    "design_review": {"enable_optional":["테스트와_인수기준"],"disable_optional":["기술_상세_부록"]},
+    "verification_approval": {"enable_optional":["근거_상세_부록"]}
+  },
+  "terminology_overrides": {
+    "상위 요구사항":"업무 요청",
+    "프로그램":"개발 기능"
+  }
+}
