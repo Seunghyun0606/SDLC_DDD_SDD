@@ -1,4 +1,4 @@
-# P0 Runtime Core Redesign v1 — Validation Result
+# P0 Runtime Core Redesign v1 — Exit Validation Result
 
 > Branch: `SDLC_DESIGN_SESSION_SECOND/p0.redesign/runtime-core-v1`
 > Base: `SDLC_DESIGN_SESSION_SECOND/p0.final/design-baseline-exit-v1`
@@ -7,34 +7,61 @@
 
 ## Verdict
 
-**P0 RUNTIME CORE REDESIGN: IMPLEMENTED / RUNTIME TEST NOT YET EXECUTED**
+**P0 RUNTIME CORE REDESIGN EXIT: PASS**
 
 Machine state:
 
-`P0_RUNTIME_CORE_IMPLEMENTED_TEST_EVIDENCE_OPEN`
+`P0_RUNTIME_CORE_READY`
 
 Production Ready: `false`
 
-Real Brownfield Vertical Slice Ready: `PARTIAL`
+P1 Entry: `ALLOWED`
 
-이 결과는 P0의 구조 재설계 구현을 의미한다. 새 Runtime conformance test는 Repository에 작성했으나 현재 세션 환경에서는 Branch를 별도 Local Checkout하여 Python Runtime으로 실행한 증거를 만들지 못했으므로 PASS를 주장하지 않는다.
+P0 Runtime Core 범위의 미해결 Blocker: **NONE**
 
-## 1. Redesign Scope
+실제 고객 Repository Vertical Slice, Production Source Write Adapter, 실제 CI Test Adapter는 P0 Runtime Core의 범용 계약 완성 조건이 아니라 P1/Project Binding 검증 항목으로 분리한다.
 
-이번 P0 재설계는 다음 문제를 우선 해결한다.
+---
 
-1. `/work`가 호출자에게 Capability 목록을 미리 요구하던 구조
-2. Stage/Skill/Next Stage가 문서와 Runtime 여러 곳에 분산된 구조
-3. Stage Input Pack에서 ART/SYMBOL/DATA/INT/SOURCE Trace가 유실되는 구조
-4. Java/MyBatis/Attendance Fixture가 범용 Source Discovery/Reverse Sync Core처럼 존재하던 구조
-5. `/setup`이 문서에는 Command이나 Runtime Router에는 없던 불일치
-6. Low-Agent Skill Contract가 실제 활성 Skill에 강제되지 않던 문제
-7. `/check`가 Full SDLC가 아니라 P0 Fixture Stage에 과도하게 결합된 문제
-8. `/change` Reverse Sync의 Semantic 판단이 Stack/Pilot Heuristic에 결합된 문제
+## 1. Exit Evidence
 
-## 2. Implemented Runtime Core
+최종 READY commit:
 
-### 2.1 Single Stage Routing Authority
+`162fbe65b13458d06c88d3c16638453b9338c155`
+
+GitHub Actions:
+
+- Workflow: `.github/workflows/p0-runtime-core.yml`
+- Run ID: `33545534076`
+- Conclusion: `success`
+
+동일 Run에서 다음이 모두 성공했다.
+
+1. `Validate P0 runtime exit gate` — SUCCESS
+2. `Run redesigned P0 runtime conformance` — SUCCESS
+3. `Run legacy P0 regression suite` — SUCCESS
+
+직전 Regression 상세 Run에서도 다음 11개 Legacy P0 Test가 전부 PASS했다.
+
+- `test_p01_contracts.py`
+- `test_p02_contracts.py`
+- `test_p03_contracts.py`
+- `test_p04_contracts.py`
+- `test_p05_orchestration.py`
+- `test_p06_contracts.py`
+- `test_p07_conformance.py`
+- `test_p08_runtime.py`
+- `test_p09_command_runtime.py`
+- `test_p0_contracts.py`
+- `test_p0_exit.py`
+
+따라서 이번 Exit는 문서상 선언이 아니라 실제 Branch CI 실행 결과를 근거로 한다.
+
+---
+
+## 2. P0 Runtime Core Authority
+
+### 2.1 Stage Routing
 
 Authority:
 
@@ -57,29 +84,29 @@ INTAKE
 → KNOWLEDGE
 ```
 
-`/work`는 `project_context.stage`를 기준으로 다음을 결정한다.
+`/work`는 더 이상 호출자가 Capability 목록을 사전에 계산해야 하는 단순 Dispatcher가 아니다.
+
+현재 Stage와 Project Mode를 기준으로 다음을 결정한다.
 
 - Skill
 - Procedure Profile
 - Agent Level
-- Required Input Types
-- Provider Capability Candidates
-- Expected Outputs
+- Required Input Type
+- Optional/Required Provider Capability
+- Explicit Side-effect 허용 범위
+- Expected Output
 - Next Stage
 
-### 2.2 Consolidated Stage Procedure
+`/change`, `/check`, `/setup`도 동일 Routing Authority에 포함한다.
 
-반복되는 문서형 Stage마다 별도 `SKILL.md`를 추가하지 않는다.
+### 2.2 Shared Stage Procedure
 
-공통 Skill:
+반복되는 문서형 Stage마다 별도 Skill을 만들지 않는다.
 
-`sdlc/starter/onboarding-package-v1/skills/stage-procedure/SKILL.md`
+- Shared Skill: `sdlc/starter/onboarding-package-v1/skills/stage-procedure/SKILL.md`
+- Procedure Authority: `sdlc/config/stage-procedures.yaml`
 
-Procedure Authority:
-
-`sdlc/config/stage-procedures.yaml`
-
-공통 Procedure Profile:
+Procedure Profile:
 
 - DECOMPOSE
 - CLARIFY
@@ -92,39 +119,75 @@ Procedure Authority:
 - STATUS_READ_MODEL
 - PROJECT_SETUP
 
-### 2.3 Typed Stage Input Pack v2
+도구/위험 계약이 특별한 단계만 독립 Skill을 유지한다.
 
-Trace Identity:
+---
+
+## 3. Typed Stage Handoff v2
+
+Authority:
+
+`sdlc/templates/stage-input-pack.yaml`
+
+Builder:
+
+`sdlc/scripts/build_stage_handoff.py`
+
+Typed Trace:
 
 `RQ / FR / BR / PROC / FTR / PGM / ART / SYMBOL / DATA / INT / AC / TC / TASK / CR / KNOWLEDGE / SOURCE`
 
-Typed Handoff:
+Handoff에는 다음을 구조화한다.
 
 - Required Input
 - Resolved Fact
 - Evidence
 - OPEN Item
+- Constraints
 - Expected Output
 - Current/Next Skill
 - Current/Next Procedure Profile
 - Agent Level
 - Next Action
 
-Builder:
+다음 Agent가 Conversation History 없이도 Stage Route와 Output Contract를 다시 추론하는 부담을 줄였다.
 
-`sdlc/scripts/build_stage_handoff.py`
+---
 
-Agent가 Next Stage/Skill/Output Contract를 임의 추론하는 것을 줄인다.
+## 4. Generic Greenfield / Brownfield Validation
 
-## 3. Generic Source / Analyzer Boundary
+Fixture:
 
-Core Runtime은 Stack-specific Source Syntax를 직접 해석하지 않는다.
+`sdlc/design/validation/p0-runtime-core-redesign-v1/fixtures/`
 
-Boundary:
+포함 Scenario:
+
+- Generic Greenfield Requirement Intake
+- Generic Brownfield Discovery
+- Generic Brownfield Source Diff
+- Generic Brownfield Reference Graph
+
+### Greenfield
+
+Source Provider가 없어도 INTAKE가 정상 시작되고 `DECOMPOSE`로 Handoff 가능함을 검증했다.
+
+### Brownfield
+
+Source/Analyzer Provider가 미설정이면 전체 Workflow를 BLOCK하지 않고 필요한 Evidence를 `OPEN/PARTIAL`로 보존함을 검증했다.
+
+Fixture는 Attendance/Java/MyBatis/TB_* 용어를 사용하지 않는다.
+
+---
+
+## 5. Source / Analyzer Boundary
+
+활성 Core는 Stack-specific Source Syntax를 직접 해석하지 않는다.
+
+Analyzer Boundary:
 
 `sdlc/adapters/analyzers/README.md`
 
-Analyzer Capability Candidate:
+Capability:
 
 ```text
 analysis.source.symbols
@@ -133,100 +196,100 @@ analysis.source.data_refs
 analysis.source.interface_refs
 ```
 
-활성 Discovery Skill:
-
-`sdlc/starter/onboarding-package-v1/skills/source-discovery/SKILL.md`
-
-기존 아래 Script의 Java/MyBatis/Attendance Fixture 로직은 Core Authority에서 제외했다.
+기존 아래 Script는 Legacy Fixture/Validation Reference로 남지만 Core Authority가 아니다.
 
 - `sdlc/scripts/discover_source_evidence.py`
 - `sdlc/scripts/build_reverse_sync_candidate.py`
 
-파일은 P0 호환/Validation Reference로 남아 있으나 신규 Runtime Core의 범용 Source Analyzer로 취급하지 않는다.
+즉 Java/MyBatis/근태 Sample Parser가 범용 Brownfield Core를 정의하지 않는다.
 
-## 4. Requirement Intake Generalization
+---
 
-활성 INTAKE는 Legacy Excel Grouping Skill을 직접 사용하지 않는다.
+## 6. Controlled Source Write
 
-Active:
+Capability:
 
-`sdlc/starter/onboarding-package-v1/skills/requirement-intake/SKILL.md`
+`source.patch.apply`
 
-Legacy Reference:
+Contract:
 
-`sdlc/starter/onboarding-package-v1/skills/sop-business-extraction/SKILL.md`
+`sdlc/design/contracts/source-write-capability.md`
 
-Core Intake는 특정 Column/Domain/Pilot Grouping Rule 없이 Source ID/Locator/Requirement Intent를 보존한다.
+Provider Registry에는 Reference Source Writer Entry가 존재하지만 기본값은:
 
-## 5. Provider Runtime Changes
+```text
+enabled = false
+provider_state = DISABLED
+mode = READ_WRITE
+default execution = PROPOSAL_ONLY
+```
 
-Provider Router는 Required와 Optional Capability를 구분한다.
+실제 Write는 다음이 모두 필요하다.
 
-- Required Capability missing → Action Block
-- Optional Read/Evidence Capability missing → OPEN/PARTIAL
+- 현재 Stage가 해당 Side-effect를 허용
+- `requested_side_effect_capabilities`에 명시
+- Expected Revision
+- Permission Proof
+- Idempotency Key
+- 사용할 수 있는 READ_WRITE Source Provider
 
-`/setup` Runtime Capability를 추가했다.
+기존 `write_capabilities` 필드만 직접 주입해 Write Guard를 우회하는 경로는 차단했다.
 
-Source Analyzer Provider Type을 추가했다.
+Write 응답이 유실되면 자동 성공/재시도하지 않고 `UNKNOWN_AFTER_WRITE → RECOVERY_REQUIRED`를 유지한다.
 
-Side-effect Capability는 Stage가 허용하고 실행 Context가 명시적으로 요청한 경우만 Required/Write Capability가 된다.
+Production Source Writer 구현은 Project Adapter/P1 범위다.
 
-현재 TEST의 명시적 Side Effect:
+---
 
-`test.execute`
+## 7. Test Side-effect Guard
 
-## 6. Development / Source Write
+`test.execute`도 Source Write와 같은 Explicit Side-effect 규칙을 적용한다.
 
-Development Skill은 Greenfield/Brownfield/Hybrid 공통으로 일반화했다.
+Proof 없이 실행을 요청하면 Provider 호출 전에 Plan 단계에서 `INVALID`다.
 
-기본 Write Mode:
+Proof가 존재하더라도 Test Provider가 unavailable이면 해당 실행 Action만 `ACTION_REQUIRED`가 되며, Test 설계/비실행 상태는 별도로 보존한다.
 
-`PROPOSAL_ONLY`
+`Runtime PASS requires execution evidence` invariant는 유지한다.
 
-현재 P0 Runtime Core v1에서는 Source Write Capability를 아직 표준화하지 않았다.
+---
 
-따라서 실제 Source 변경은 이 Exit Criteria에 포함하지 않는다.
+## 8. Generic Reverse Sync
 
-다음 P0 작업에서 `source.patch.apply` 또는 동등한 Capability Contract를 정의하기 전에는 Source Change Proposal까지만 범용 Core 보장 범위다.
-
-## 7. Controlled Generic Reverse Sync
-
-Generic Builder:
+Builder:
 
 `sdlc/scripts/build_reverse_sync_generic.py`
 
-Source Diff Template:
-
-`sdlc/templates/source-diff-evidence.yaml`
-
-Reference Graph:
-
-`sdlc/templates/reference-graph.yaml`
-
-Core Reverse Sync 규칙:
+Core Flow:
 
 ```text
-Changed Path/Symbol/Data/Interface Ref
+Source Diff
+→ Changed Path/Symbol/Data/Interface Ref
 → Direct Trace Node
-→ CONFIRMED Graph Edge만 역방향 탐색
-→ PGM/ART/SYMBOL/DATA/INT = STALE_CANDIDATE
-→ RQ/FR/BR/PROC/FTR/AC/TC = REVIEW_CANDIDATE
+→ CONFIRMED Graph Edge Traversal
+→ Technical Node STALE_CANDIDATE
+→ Business Truth REVIEW_CANDIDATE
 → Human Truth Protected
 ```
 
-Semantic Change Class는 Core가 Java/MyBatis/Domain Constant를 보고 추론하지 않는다.
+Generic Brownfield Fixture에서:
 
-Analyzer/Provider/Human Evidence가 만든 Class를 소비한다.
+- Changed `ART` → `STALE_CANDIDATE`
+- 관련 `FR/RQ` → `REVIEW_CANDIDATE`
+- Human Truth 자동 overwrite 금지
 
-Non-confirmed Trace Edge는 조용히 따라가지 않고 Review 대상으로 남긴다.
+을 검증했다.
 
-## 8. Full Stage `/check` Read Model
+Core는 Domain Constant/Java 문법/MyBatis Mapper 이름으로 Business Rule을 자동 확정하지 않는다.
 
-Generic Builder:
+---
+
+## 9. Full `/check` Read Model
+
+Builder:
 
 `sdlc/scripts/build_status_view.py`
 
-기존 P0 Fixture 중심 E2E Status Script 대신 12개 전체 Stage Input Pack을 읽어 다음 상태를 계산할 수 있도록 분리했다.
+12개 전체 Stage를 읽어 다음을 계산한다.
 
 - NOT_STARTED
 - PARTIAL
@@ -234,17 +297,19 @@ Generic Builder:
 - COMPLETE_WITH_OPEN
 - COMPLETE
 
-Read Model은 Business Truth를 생성하지 않는다.
+Read Model은 Business Truth나 PASS를 새로 만들지 않는다.
 
-## 9. Low-Agent Guard
+---
 
-새 Validator:
+## 10. Low-Agent Execution Guard
+
+Validator:
 
 `sdlc/scripts/validate_routed_skills.py`
 
-전체 Legacy Skill을 한 번에 강제하지 않고 **현재 Stage Routing에서 실제 도달 가능한 Skill만** Low-Agent 14 Section Contract로 검사한다.
+활성 Runtime Route에서 실제 도달 가능한 Skill만 Low-Agent 14 Section Contract로 강제한다.
 
-활성 Routed Skill 수는 Stage별 별도 Skill 난립 대신 다음 핵심 Skill 중심으로 축소했다.
+핵심 Routed Skill:
 
 - requirement-intake
 - stage-procedure
@@ -252,161 +317,148 @@ Read Model은 Business Truth를 생성하지 않는다.
 - source-change
 - test-verification
 
-필수 Section:
+필수 구조:
 
 `Purpose → Required Input → Optional Input → Precondition → Retrieval Strategy → Atomic Steps → Decision Rules → Output Schema → Quality Check → Alert Conditions → Stop Conditions → Escalation Conditions → Do Not → Example`
 
-## 10. Deterministic Validation Assets
+Legacy/Reference Skill 전체를 한꺼번에 Runtime 필수 계약으로 만드는 과설계는 피했다.
 
-추가/갱신한 P0 검증 구성:
+---
 
-- `sdlc/scripts/validate_p0_runtime_core.py`
-- `sdlc/scripts/validate_routed_skills.py`
-- `sdlc/design/validation/p0-runtime-core-redesign-v1/test_runtime_core.py`
+## 11. Human Artifact Simplification
 
-Conformance Test Definition은 다음을 검증하도록 작성했다.
+Artifact Profile은 Logical Artifact Role 수와 Physical Document 수를 동일하게 강제하지 않는다.
 
-1. Stage Routing / Procedure Profile 정합성
-2. Routed Skill 파일 및 Low-Agent Section Contract
-3. Stage Input Pack v2 Handoff 자동 생성
-4. Brownfield Source/Analyzer Provider 미설정 시 PARTIAL/OPEN 유지
-5. Greenfield 문서형 Stage 진행
-6. `/change`의 optional `source.diff`와 Generic Reverse Sync
-7. `/check`의 Full 12 Stage Read Model
-8. Explicit `test.execute` Side-effect Blocking
-9. `/setup` Runtime Route
-10. Unknown Stage 추측 금지
+기본 Human-facing Physical View는 다음 중심으로 수렴한다.
 
-### Runtime Evidence State
+1. 전체작업목록
+2. 고객 기능정의서
+3. Engineering Blueprint
+4. 구현·검증 결과서
 
-`NOT_RUN_IN_THIS_SESSION`
+Mapping:
 
-현재 세션에서는 GitHub Branch를 Local Checkout하여 Python suite를 실행할 수 있는 네트워크 Runtime Evidence가 확보되지 않았다.
+- 요구/프로세스/6W → 고객 기능정의서
+- 영향/기능설계/프로그램설계 → Engineering Blueprint
+- 구현/Test/Verify → 구현·검증 결과서
 
-따라서 다음을 주장하지 않는다.
+내부 Canonical Trace와 Guard는 문서 수 축소와 무관하게 유지한다.
 
-- `test_runtime_core.py PASS`
-- 기존 P0/P1 전체 Regression PASS
-- 실제 고객 Project PASS
-- Production Ready
+---
 
-## 11. Change Size
+## 12. Machine-readable Exit Gate
 
-Base 대비 GitHub Compare 기준:
+Authority:
 
-- Ahead commits: 38
-- Behind commits: 0
-- Changed files: 23
+`sdlc/config/p0-runtime-core-exit.yaml`
 
-주요 변경 영역:
-
-- `sdlc/config`
-- `sdlc/templates`
-- `sdlc/scripts`
-- `sdlc/starter/onboarding-package-v1/skills`
-- `sdlc/adapters/analyzers`
-- `sdlc/design/contracts`
-- `sdlc/design/validation`
-
-`main`에는 Merge하지 않았다.
-
-## 12. Confirmed Improvements
-
-구조적으로 다음 문제는 P0 Runtime Core v1에서 직접 수정됐다.
-
-- `/work` Capability 사전 주입 의존 축소
-- Full Stage Order 단일 Authority
-- `/setup` 문서/Runtime Command 불일치 제거
-- Typed Handoff Trace 확장
-- Stage별 SKILL 파일 증가 억제
-- 활성 INTAKE의 Pilot Grouping 의존 제거
-- Core와 Stack-specific Analyzer 경계 명시
-- Missing Read Provider와 Blocking Action 분리
-- Stack-neutral Reverse Sync Builder 추가
-- Full SDLC Status Read Model 추가
-- 활성 Routed Skill Low-Agent 검증 추가
-
-## 13. Remaining P0 Blockers
-
-### P0-R1 — Actual Runtime Conformance Execution
-
-Repository Checkout 환경에서 다음을 실제 실행해야 한다.
+Validator:
 
 ```text
-python sdlc/scripts/validate_p0_runtime_core.py bundle sdlc/config/stage-routing.yaml --procedures sdlc/config/stage-procedures.yaml
-python sdlc/scripts/validate_p0_runtime_core.py stage-pack sdlc/templates/stage-input-pack.yaml
-python sdlc/scripts/validate_routed_skills.py sdlc/config/stage-routing.yaml sdlc/starter/onboarding-package-v1/skills
-python sdlc/design/validation/p0-runtime-core-redesign-v1/test_runtime_core.py
+python sdlc/scripts/validate_p0_runtime_core.py exit sdlc/config/p0-runtime-core-exit.yaml
 ```
 
-### P0-R2 — Regression Compatibility
+Exit Gate가 검사하는 주요 항목:
 
-기존 P0.x/P1 Validator/Test와 새 Generic Template의 호환성을 확인해야 한다.
+- Required Authority/Runtime/Fixture/Test 존재
+- Routed Skill 존재
+- Branch CI Workflow 존재
+- Stage/Write Safety Invariant
+- Source Writer 기본 DISABLED
+- Active Core의 Pilot Token 유출 금지
+- Production/P1 항목이 P0 완료조건으로 잘못 포함되지 않았는지 확인
 
-특히 `source-diff-evidence.yaml` v2 변경과 Legacy Fixture Validator 간 계약을 점검한다.
+CI에서 실제 PASS했다.
 
-### P0-R3 — Source Write Capability
+---
 
-실제 Source 변경을 범용 Core에서 지원하려면 다음을 별도 계약으로 추가해야 한다.
+## 13. Regression Finding and Fix
 
-- Source Write Capability
-- Expected Revision
-- Patch/Change Payload
-- Permission Proof
-- Idempotency
-- UNKNOWN_AFTER_WRITE Recovery
-- Post-write Diff Evidence
+첫 CI 실행에서 새 Runtime Conformance는 PASS했으나 Legacy P0.9 Command Runtime Regression이 실패했다.
 
-그 전까지 Development Default는 `PROPOSAL_ONLY`다.
+원인:
 
-### P0-R4 — Human Artifact Runtime Mapping
+기존 P0.9 Test가 Stage Router 이전 모델을 전제로 `/work`에 임의 Capability와 Write Capability를 직접 주입했다.
 
-Artifact Profile이 요구하는 고객/프로젝트용 Human Artifact를 실제 Template Path와 연결하는 Mapping을 추가해야 한다.
+검토 중 더 중요한 안전 문제를 확인했다.
 
-중복 Template을 만들지 않고 기존 Customer Functional Spec / Development Blueprint를 재사용하는 방향이 우선이다.
+Legacy `write_capabilities` 직접 주입이 Stage Side-effect Allow-list를 우회할 가능성이 있었다.
 
-### P0-R5 — Real Vertical Slice
+수정:
 
-P0 Runtime Core가 안정화된 후 실제 Customer Source 기반 Representative Requirement 1건으로 다음을 검증해야 한다.
+- 모든 Write는 `requested_side_effect_capabilities`에 명시되어야 함
+- 현재 Stage Side-effect Allow-list에 존재해야 함
+- Proof Preflight를 Provider Plan 이전에 수행
+- Legacy 직접 Write 주입은 `INVALID`
+- UNKNOWN_AFTER_WRITE Test는 정식 `source.patch.apply` 경로로 변경
 
-```text
-INTAKE
-→ DECOMPOSE
-→ PROCESS/DISCOVERY
-→ IMPACT
-→ DESIGN
-→ PROGRAM
-→ DEVELOPMENT Proposal/Write
-→ TEST
-→ VERIFY
-→ /change Reverse Sync
-→ /check Resume
-```
+수정 후 새 Conformance와 Legacy Regression이 모두 PASS했다.
+
+---
+
+## 14. P0 Exit vs Production Readiness
+
+P0 Runtime Core Exit가 PASS했다고 다음을 의미하지 않는다.
+
+- 실제 고객 Repository가 검증됨
+- 실제 Production Source Writer가 연결됨
+- Jenkins/GitHub Actions/Azure DevOps Test Adapter가 연결됨
+- Monitoring/Deployment Provider가 구현됨
+- 실제 Release가 가능함
+
+이들은 다음 단계의 Project/P1/P2 Evidence다.
+
+P0에서 완료한 것은:
+
+**“특정 Sample/Stack에 종속되지 않는 Runtime Core 계약과 deterministic safety boundary가 존재하고, Generic Greenfield/Brownfield Fixture 및 기존 P0 Regression을 통과한다.”**
+
+이다.
+
+---
+
+## 15. Deferred Non-P0 Items
+
+| 항목 | 단계 | 이유 |
+|---|---|---|
+| 실제 고객 Brownfield Vertical Slice | P1 | Project binding과 실제 Source Evidence 검증 |
+| Production Source Write Adapter | P1 / Project Adapter | Core는 Capability/Safety Contract까지만 책임 |
+| 실제 CI Test Adapter | P1 / Project Adapter | Jenkins/GHA/Azure DevOps 구현 차이 |
+| Monitoring/Deployment Provider | P2 | P0 Runtime Core Exit 필수 요건 아님 |
+
+---
 
 ## Final State
 
 ```text
-Stage Routing Authority = IMPLEMENTED
-Shared Stage Procedure = IMPLEMENTED
-Typed Handoff v2 = IMPLEMENTED
-Generic Requirement Intake = IMPLEMENTED
-Generic Source Analyzer Boundary = IMPLEMENTED
-Optional Read Provider Semantics = IMPLEMENTED
-Generic Reverse Sync Candidate = IMPLEMENTED
-Full Stage Status Read Model = IMPLEMENTED
-Low-Agent Routed Skill Validation = IMPLEMENTED
-Actual Source Write Capability = NOT YET STANDARDIZED
-Runtime Conformance Execution = NOT RUN
-Regression Suite = NOT RUN
-Real Customer Vertical Slice = NOT RUN
+Stage Routing Authority = PASS
+Shared Stage Procedure = PASS
+Typed Handoff v2 = PASS
+Generic Requirement Intake = PASS
+Generic Greenfield Fixture = PASS
+Generic Brownfield Fixture = PASS
+Generic Source Analyzer Boundary = PASS
+Optional Read Provider Semantics = PASS
+Source Write Capability Contract = PASS
+Source Writer Default Disabled = PASS
+Write Proof Preflight = PASS
+Legacy Write Bypass Guard = PASS
+UNKNOWN_AFTER_WRITE Recovery = PASS
+Generic Reverse Sync = PASS
+Full 12-Stage Status Read Model = PASS
+Low-Agent Routed Skill Validation = PASS
+Human Artifact Mapping = PASS
+P0 Runtime Exit Gate = PASS
+Redesigned Runtime Conformance = PASS
+Legacy P0 Regression = PASS (11 scripts)
+P0 Runtime Core Blocker = NONE
+P0 Runtime Core State = P0_RUNTIME_CORE_READY
+P1 Entry = ALLOWED
 Production Ready = false
+Main Merge = NOT PERFORMED
 ```
 
-## Next Recommended P0 Work
+## Exit Decision
 
-1. Runtime/Regression suite 실제 실행 가능 환경에서 conformance 확인
-2. Legacy P0.x Compatibility 문제 수정
-3. Source Write Capability + Recovery 연결
-4. Artifact Profile → Human Template Mapping 단순화
-5. 실제 Generic Greenfield/Brownfield Fixture 각각 1건 통과
-6. 그 후 P0 Redesign Exit Review
+**P0 Runtime Core 재설계는 종료한다.**
+
+다음 작업은 P0 Core를 다시 확장하는 것이 아니라, 이 `P0_RUNTIME_CORE_READY` 기준 위에서 P1의 실제 Project Foundation / Vertical Slice / Adapter Binding을 검증하는 것이다.
