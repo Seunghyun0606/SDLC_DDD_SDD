@@ -1,0 +1,147 @@
+version: 1
+status: ACTIVE_STRUCTURAL_REDESIGN_V1
+
+principles:
+  stage_pack_is_execution_entry: true
+  caller_must_not_invent_required_capabilities: true
+  missing_optional_capability_is_open: true
+  missing_required_capability_blocks_only_dependent_action: true
+  analysis_may_continue_with_nonblocking_open: true
+  side_effect_requires_explicit_guard_proof: true
+
+stages:
+  INTAKE:
+    skill: requirement-boundary-review
+    required_capabilities: []
+    optional_capabilities: []
+    output_artifacts: [requirement_customer_view, stage_input_pack]
+    next_stage: DECOMPOSE
+    side_effect_actions: []
+
+  DECOMPOSE:
+    skill: requirement-boundary-review
+    required_capabilities: []
+    optional_capabilities: []
+    output_artifacts: [analysis, stage_input_pack]
+    next_stage: CLARIFY
+    side_effect_actions: []
+
+  CLARIFY:
+    skill: requirement-boundary-review
+    required_capabilities: []
+    optional_capabilities: []
+    output_artifacts: [analysis, open_items, stage_input_pack]
+    next_stage: PROCESS
+    side_effect_actions: []
+
+  PROCESS:
+    skill: sop-business-extraction
+    required_capabilities: []
+    optional_capabilities: []
+    output_artifacts: [process_analysis, stage_input_pack]
+    next_stage: DISCOVERY
+    side_effect_actions: []
+
+  DISCOVERY:
+    skill: brownfield-source-analysis
+    mode_rules:
+      GREENFIELD:
+        required_capabilities: []
+        optional_capabilities: []
+      BROWNFIELD:
+        required_capabilities: [source.snapshot.read, source.search]
+        optional_capabilities: [source.object.read]
+      HYBRID:
+        required_capabilities: []
+        optional_capabilities: [source.snapshot.read, source.search, source.object.read]
+      AUTO:
+        required_capabilities: []
+        optional_capabilities: [source.snapshot.read, source.search, source.object.read]
+    output_artifacts: [source_discovery_result, stage_input_pack]
+    next_stage: IMPACT
+    side_effect_actions: []
+
+  IMPACT:
+    skill: brownfield-source-analysis
+    mode_rules:
+      GREENFIELD:
+        required_capabilities: []
+        optional_capabilities: []
+      BROWNFIELD:
+        required_capabilities: [source.object.read]
+        optional_capabilities: [source.search]
+      HYBRID:
+        required_capabilities: []
+        optional_capabilities: [source.object.read, source.search]
+      AUTO:
+        required_capabilities: []
+        optional_capabilities: [source.object.read, source.search]
+    output_artifacts: [impact_analysis, stage_input_pack]
+    next_stage: DESIGN
+    side_effect_actions: []
+
+  DESIGN:
+    skill: source-change
+    required_capabilities: []
+    optional_capabilities: []
+    output_artifacts: [engineering_design, stage_input_pack]
+    next_stage: PROGRAM
+    side_effect_actions: []
+
+  PROGRAM:
+    skill: source-change
+    required_capabilities: []
+    optional_capabilities: [source.search]
+    output_artifacts: [program_spec, stage_input_pack]
+    next_stage: DEVELOPMENT
+    side_effect_actions: []
+
+  DEVELOPMENT:
+    skill: source-change
+    required_capabilities: []
+    optional_capabilities: [source.object.read]
+    output_artifacts: [implementation_result, stage_input_pack]
+    next_stage: TEST
+    side_effect_actions: [source.write]
+
+  TEST:
+    skill: test-verification
+    required_capabilities: [test.execute]
+    optional_capabilities: [test.discover, test.result.read]
+    output_artifacts: [test_execution_result, stage_input_pack]
+    next_stage: VERIFY
+    side_effect_actions: [test.execute]
+
+  VERIFY:
+    skill: test-verification
+    required_capabilities: [test.result.read]
+    optional_capabilities: [source.diff]
+    output_artifacts: [test_verification, stage_input_pack]
+    next_stage: KNOWLEDGE_PROMOTION
+    side_effect_actions: []
+
+  KNOWLEDGE_PROMOTION:
+    skill: project-foundation-bootstrap
+    required_capabilities: []
+    optional_capabilities: []
+    output_artifacts: [knowledge_candidate, reference_graph]
+    next_stage: COMPLETE
+    side_effect_actions: [canonical.publish]
+
+open_item_policy:
+  default_blocks_reasoning: false
+  default_blocks_action: false
+  global_action_scope: "*"
+  action_scope_examples:
+    - source.write
+    - test.execute
+    - canonical.publish
+    - db.write
+    - deploy.execute
+
+invariants:
+  - nonblocking_open_must_not_stop_read_only_stage_progress
+  - action_blocker_must_name_action_scope_or_global_scope
+  - provider_unavailable_must_not_be_converted_to_success
+  - greenfield_must_not_require_source_capability_before_source_exists
+  - source_behavior_must_not_auto_confirm_business_truth
