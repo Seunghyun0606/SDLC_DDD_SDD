@@ -41,13 +41,13 @@ def discover_markers(root: Path, config: dict[str, Any]) -> list[dict[str, Any]]
     for kind, candidates in markers.items():
         for candidate in candidates or []:
             if exists_bounded(root, candidate, max_depth):
-                found.append({"asset_type": kind.upper(), "locator": candidate, "truth_state": "OBSERVED"})
+                found.append({"asset_type": kind.upper(), "locator": candidate, "state": "DISCOVERED", "truth_state": "OBSERVED", "evidence_ids": [], "notes": ""})
     for candidate in boot.get("document_candidates") or []:
         if exists_bounded(root, candidate, max_depth):
-            found.append({"asset_type": "DOCUMENT_CANDIDATE", "locator": candidate, "truth_state": "OBSERVED"})
+            found.append({"asset_type": "DOCUMENT_CANDIDATE", "locator": candidate, "state": "DISCOVERED", "truth_state": "OBSERVED", "evidence_ids": [], "notes": ""})
     for candidate in boot.get("data_candidates") or []:
         if exists_bounded(root, candidate, max_depth):
-            found.append({"asset_type": "DATA_CANDIDATE", "locator": candidate, "truth_state": "OBSERVED"})
+            found.append({"asset_type": "DATA_CANDIDATE", "locator": candidate, "state": "DISCOVERED", "truth_state": "OBSERVED", "evidence_ids": [], "notes": ""})
     return found
 
 
@@ -103,6 +103,7 @@ def bootstrap(project_root: Path, profile: dict[str, Any], registry: dict[str, A
     artifact_profile = ((profile.get("artifacts") or {}).get("profile")) or "STANDARD"
     first_work_allowed = bool(project_id and resolved_mode and states)
     source_claim_allowed = resolved_mode == "GREENFIELD" or source_state in USABLE_PROVIDER_STATES
+    status = "READY" if first_work_allowed else "PARTIAL"
 
     return {
         "schema_version": 1,
@@ -110,9 +111,12 @@ def bootstrap(project_root: Path, profile: dict[str, Any], registry: dict[str, A
         "project_bootstrap": {
             "project_id": project_id,
             "project_name": name,
+            "mode": resolved_mode,
             "requested_mode": requested_mode,
             "resolved_mode": resolved_mode,
             "mode_truth": mode_truth,
+            "bootstrap_revision": 2,
+            "status": status,
             "artifact_profile": artifact_profile,
             "project_root": str(project_root),
             "scan_policy": {
@@ -120,8 +124,20 @@ def bootstrap(project_root: Path, profile: dict[str, Any], registry: dict[str, A
                 "max_depth": int(((config.get("bootstrap") or {}).get("scan_policy") or {}).get("max_depth", 2)),
                 "unlimited_recursive_scan": False,
             },
+            "providers": {
+                "source_provider_state": source_state,
+                "test_provider_state": test_state,
+                "other_provider_refs": [k for k in sorted(states) if k not in {"SOURCE", "TEST"}],
+            },
             "provider_states": states,
             "assets": markers,
+            "standards": {"discovered": [], "adopted": [], "deviations": []},
+            "terminology": {"glossary_sources": [], "unresolved_terms": []},
+            "customization": {
+                "active_overlay_ids": [],
+                "proposed_overlay_ids": [],
+                "upfront_customization_complete_required": False,
+            },
             "technology_decisions": decisions,
             "open_items": open_items,
             "entry_gate": {
@@ -129,6 +145,7 @@ def bootstrap(project_root: Path, profile: dict[str, Any], registry: dict[str, A
                 "source_claim_allowed": source_claim_allowed,
                 "source_provider_state": source_state,
                 "test_provider_state": test_state,
+                "blockers": [],
                 "warnings": [x.get("open_id") for x in open_items],
             },
             "next": {
@@ -152,6 +169,7 @@ def main() -> int:
     result = bootstrap(args.project_root, load(args.project_profile), load(args.provider_registry), load(args.config))
     text = yaml.safe_dump(result, allow_unicode=True, sort_keys=False)
     if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(text, encoding="utf-8")
     else:
         print(text, end="")
