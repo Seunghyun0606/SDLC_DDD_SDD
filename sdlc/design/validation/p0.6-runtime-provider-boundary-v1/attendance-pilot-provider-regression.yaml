@@ -1,0 +1,29 @@
+schema_version: 1
+artifact_type: SAMPLE_ONLY_PROVIDER_REGRESSION
+sample_only: true
+does_not_define_core_contract: true
+source_reference:
+  description: 요구사항목록.xlsx 기반 기존 근태마감 Pilot Work Unit
+  source_group_id: RQG-CAND-6BB6D66548
+regression_expectations:
+  - case_id: PILOT-CHECK
+    command: /check
+    requested_capabilities: []
+    expected:
+      status: READY
+      reason: Local command-router capability만 필요
+  - case_id: PILOT-ACTUAL-SOURCE
+    command: /work
+    requested_capabilities: [source.snapshot.read]
+    expected:
+      status: ACTION_REQUIRED
+      reason: Example Source Provider는 UNCONFIGURED이므로 실제 고객 Source 연결 필요
+  - case_id: PILOT-RUNTIME-TEST
+    command: /work
+    requested_capabilities: [test.execute]
+    expected:
+      status: ACTION_REQUIRED
+      reason: Example Test Provider는 UNCONFIGURED이므로 실제 Test Runtime 연결 필요
+anti_overfit_note: >-
+  이 파일은 기존 Pilot의 회귀호환성을 확인하기 위한 샘플이다. Provider Type, Capability,
+  Request/Response Envelope, State Model, Routing Rule은 이 업무명이나 Source Group ID를 참조하지 않는다.
