@@ -14,6 +14,7 @@ knowledge_used: []
 generated_at: "{{generated_at}}"
 ---
 <!-- 작성 안내: 요구 원문/외부 ID와 분석 결과를 한 문서에서 관리한다. INTAKE용 별도 문서와 DECOMPOSE용 분석 문서를 중복 생성하지 않는다. -->
+<!-- Machine evidence mapping: 근거 위치=Locator / 원본 식별값=Source Hash / 확인 수준=Confidence / 현재 상태=Status -->
 # {{representative_id}} {{short_name}} 요구사항 정의
 
 ## 문서 목적
@@ -29,11 +30,11 @@ flowchart LR
 ```
 
 ## 입력 및 근거
-| 구분 | 내용 | 사실/근거 구분 | 위치(Locator) | 원본 해시(Source Hash) | 신뢰도(Confidence) | 상태(Status) |
+| 구분 | 내용 | 무엇을 근거로 판단했는가 | 근거 위치 | 원본 식별값 | 확인 수준 | 현재 상태 |
 |---|---|---|---|---|---|---|
-| 요구사항 원문 | {{requirement_source}} | GIVEN | {{requirement_locator}} | {{requirement_source_hash}} | HIGH | CURRENT |
+| 요구사항 원문 | {{requirement_source}} | 요청/제공 근거(GIVEN) | {{requirement_locator}} | {{requirement_source_hash}} | 높음 | 현재 사용 |
 | 고객/업무 보충자료 | {{business_source_summary}} | {{business_truth_type}} | {{business_source_locator}} | {{business_source_hash}} | {{business_source_confidence}} | {{business_source_status}} |
-| 기존 시스템/Source 근거 | {{source_summary}} | OBSERVED | {{source_locator}} | {{source_hash}} | {{source_confidence}} | {{source_status}} |
+| 기존 시스템/프로그램 소스 | {{source_summary}} | 현행 확인(OBSERVED) | {{source_locator}} | {{source_hash}} | {{source_confidence}} | {{source_status}} |
 
 ## 상세 내용
 ### 원문과 식별정보
@@ -62,7 +63,7 @@ flowchart LR
 {{fr_rows}}
 
 ### 업무 규칙(BR) 후보
-아직 업무 권한자가 확정하지 않은 규칙은 후보 또는 OPEN으로 유지한다.
+아직 업무 권한자가 확정하지 않은 규칙은 후보 또는 **미확정**으로 유지한다.
 
 {{business_rule_candidates}}
 
