@@ -1,74 +1,142 @@
-version: 1
-status: P0_BASELINE_CANDIDATE
+version: 2
+status: P0_RUNTIME_CORE_REDESIGN_ACTIVE
 purpose: >-
-  Phase 0의 논리적 manifest/capabilities/decisions/contracts 역할을 현재 분산형
-  authoritative artifact에 연결하는 index다. 이 파일은 원본 truth를 복제하지 않는다.
+  Phase 0의 분산형 authoritative artifact를 연결하되, P0 Runtime Core 재설계에서
+  Stage Routing/Procedure/Handoff/Provider/Skill 실행 Authority를 명확히 지정하는 index다.
+  이 파일 자체는 원본 truth를 복제하지 않는다.
 
 baseline_roles:
   design_baseline:
     authority: sdlc/design/baselines/AI_SDLC_Harness_Full_Design_v1.5.1.md
+    role: REFERENCE_BASELINE
+
   business_source_manifest:
     authority: sdlc/starter/onboarding-package-v1/02_business-source-manifest.yaml
     original_phase0_role: manifest
+
   artifact_profile:
     authority: sdlc/config/artifact-profiles.yaml
+
   project_profile:
     authority: sdlc/config/project-profile.example.yaml
+
+  runtime_core_redesign:
+    contract: sdlc/design/contracts/p0-runtime-core-redesign.md
+    stage_routing: sdlc/config/stage-routing.yaml
+    stage_procedures: sdlc/config/stage-procedures.yaml
+    command_executor: sdlc/scripts/execute_command_runtime.py
+    provider_router: sdlc/scripts/route_provider_command.py
+    validator: sdlc/scripts/validate_p0_runtime_core.py
+    routed_skill_validator: sdlc/scripts/validate_routed_skills.py
+
   requirement_boundary:
     authority: sdlc/config/rq-boundary.yaml
     decision_artifacts:
       - sdlc/templates/requirement-review-decision.yaml
       - sdlc/config/requirement-review.yaml
+
   stage_handoff:
     authority: sdlc/templates/stage-input-pack.yaml
-    granularity: sdlc/config/stage-pack-granularity.yaml
+    version: 2
+    granularity_compatibility: sdlc/config/stage-pack-granularity.yaml
+
+  stage_execution:
+    routing_authority: sdlc/config/stage-routing.yaml
+    repeated_stage_procedure_authority: sdlc/config/stage-procedures.yaml
+    shared_skill: sdlc/starter/onboarding-package-v1/skills/stage-procedure/SKILL.md
+
+  requirement_intake:
+    authority: sdlc/starter/onboarding-package-v1/skills/requirement-intake/SKILL.md
+    legacy_inventory_reference: sdlc/starter/onboarding-package-v1/skills/sop-business-extraction/SKILL.md
+
   canonical_publish:
     authority: sdlc/config/canonical-publish.yaml
     request: sdlc/templates/canonical-publish-request.yaml
+
   source_discovery:
-    authority: sdlc/config/source-discovery.yaml
+    runtime_authority: sdlc/starter/onboarding-package-v1/skills/source-discovery/SKILL.md
+    route: sdlc/config/stage-routing.yaml
+    provider_registry: sdlc/config/provider-registry.example.yaml
+    analyzer_boundary: sdlc/adapters/analyzers/README.md
+    legacy_config_reference: sdlc/config/source-discovery.yaml
+    legacy_fixture_scripts:
+      - sdlc/scripts/discover_source_evidence.py
+      - sdlc/scripts/build_reverse_sync_candidate.py
+    legacy_fixture_scripts_are_core_authority: false
+
+  development:
+    authority: sdlc/starter/onboarding-package-v1/skills/source-change/SKILL.md
+    default_write_mode: PROPOSAL_ONLY
+
   reverse_sync:
     authority: sdlc/design/contracts/source-reverse-sync-contract.md
     classification: sdlc/config/reverse-sync-classification.yaml
+    fixture_classifier_is_authoritative: false
+
   test_verification:
     authority: sdlc/config/test-verification.yaml
+    skill: sdlc/starter/onboarding-package-v1/skills/test-verification/SKILL.md
+
   provider_capabilities:
     authority: sdlc/config/provider-registry.example.yaml
     original_phase0_role: capabilities
+
   provider_boundary:
     authority: sdlc/design/contracts/runtime-provider-boundary.md
+
   adapter_conformance:
     authority: sdlc/design/contracts/provider-adapter-conformance.md
+
   invocation_recovery:
     authority: sdlc/design/contracts/runtime-invocation-recovery.md
+
   command_runtime:
-    authority: sdlc/design/contracts/command-runtime-integration.md
-  e2e_status:
-    authority: sdlc/config/e2e-orchestration.yaml
+    routing_authority: sdlc/config/stage-routing.yaml
+    execution: sdlc/scripts/execute_command_runtime.py
+    provider_plan: sdlc/scripts/route_provider_command.py
+    legacy_contract_reference: sdlc/design/contracts/command-runtime-integration.md
+
+  status_read_model:
+    procedure_authority: sdlc/config/stage-procedures.yaml
+    procedure_profile: STATUS_READ_MODEL
+    legacy_e2e_fixture_config: sdlc/config/e2e-orchestration.yaml
+    legacy_e2e_fixture_is_core_authority: false
+
   low_agent_execution:
     authority: sdlc/design/contracts/low-agent-execution-contract.md
+    active_routed_skill_check: sdlc/scripts/validate_routed_skills.py
+
+  p0_runtime_core_validation:
+    test: sdlc/design/validation/p0-runtime-core-redesign-v1/test_runtime_core.py
 
 original_phase0_mapping:
   manifest.yaml:
     current_model: INDEXED_DISTRIBUTED
     primary_authority: sdlc/starter/onboarding-package-v1/02_business-source-manifest.yaml
     note: 단일 전역 manifest로 모든 truth를 복제하지 않는다.
+
   capabilities.yaml:
     current_model: PROVIDER_CAPABILITY_REGISTRY
     primary_authority: sdlc/config/provider-registry.example.yaml
-    note: Capability는 provider registry와 project overlay에서 관리한다.
+    note: Capability는 Provider Registry가 관리하며 Stage는 stage-routing.yaml에서 Capability 후보만 요청한다.
+
   decisions.yaml:
     current_model: TYPED_DECISION_ARTIFACTS
     primary_authorities:
       - sdlc/templates/requirement-review-decision.yaml
       - sdlc/config/canonical-publish.yaml
       - sdlc/config/rq-boundary.yaml
-    note: 단일 decisions 파일에 서로 다른 decision lifecycle을 중복 저장하지 않는다.
+    note: 서로 다른 Decision Lifecycle을 단일 파일에 복제하지 않는다.
+
   contracts:
-    current_model: DISTRIBUTED_CONTRACTS
+    current_model: DISTRIBUTED_CONTRACTS_WITH_RUNTIME_INDEX
     root: sdlc/design/contracts
+    runtime_entry: sdlc/design/contracts/p0-runtime-core-redesign.md
 
 truth_ownership:
   index_is_authoritative_for_content: false
   referenced_artifact_is_authoritative: true
   duplicate_truth_in_index: DENY
+  stage_order_authority: sdlc/config/stage-routing.yaml
+  stage_procedure_authority: sdlc/config/stage-procedures.yaml
+  stage_handoff_authority: sdlc/templates/stage-input-pack.yaml
