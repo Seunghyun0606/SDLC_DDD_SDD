@@ -1,5 +1,5 @@
 {
-  "schema_version": 8,
+  "schema_version": 9,
   "candidate_design": "v1.6.0-rc.1",
   "core_required_files": [
     ".cursor/rules/00-core.mdc",
@@ -19,6 +19,10 @@
     "sdlc/config/br-intake-profile.example.json",
     "sdlc/config/open-resolution-profile.example.yaml",
     "sdlc/design/contracts/customer-document-contract.json",
+    "sdlc/scripts/render_customer_document.py",
+    "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md",
+    "sdlc/templates/customer/standard/A02_영향_개발범위_공유서.md",
+    "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md",
     "sdlc/design/contracts/br-candidate.schema.json",
     "sdlc/design/contracts/br-document-extraction-contract.json",
     "sdlc/design/contracts/sop-extraction-contract.json",
@@ -96,6 +100,12 @@
   "document_experience": {
     "visible_language": "ko-KR",
     "customer_document_contract": "sdlc/design/contracts/customer-document-contract.json",
+    "customer_projection_script": "sdlc/scripts/render_customer_document.py",
+    "active_customer_view_count": 3,
+    "active_customer_views": ["solution_agreement", "delivery_scope", "acceptance_handover"],
+    "legacy_customer_document_ids_are_aliases": true,
+    "customer_projection_accepts_internal_markdown_and_canonical_json": true,
+    "customer_projection_must_not_invent_missing_business_facts": true,
     "br_candidate_schema": "sdlc/design/contracts/br-candidate.schema.json",
     "br_document_extraction_contract": "sdlc/design/contracts/br-document-extraction-contract.json",
     "sop_extraction_contract": "sdlc/design/contracts/sop-extraction-contract.json",
