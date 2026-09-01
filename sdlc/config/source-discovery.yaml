@@ -1,76 +1,111 @@
-version: 1
-status: ACTIVE_P0_3_CANDIDATE
+version: 2
+status: ACTIVE_STRUCTURAL_REDESIGN_V1
 
-purpose: Source Repository/Snapshot에서 직접 확인 가능한 Program/Artifact/Symbol/Data Evidence를 수집하되 이름 유사성으로 Business Trace를 확정하지 않는다.
+purpose: Source Repository/Snapshot에서 직접 확인 가능한 Evidence를 단계적으로 수집한다. 초기 Inventory는 기존 Program/Artifact 관계를 요구하지 않고, Bounded Trace 단계에서만 직접 관계를 사용한다.
+
+phases:
+  INVENTORY:
+    purpose: Repository 구조/언어/Build/Test/Data/Interface 후보를 제한된 범위에서 식별한다.
+    required_inputs: [source_root, source_revision]
+    direct_trace_required: false
+    output: source_inventory
+    next: ANALYZER_SELECTION
+  ANALYZER_SELECTION:
+    purpose: Inventory Evidence에 따라 필요한 Analyzer/Provider를 선택한다.
+    required_inputs: [source_inventory]
+    direct_trace_required: false
+    output: analyzer_plan
+    next: BOUNDED_TRACE
+  BOUNDED_TRACE:
+    purpose: 현재 Requirement/Program에 필요한 Source Evidence만 추적한다.
+    required_inputs: [source_root, source_revision, target_context]
+    optional_inputs: [trace_manifest, direct_relations, configured_paths]
+    direct_trace_required: false
+    output: source_discovery_result
 
 input_contract:
   required:
     - source_root
     - source_revision
-    - trace_manifest_or_direct_relation
   optional:
+    - target_context
+    - trace_manifest
+    - direct_relations
     - configured_paths
-    - language_profile
+    - analyzer_plan
     - prior_stage_input_pack
 
 provider_states:
   - AVAILABLE
+  - DEGRADED
   - UNAVAILABLE
+  - UNCONFIGURED
   - PARTIAL
 
 retrieval_order:
-  - direct_artifact_relation
-  - direct_symbol_relation
-  - mapper_or_query_relation
+  - explicit_direct_relation
+  - explicit_target_path_or_symbol
+  - analyzer_supported_relation
   - configured_path
   - bounded_reference_search
+  - OPEN
 
-extraction:
-  artifact_types:
-    - JAVA
-    - XML
-    - SQL
-    - CONFIG
-  evidence:
-    - file_path
-    - file_hash
-    - symbols
-    - mapper_statement_ids
-    - table_names
-    - transaction_markers
-    - direct_program_ids
+analyzer_boundary:
+  core_responsibility:
+    - bounded_inventory
+    - evidence_envelope
+    - revision_and_hash
+    - open_and_blind_spot_preservation
+    - reference_graph_linking
+  adapter_responsibility:
+    - language_symbol_parsing
+    - framework_route_parsing
+    - orm_mapper_parsing
+    - sql_procedure_trigger_parsing
+    - batch_scheduler_parsing
+    - interface_contract_parsing
+    - runtime_dependency_parsing
 
 truth:
   source_file_presence: OBSERVED
   source_symbol_presence: OBSERVED
   table_reference: OBSERVED
-  program_relation_from_manifest: OBSERVED_RELATION
+  relation_from_explicit_manifest: OBSERVED_RELATION
+  analyzer_inferred_relation: INFERRED
   business_rule_from_source: NEVER_AUTO_CONFIRM
 
 hard_rules:
   - id: DISC-001
-    statement: Direct Trace Manifest가 없으면 Name Similarity로 PGM을 CONFIRMED하지 않는다.
+    statement: Initial Inventory는 Direct Trace Manifest를 요구하지 않는다.
   - id: DISC-002
-    statement: Source에서 본 조건/예외는 OBSERVED Behavior이며 Business Truth가 아니다.
+    statement: Name Similarity 또는 Analyzer 추론만으로 PGM/BR 관계를 CONFIRMED하지 않는다.
   - id: DISC-003
-    statement: 탐색 결과에는 Source Revision과 File Hash를 포함한다.
+    statement: Source에서 본 조건/예외는 OBSERVED Behavior이며 Business Truth가 아니다.
   - id: DISC-004
-    statement: Configured/Direct 범위가 끝나면 전체 Repository 무한 탐색을 하지 않는다.
+    statement: Evidence에는 Source Revision과 가능한 경우 File Hash를 포함한다.
   - id: DISC-005
-    statement: Dynamic SQL/Procedure/Trigger/Runtime Consumer가 가능하면 Blind Spot으로 남긴다.
+    statement: 전체 Repository 무제한 Scan을 금지하고 명시적 depth/budget을 사용한다.
+  - id: DISC-006
+    statement: 지원하지 않는 Procedure/Trigger/Batch/Interface/Runtime dependency는 OPEN/Blind Spot으로 보존한다.
+  - id: DISC-007
+    statement: Analyzer가 없다는 이유로 Core Source Discovery 코드를 특정 언어 규칙으로 확장하지 않는다.
 
 stop_conditions:
-  - all_direct_artifacts_resolved
+  - bounded_inventory_complete
+  - target_evidence_sufficient
   - configured_search_budget_exhausted
   - next_evidence_requires_runtime_or_external_system
   - ambiguous_target_requires_escalation
 
 escalation:
-  MISSING_DIRECT_TRACE: L2
+  MISSING_ANALYZER: ENGINEERING_OWNER
   AMBIGUOUS_TARGET: L2_OR_L3
   DYNAMIC_RUNTIME_ONLY: L3
   SECURITY_CRITICAL: L3_OR_HUMAN
 
-output:
-  template: sdlc/templates/source-discovery-result.yaml
+runtime:
+  inventory_script: sdlc/scripts/discover_source_inventory.py
+  bounded_trace_reference_script: sdlc/scripts/discover_source_evidence.py
+  analyzer_registry: sdlc/config/source-analyzers.yaml
+  output_template: sdlc/templates/source-discovery-result.yaml
   validator: sdlc/scripts/validate_p03_contracts.py
