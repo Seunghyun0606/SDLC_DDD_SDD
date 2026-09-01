@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "provider_id": "EXTERNAL_AGENT_PROVIDER_REQUIRED",
+  "enabled": false,
+  "run_count": 3,
+  "timeout_seconds": 120,
+  "result_filename": "stage-result.json",
+  "command": [],
+  "rules": {
+    "same_input_required": true,
+    "actual_provider_execution_required_for_pass": true,
+    "semantic_fingerprint_compared": true,
+    "volatile_timestamp_difference_ignored": true,
+    "llm_determinism_claimed": false
+  },
+  "note": "Project가 실제 Agent/LLM CLI 또는 wrapper를 연결한 뒤 enabled=true와 command를 설정한다. Provider가 없는 상태는 PASS가 아니라 NOT_EXECUTED로 기록한다."
+}
