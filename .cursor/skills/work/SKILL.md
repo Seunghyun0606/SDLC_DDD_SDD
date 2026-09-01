@@ -20,7 +20,10 @@
 - Output은 Canonical relation을 갱신하고 해당 Template 기반 Artifact를 생성/갱신한다.
 - 모든 Stage Reference의 `## 실행 계약(Agent Execution Contract)`을 실행 지침으로 사용한다. 저수준 Agent가 임의 순서를 만들지 않고 `입력 필드 → 근거 분류 → 실행 순서 → 계속/중단 → 출력 매핑 → 품질 게이트 → 미확정/실패 처리`를 따른다.
 - 공통 실행계약은 `sdlc/design/contracts/agent-execution-contract.json`을 따른다.
-- 프로젝트 고유 탐색/Framework 해석은 Core Reference에 발명하지 않고 Project Profile/Adapter에서 제공한다.
+- PROCESS/DESIGN/PROGRAM에서는 `business-scenario-sixw-contract.json`의 누가/언제/어디서/무엇을/어떻게/왜를 업무 기준으로 유지한다. 누락은 OPEN으로 두고 발명하지 않는다.
+- DESIGN/PROGRAM에서는 `developer-spec-contract.json`에 따라 화면/필드/CRUD/핵심 로직/Query·Data/Common Code/Integration/권한/예외를 `RESOLVED / OPEN / N/A(사유)`로 관리한다.
+- SOP/업무규정/운영매뉴얼/PPTX/XLSX 등 고객 문서가 있으면 포맷 Adapter의 구조 보존 Evidence Chunk를 우선 만들고 `.cursor/skills/sop-extract/SKILL.md`를 사용해 SCN/PROC/BR/FR/Data/Screen/Integration Candidate를 추출한 뒤 PROCESS/DESIGN 입력으로 사용한다.
+- 프로젝트 고유 탐색/Framework 해석과 포맷별 Parser 구현은 Core Reference에 발명하지 않고 Project Profile/Adapter에서 제공한다.
 
 ## References
 - `references/requirement.md`
