@@ -1,4 +1,4 @@
-version: 1.2
+version: 1.3
 stage_input_pack:
   metadata:
     pack_id: FILL_ME
@@ -50,6 +50,7 @@ stage_input_pack:
 
   execution:
     requested_actions: []
+    requested_outputs: []
     capability_inputs: {}
     write_proofs: {}
     human_actions: []
@@ -66,3 +67,4 @@ stage_input_pack:
     boundary_guard_check: PENDING
     granularity_check: PENDING
     execution_scope_check: PENDING
+    artifact_profile_check: PENDING
