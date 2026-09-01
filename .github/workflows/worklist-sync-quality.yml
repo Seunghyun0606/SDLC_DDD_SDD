@@ -5,6 +5,7 @@ on:
     branches:
       - feature/phase-0.5-worklist-sync
       - 'validation/**'
+      - 'SDLC_DESIGN_SESSION_FIRST/**'
   pull_request:
 
 permissions:
