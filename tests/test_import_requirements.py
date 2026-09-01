@@ -111,6 +111,27 @@ class RequirementImportTest(unittest.TestCase):
         self.assertIn('A["Source 0 rows"]', report)
         self.assertNotIn("A[/", report)
 
+    def test_stable_group_key_does_not_change_when_record_order_changes(self):
+        a = {"source_record_id":"S1","level1":"A","level2":"B","external_requirement_id":"R1","source_requirement_name":"N","source_requirement_text":"T1"}
+        b = {"source_record_id":"S2","level1":"A","level2":"B","external_requirement_id":"R2","source_requirement_name":"N","source_requirement_text":"T2"}
+        key1 = ir.transform([a, b], [])["rq_candidates"][0]["stable_key"]
+        key2 = ir.transform([b, a], [])["rq_candidates"][0]["stable_key"]
+        self.assertEqual(key1, key2)
+        self.assertTrue(key1.startswith("rqgrp:sha256:"))
+
+    def test_group_header_provenance_is_preserved_when_enabled(self):
+        with tempfile.TemporaryDirectory() as td:
+            x = Path(td) / "req.xlsx"
+            out = Path(td) / "out.json"
+            report = Path(td) / "report.md"
+            profile = Path(td) / "profile.yaml"
+            profile.write_text("header:\n  effective_row: 2\n  preserve_group_header_row: true\n", encoding="utf-8")
+            make_xlsx(x, [HEADERS1, HEADERS2, [1,"A","B","R1","N","T","","",""]])
+            data = ir.run_import(x, profile, out, report)
+            self.assertEqual(data["source_metadata"]["group_header_rows"][0]["source_row"], 1)
+            self.assertEqual(data["source_metadata"]["group_header_rows"][0]["values"][1], "업무구분")
+            self.assertEqual(data["source_metadata"]["effective_headers"][3], "요구사항 ID")
+
 
 if __name__ == "__main__":
     unittest.main()
