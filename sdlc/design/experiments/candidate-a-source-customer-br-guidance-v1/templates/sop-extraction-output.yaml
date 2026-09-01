@@ -1,0 +1,75 @@
+extraction_package:
+  source:
+    source_id: ""
+    file_name: ""
+    file_type: XLSX|PPTX|DOCX|PDF
+    source_type: POLICY|REQUIREMENT|PROCESS|MANUAL|LEGACY_DESIGN|MEETING_NOTE|SCREEN_SPEC|REFERENCE
+    authority: A1_OFFICIAL|A2_OWNER_CONFIRMED|A3_PROJECT_AGREED|A4_LEGACY|A5_INFORMAL
+    owner_role: ""
+    effective_from: null
+    effective_to: null
+    scope: {}
+
+  document_structure:
+    sections_or_sheets: []
+    revision_info: []
+    approval_info: []
+
+  items:
+    - item_id: SOPI-001
+      provenance:
+        locator: ""
+        raw_text: ""
+        visual_reference: null
+      six_w:
+        who:
+          actor_role: null
+          auth_profile: null
+          truth: OPEN
+        when:
+          trigger: null
+          frequency_or_window: null
+          precondition_state: null
+          truth: OPEN
+        where:
+          channel: null
+          system: null
+          menu_or_screen: null
+          batch_or_api: null
+          truth: OPEN
+        what:
+          business_object: null
+          fields: []
+          input: []
+          output: []
+          truth: OPEN
+        how:
+          action: null
+          crud: []
+          sequence: []
+          validation: []
+          state_transition: []
+          exception: []
+          truth: OPEN
+        why:
+          business_goal: null
+          policy_reason: null
+          truth: OPEN
+      candidates:
+        rq: []
+        fr: []
+        br: []
+        ui: []
+        data: []
+        query: []
+        integration: []
+        common_code: []
+      questions: []
+
+  conflicts: []
+  unresolved_scope: []
+  output_candidates:
+    business_definition_6w: []
+    rq: []
+    fr: []
+    br: []
