@@ -1,0 +1,100 @@
+conformance_suite:
+  suite_id: P07-LOCAL-FILESYSTEM-SOURCE
+  adapter:
+    module: sdlc.adapters.reference.local_filesystem_source
+    config:
+      root: ${SUITE_DIR}/fixtures/source-before
+      max_files: 100
+      max_bytes: 1000000
+      max_output_chars: 10000
+  cases:
+    - case_id: SOURCE-SNAPSHOT-OK
+      request:
+        provider_request:
+          request_id: P07-SRC-001
+          provider_type: SOURCE
+          operation: source.snapshot.read
+          project_context: {project_id: GENERIC-SOURCE, mode: BROWNFIELD, stage: DISCOVERY}
+          target: {target_type: WORK_UNIT, target_id: GENERIC-WORK-1}
+          write_intent: false
+          extensions: {}
+      expected:
+        equals:
+          provider_response.status: OK
+          provider_response.evidence.0.truth: OBSERVED
+        min_length:
+          provider_response.outputs.0.files: 1
+    - case_id: SOURCE-OBJECT-OK
+      request:
+        provider_request:
+          request_id: P07-SRC-002
+          provider_type: SOURCE
+          operation: source.object.read
+          project_context: {project_id: GENERIC-SOURCE, mode: BROWNFIELD, stage: DISCOVERY}
+          target: {target_type: WORK_UNIT, target_id: GENERIC-WORK-1}
+          write_intent: false
+          extensions: {path: app.py}
+      expected:
+        equals:
+          provider_response.status: OK
+          provider_response.outputs.0.path: app.py
+    - case_id: SOURCE-SEARCH-OK
+      request:
+        provider_request:
+          request_id: P07-SRC-003
+          provider_type: SOURCE
+          operation: source.search
+          project_context: {project_id: GENERIC-SOURCE, mode: BROWNFIELD, stage: DISCOVERY}
+          target: {target_type: WORK_UNIT, target_id: GENERIC-WORK-1}
+          write_intent: false
+          extensions: {query: calculate_total}
+      expected:
+        equals:
+          provider_response.status: OK
+        min_length:
+          provider_response.outputs.0.matches: 1
+    - case_id: SOURCE-DIFF-OK
+      request:
+        provider_request:
+          request_id: P07-SRC-004
+          provider_type: SOURCE
+          operation: source.diff
+          project_context: {project_id: GENERIC-SOURCE, mode: BROWNFIELD, stage: IMPACT}
+          target: {target_type: WORK_UNIT, target_id: GENERIC-WORK-1}
+          write_intent: false
+          extensions:
+            before_root: ${SUITE_DIR}/fixtures/source-before
+            after_root: ${SUITE_DIR}/fixtures/source-after
+      expected:
+        equals:
+          provider_response.status: OK
+        contains:
+          provider_response.outputs.0.changed_paths: app.py
+    - case_id: SOURCE-PATH-TRAVERSAL-BLOCKED
+      request:
+        provider_request:
+          request_id: P07-SRC-005
+          provider_type: SOURCE
+          operation: source.object.read
+          project_context: {project_id: GENERIC-SOURCE, mode: BROWNFIELD, stage: DISCOVERY}
+          target: {target_type: WORK_UNIT, target_id: GENERIC-WORK-1}
+          write_intent: false
+          extensions: {path: ../outside.txt}
+      expected:
+        equals:
+          provider_response.status: BLOCKED
+          provider_response.open_items.0.code: SOURCE_SCOPE_VIOLATION
+    - case_id: SOURCE-UNSUPPORTED-BLOCKED
+      request:
+        provider_request:
+          request_id: P07-SRC-006
+          provider_type: SOURCE
+          operation: source.symbol.graph
+          project_context: {project_id: GENERIC-SOURCE, mode: BROWNFIELD, stage: DISCOVERY}
+          target: {target_type: WORK_UNIT, target_id: GENERIC-WORK-1}
+          write_intent: false
+          extensions: {}
+      expected:
+        equals:
+          provider_response.status: BLOCKED
+          provider_response.open_items.0.code: UNSUPPORTED_OPERATION
