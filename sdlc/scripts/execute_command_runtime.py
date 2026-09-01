@@ -14,8 +14,10 @@ def execute(registry:dict[str,Any], context:dict[str,Any]):
     plan, errors=build_plan(registry,context)
     if errors:
         return {"command_runtime_result":{"command_id":context.get("command_id"),"state":"INVALID","plan":plan,"errors":errors,"invocations":[],"open_items":[]}}
+
     runtime=plan.get("runtime_plan") or {}
     open_items=list(runtime.get("open_items") or [])
+    blocking_open=[x for x in open_items if x.get("blocks_action") is True]
     human_actions=list(context.get("human_actions") or [])
     blocking_human=[x for x in human_actions if x.get("blocks_action",True)]
     resolved=list(runtime.get("resolved_providers") or [])
@@ -24,10 +26,14 @@ def execute(registry:dict[str,Any], context:dict[str,Any]):
     write_caps=set(context.get("write_capabilities") or [])
     proofs=context.get("write_proofs") or {}
     adapter_configs=context.get("adapter_configs") or {}
-    if open_items:
-        return {"command_runtime_result":{"command_id":context.get("command_id"),"state":"ACTION_REQUIRED","plan":plan,"errors":[],"invocations":[],"open_items":open_items,"human_actions":human_actions}}
-    if blocking_human:
-        return {"command_runtime_result":{"command_id":context.get("command_id"),"state":"ACTION_REQUIRED","plan":plan,"errors":[],"invocations":[],"open_items":[],"human_actions":human_actions}}
+
+    if blocking_open or blocking_human:
+        return {"command_runtime_result":{
+            "command_id":context.get("command_id"),"command":context.get("command"),"state":"ACTION_REQUIRED",
+            "plan":plan,"errors":[],"invocations":[],"open_items":open_items,"human_actions":human_actions,
+            "blocked_action_open_ids":[x.get("open_id") for x in blocking_open if x.get("open_id")],
+        }}
+
     external=[x for x in resolved if x.get("provider_type")!="COMMAND_ROUTER"]
     for idx,item in enumerate(external,1):
         cap=item.get("capability"); write=cap in write_caps; proof=proofs.get(cap) or {}
@@ -38,12 +44,22 @@ def execute(registry:dict[str,Any], context:dict[str,Any]):
             "constraints":{"do_not_invent_missing_result":True},"extensions":capability_inputs.get(cap) or {}}}
         journal,response=invoke_request(registry,req,adapter_configs)
         invocations.append({"capability":cap,"request":req,"journal":journal,"response":response})
+
     states=[x["journal"]["invocation_journal"]["state"] for x in invocations]
-    if "UNKNOWN_AFTER_WRITE" in states: state="RECOVERY_REQUIRED"
-    elif any(s in {"BLOCKED","FAILED"} for s in states): state="ACTION_REQUIRED"
-    elif "PARTIAL" in states: state="PARTIAL"
-    else: state="COMPLETE"
-    return {"command_runtime_result":{"command_id":context.get("command_id"),"command":context.get("command"),"state":state,"plan":plan,"errors":[],"invocations":invocations,"open_items":[],"human_actions":human_actions}}
+    if "UNKNOWN_AFTER_WRITE" in states:
+        state="RECOVERY_REQUIRED"
+    elif any(s in {"BLOCKED","FAILED"} for s in states):
+        state="ACTION_REQUIRED"
+    elif "PARTIAL" in states or open_items or human_actions:
+        state="PARTIAL"
+    else:
+        state="COMPLETE"
+
+    return {"command_runtime_result":{
+        "command_id":context.get("command_id"),"command":context.get("command"),"state":state,
+        "plan":plan,"errors":[],"invocations":invocations,"open_items":open_items,"human_actions":human_actions,
+        "blocked_action_open_ids":[],
+    }}
 
 def main():
     p=argparse.ArgumentParser(); p.add_argument("registry",type=Path); p.add_argument("context",type=Path); p.add_argument("-o","--output",type=Path); a=p.parse_args()
