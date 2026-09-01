@@ -20,9 +20,18 @@ STAGE_ORDER={name:i for i,name in enumerate([
 ])}
 INTERNAL_ID_RE=re.compile(r'\b(?:RQ|FR|BR|PGM|TASK|AC|TC|SCN|PROC|ART|DATA|CODE|REQ)[:-]?[A-Z0-9_.-]+\b|\bREQ_[A-Z0-9_]+\b')
 STATUS_TRANSLATIONS={
-    'CONFIRMED_BUSINESS':'확정', 'ACCEPTED_DESIGN':'확정', 'PROPOSED':'제안',
-    'CANDIDATE':'제안', 'ANALYZING':'확인중', 'DEFERRED':'보류',
-    'OBSERVED_AS_IS':'현행 확인', 'N_A':'비적용'
+    'OPEN_REAL_SOURCE':'실제 소스 확인 필요',
+    'EXECUTION_GUARDED':'실행 전 확인 필요',
+    'CONFIRMED_BUSINESS':'확정',
+    'ACCEPTED_DESIGN':'확정',
+    'OBSERVED_AS_IS':'현행 확인',
+    'PROPOSED':'제안',
+    'CANDIDATE':'제안',
+    'ANALYZING':'확인중',
+    'DEFERRED':'보류',
+    'PARTIAL':'부분 확인',
+    'N_A':'비적용',
+    'OPEN':'미확정'
 }
 
 
@@ -55,13 +64,14 @@ def _document_override(requested_type: str, resolved_type: str, profile: dict) -
 def enabled_optional(document_type: str, contract: dict, profile: dict) -> list[str]:
     resolved=resolve_document_type(document_type,contract)
     spec=contract['document_types'][resolved]
+    allowed=set(spec.get('optional',[]))
     enabled=[]
     for name in profile.get('default_optional_sections',[]):
-        if name in contract['optional_section_catalog'] and name not in enabled:
+        if name in allowed and name not in enabled:
             enabled.append(name)
     override=_document_override(document_type,resolved,profile)
     for name in override.get('enable_optional',[]):
-        if name in contract['optional_section_catalog'] and name not in enabled:
+        if name in allowed and name not in enabled:
             enabled.append(name)
     disabled=set(override.get('disable_optional',[]))
     required_add=set(spec.get('required_add',[]))
@@ -260,7 +270,7 @@ def project(document_type: str, contract: dict, profile: dict, artifacts: list[d
             if artifact.get('title'):
                 derived_name=artifact['title']
                 break
-    projection['_short_name']=derived_name or '프로젝트 변경'
+    projection['_short_name']=sanitize_customer_text(derived_name or '프로젝트 변경',contract,profile) or '프로젝트 변경'
     projection['_resolved_document_type']=resolved
     projection['_source_count']=len(eligible)
     return projection
