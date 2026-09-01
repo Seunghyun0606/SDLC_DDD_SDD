@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate P0 redesigned stage routing and typed Stage Input Pack contracts."""
+"""Validate P0 redesigned stage routing, procedure profiles, and typed Stage Input Pack contracts."""
 from __future__ import annotations
 import argparse
 import sys
@@ -10,6 +10,10 @@ STAGES = [
     "INTAKE", "DECOMPOSE", "CLARIFY", "PROCESS", "DISCOVERY", "IMPACT",
     "DESIGN", "PROGRAM", "DEVELOPMENT", "TEST", "VERIFY", "KNOWLEDGE",
 ]
+PROCEDURE_PROFILES = {
+    "DECOMPOSE", "CLARIFY", "PROCESS", "IMPACT", "DESIGN", "PROGRAM", "KNOWLEDGE",
+    "CHANGE_CONTROL", "STATUS_READ_MODEL", "PROJECT_SETUP",
+}
 RELATED_KEYS = {
     "rq", "fr", "br", "proc", "ftr", "pgm", "art", "symbol", "data", "int",
     "ac", "tc", "task", "cr", "knowledge", "source",
@@ -52,6 +56,10 @@ def validate_stage_routing(doc):
         add(errors, "PRC-004", "config_driven_stage_selection must be true")
     if principles.get("missing_read_capability_preserves_open") is not True:
         add(errors, "PRC-005", "missing read capability must preserve OPEN")
+    if principles.get("repeated_document_stages_use_shared_skill") is not True:
+        add(errors, "PRC-006", "repeated document stages must use the shared procedure skill")
+    if not nonempty(doc.get("procedure_config")):
+        add(errors, "PRC-007", "procedure_config is required")
 
     for index, stage in enumerate(STAGES):
         rule = stages.get(stage) or {}
@@ -63,17 +71,58 @@ def validate_stage_routing(doc):
         expected_next = STAGES[index + 1] if index + 1 < len(STAGES) else None
         if rule.get("next_stage") != expected_next:
             add(errors, "PRC-012", f"stages.{stage}.next_stage must be {expected_next}")
+        if rule.get("skill") == "stage-procedure" and not nonempty(rule.get("procedure_profile")):
+            add(errors, "PRC-015", f"stages.{stage}.procedure_profile is required for stage-procedure")
         for candidate in rule.get("capability_candidates") or []:
             if not nonempty(candidate.get("capability")):
                 add(errors, "PRC-013", f"stages.{stage} has capability candidate without capability")
             if candidate.get("missing_behavior") not in {"OPEN", "BLOCKED"}:
                 add(errors, "PRC-014", f"stages.{stage} capability missing_behavior must be OPEN or BLOCKED")
 
+    for command in ("/change", "/check", "/setup"):
+        rule = commands.get(command) or {}
+        if rule.get("skill") == "stage-procedure" and not nonempty(rule.get("procedure_profile")):
+            add(errors, "PRC-016", f"commands.{command}.procedure_profile is required")
+        if rule.get("agent_level") not in AGENT_LEVELS:
+            add(errors, "PRC-017", f"commands.{command}.agent_level is invalid")
+
     boundary = doc.get("analyzer_boundary") or {}
     if boundary.get("core_must_not_parse_stack_specific_syntax") is not True:
         add(errors, "PRC-020", "Core must not parse stack-specific syntax")
     if not nonempty(boundary.get("stack_specific_analysis_location")):
         add(errors, "PRC-021", "stack_specific_analysis_location is required")
+    return errors
+
+
+def validate_stage_procedures(doc):
+    errors = []
+    profiles = doc.get("profiles") or {}
+    if set(profiles) != PROCEDURE_PROFILES:
+        missing = sorted(PROCEDURE_PROFILES - set(profiles))
+        extra = sorted(set(profiles) - PROCEDURE_PROFILES)
+        add(errors, "PROC-001", f"procedure profiles mismatch; missing={missing}, extra={extra}")
+    for name, profile in profiles.items():
+        profile = profile or {}
+        for key in ("purpose_ko", "atomic_steps", "decision_rules", "quality_checks", "alerts", "stop_conditions", "escalation", "do_not"):
+            if key not in profile:
+                add(errors, "PROC-002", f"profiles.{name}.{key} is required")
+        for key in ("purpose_ko", "atomic_steps", "decision_rules", "quality_checks", "stop_conditions", "do_not"):
+            if not nonempty(profile.get(key)):
+                add(errors, "PROC-003", f"profiles.{name}.{key} must not be empty")
+    return errors
+
+
+def validate_routing_procedure_refs(routing, procedures):
+    errors = []
+    profile_names = set((procedures.get("profiles") or {}).keys())
+    for stage, rule in (routing.get("stages") or {}).items():
+        if rule.get("skill") == "stage-procedure" and rule.get("procedure_profile") not in profile_names:
+            add(errors, "BUNDLE-001", f"stage {stage} references missing procedure profile {rule.get('procedure_profile')}")
+    for command, rule in (routing.get("commands") or {}).items():
+        if command == "/work":
+            continue
+        if rule.get("skill") == "stage-procedure" and rule.get("procedure_profile") not in profile_names:
+            add(errors, "BUNDLE-002", f"command {command} references missing procedure profile {rule.get('procedure_profile')}")
     return errors
 
 
@@ -158,11 +207,25 @@ def validate_stage_pack(doc):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("kind", choices=["routing", "stage-pack"])
+    parser.add_argument("kind", choices=["routing", "procedures", "stage-pack", "bundle"])
     parser.add_argument("path", type=Path)
+    parser.add_argument("--procedures", type=Path)
     args = parser.parse_args()
+
     doc = load(args.path)
-    errors = validate_stage_routing(doc) if args.kind == "routing" else validate_stage_pack(doc)
+    if args.kind == "routing":
+        errors = validate_stage_routing(doc)
+    elif args.kind == "procedures":
+        errors = validate_stage_procedures(doc)
+    elif args.kind == "stage-pack":
+        errors = validate_stage_pack(doc)
+    else:
+        if not args.procedures:
+            print("BUNDLE-000: --procedures is required for bundle validation")
+            return 1
+        procedures = load(args.procedures)
+        errors = validate_stage_routing(doc) + validate_stage_procedures(procedures) + validate_routing_procedure_refs(doc, procedures)
+
     if errors:
         print("\n".join(errors))
         return 1
