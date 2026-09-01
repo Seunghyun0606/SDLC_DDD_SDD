@@ -1,0 +1,47 @@
+import json
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+CONTRACT = json.loads((ROOT / "sdlc/design/contracts/starter-kit-contract.json").read_text(encoding="utf-8"))
+
+
+class StarterKitContractTest(unittest.TestCase):
+    def test_greenfield_and_brownfield_are_separate_modes(self):
+        self.assertEqual({"GREENFIELD", "BROWNFIELD"}, set(CONTRACT["modes"]))
+
+    def test_greenfield_can_start_without_source(self):
+        green = CONTRACT["modes"]["GREENFIELD"]
+        self.assertFalse(green["source_required_to_start"])
+        self.assertIn("requirement_sources", green["startable_minimum"])
+
+    def test_brownfield_requires_repository_to_confirm_source_analysis(self):
+        brown = CONTRACT["modes"]["BROWNFIELD"]
+        self.assertTrue(brown["source_required_to_confirm_source_analysis"])
+        self.assertIn("repository.reference", brown["startable_minimum"])
+        self.assertIn("analysis_seed.text", brown["startable_minimum"])
+
+    def test_brownfield_impact_contract_is_not_file_only(self):
+        relations = set(CONTRACT["modes"]["BROWNFIELD"]["impact_required_relation_types"])
+        for marker in {"CALLER", "CALLEE", "DATA_READ_WRITE", "EXTERNAL_INTERFACE", "CONFIG_FEATURE_FLAG", "TEST"}:
+            self.assertIn(marker, relations)
+        self.assertTrue(CONTRACT["modes"]["BROWNFIELD"]["coverage_gaps_must_be_reported"])
+
+    def test_missing_recommended_input_remains_non_blocking(self):
+        self.assertTrue(CONTRACT["shared_invariants"]["missing_recommended_input_is_non_blocking"])
+
+    def test_source_does_not_auto_promote_business_truth(self):
+        self.assertTrue(CONTRACT["shared_invariants"]["business_truth_is_not_inferred_from_source_automatically"])
+        self.assertFalse(CONTRACT["reverse_engineering"]["automatic_business_truth_promotion"])
+
+    def test_reverse_engineering_is_not_falsely_claimed_as_core_enabled(self):
+        self.assertEqual("DESIGN_REVIEW_ONLY_NOT_CORE_ENABLED", CONTRACT["reverse_engineering"]["status"])
+
+    def test_starter_documents_exist(self):
+        for mode in ("greenfield", "brownfield"):
+            self.assertTrue((ROOT / f"sdlc/starter-kits/{mode}/README.md").is_file())
+            self.assertTrue((ROOT / f"sdlc/starter-kits/{mode}/starter-manifest.example.yaml").is_file())
+
+
+if __name__ == "__main__":
+    unittest.main()
