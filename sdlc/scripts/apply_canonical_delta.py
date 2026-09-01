@@ -4,11 +4,12 @@
 The runtime intentionally stays small:
 - JSON file store, no graph/vector database dependency
 - optimistic store revision
-- idempotent delta_id
+- semantic idempotency for delta_id (same id + same payload only)
 - all-or-nothing apply
 - entity/relation/provenance operations only
+- explicit no-canonical-change delta for artifact-only stage work
 - no destructive delete operation in v1
-- source-derived evidence cannot overwrite or downgrade CONFIRMED_BUSINESS truth
+- non-confirmed evidence cannot overwrite or downgrade CONFIRMED_BUSINESS truth
 
 This is an execution runtime, not a new business taxonomy contract.
 """
@@ -16,12 +17,13 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
 
 EVIDENCE_CLASSES = {"GIVEN", "OBSERVED", "INFERRED", "ASSUMED", "CONFIRMED"}
-SOURCE_DERIVED = {"OBSERVED", "INFERRED", "ASSUMED"}
+NON_CONFIRMED_EVIDENCE = EVIDENCE_CLASSES - {"CONFIRMED"}
 ALLOWED_OPS = {"UPSERT_ENTITY", "UPSERT_RELATION", "ADD_PROVENANCE"}
 
 
@@ -77,6 +79,30 @@ def _error(code: str, message: str, **extra) -> dict:
     return {"code": code, "message": message, **extra}
 
 
+def _semantic_delta_payload(delta: dict) -> dict:
+    """Payload used to prove that a reused delta_id means the same change.
+
+    base_revision is intentionally excluded: retrying an already-applied semantic change
+    after the store revision advanced is still idempotent. Volatile timestamps are also
+    ignored when present in optional metadata.
+    """
+    volatile = {"generated_at", "updated_at", "created_at", "checked_at", "observed_at"}
+
+    def clean(value):
+        if isinstance(value, dict):
+            return {k: clean(v) for k, v in sorted(value.items()) if k not in volatile and k != "base_revision"}
+        if isinstance(value, list):
+            return [clean(v) for v in value]
+        return value
+
+    return clean(delta)
+
+
+def delta_payload_hash(delta: dict) -> str:
+    raw = json.dumps(_semantic_delta_payload(delta), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return "sha256:" + hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
 def validate_delta(delta: dict) -> list[dict]:
     errors = []
     if delta.get("schema_version") != 1:
@@ -91,8 +117,15 @@ def validate_delta(delta: dict) -> list[dict]:
         errors.append(_error("MISSING_SOURCE_ARTIFACT", "source_artifact is required"))
 
     operations = delta.get("operations")
-    if not isinstance(operations, list) or not operations:
-        errors.append(_error("MISSING_OPERATIONS", "operations must be a non-empty array"))
+    if not isinstance(operations, list):
+        errors.append(_error("INVALID_OPERATIONS", "operations must be an array"))
+        return errors
+    if not operations:
+        if not str(delta.get("no_change_reason") or "").strip():
+            errors.append(_error(
+                "EMPTY_OPERATIONS_REQUIRE_REASON",
+                "empty operations are allowed only with no_change_reason for an explicit artifact-only/no-canonical-change result",
+            ))
         return errors
 
     for index, op in enumerate(operations):
@@ -173,6 +206,10 @@ def _changed_fields(existing: dict, incoming: dict) -> list[str]:
     return sorted(key for key, value in incoming.items() if current.get(key) != value)
 
 
+def _existing_delta(store: dict, delta_id: str) -> dict | None:
+    return next((row for row in store.get("applied_deltas", []) if row.get("delta_id") == delta_id), None)
+
+
 def apply_delta(store: dict, delta: dict) -> tuple[dict, dict]:
     """Return (result, resulting_store). Conflict/invalid deltas never mutate the store."""
     validate_store(store)
@@ -187,12 +224,38 @@ def apply_delta(store: dict, delta: dict) -> tuple[dict, dict]:
         }, original)
 
     delta_id = delta["delta_id"]
-    if any(row.get("delta_id") == delta_id for row in store.get("applied_deltas", [])):
+    payload_hash = delta_payload_hash(delta)
+    existing_delta = _existing_delta(store, delta_id)
+    if existing_delta is not None:
+        existing_hash = existing_delta.get("payload_hash")
+        if not existing_hash:
+            return ({
+                "status": "CONFLICT",
+                "delta_id": delta_id,
+                "store_revision": store["revision"],
+                "conflicts": [_error(
+                    "DELTA_ID_LEGACY_HASH_MISSING",
+                    "delta_id was applied by a legacy runtime without payload_hash; reuse is blocked because semantic identity cannot be proven",
+                )],
+            }, original)
+        if existing_hash != payload_hash:
+            return ({
+                "status": "CONFLICT",
+                "delta_id": delta_id,
+                "store_revision": store["revision"],
+                "conflicts": [_error(
+                    "DELTA_ID_CONTENT_CONFLICT",
+                    "delta_id was already applied with different semantic content",
+                    existing_payload_hash=existing_hash,
+                    incoming_payload_hash=payload_hash,
+                )],
+            }, original)
         return ({
             "status": "IDEMPOTENT",
             "delta_id": delta_id,
             "store_revision": store["revision"],
-            "message": "delta_id already applied; no mutation performed",
+            "payload_hash": payload_hash,
+            "message": "same delta_id and semantic payload already applied; no mutation performed",
         }, original)
 
     if delta["base_revision"] != store["revision"]:
@@ -208,12 +271,21 @@ def apply_delta(store: dict, delta: dict) -> tuple[dict, dict]:
             )],
         }, original)
 
+    if not delta["operations"]:
+        return ({
+            "status": "NO_CHANGE",
+            "delta_id": delta_id,
+            "store_revision": store["revision"],
+            "payload_hash": payload_hash,
+            "no_change_reason": delta["no_change_reason"],
+            "message": "stage artifact may be updated, but no canonical mutation was requested",
+        }, original)
+
     working = copy.deepcopy(store)
     entity_ops = [(i, op) for i, op in enumerate(delta["operations"]) if op["op"] == "UPSERT_ENTITY"]
     provenance_ops = [(i, op) for i, op in enumerate(delta["operations"]) if op["op"] == "ADD_PROVENANCE"]
     relation_ops = [(i, op) for i, op in enumerate(delta["operations"]) if op["op"] == "UPSERT_RELATION"]
 
-    # Phase 1: entities. Operation ordering does not control relation validity.
     for index, op in entity_ops:
         entity_id = op["id"]
         existing = working["entities"].get(entity_id)
@@ -245,7 +317,7 @@ def apply_delta(store: dict, delta: dict) -> tuple[dict, dict]:
 
         changed = _changed_fields(existing, op.get("fields", {}))
         incoming_truth = op.get("truth_status")
-        if existing.get("truth_status") == "CONFIRMED_BUSINESS" and op["evidence_class"] in SOURCE_DERIVED:
+        if existing.get("truth_status") == "CONFIRMED_BUSINESS" and op["evidence_class"] in NON_CONFIRMED_EVIDENCE:
             if changed:
                 return ({
                     "status": "CONFLICT",
@@ -253,7 +325,7 @@ def apply_delta(store: dict, delta: dict) -> tuple[dict, dict]:
                     "store_revision": store["revision"],
                     "conflicts": [_error(
                         "BUSINESS_TRUTH_OVERWRITE_BLOCKED",
-                        "source-derived evidence cannot overwrite CONFIRMED_BUSINESS fields",
+                        "non-confirmed evidence cannot overwrite CONFIRMED_BUSINESS fields",
                         entity_id=entity_id,
                         changed_fields=changed,
                         evidence_class=op["evidence_class"],
@@ -266,7 +338,7 @@ def apply_delta(store: dict, delta: dict) -> tuple[dict, dict]:
                     "store_revision": store["revision"],
                     "conflicts": [_error(
                         "BUSINESS_TRUTH_STATUS_DOWNGRADE_BLOCKED",
-                        "source-derived evidence cannot downgrade CONFIRMED_BUSINESS truth_status",
+                        "non-confirmed evidence cannot downgrade CONFIRMED_BUSINESS truth_status",
                         entity_id=entity_id,
                         existing_truth_status="CONFIRMED_BUSINESS",
                         incoming_truth_status=incoming_truth,
@@ -279,7 +351,6 @@ def apply_delta(store: dict, delta: dict) -> tuple[dict, dict]:
             existing["truth_status"] = incoming_truth
         _append_provenance(existing, _provenance(delta, op, index))
 
-    # Phase 2: provenance-only evidence. Observation may attach to confirmed truth without changing it.
     for index, op in provenance_ops:
         entity = working["entities"].get(op["id"])
         if entity is None:
@@ -295,7 +366,6 @@ def apply_delta(store: dict, delta: dict) -> tuple[dict, dict]:
             }, original)
         _append_provenance(entity, _provenance(delta, op, index))
 
-    # Phase 3: relations. Endpoints may have been created anywhere in this delta.
     existing_relations = {_relation_key(row): row for row in working["relations"]}
     for index, op in relation_ops:
         missing = [entity_id for entity_id in [op["from"], op["to"]] if entity_id not in working["entities"]]
@@ -334,6 +404,7 @@ def apply_delta(store: dict, delta: dict) -> tuple[dict, dict]:
     working["updated_at"] = applied_at
     working["applied_deltas"].append({
         "delta_id": delta_id,
+        "payload_hash": payload_hash,
         "revision": working["revision"],
         "stage": delta["stage"],
         "source_artifact": delta["source_artifact"],
@@ -343,6 +414,7 @@ def apply_delta(store: dict, delta: dict) -> tuple[dict, dict]:
     return ({
         "status": "APPLIED",
         "delta_id": delta_id,
+        "payload_hash": payload_hash,
         "previous_revision": store["revision"],
         "store_revision": working["revision"],
         "operation_count": len(delta["operations"]),
@@ -381,7 +453,7 @@ def main(argv: list[str] | None = None) -> int:
         result_path.write_text(text, encoding="utf-8")
     print(text, end="")
 
-    if result["status"] in {"APPLIED", "IDEMPOTENT"}:
+    if result["status"] in {"APPLIED", "IDEMPOTENT", "NO_CHANGE"}:
         return 0
     if result["status"] == "CONFLICT":
         return 2
