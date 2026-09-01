@@ -10,7 +10,7 @@ parent_commit: 2e9eeeb36819d16c19c982c4d08128a19ae11472
 main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
 candidate_design_version: v1.5.4-rc.1
-status: FULL_PILOT_LOCAL_VALIDATED_CI_PENDING
+status: FULL_PILOT_VALIDATED
 merge_to_main: false
 purpose: 전체 142 Requirement에 대해 Java Reference Project와 상세 Program DoR를 적용해 실제 개발 명세 깊이와 Workflow 산출물 전수 Coverage를 검증
 pilot:
@@ -32,10 +32,16 @@ validation:
   java_compile: PASS
   java_symbol_coverage: 142/142
   program_readiness_tests_added: 6
-  program_readiness_tests_result: PASS_LOCAL
+  program_readiness_tests_result: PASS
   inherited_combined_unittest_count: 35
-  expected_combined_unittest_count: 41
-  mermaid_docs_quality: CI_PENDING
+  combined_unittest_count: 41
+  mermaid_markdown_files_checked: 72
+  mermaid_docs_quality: PASS
+  github_actions:
+    worklist_sync_quality_run: 54
+    worklist_sync_quality_result: SUCCESS
+    docs_quality_run: 29
+    docs_quality_result: SUCCESS
 stage_validation:
   intake: PASS_REAL_XLSX_142
   decompose: PASS_ALL_RQ
@@ -52,7 +58,7 @@ stage_validation:
 new_design_gaps:
   - id: GAP-PS-001
     type: Contract Gap + Implementation Gap
-    status: IMPLEMENTED_LOCAL_VALIDATED
+    status: IMPLEMENTED_VALIDATED
     title: Program Specification Implementation Readiness Contract
   - id: GAP-PS-002
     type: Traceability Gap
@@ -60,7 +66,7 @@ new_design_gaps:
     title: Full Requirement to Source Symbol Coverage Contract
   - id: GAP-PS-003
     type: Evidence Integrity Gap
-    status: IMPLEMENTED_LOCAL_VALIDATED
+    status: IMPLEMENTED_VALIDATED
     title: Candidate Architecture must not satisfy Real Source Evidence
 next_step: review full pilot outputs, then connect actual Brownfield Source and replace OPEN_REAL_SOURCE without changing the Program DoR structure
-updated_at: 2026-09-01T19:55:00+09:00
+updated_at: 2026-09-01T19:50:00+09:00
