@@ -1,0 +1,85 @@
+development_evidence_pack:
+  metadata:
+    pack_id: DEP-TASK-P017-DEV-01-R2
+    project_id: PILOT-MYBATIS
+    branch: pilot/rq-p017-close-10min
+  subject:
+    rq_id: RQ-PILOT-017
+    task_id: TASK-P017-DEV-01
+    program_id: PGM-ATT-CLOSE-001
+  evidence_revision:
+    canonical: 12
+    source_commit: fixture-v1
+    source_hashes:
+      AttendanceCloseService.java: FIXTURE_HASH_SERVICE_V1
+      AttendanceCloseMapper.java: FIXTURE_HASH_MAPPER_V1
+      AttendanceCloseMapper.xml: FIXTURE_HASH_XML_V1
+  intent:
+    fr_ids: [FR-P017-01, FR-P017-03, FR-P017-04]
+    br_ids: [BR-P017-01, BR-P017-02, BR-P017-03]
+    ac_ids: [AC-01, AC-03, AC-04, AC-05]
+    change_request_ids: [CR-PILOT-001]
+  target:
+    files:
+      - src/main/java/com/acme/attendance/AttendanceCloseService.java
+      - src/main/java/com/acme/attendance/AttendanceCloseMapper.java
+      - src/main/resources/mapper/AttendanceCloseMapper.xml
+    symbols:
+      - AttendanceCloseService.closeDaily
+      - AttendanceCloseMapper.hasApprovedCorrection
+    mapper_statements:
+      - selectPlannedMinutes
+      - isMonthClosed
+      - hasApprovedCorrection
+      - upsertDailyAttendance
+  source_context:
+    as_is: "30분 단위 절삭, 월마감 수정요청 예외 없음"
+    to_be: "10분 단위, 승인 수정요청 허용, FORCE_CLOSE 제외"
+    calls:
+      - AttendanceCloseMapper.selectPlannedMinutes
+      - AttendanceCloseMapper.isMonthClosed
+      - AttendanceCloseMapper.hasApprovedCorrection
+      - AttendanceCloseMapper.upsertDailyAttendance
+    reads: [TB_WORK_PLAN, TB_ATT_CLOSE, TB_ATT_CORRECTION_REQ]
+    writes: [TB_ATT_DAILY, TB_ATT_CLOSE]
+    transaction_owner: AttendanceCloseService.closeDaily
+  brownfield_convention:
+    profile_revision: 1
+    applicable_standards:
+      - SERVICE_TRANSACTION_BOUNDARY
+      - MYBATIS_INTERFACE_XML_ID_MATCH
+      - NO_UNRELATED_REFACTORING
+    similar_references:
+      - "validation-before-write Service pattern"
+    protected_paths: [generated/**]
+    legacy_deviations:
+      - "Oracle MERGE 유지"
+  blind_spots:
+    - "실제 Oracle index/lock/runtime은 fixture에서 검증하지 않음"
+  assumptions: []
+  target_write_proof:
+    result: PASS_FOR_FIXTURE
+    evidence:
+      - type: CANONICAL_RELATION
+        ref: TASK-P017-DEV-01->PGM-ATT-CLOSE-001
+      - type: CURRENT_SOURCE_SYMBOL
+        ref: AttendanceCloseService.closeDaily
+      - type: MAPPER_RELATION
+        ref: AttendanceCloseMapper#AttendanceCloseMapper.xml
+    invariant_checks:
+      - TASK_PROGRAM_RELATION: PASS
+      - PROGRAM_ARTIFACT_RELATION: PASS
+      - MAPPER_INTERFACE_XML: PASS
+    ambiguity: SAFE_FOR_FIXTURE
+  execution:
+    central_store: AVAILABLE_SIMULATION
+    pgm_lane_required: true
+    pgm_lane: OWNED_BY_WU-P017-001
+    work_unit_required: true
+    work_unit_id: WU-P017-001
+  action_permissions:
+    proposal: ALLOW
+    draft_source_write: ALLOW
+    merge: DENY
+    release: DENY
+    verify_pass: DENY
