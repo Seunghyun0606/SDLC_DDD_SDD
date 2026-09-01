@@ -1,0 +1,17 @@
+schema_version: 1
+package:
+  customer: pilot-customer
+  project: SDLC v1.5.5 BR Intake Pilot
+  received_at: 2026-09-01
+
+documents:
+  - document_id: CUST-DOC-REQ-001
+    path: originals/요구사항목록.xlsx
+    title: 요구사항목록
+    document_type: SPREADSHEET
+    authority: UNKNOWN
+    lifecycle_status: CURRENT
+    scope: 근태관리
+    related_process: 근무계획 수립(탄력근로제)
+    locator_hint: Sheet+Cell/External Requirement ID
+    source_hash: sha256:d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f
