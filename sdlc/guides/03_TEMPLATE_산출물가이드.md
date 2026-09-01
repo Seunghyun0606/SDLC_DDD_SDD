@@ -6,7 +6,7 @@
 
 ```mermaid
 flowchart LR
-    I[입력/Canonical] --> T[Template] --> A[Agent Draft] --> H[Human Review] --> O[Current Artifact]
+    I["입력/Canonical"] --> T["Template"] --> A["Agent Draft"] --> H["Human Review"] --> O["Current Artifact"]
 ```
 
 ## 파일명 규칙
@@ -39,3 +39,14 @@ flowchart LR
 | 구현결과 | 실제 Source 변경 결과 | `RQ-xxxx_업무명_구현결과.md` |
 | 검증결과 | AC/TC/PGM 기준 최종 검증 | `RQ-xxxx_업무명_검증결과.md` |
 | 전체작업목록 | PM/작업자 공통 Work List | `전체작업목록.md/.xlsx` |
+
+## Mermaid Template 규칙
+
+Template에 Mermaid를 포함할 경우 사람이 입력하는 라벨은 기본적으로 quoted label을 사용한다.
+
+```text
+A["일반 노드"]
+Q{"확인이 필요한가?"}
+```
+
+특히 `/work`, `/setup`, `AS-IS/TO-BE`, `AC/TC`처럼 `/`가 포함된 문자열을 따옴표 없는 `[...]`에 직접 넣지 않는다.
