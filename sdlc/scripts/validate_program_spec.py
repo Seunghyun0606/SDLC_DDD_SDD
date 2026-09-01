@@ -16,6 +16,12 @@ def validate_text(text: str, config: dict) -> list[str]:
     zero_open = any(x in text for x in ["미확정 항목 수: 0","미확정 항목 수: `0`","OPEN Count: 0","OPEN Count: `0`"])
     if ready and config["rules"].get("ready_requires_zero_open") and not zero_open:
         errors.append("READY_WITH_NONZERO_OR_UNKNOWN_OPEN")
+
+    dev_section_present = "### 개발 상세 명세 완성도" in text
+    if ready and dev_section_present and config["rules"].get("ready_requires_developer_spec_zero_open_when_section_present"):
+        dev_zero_open = any(x in text for x in ["OPEN 상세 명세 수: 0","OPEN 상세 명세 수: `0`"])
+        if not dev_zero_open:
+            errors.append("READY_WITH_OPEN_OR_UNKNOWN_DEVELOPER_SPEC")
     return errors
 
 def main() -> int:
