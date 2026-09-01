@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate P0 redesigned stage routing, procedure profiles, and typed Stage Input Pack contracts."""
+"""Validate P0 redesigned stage routing, procedures, handoff, and runtime-core exit gate."""
 from __future__ import annotations
 import argparse
 import sys
@@ -91,6 +91,15 @@ def validate_stage_routing(doc):
         add(errors, "PRC-020", "Core must not parse stack-specific syntax")
     if not nonempty(boundary.get("stack_specific_analysis_location")):
         add(errors, "PRC-021", "stack_specific_analysis_location is required")
+
+    policy = doc.get("side_effect_policy") or {}
+    for key in ("require_explicit_requested_action", "require_permission_proof", "require_idempotency_key", "require_expected_revision", "unknown_after_write_requires_recovery"):
+        if policy.get(key) is not True:
+            add(errors, "PRC-030", f"side_effect_policy.{key} must be true")
+    if "source.patch.apply" not in ((stages.get("DEVELOPMENT") or {}).get("side_effect_capabilities") or []):
+        add(errors, "PRC-031", "DEVELOPMENT must allow explicit source.patch.apply as its standardized source-write capability")
+    if "test.execute" not in ((stages.get("TEST") or {}).get("side_effect_capabilities") or []):
+        add(errors, "PRC-032", "TEST must allow explicit test.execute")
     return errors
 
 
@@ -205,11 +214,78 @@ def validate_stage_pack(doc):
     return errors
 
 
+def validate_exit_gate(repo_root: Path, gate):
+    errors = []
+    scope = gate.get("exit_scope") or {}
+    if scope.get("success_state") != "P0_RUNTIME_CORE_READY":
+        add(errors, "P0RX-001", "exit_scope.success_state must be P0_RUNTIME_CORE_READY")
+    if scope.get("production_ready_on_success") is not False:
+        add(errors, "P0RX-002", "P0 runtime-core exit must not imply production readiness")
+    if scope.get("p1_entry_allowed_on_success") is not True:
+        add(errors, "P0RX-003", "successful P0 runtime-core exit must allow P1 entry")
+
+    path_groups = (
+        "required_authorities",
+        "required_runtime",
+        "required_generic_fixtures",
+        "required_test_definitions",
+    )
+    for group in path_groups:
+        for rel in gate.get(group) or []:
+            if not (repo_root / rel).is_file():
+                add(errors, "P0RX-010", f"{group} path missing: {rel}")
+    for skill in gate.get("required_routed_skills") or []:
+        rel = Path("sdlc/starter/onboarding-package-v1/skills") / skill / "SKILL.md"
+        if not (repo_root / rel).is_file():
+            add(errors, "P0RX-011", f"required routed skill missing: {skill}")
+
+    ci = gate.get("required_ci") or {}
+    workflow = ci.get("workflow")
+    if not workflow or not (repo_root / workflow).is_file():
+        add(errors, "P0RX-012", f"CI workflow missing: {workflow}")
+    if ci.get("success_required") is not True:
+        add(errors, "P0RX-013", "CI success must be required")
+
+    anti = gate.get("anti_overfitting") or {}
+    forbidden = anti.get("forbidden_core_tokens") or []
+    for rel in anti.get("core_paths") or []:
+        path = repo_root / rel
+        if not path.is_file():
+            add(errors, "P0RX-014", f"anti-overfit core path missing: {rel}")
+            continue
+        text = path.read_text(encoding="utf-8")
+        for token in forbidden:
+            if token in text:
+                add(errors, "P0RX-015", f"pilot token leaked into active core: {token} in {rel}")
+
+    registry = load(repo_root / "sdlc/config/provider-registry.example.yaml")
+    providers = (registry.get("registry") or {}).get("providers") or []
+    source_writers = [
+        p for p in providers
+        if p.get("provider_type") == "SOURCE" and "source.patch.apply" in (p.get("capabilities") or [])
+    ]
+    if len(source_writers) != 1:
+        add(errors, "P0RX-020", "exactly one reference source.patch.apply provider entry is required")
+    else:
+        writer = source_writers[0]
+        if writer.get("enabled") is not False or writer.get("provider_state") != "DISABLED":
+            add(errors, "P0RX-021", "reference source writer must remain disabled by default")
+        if writer.get("mode") != "READ_WRITE":
+            add(errors, "P0RX-022", "source.patch.apply provider must be READ_WRITE")
+
+    deferred = {item.get("id") for item in gate.get("deferred_non_p0_blockers") or []}
+    for required in ("REAL_CUSTOMER_VERTICAL_SLICE", "PRODUCTION_SOURCE_WRITE_ADAPTER", "PRODUCTION_CI_TEST_ADAPTER"):
+        if required not in deferred:
+            add(errors, "P0RX-030", f"non-P0 production evidence must be explicitly deferred: {required}")
+    return errors
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("kind", choices=["routing", "procedures", "stage-pack", "bundle"])
+    parser.add_argument("kind", choices=["routing", "procedures", "stage-pack", "bundle", "exit"])
     parser.add_argument("path", type=Path)
     parser.add_argument("--procedures", type=Path)
+    parser.add_argument("--repo-root", type=Path)
     args = parser.parse_args()
 
     doc = load(args.path)
@@ -219,6 +295,9 @@ def main():
         errors = validate_stage_procedures(doc)
     elif args.kind == "stage-pack":
         errors = validate_stage_pack(doc)
+    elif args.kind == "exit":
+        repo_root = (args.repo_root or Path(__file__).resolve().parents[2]).resolve()
+        errors = validate_exit_gate(repo_root, doc)
     else:
         if not args.procedures:
             print("BUNDLE-000: --procedures is required for bundle validation")
