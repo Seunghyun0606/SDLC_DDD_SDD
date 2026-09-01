@@ -38,6 +38,7 @@ def action_blockers(open_items: list[dict[str, Any]], action: str) -> list[dict[
 def resolve(routing: dict[str, Any], pack_doc: dict[str, Any], artifact_plan: dict[str, Any] | None = None) -> dict[str, Any]:
     pack = (pack_doc or {}).get("stage_input_pack") or {}
     metadata = pack.get("metadata") or {}
+    execution = pack.get("execution") or {}
     stage = metadata.get("stage")
     mode = metadata.get("project_mode") or "AUTO"
     stage_cfg = ((routing.get("stages") or {}).get(stage))
@@ -47,6 +48,13 @@ def resolve(routing: dict[str, Any], pack_doc: dict[str, Any], artifact_plan: di
     mode_cfg = ((stage_cfg.get("mode_rules") or {}).get(mode)) or {}
     required = list(mode_cfg.get("required_capabilities", stage_cfg.get("required_capabilities") or []))
     optional = list(mode_cfg.get("optional_capabilities", stage_cfg.get("optional_capabilities") or []))
+
+    allowed_actions = list(stage_cfg.get("side_effect_actions") or [])
+    requested_actions = list(execution.get("requested_actions") or [])
+    invalid_actions = [a for a in requested_actions if a not in allowed_actions]
+    if invalid_actions:
+        raise ValueError(f"stage {stage} does not allow requested actions: {invalid_actions}")
+    required = unique(required + requested_actions)
     capabilities = unique(required + optional)
 
     outputs = list(stage_cfg.get("output_artifacts") or [])
@@ -67,11 +75,13 @@ def resolve(routing: dict[str, Any], pack_doc: dict[str, Any], artifact_plan: di
     open_items = list(pack.get("open_items") or [])
     reasoning_blockers = [item for item in open_items if item.get("blocks_reasoning") is True]
     actions = []
-    for action in stage_cfg.get("side_effect_actions") or []:
+    for action in allowed_actions:
         blockers = action_blockers(open_items, action)
+        requested = action in requested_actions
         actions.append({
             "action": action,
-            "state": "GUARDED" if blockers else "READY_FOR_PROOF_CHECK",
+            "requested": requested,
+            "state": "NOT_REQUESTED" if not requested else ("GUARDED" if blockers else "READY_FOR_PROOF_CHECK"),
             "blocker_ids": [b.get("open_id") for b in blockers if b.get("open_id")],
         })
 
@@ -88,6 +98,7 @@ def resolve(routing: dict[str, Any], pack_doc: dict[str, Any], artifact_plan: di
             "required_capabilities": required,
             "optional_capabilities": optional,
             "requested_capabilities": capabilities,
+            "write_capabilities": requested_actions,
             "expected_outputs": outputs,
             "suppressed_human_outputs": suppressed,
             "next_stage": stage_cfg.get("next_stage"),
