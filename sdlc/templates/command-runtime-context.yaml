@@ -1,15 +1,24 @@
-schema_version: 1
+schema_version: 2
 command_id: CMD-001
-command: /check
+command: /work  # /work | /change | /check | /setup
 project_context:
   project_id: PROJECT-001
-  mode: AUTO
-  stage: CHECK
+  mode: AUTO  # AUTO | BROWNFIELD | GREENFIELD | HYBRID
+  stage: INTAKE  # /work일 때 stage-routing.yaml의 현재 Stage
 target:
   target_type: WORK_UNIT
   target_id: WORK-001
+
+# 기본적으로 비워 둔다. /work는 stage-routing.yaml에서 Capability를 도출한다.
+# 특수 실행/호환성 입력이 필요한 경우에만 추가한다.
 requested_capabilities: []
+optional_capabilities: []
+
+# Stage가 허용한 Side-effect Capability 중 이번 실행에서 실제 호출할 항목만 명시한다.
+# 예: TEST Stage에서 실제 테스트를 실행할 때 [test.execute]
+requested_side_effect_capabilities: []
 write_capabilities: []
+
 capability_inputs: {}
 write_proofs: {}
 human_actions: []
