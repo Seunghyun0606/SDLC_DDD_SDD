@@ -1,0 +1,75 @@
+version: 1.4
+stage_input_pack:
+  metadata:
+    pack_id: P2-SLICE-REQ_TM_TE100-DISCOVERY
+    project_id: SAMPLE-BROWNFIELD-REQUIREMENTS
+    project_mode: BROWNFIELD
+    stage: DISCOVERY
+    generated_at: '2026-09-02'
+    source_revision: sha256:d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f
+    profile: LITE
+    granularity: ROW
+    source_group_id: null
+  target:
+    primary_id: REQ_TM_TE100
+    target_type: SOURCE_REQUIREMENT
+    boundary_status: OPEN
+    source_requirement_ids: [REQ_TM_TE100]
+    related_ids:
+      rq: []
+      fr: []
+      br: []
+      ac: []
+      proc: []
+      pgm: []
+      task: []
+      tc: []
+  required_inputs:
+    - input_type: REQUIREMENT_INTAKE
+      source_ref: requirements-intake-REQ_TM_TE100.yaml
+      truth_state: GIVEN
+  resolved_facts:
+    - fact_id: FACT-P2-001
+      statement: Source requirement belongs to Level2 Interface in the provided workbook.
+      truth: GIVEN
+      evidence_ids: [EVID-P2-XLSX-001]
+  evidence:
+    - evidence_id: EVID-P2-XLSX-001
+      evidence_type: WORKBOOK_ROW
+      source_ref: 요구사항목록.xlsx#Sheet1!D142:F142
+      source_revision: sha256:d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f
+  open_items:
+    - open_id: OPEN-P2-BOUNDARY
+      type: BOUNDARY_REVIEW
+      question: Does REQ_TM_TE100 represent a standalone canonical RQ, an FR, or part of a larger requirement boundary?
+      blocks_reasoning: false
+      blocks_action: false
+      action_scopes: []
+      required_evidence: []
+      escalation: L2_OR_HUMAN
+  constraints:
+    do_not_invent_missing_business_fact: true
+    source_behavior_is_not_business_truth: true
+    ambiguous_write_must_not_be_auto_selected: true
+  execution:
+    requested_actions: []
+    requested_outputs: []
+    capability_inputs: {}
+    write_proofs: {}
+    revision_guard:
+      decision: NOT_EVALUATED
+      guard_proof_ref: null
+    human_actions: []
+    adapter_configs: {}
+  expected_outputs: []
+  next_actions:
+    - Resolve Source Provider for bounded Brownfield discovery.
+  validation:
+    required_field_check: PASS
+    id_reference_check: PASS
+    open_preservation_check: PASS
+    boundary_guard_check: PASS
+    granularity_check: PASS
+    execution_scope_check: PASS
+    artifact_profile_check: PASS
+    revision_ownership_guard_check: NOT_APPLICABLE
