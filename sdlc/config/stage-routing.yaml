@@ -1,8 +1,10 @@
-version: 1
+version: 2
 status: ACTIVE_P0_REDESIGN
 purpose: >-
   /work가 호출자에게 requested_capabilities를 미리 주입받지 않고 현재 Stage와 Project Mode를 기준으로
-  다음 Skill, 입력 계약, 외부 Capability 후보, 기대 산출물과 다음 Stage를 결정하기 위한 단일 Routing Authority다.
+  다음 Skill, Procedure Profile, 입력 계약, 외부 Capability 후보, 기대 산출물과 다음 Stage를 결정하기 위한 단일 Routing Authority다.
+
+procedure_config: sdlc/config/stage-procedures.yaml
 
 principles:
   config_driven_stage_selection: true
@@ -12,19 +14,23 @@ principles:
   side_effect_capability_requires_explicit_action: true
   stage_route_must_not_create_business_truth: true
   stage_route_must_not_skip_execution_guard: true
+  repeated_document_stages_use_shared_skill: true
 
 commands:
   /work:
     route_by: project_context.stage
     default_stage: INTAKE
   /change:
-    skill: change-and-reverse-sync
+    skill: stage-procedure
+    procedure_profile: CHANGE_CONTROL
     expected_outputs: [CHANGE_REQUEST, STALE_OR_REVIEW_CANDIDATES, STAGE_INPUT_PACK]
   /check:
-    skill: status-read-model
+    skill: stage-procedure
+    procedure_profile: STATUS_READ_MODEL
     expected_outputs: [SDLC_STATUS_VIEW]
   /setup:
-    skill: project-foundation-bootstrap
+    skill: stage-procedure
+    procedure_profile: PROJECT_SETUP
     expected_outputs: [PROJECT_BOOTSTRAP_MANIFEST]
 
 stage_order:
@@ -53,7 +59,8 @@ stages:
 
   DECOMPOSE:
     display_name_ko: 요구사항 분해
-    skill: requirement-decomposition
+    skill: stage-procedure
+    procedure_profile: DECOMPOSE
     agent_level: L1_WITH_DETERMINISTIC_GUARDS
     required_input_types: [STAGE_INPUT_PACK, REQUIREMENT_CANDIDATE]
     capability_candidates: []
@@ -62,7 +69,8 @@ stages:
 
   CLARIFY:
     display_name_ko: 미확정 사항 정리
-    skill: requirement-clarification
+    skill: stage-procedure
+    procedure_profile: CLARIFY
     agent_level: L2_AGENT_REQUIRED
     required_input_types: [STAGE_INPUT_PACK]
     capability_candidates: []
@@ -71,7 +79,8 @@ stages:
 
   PROCESS:
     display_name_ko: 업무 프로세스 분석
-    skill: business-process-analysis
+    skill: stage-procedure
+    procedure_profile: PROCESS
     agent_level: L2_AGENT_REQUIRED
     required_input_types: [STAGE_INPUT_PACK]
     capability_candidates: []
@@ -93,12 +102,25 @@ stages:
       - capability: source.snapshot.read
         modes: [BROWNFIELD, HYBRID, AUTO]
         missing_behavior: OPEN
-    expected_outputs: [SOURCE_EVIDENCE_SET, STAGE_INPUT_PACK]
+      - capability: analysis.source.symbols
+        modes: [BROWNFIELD, HYBRID, AUTO]
+        missing_behavior: OPEN
+      - capability: analysis.source.dependencies
+        modes: [BROWNFIELD, HYBRID, AUTO]
+        missing_behavior: OPEN
+      - capability: analysis.source.data_refs
+        modes: [BROWNFIELD, HYBRID, AUTO]
+        missing_behavior: OPEN
+      - capability: analysis.source.interface_refs
+        modes: [BROWNFIELD, HYBRID, AUTO]
+        missing_behavior: OPEN
+    expected_outputs: [SOURCE_EVIDENCE_SET, ANALYZER_EVIDENCE, STAGE_INPUT_PACK]
     next_stage: IMPACT
 
   IMPACT:
     display_name_ko: 영향분석
-    skill: impact-analysis
+    skill: stage-procedure
+    procedure_profile: IMPACT
     agent_level: L2_AGENT_REQUIRED
     required_input_types: [STAGE_INPUT_PACK]
     capability_candidates: []
@@ -107,7 +129,8 @@ stages:
 
   DESIGN:
     display_name_ko: 기능설계
-    skill: functional-design
+    skill: stage-procedure
+    procedure_profile: DESIGN
     agent_level: L2_AGENT_REQUIRED
     required_input_types: [STAGE_INPUT_PACK]
     capability_candidates: []
@@ -116,7 +139,8 @@ stages:
 
   PROGRAM:
     display_name_ko: 프로그램설계
-    skill: program-design
+    skill: stage-procedure
+    procedure_profile: PROGRAM
     agent_level: L2_AGENT_REQUIRED
     required_input_types: [STAGE_INPUT_PACK, ENGINEERING_DESIGN]
     capability_candidates: []
@@ -169,7 +193,8 @@ stages:
 
   KNOWLEDGE:
     display_name_ko: 지식 반영
-    skill: knowledge-promotion
+    skill: stage-procedure
+    procedure_profile: KNOWLEDGE
     agent_level: L1_WITH_DETERMINISTIC_GUARDS
     required_input_types: [STAGE_INPUT_PACK, VERIFICATION_RESULT]
     capability_candidates: []
