@@ -1,0 +1,23 @@
+knowledge_candidate:
+  knowledge_id: K-<type>-<sequence>
+  project_id: ""
+  type: ""
+  title: ""
+  statement: ""
+  truth_state: OPEN
+  promotion_state: CANDIDATE
+  revision: 1
+  applies_to_ids: []
+  provenance:
+    evidence_ids: []
+    source_refs: []
+    source_revision: ""
+  review:
+    required: true
+    reviewed_by: ""
+    reviewed_at: ""
+    decision_basis: ""
+  relations:
+    supports: []
+    conflicts_with: []
+    supersedes: []
