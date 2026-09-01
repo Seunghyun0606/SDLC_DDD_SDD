@@ -1,0 +1,25 @@
+schema_version: 1
+artifact_type: TEST_EXECUTION_RESULT
+subject:
+  test_contract_id: null
+  rq_group_candidate_id: null
+source_binding:
+  source_evidence_set_id: null
+runtime_environment:
+  kind: NONE
+  actual_runtime: false
+  description: null
+execution:
+  test_command: null
+  started_at: null
+  finished_at: null
+  cases: []
+summary:
+  required: 0
+  passed: 0
+  failed: 0
+  blocked: 0
+  not_executed: 0
+  skipped: 0
+open_blockers: []
+status: NOT_EXECUTED
