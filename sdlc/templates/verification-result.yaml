@@ -1,0 +1,28 @@
+schema_version: 1
+artifact_type: VERIFICATION_RESULT
+subject:
+  test_contract_id: null
+  test_execution_result_id: null
+  rq_group_candidate_id: null
+source_binding:
+  source_evidence_set_id: null
+  production_source: false
+verification:
+  state: NOT_VERIFIED
+  contract_coverage_pass: false
+  runtime_execution_complete: false
+  all_required_tests_passed: false
+  actual_runtime_environment: false
+  business_rule_candidate_reviewed: false
+claims:
+  runtime_pass: false
+  production_verified: false
+stale_resolution:
+  impact: UNCHANGED
+  pgm_spec: UNCHANGED
+  test_scenarios: UNCHANGED
+  requirement: REVIEW_CANDIDATE
+open_blockers: []
+required_next_actions: []
+evidence: []
+status: NOT_VERIFIED
