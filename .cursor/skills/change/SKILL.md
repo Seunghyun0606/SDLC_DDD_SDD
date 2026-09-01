@@ -80,8 +80,24 @@ Source 기준점이 바뀌었거나 외부에서 Source가 수정된 경우 다�
 8. 현행 Source 관찰을 Canonical에 연결해야 하면 Business 값을 덮는 `UPSERT_ENTITY`보다 `ADD_PROVENANCE`를 우선 사용한다.
 9. 재생성/검토가 끝난 뒤에만 현재 Source Evidence hash로 Artifact를 갱신한다.
 
+## Program Spec Semantic Reverse Candidate
+Brownfield Impact Adapter의 기준점/현재 결과가 모두 있고 Program Spec과 Source Node의 Binding이 등록되어 있으면 Source 변화에서 구현 명세 갱신 후보를 만들 수 있다.
+
+실행:
+`python sdlc/scripts/generate_program_spec_reverse_candidate.py --baseline-impact <before-impact.json> --observed-impact <after-impact.json> --program-bindings <program-bindings.json> --output <program-reverse-candidate.json>`
+
+규칙:
+1. Program Binding은 `program_id / artifact_path / functional_design_ref / source_node_ids`를 가진다.
+2. Candidate는 해당 PGM의 Source Node와 실제 변경 Node/Edge가 설정된 hop 범위 안에서 연결될 때만 생성한다.
+3. 전역 Coverage 변화만으로 관계 없는 Program Spec Candidate를 만들지 않는다.
+4. Candidate가 수정할 수 있는 범위는 Program Spec의 구현 Target, Source 근거, 구현 Mapping/Delta, Query/Table, Transaction, Integration 기술 계약, 기술 제어, TASK/AC/TC/Source, 준비도뿐이다.
+5. 업무 시나리오, 업무 규칙, 기능 요구 의미, 업무 예외, Business Truth는 자동 갱신 금지다.
+6. 결과는 `review_required: true`, `auto_apply: false`다. Generator는 실제 Program Spec 파일을 수정하지 않는다.
+7. 검토자가 Candidate를 수용한 뒤에도 Program Spec 갱신과 Canonical Delta 적용은 별도 Stage Result 검증을 거친다.
+
 ### 안전 규칙
 - 신규 Source가 생겼다는 이유만으로 관련 없는 기존 문서를 자동 STALE 처리하지 않는다.
 - Source-derived 설계/프로그램 문서는 `STALE` 전파가 가능하지만, 고객 승인 Requirement/BR 등 권위 있는 업무 사실은 기본적으로 `CHECK_REQUIRED`가 적절하다.
 - 역방향 전파는 명시된 Artifact Edge를 통해서만 수행한다.
 - Source 변경은 Business Truth 변경의 증거 후보이지 자동 정책 변경이 아니다.
+- Semantic Reverse Candidate는 Program Spec 구현정보 갱신 후보일 뿐 Functional Design 재작성기가 아니다.
