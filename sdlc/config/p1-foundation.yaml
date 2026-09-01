@@ -1,0 +1,105 @@
+version: 1
+status: ACTIVE_P1_FOUNDATION
+
+principles:
+  start_with_core_defaults: true
+  require_upfront_project_customization: false
+  customize_only_on_observed_difference: true
+  preserve_core_contracts: true
+  project_overlay_must_not_copy_core_truth: true
+  sample_or_pilot_required: false
+
+project_bootstrap:
+  modes: [BROWNFIELD, GREENFIELD, HYBRID, AUTO]
+  minimum_before_first_work:
+    - project_identity
+    - project_mode
+    - source_provider_state
+  brownfield_discovery_candidates:
+    - README
+    - CONTRIBUTING
+    - ARCHITECTURE_GUIDE
+    - BUILD_CONFIGURATION
+    - TEST_CONFIGURATION
+    - SOURCE_ROOT
+    - DATA_ACCESS
+    - DATABASE_OBJECTS
+    - INTERFACE_DEFINITION
+    - DEVELOPMENT_STANDARD
+  discovery_is_jit: true
+  unobserved_candidates_remain: OPEN
+
+customization:
+  strategy: LATE_BOUND_OVERLAY
+  overlay_template: sdlc/templates/project-overlay.yaml
+  trigger_conditions:
+    - CORE_DEFAULT_CONFLICTS_WITH_OBSERVED_PROJECT_FACT
+    - REQUIRED_PROJECT_TERM_DIFFERS
+    - REQUIRED_ARTIFACT_OR_STAGE_DIFFERS
+    - PROVIDER_OR_PATH_REQUIRES_PROJECT_BINDING
+    - PROJECT_STANDARD_REQUIRES_OVERRIDE
+  not_valid_triggers:
+    - JUST_IN_CASE
+    - SAMPLE_SPECIFIC_VALUE
+    - PERSONAL_PREFERENCE_WITHOUT_PROJECT_NEED
+  entry_states: [PROPOSED, ACTIVE, SUPERSEDED, REJECTED]
+  truth_states: [GIVEN, OBSERVED, INFERRED, CONFIRMED, OPEN]
+  activation:
+    requires_reason: true
+    requires_evidence_or_given_source: true
+    requires_scope: true
+    requires_revision: true
+  precedence:
+    - LOCAL_OVERRIDE
+    - DOMAIN_OVERLAY
+    - PROJECT_OVERLAY
+    - PROJECT_PROFILE
+    - PRESET
+    - CORE_DEFAULT
+  conflict_behavior: RECORD_AND_REVIEW
+
+knowledge:
+  promotion_states: [CANDIDATE, REVIEW_REQUIRED, PROMOTED, REJECTED, SUPERSEDED]
+  provenance_required: true
+  source_behavior_auto_confirms_business_truth: false
+  reusable_types:
+    - BUSINESS_RULE
+    - PROCESS
+    - PROGRAM_RESPONSIBILITY
+    - DATA_MEANING
+    - INTERFACE_MEANING
+    - ARCHITECTURE_DECISION
+    - DEVELOPMENT_STANDARD
+    - OPERATIONAL_CONSTRAINT
+    - KNOWN_EDGE_CASE
+    - VERIFIED_TEST_PATTERN
+
+reference_graph:
+  node_types: [RQ, FR, BR, PROC, FTR, PGM, ART, SYMBOL, DATA, INT, AC, TC, TASK, CR, KNOWLEDGE, SOURCE]
+  relation_type_is_extensible: true
+  every_edge_requires_provenance: true
+  unresolved_reference_state: OPEN
+  silent_reference_drop: DENY
+
+open_items:
+  default_non_blocking: true
+  execution_guard_only_for_side_effecting_action: true
+  states: [OPEN, ASSUMED, RESOLVED, DEFERRED, GUARDED]
+  severity: [INFO, WARNING, CRITICAL]
+
+baseline_index:
+  duplicate_truth: DENY
+  cache_is_derived: true
+  cache_can_be_rebuilt: true
+  stale_source_revision_marks_cache_stale: true
+
+real_project_entry:
+  real_source_required_for_source_claims: true
+  actual_test_command_required_for_runtime_test_claims: true
+  representative_vertical_slice_before_scale_out: true
+  recommended_slice_count: 1
+  scale_out_requires:
+    - FOUNDATION_STATE_VALID
+    - REFERENCE_GRAPH_VALID
+    - CUSTOMIZATION_CONFLICTS_RECORDED
+    - REPRESENTATIVE_SLICE_REVIEWED
