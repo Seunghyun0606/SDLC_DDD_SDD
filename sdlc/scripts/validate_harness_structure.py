@@ -67,8 +67,16 @@ def validate(root: Path) -> list[str]:
     dev_path=root/c['developer_specification']['contract']
     if dev_path.is_file():
         dev=json.loads(dev_path.read_text(encoding='utf-8'))
-        if not dev.get('rules', {}).get('not_applicable_requires_reason'):
+        rules=dev.get('rules', {})
+        if not rules.get('not_applicable_requires_reason'):
             errors.append('developer spec N/A must require a reason')
+        if not rules.get('functional_design_semantics_must_not_be_duplicated_in_program_spec'):
+            errors.append('program spec must not duplicate functional design semantics')
+        ownership=dev.get('ownership_model', {})
+        if ownership.get('functional_design') != 'SEMANTIC_SOURCE_OF_TRUTH':
+            errors.append('functional design must be semantic source of truth')
+        if ownership.get('program_spec') != 'IMPLEMENTATION_DELTA_AND_EXECUTION_READINESS':
+            errors.append('program spec must be implementation delta and readiness')
         if not c['developer_specification'].get('legacy_program_dor_17_fields_preserved'):
             errors.append('legacy 17-field Program DoR must remain preserved')
 
@@ -85,12 +93,18 @@ def validate(root: Path) -> list[str]:
             errors.append('designer/developer proposal must not become business truth automatically')
         if not principles.get('existing_system_observation_is_not_automatic_target_policy'):
             errors.append('AS-IS observation must not become TO-BE policy automatically')
-        required=set(oc.get('required_item_fields', []))
+        required=set(oc.get('machine_required_item_fields', oc.get('required_item_fields', [])))
         for field in ['resolution_method','basis_class','decision_owner_role','resolution_status','downstream_impact']:
-            if field not in required: errors.append(f'OPEN resolution item missing required field: {field}')
+            if field not in required: errors.append(f'OPEN resolution machine item missing required field: {field}')
         states=set(oc.get('resolution_status', []))
         for state in ['PROPOSED','OBSERVED_AS_IS','ACCEPTED_DESIGN','CONFIRMED_BUSINESS','CONFLICT']:
             if state not in states: errors.append(f'OPEN resolution status missing: {state}')
+        human=oc.get('human_view', {})
+        if human.get('status_values') != ['미확정','확인중','제안','확정','보류']:
+            errors.append('OPEN human view must use five simplified statuses')
+        human_required=set(human.get('required_fields', []))
+        for field in ['question_or_gap','resolution_action','current_or_proposed_value','decision_owner_role','human_status']:
+            if field not in human_required: errors.append(f'OPEN human view missing required field: {field}')
     else:
         errors.append('open resolution contract missing')
 
@@ -99,6 +113,8 @@ def validate(root: Path) -> list[str]:
         txt=open_skill.read_text(encoding='utf-8')
         for marker in ['SOP는 유용한 Evidence이지만 필수 입력이 아니다','DESIGNER_PROPOSAL','DEVELOPER_PROPOSAL','OBSERVED_AS_IS','ACCEPTED_DESIGN','CONFIRMED_BUSINESS']:
             if marker not in txt: errors.append(f'OPEN resolution skill missing marker {marker}')
+        for marker in ['미확정','확인중','제안','확정','보류']:
+            if marker not in txt: errors.append(f'OPEN resolution skill missing human status {marker}')
 
     if 'open_resolution:' not in profile or 'sop_required: false' not in profile:
         errors.append('project profile must configure non-blocking OPEN resolution')
