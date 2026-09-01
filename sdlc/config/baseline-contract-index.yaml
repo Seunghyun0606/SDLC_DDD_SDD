@@ -1,9 +1,9 @@
-version: 4
-status: P1_FOUNDATION_STRUCTURAL_REDESIGN_V1_ACTIVE
+version: 5
+status: P2_REPRESENTATIVE_BROWNFIELD_SLICE_ACTIVE
 purpose: >-
-  Phase 0의 논리적 manifest/capabilities/decisions/contracts 역할과 P1 Foundation의
-  bootstrap/customization/knowledge/reference authority를 현재 분산형 authoritative artifact에
-  연결한다. Structural Redesign v1은 기존 Truth를 복제하지 않고 Runtime consumer 관계만 명시한다.
+  Phase 0/P1의 Safety Contract와 Structural Redesign Runtime을 유지하면서 P2의
+  XLSX Intake, 대표 Brownfield Slice, Generic Analyzer, E2E Read Model, Revision/Ownership Guard의
+  authoritative artifact와 실제 runtime consumer 관계를 연결한다. 이 Index는 Truth를 복제하지 않는다.
 
 baseline_roles:
   design_baseline:
@@ -15,6 +15,14 @@ baseline_roles:
     artifact_profile_resolver: sdlc/scripts/resolve_artifact_profile.py
     stage_resolver: sdlc/scripts/resolve_stage_execution.py
     command_context_builder: sdlc/scripts/build_command_context.py
+  requirement_intake:
+    authority: sdlc/config/requirement-intake.yaml
+    xlsx_runtime: sdlc/scripts/intake_requirements_xlsx.py
+    truth: SOURCE_ROWS_ARE_GIVEN_NOT_CANONICAL
+  representative_brownfield_slice:
+    validation_root: sdlc/design/validation/p2-representative-brownfield-slice-v1
+    source_requirement_id: REQ_TM_TE100
+    production_source_connected: false
   business_source_manifest:
     authority: sdlc/starter/onboarding-package-v1/02_business-source-manifest.yaml
     original_phase0_role: manifest
@@ -73,11 +81,19 @@ baseline_roles:
     bounded_trace: sdlc/scripts/collect_bounded_source_evidence.py
     target_context: sdlc/templates/source-target-context.yaml
     analyzer_registry: sdlc/config/source-analyzers.yaml
+    java_spring_adapter: sdlc/scripts/analyze_java_spring.py
+    sql_database_adapter: sdlc/scripts/analyze_sql_database.py
+    interface_adapter_state: UNCONFIGURED
   reverse_sync:
     authority: sdlc/design/contracts/source-reverse-sync-contract.md
     classification: sdlc/config/reverse-sync-classification.yaml
     source_change_template: sdlc/templates/source-change-evidence.yaml
     runtime: sdlc/scripts/build_reverse_sync_from_signals.py
+  version_control_guard:
+    authority: sdlc/config/version-control-runtime.yaml
+    context: sdlc/templates/change-execution-context.yaml
+    runtime: sdlc/scripts/guard_revision_ownership.py
+    source_write_consumer: sdlc/scripts/build_command_context.py
   test_verification:
     authority: sdlc/config/test-verification.yaml
   provider_capabilities:
@@ -95,7 +111,10 @@ baseline_roles:
     executor: sdlc/scripts/execute_command_runtime.py
   e2e_status:
     authority: sdlc/config/e2e-orchestration.yaml
-    structural_redesign_status: LEGACY_ORCHESTRATION_NOT_YET_GENERIC
+    ledger: sdlc/templates/e2e-execution-ledger.yaml
+    runtime: sdlc/scripts/orchestrate_generic_e2e_status.py
+    legacy_runtime: sdlc/scripts/orchestrate_e2e_status.py
+    legacy_runtime_status: COMPATIBILITY_ONLY
   low_agent_execution:
     authority: sdlc/design/contracts/low-agent-execution-contract.md
 
