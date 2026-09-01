@@ -61,6 +61,19 @@ class GreenfieldE2EPilotTest(unittest.TestCase):
         self.assertFalse(self.result["metrics"]["machine_result_envelope_is_user_artifact"])
         self.assertEqual(0, self.result["metrics"]["required_machine_taxonomy_input_count"])
 
+    def test_materialized_artifacts_are_six_human_readable_documents(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            artifact_root = Path(tmp) / "artifacts"
+            names = MOD.materialize(self.result, artifact_root)
+            self.assertEqual(sorted(MOD.USER_ARTIFACTS), names)
+            self.assertEqual(6, len(list(artifact_root.glob("*.md"))))
+            combined = "\n".join(path.read_text(encoding="utf-8") for path in sorted(artifact_root.glob("*.md")))
+            self.assertIn("REQ_TM_FL001", combined)
+            self.assertIn("탄력근로제 근무계획 저장", combined)
+            self.assertIn("미확정", combined)
+            for machine_term in ["decision_domain", "basis_class", "downstream_impact", "resolution_method", "Source Hash"]:
+                self.assertNotIn(machine_term, combined)
+
     def test_all_workflow_stages_are_accounted_for(self):
         self.assertEqual(MOD.WORKFLOW, self.result["workflow"])
         self.assertEqual(len(MOD.WORKFLOW), self.result["metrics"]["workflow_stage_count"])
@@ -69,13 +82,17 @@ class GreenfieldE2EPilotTest(unittest.TestCase):
         self.assertEqual("PASS_AGENT_E2E_REPLAY_HUMAN_USABILITY_NOT_MEASURED", self.result["verdict"])
         self.assertTrue(any("사용시간" in item for item in self.result["limitations"]))
 
-    def test_cli_writes_result(self):
+    def test_cli_writes_result_and_materializes_documents(self):
         with tempfile.TemporaryDirectory() as tmp:
-            output = Path(tmp) / "greenfield.json"
-            rc = MOD.main(["--seed", str(SEED), "--output", str(output)])
+            root = Path(tmp)
+            output = root / "greenfield.json"
+            artifacts = root / "artifacts"
+            rc = MOD.main(["--seed", str(SEED), "--output", str(output), "--artifact-root", str(artifacts)])
             self.assertEqual(0, rc)
             payload = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual("REQ_TM_FL001", payload["input"]["external_id"])
+            self.assertEqual(sorted(MOD.USER_ARTIFACTS), payload["materialized_artifacts"])
+            self.assertEqual(6, len(list(artifacts.glob("*.md"))))
 
 
 if __name__ == "__main__":
