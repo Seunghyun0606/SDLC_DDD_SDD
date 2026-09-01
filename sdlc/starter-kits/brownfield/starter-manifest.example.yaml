@@ -1,0 +1,74 @@
+schema_version: 1
+mode: BROWNFIELD
+project:
+  name: example-brownfield
+
+analysis_seed:
+  type: CHANGE_REQUEST  # CHANGE_REQUEST | REQUIREMENT | INCIDENT | REVERSE_ANALYSIS | INVENTORY
+  text: "무엇을 변경/분석하려는지 자연어로 작성"
+  source_document_id: UNKNOWN
+
+repository:
+  reference: "repo URL 또는 접근 가능한 source path/bundle"
+  baseline_ref: "branch/tag/commit 또는 UNKNOWN"
+  observed_ref: "현재 분석 대상 branch/tag/commit 또는 baseline_ref와 동일"
+
+source_profile:
+  path: source/source-profile.yaml
+  auto_discover_when_missing: true
+
+system_evidence:
+  module_inventory: source/module-inventory.md
+  architecture: system-evidence/architecture.md
+  db_schema_and_migrations: system-evidence/db-schema-and-migrations.md
+  interface_inventory: system-evidence/interface-inventory.md
+  runtime_config_inventory: system-evidence/runtime-config-inventory.md
+  build_test_baseline: system-evidence/build-test-baseline.md
+
+business_documents:
+  originals_root: business-docs/originals
+  manifest: business-docs/manifest.yaml
+
+profiles:
+  terminology: profiles/terminology-profile.json
+  customer_document: profiles/customer-document-profile.json
+
+impact_analysis:
+  required_relation_types:
+    - ENTRY_POINT
+    - CALLER
+    - CALLEE
+    - DATA_READ_WRITE
+    - TRANSACTION
+    - EXTERNAL_INTERFACE
+    - EVENT
+    - CONFIG_FEATURE_FLAG
+    - TEST
+    - MODULE_BUILD_DEPENDENCY
+  required_result_classes:
+    - DIRECT_IMPACT
+    - INDIRECT_IMPACT
+    - CHECK_REQUIRED
+    - OUT_OF_SCOPE
+  coverage_gaps_must_be_reported: true
+
+reverse_engineering:
+  enabled_by_default: false
+  requested_scope: NONE  # NONE | INVENTORY | DRIFT_CHECK | REVERSE_SPEC | SOURCE_DIFF
+  promote_to_business_truth_automatically: false
+
+readiness:
+  startable_minimum:
+    - analysis_seed.text
+    - repository.reference
+  impact_analysis_ready_requires:
+    - source_candidate_found
+    - direct_relation_trace
+    - coverage_gap_reported
+  implementation_ready_rule: "Real target confirmed, build/test path known, Program DoR OPEN = 0"
+
+non_blocking:
+  unknown_value: UNKNOWN
+  missing_recommended_input: CHECK_REQUIRED
+  no_repository_reference: SOURCE_ANALYSIS_NOT_CONFIRMED
+  dangerous_write_requires_execution_guard: true
