@@ -1,8 +1,9 @@
-version: 1.1
+version: 1.2
 stage_input_pack:
   metadata:
     pack_id: FILL_ME
     project_id: FILL_ME
+    project_mode: AUTO  # AUTO | BROWNFIELD | GREENFIELD | HYBRID
     stage: FILL_ME
     generated_at: null
     source_revision: FILL_ME
@@ -32,11 +33,27 @@ stage_input_pack:
   evidence: []
 
   open_items: []
+  # OPEN item action guard example:
+  # - open_id: OPEN-001
+  #   type: TARGET_REVISION_UNKNOWN
+  #   question: Source write 대상 revision을 확인할 수 있는가?
+  #   blocks_reasoning: false
+  #   blocks_action: true
+  #   action_scopes: [source.write]
+  #   required_evidence: [current_source_revision]
+  #   escalation: ENGINEERING_OWNER
 
   constraints:
     do_not_invent_missing_business_fact: true
     source_behavior_is_not_business_truth: true
     ambiguous_write_must_not_be_auto_selected: true
+
+  execution:
+    requested_actions: []
+    capability_inputs: {}
+    write_proofs: {}
+    human_actions: []
+    adapter_configs: {}
 
   expected_outputs: []
 
@@ -48,3 +65,4 @@ stage_input_pack:
     open_preservation_check: PENDING
     boundary_guard_check: PENDING
     granularity_check: PENDING
+    execution_scope_check: PENDING
