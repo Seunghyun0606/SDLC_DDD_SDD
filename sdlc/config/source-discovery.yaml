@@ -1,0 +1,76 @@
+version: 1
+status: ACTIVE_P0_3_CANDIDATE
+
+purpose: Source Repository/Snapshot에서 직접 확인 가능한 Program/Artifact/Symbol/Data Evidence를 수집하되 이름 유사성으로 Business Trace를 확정하지 않는다.
+
+input_contract:
+  required:
+    - source_root
+    - source_revision
+    - trace_manifest_or_direct_relation
+  optional:
+    - configured_paths
+    - language_profile
+    - prior_stage_input_pack
+
+provider_states:
+  - AVAILABLE
+  - UNAVAILABLE
+  - PARTIAL
+
+retrieval_order:
+  - direct_artifact_relation
+  - direct_symbol_relation
+  - mapper_or_query_relation
+  - configured_path
+  - bounded_reference_search
+
+extraction:
+  artifact_types:
+    - JAVA
+    - XML
+    - SQL
+    - CONFIG
+  evidence:
+    - file_path
+    - file_hash
+    - symbols
+    - mapper_statement_ids
+    - table_names
+    - transaction_markers
+    - direct_program_ids
+
+truth:
+  source_file_presence: OBSERVED
+  source_symbol_presence: OBSERVED
+  table_reference: OBSERVED
+  program_relation_from_manifest: OBSERVED_RELATION
+  business_rule_from_source: NEVER_AUTO_CONFIRM
+
+hard_rules:
+  - id: DISC-001
+    statement: Direct Trace Manifest가 없으면 Name Similarity로 PGM을 CONFIRMED하지 않는다.
+  - id: DISC-002
+    statement: Source에서 본 조건/예외는 OBSERVED Behavior이며 Business Truth가 아니다.
+  - id: DISC-003
+    statement: 탐색 결과에는 Source Revision과 File Hash를 포함한다.
+  - id: DISC-004
+    statement: Configured/Direct 범위가 끝나면 전체 Repository 무한 탐색을 하지 않는다.
+  - id: DISC-005
+    statement: Dynamic SQL/Procedure/Trigger/Runtime Consumer가 가능하면 Blind Spot으로 남긴다.
+
+stop_conditions:
+  - all_direct_artifacts_resolved
+  - configured_search_budget_exhausted
+  - next_evidence_requires_runtime_or_external_system
+  - ambiguous_target_requires_escalation
+
+escalation:
+  MISSING_DIRECT_TRACE: L2
+  AMBIGUOUS_TARGET: L2_OR_L3
+  DYNAMIC_RUNTIME_ONLY: L3
+  SECURITY_CRITICAL: L3_OR_HUMAN
+
+output:
+  template: sdlc/templates/source-discovery-result.yaml
+  validator: sdlc/scripts/validate_p03_contracts.py
