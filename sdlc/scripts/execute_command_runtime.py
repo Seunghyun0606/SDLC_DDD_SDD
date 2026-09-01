@@ -34,7 +34,10 @@ def apply_stage_route(context: dict[str, Any], routing: dict[str, Any]):
 
     required = list(routed.get("requested_capabilities") or [])
     optional = list(routed.get("optional_capabilities") or [])
-    route_summary: dict[str, Any] = {"command": command}
+    route_summary: dict[str, Any] = {
+        "command": command,
+        "procedure_config": routing.get("procedure_config"),
+    }
 
     if command == "/work":
         project = routed.setdefault("project_context", {})
@@ -69,6 +72,7 @@ def apply_stage_route(context: dict[str, Any], routing: dict[str, Any]):
             "stage": stage,
             "display_name_ko": stage_rule.get("display_name_ko"),
             "skill": stage_rule.get("skill"),
+            "procedure_profile": stage_rule.get("procedure_profile"),
             "agent_level": stage_rule.get("agent_level"),
             "required_input_types": stage_rule.get("required_input_types") or [],
             "expected_outputs": stage_rule.get("expected_outputs") or [],
@@ -77,6 +81,8 @@ def apply_stage_route(context: dict[str, Any], routing: dict[str, Any]):
     else:
         route_summary.update({
             "skill": command_rule.get("skill"),
+            "procedure_profile": command_rule.get("procedure_profile"),
+            "agent_level": command_rule.get("agent_level"),
             "expected_outputs": command_rule.get("expected_outputs") or [],
         })
 
