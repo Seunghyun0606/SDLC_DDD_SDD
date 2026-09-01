@@ -1,0 +1,163 @@
+version: 1
+stage_input_pack:
+  metadata:
+    pack_id: SIP-P04-TM-CLOSE-VERIFY-001
+    project_id: PILOT-TM-SYNTHETIC-SOURCE
+    stage: VERIFY
+    generated_at: '2026-09-02'
+    source_revision: fixture-after-cr
+    profile: STANDARD
+  target:
+    primary_id: RQG-CAND-6BB6D66548
+    target_type: RQ_GROUP_CANDIDATE
+    boundary_status: OPEN
+    granularity: GROUP
+    source_group_id: RQG-CAND-6BB6D66548
+    source_requirement_ids:
+      - REQ_TM_TE016
+      - REQ_TM_TE017
+      - REQ_TM_TE018
+      - REQ_TM_TE019
+      - REQ_TM_TE020
+      - REQ_TM_TE021
+      - REQ_TM_TE022
+      - REQ_TM_TE023
+      - REQ_TM_TE024
+      - REQ_TM_TE025
+      - REQ_TM_TE026
+      - REQ_TM_TE027
+      - REQ_TM_TE028
+      - REQ_TM_TE029
+      - REQ_TM_TE030
+      - REQ_TM_TE031
+      - REQ_TM_TE032
+      - REQ_TM_TE033
+      - REQ_TM_TE034
+      - REQ_TM_TE035
+      - REQ_TM_TE036
+      - REQ_TM_TE037
+      - REQ_TM_TE038
+      - REQ_TM_TE039
+      - REQ_TM_TE040
+      - REQ_TM_TE041
+      - REQ_TM_TE042
+      - REQ_TM_TE043
+      - REQ_TM_TE044
+      - REQ_TM_TE045
+      - REQ_TM_TE046
+      - REQ_TM_TE047
+      - REQ_TM_TE048
+      - REQ_TM_TE049
+      - REQ_TM_TE050
+      - REQ_TM_TE051
+      - REQ_TM_TE052
+      - REQ_TM_TE053
+      - REQ_TM_TE054
+    related_ids:
+      rq: []
+      fr: []
+      br: []
+      ac: []
+      proc: []
+      pgm: [PGM-ATT-CLOSE-001]
+      task: []
+      tc: []
+    synthetic_fixture_trace:
+      acceptance_criteria: [AC-01, AC-02, AC-03, AC-04, AC-05]
+      test_cases: [TC-P017-01, TC-P017-02, TC-P017-03, TC-P017-04]
+  required_inputs:
+    - id: TEST-CONTRACT-P04
+      type: test_contract
+      locator: p0.4-test-verify-contract-v1/attendance-close-test-contract.yaml
+      required: true
+      available: true
+    - id: TEST-EXECUTION-P04
+      type: test_execution_result
+      locator: p0.4-test-verify-contract-v1/attendance-close-test-execution.yaml
+      required: true
+      available: true
+    - id: SOURCE-EVIDENCE-P03
+      type: source_evidence_set
+      locator: p0.3 source fixture after-cr
+      revision: 113e74710f9147f1482621b95962585d4c20a700f08cf51f1c3df5d55ddb4497
+      required: true
+      available: true
+  resolved_facts:
+    - fact_id: FACT-P04-001
+      value: AC-01~05 are directly covered by TC-P017-01~04 in the synthetic fixture test contract
+      truth: OBSERVED
+      evidence_ids: [EV-P04-001]
+      confidence: HIGH
+    - fact_id: FACT-P04-002
+      value: All four required test cases are explicitly NOT_EXECUTED
+      truth: OBSERVED
+      evidence_ids: [EV-P04-002]
+      confidence: HIGH
+    - fact_id: FACT-P04-003
+      value: Actual Spring/MyBatis/Oracle runtime environment and test command are not available
+      truth: OBSERVED
+      evidence_ids: [EV-P04-003]
+      confidence: HIGH
+  evidence:
+    - evidence_id: EV-P04-001
+      provider: TEST_CONTRACT
+      locator: attendance-close-test-contract.yaml
+      revision: 1
+      observed_value: 100 percent AC design coverage
+      confidence: HIGH
+    - evidence_id: EV-P04-002
+      provider: TEST_EXECUTION_RESULT
+      locator: attendance-close-test-execution.yaml
+      revision: 1
+      observed_value: [NOT_EXECUTED, NOT_EXECUTED, NOT_EXECUTED, NOT_EXECUTED]
+      confidence: HIGH
+    - evidence_id: EV-P04-003
+      provider: EXECUTION_CONTEXT
+      locator: current project session
+      revision: '2026-09-02'
+      observed_value: runtime and test command unavailable
+      confidence: HIGH
+  open_items:
+    - open_id: OPEN-P04-001
+      type: RUNTIME_ENVIRONMENT_UNAVAILABLE
+      question: 실제 Spring/MyBatis/Oracle 환경에서 TC-P017-01~04를 실행할 수 있는가?
+      blocks_reasoning: false
+      blocks_action: true
+      required_evidence: [actual_runtime_environment, test_command]
+      escalation: ENGINEERING_OWNER
+    - open_id: OPEN-P04-002
+      type: BUSINESS_RULE_REVIEW_OPEN
+      question: 10분 단위 반영 Rule과 근태마감 RQ Boundary가 실제 고객 요구로 확정되었는가?
+      blocks_reasoning: false
+      blocks_action: true
+      required_evidence: [L2_or_human_decision]
+      escalation: L2_OR_HUMAN
+    - open_id: OPEN-P04-003
+      type: FIXTURE_ONLY_EVIDENCE
+      question: 실제 고객 Source에서도 동일 Test Contract와 Source relation이 유효한가?
+      blocks_reasoning: false
+      blocks_action: true
+      required_evidence: [actual_customer_repository_or_snapshot]
+      escalation: ENGINEERING_OWNER
+  constraints:
+    do_not_claim_runtime_pass_without_execution_evidence: true
+    synthetic_fixture_cannot_be_production_verified: true
+    ac_coverage_is_not_execution_success: true
+    preserve_boundary_open: true
+  expected_outputs:
+    - verification_result
+    - runtime_execution_evidence_or_explicit_not_executed
+    - blocker_list
+    - next_action
+  next_actions:
+    - 실제 Runtime/Test command가 제공되면 Required TC 4건을 실행한다.
+    - L2/Human이 Business Rule/RQ Boundary를 검토한다.
+    - 실제 고객 Source 연결 후 Source Evidence Set과 Test Contract를 재바인딩한다.
+  validation:
+    required_field_check: PASS
+    ac_tc_coverage_check: PASS
+    execution_state_check: PASS
+    source_binding_check: PASS
+    runtime_pass_guard_check: PASS
+    production_verify_guard_check: PASS
+    open_preservation_check: PASS
