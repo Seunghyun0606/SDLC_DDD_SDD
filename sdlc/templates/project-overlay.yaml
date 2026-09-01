@@ -1,0 +1,38 @@
+overlay:
+  overlay_id: OVL-<project>-<sequence>
+  scope:
+    project_id: ""
+    domain: ""
+    applies_to: []
+  state: PROPOSED  # PROPOSED | ACTIVE | SUPERSEDED | REJECTED
+  revision: 1
+
+trigger:
+  type: ""  # one of p1-foundation.yaml customization.trigger_conditions
+  reason: ""
+  detected_at_stage: ""
+  detected_by: ""
+
+basis:
+  truth_state: OPEN  # GIVEN | OBSERVED | INFERRED | CONFIRMED | OPEN
+  evidence_ids: []
+  source_refs: []
+  project_fact: ""
+
+change:
+  target_key: ""
+  core_or_profile_value: null
+  project_value: null
+  rationale: ""
+
+safety:
+  copies_core_truth: false
+  sample_specific_only: false
+  affects_side_effecting_action: false
+  requires_human_review: false
+
+lifecycle:
+  activated_by: ""
+  activated_at: ""
+  supersedes: ""
+  next_review_trigger: ""
