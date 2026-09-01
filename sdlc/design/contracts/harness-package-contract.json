@@ -1,6 +1,6 @@
 {
-  "schema_version": 3,
-  "candidate_design": "v1.5.5-rc.1",
+  "schema_version": 4,
+  "candidate_design": "v1.5.6-rc.1",
   "core_required_files": [
     ".cursor/rules/00-core.mdc",
     ".cursor/rules/10-project.mdc",
@@ -17,7 +17,13 @@
     "sdlc/config/br-intake-profile.example.json",
     "sdlc/design/contracts/customer-document-contract.json",
     "sdlc/design/contracts/br-candidate.schema.json",
-    "sdlc/design/contracts/br-document-extraction-contract.json"
+    "sdlc/design/contracts/br-document-extraction-contract.json",
+    "sdlc/design/contracts/starter-kit-contract.json",
+    "sdlc/starter-kits/README.md",
+    "sdlc/starter-kits/greenfield/README.md",
+    "sdlc/starter-kits/greenfield/starter-manifest.example.yaml",
+    "sdlc/starter-kits/brownfield/README.md",
+    "sdlc/starter-kits/brownfield/starter-manifest.example.yaml"
   ],
   "overlay_precedence": ["core","preset","project_profile","project_overlay","domain_overlay","local_override"],
   "customization_roots": ["sdlc/custom/project","sdlc/custom/domain"],
@@ -46,5 +52,11 @@
     "customer_document_contract":"sdlc/design/contracts/customer-document-contract.json",
     "br_candidate_schema":"sdlc/design/contracts/br-candidate.schema.json",
     "br_document_extraction_contract":"sdlc/design/contracts/br-document-extraction-contract.json"
+  },
+  "starter_kits": {
+    "contract":"sdlc/design/contracts/starter-kit-contract.json",
+    "greenfield":"sdlc/starter-kits/greenfield/starter-manifest.example.yaml",
+    "brownfield":"sdlc/starter-kits/brownfield/starter-manifest.example.yaml",
+    "mode_preset_mapping_required":true
   }
 }
