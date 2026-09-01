@@ -1,35 +1,32 @@
 schema_version: 1
-branch: validation/v1.5.1-requirements-pilot-v0.1
-branch_version: requirements-pilot-v0.1.0
-parent_branch: feature/phase-0.5-worklist-sync
-parent_commit: ecd8ef63d84c3c6f9d1306b3c692c0d33ada94d5
+branch: validation/v1.5.2-requirement-intake-poc-v0.2
+branch_version: requirement-intake-poc-v0.2.0
+parent_branch: validation/v1.5.1-requirements-pilot-v0.1
+parent_commit: e59ce1a087f9451ecf1344ffa4b099a7c6a84b70
 main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
 candidate_design_version: v1.5.2-rc.1
-status: VALIDATED_WITH_GAPS
+status: IMPLEMENTED_VALIDATED
 merge_to_main: false
-purpose: 실제 요구사항목록 142건을 이용한 단계별 SDLC 설계 실행가능성 검증
-input:
-  file: 요구사항목록.xlsx
-  records: 142
-  external_id_ranges:
-    - REQ_TM_FL001..REQ_TM_FL039
-    - REQ_TM_TE001..REQ_TM_TE103
+purpose: Bulk Requirement Intake / External ID / RQ-FR Grouping 설계 Gap의 구현 가능성 PoC
 scope:
-  - requirement batch intake
-  - RQ-FR grouping
-  - external requirement id traceability
-  - stage-by-stage feasibility
-  - PM optional tracking
-  - Brownfield discovery prerequisites
+  - two-row XLSX header parsing
+  - source record provenance
+  - external requirement id preservation
+  - exact RQ grouping
+  - FR candidate creation
+  - near-duplicate GROUPING_REVIEW
+  - non-blocking invalid/duplicate handling
+  - GitHub-safe Mermaid report
 validation:
-  stage_result: CONDITIONAL_PASS
-  docs_quality_ci: PASS
-  worklist_sync_ci: PASS
-  blocking_design_gaps: 3
-  major_gaps:
-    - GAP-RI-001 external requirement id traceability
-    - GAP-RI-002 bulk requirement intake
-    - GAP-RI-003 RQ-FR grouping contract
-next_candidate: v1.5.2-rc.1
-updated_at: 2026-09-01T17:48:00+09:00
+  requirement_intake_tests: 6
+  requirement_intake_tests_result: PASS
+  inherited_worklist_tests: 6
+  github_actions_combined_tests: PASS
+  mermaid_docs_quality: PASS
+actual_uploaded_requirements:
+  structural_validation_records: 142
+  code_execution_against_chat_attachment: NOT_MOUNTED_IN_REPO_RUNTIME
+  note: actual file structure was validated from uploaded workbook parsing; importer code was contract-tested with representative two-row XLSX fixtures
+next_step: connect actual application source repository and validate DISCOVERY/IMPACT on one RQ group
+updated_at: 2026-09-01T17:58:00+09:00
