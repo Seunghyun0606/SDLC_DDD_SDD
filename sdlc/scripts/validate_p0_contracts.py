@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic P0 validators for Stage Input Pack and Requirement Boundary files."""
+"""Deterministic P0/P0.1 validators for legacy normalization, boundary, and Stage Input Pack."""
 
 from __future__ import annotations
 
@@ -22,6 +22,10 @@ BOUNDARY_DECISIONS = {
     "UNRESOLVED",
 }
 BOUNDARY_STATUS = {"CONFIRMED", "PROVISIONAL", "OPEN"}
+BOUNDARY_SCOPE = {"ROW", "GROUP", "SUBGROUP"}
+PACK_GRANULARITY = {"ROW", "GROUP", "SUBGROUP", "CANONICAL_ENTITY"}
+NORMALIZER_STRATEGIES = {"EXACT_LEVEL2_REQUIREMENT_NAME"}
+PARTITION_MODES = {"ALL_ROWS_EXACTLY_ONCE", "PARTIAL_REVIEW"}
 RELATED_KEYS = {"rq", "fr", "br", "ac", "proc", "pgm", "task", "tc"}
 
 
@@ -60,9 +64,27 @@ def validate_stage_pack(data):
     source_ids = target.get("source_requirement_ids")
     if not isinstance(source_ids, list) or not source_ids:
         add(errors, "SIP-005", "target.source_requirement_ids must preserve at least one source ID")
+        source_ids = []
+    elif len(source_ids) != len(set(source_ids)):
+        add(errors, "SIP-021", "target.source_requirement_ids must be unique")
+
     related = target.get("related_ids")
     if not isinstance(related, dict) or not RELATED_KEYS.issubset(set(related)):
         add(errors, "SIP-006", f"target.related_ids must contain {sorted(RELATED_KEYS)}")
+
+    granularity = meta.get("granularity")
+    group_id = meta.get("source_group_id")
+    if len(source_ids) > 1:
+        if granularity not in {"GROUP", "SUBGROUP"}:
+            add(errors, "SIP-022", "multi-row legacy handoff requires metadata.granularity GROUP or SUBGROUP")
+        if not nonempty(group_id):
+            add(errors, "SIP-023", "multi-row legacy handoff requires metadata.source_group_id")
+    elif granularity is not None and granularity not in PACK_GRANULARITY:
+        add(errors, "SIP-024", f"metadata.granularity must be one of {sorted(PACK_GRANULARITY)}")
+    if granularity in {"GROUP", "SUBGROUP"} and not nonempty(group_id):
+        add(errors, "SIP-025", "GROUP/SUBGROUP pack requires metadata.source_group_id")
+    if granularity == "ROW" and len(source_ids) != 1:
+        add(errors, "SIP-026", "ROW granularity requires exactly one source requirement ID")
 
     evidence = root.get("evidence") or []
     evidence_ids = []
@@ -132,20 +154,43 @@ def validate_stage_pack(data):
     return errors
 
 
+def _boundary_source_ids(rec):
+    if isinstance(rec.get("source_requirement_ids"), list):
+        return rec.get("source_requirement_ids") or []
+    if nonempty(rec.get("source_requirement_id")):
+        return [rec.get("source_requirement_id")]
+    return []
+
+
 def validate_boundary(data):
     errors = []
     records = (data or {}).get("boundary_records")
     if not isinstance(records, list) or not records:
         return ["RQB-001: boundary_records must contain at least one record"]
 
-    source_ids = []
+    all_source_ids = []
     for idx, rec in enumerate(records):
         rec = rec or {}
-        sid = rec.get("source_requirement_id")
-        if not nonempty(sid):
-            add(errors, "RQB-002", f"boundary_records[{idx}].source_requirement_id is required")
-        else:
-            source_ids.append(sid)
+        source_ids = _boundary_source_ids(rec)
+        if not source_ids:
+            add(errors, "RQB-002", f"boundary_records[{idx}] must preserve source requirement ID(s)")
+        if len(source_ids) != len(set(source_ids)):
+            add(errors, "RQB-013", f"boundary_records[{idx}].source_requirement_ids must be unique")
+        all_source_ids.extend(source_ids)
+
+        scope = rec.get("scope_type")
+        if scope is None:
+            scope = "ROW" if len(source_ids) <= 1 else None
+        if scope not in BOUNDARY_SCOPE:
+            add(errors, "RQB-014", f"boundary_records[{idx}].scope_type must be one of {sorted(BOUNDARY_SCOPE)}")
+        if len(source_ids) > 1:
+            if scope not in {"GROUP", "SUBGROUP"}:
+                add(errors, "RQB-015", f"boundary_records[{idx}] multi-row boundary must use GROUP or SUBGROUP scope")
+            if not nonempty(rec.get("source_group_id")):
+                add(errors, "RQB-016", f"boundary_records[{idx}] multi-row boundary requires source_group_id")
+        if nonempty(rec.get("source_count")) and rec.get("source_count") != len(source_ids):
+            add(errors, "RQB-017", f"boundary_records[{idx}].source_count must equal number of source IDs")
+
         decision = rec.get("decision")
         status = rec.get("status")
         rq_ids = rec.get("canonical_rq_ids") or []
@@ -175,14 +220,123 @@ def validate_boundary(data):
             if status == "CONFIRMED" and not nonempty(rec.get("decided_by")):
                 add(errors, "RQB-011", f"boundary_records[{idx}] confirmed split requires decided_by")
 
-    if len(source_ids) != len(set(source_ids)):
-        add(errors, "RQB-012", "source_requirement_id must be unique")
+    if len(all_source_ids) != len(set(all_source_ids)):
+        add(errors, "RQB-012", "source requirement IDs must not appear in multiple boundary records")
+    return errors
+
+
+def validate_normalization(data):
+    errors = []
+    root = (data or {}).get("legacy_requirement_normalization")
+    if not isinstance(root, dict):
+        return ["LRN-001: legacy_requirement_normalization object is required"]
+
+    meta = root.get("metadata") or {}
+    for key in ("normalizer_id", "source_name", "source_revision", "strategy", "partition_mode"):
+        if not nonempty(meta.get(key)):
+            add(errors, "LRN-002", f"metadata.{key} is required")
+    strategy = meta.get("strategy")
+    partition_mode = meta.get("partition_mode")
+    if strategy not in NORMALIZER_STRATEGIES:
+        add(errors, "LRN-003", f"metadata.strategy must be one of {sorted(NORMALIZER_STRATEGIES)}")
+    if partition_mode not in PARTITION_MODES:
+        add(errors, "LRN-004", f"metadata.partition_mode must be one of {sorted(PARTITION_MODES)}")
+
+    rows = root.get("source_rows")
+    if not isinstance(rows, list) or not rows:
+        return errors + ["LRN-005: source_rows must contain at least one row"]
+    row_map = {}
+    for idx, row in enumerate(rows):
+        row = row or {}
+        sid = row.get("source_requirement_id")
+        if not nonempty(sid):
+            add(errors, "LRN-006", f"source_rows[{idx}].source_requirement_id is required")
+            continue
+        if sid in row_map:
+            add(errors, "LRN-007", f"duplicate source_requirement_id: {sid}")
+        row_map[sid] = row
+        for key in ("level2", "requirement_name"):
+            if not nonempty(row.get(key)):
+                add(errors, "LRN-008", f"source_rows[{idx}].{key} is required for exact grouping")
+
+    groups = root.get("candidate_groups")
+    if not isinstance(groups, list) or not groups:
+        return errors + ["LRN-009: candidate_groups must contain at least one group"]
+
+    group_ids = set()
+    assigned = []
+    for idx, group in enumerate(groups):
+        group = group or {}
+        gid = group.get("group_id")
+        if not nonempty(gid):
+            add(errors, "LRN-010", f"candidate_groups[{idx}].group_id is required")
+        elif gid in group_ids:
+            add(errors, "LRN-011", f"duplicate group_id: {gid}")
+        else:
+            group_ids.add(gid)
+
+        source_ids = group.get("source_requirement_ids")
+        if not isinstance(source_ids, list) or not source_ids:
+            add(errors, "LRN-012", f"candidate_groups[{idx}].source_requirement_ids must not be empty")
+            source_ids = []
+        if len(source_ids) != len(set(source_ids)):
+            add(errors, "LRN-013", f"candidate_groups[{idx}] contains duplicate source IDs")
+        assigned.extend(source_ids)
+
+        unknown = [sid for sid in source_ids if sid not in row_map]
+        if unknown:
+            add(errors, "LRN-014", f"candidate_groups[{idx}] references unknown source IDs {unknown}")
+
+        if group.get("publish_canonical") is not False:
+            add(errors, "LRN-015", f"candidate_groups[{idx}].publish_canonical must be false")
+        if group.get("boundary_status") != "OPEN":
+            add(errors, "LRN-016", f"candidate_groups[{idx}].boundary_status must be OPEN")
+        if group.get("canonical_decision") != "UNRESOLVED":
+            add(errors, "LRN-017", f"candidate_groups[{idx}].canonical_decision must be UNRESOLVED")
+
+        key = group.get("grouping_key") or {}
+        if strategy == "EXACT_LEVEL2_REQUIREMENT_NAME":
+            if set(key) != {"level2", "requirement_name"}:
+                add(errors, "LRN-018", f"candidate_groups[{idx}].grouping_key must contain exactly level2 and requirement_name")
+            for sid in source_ids:
+                row = row_map.get(sid)
+                if not row:
+                    continue
+                if row.get("level2") != key.get("level2") or row.get("requirement_name") != key.get("requirement_name"):
+                    add(errors, "LRN-019", f"candidate_groups[{idx}] violates exact grouping for source ID {sid}")
+
+        if nonempty(group.get("source_count")) and group.get("source_count") != len(source_ids):
+            add(errors, "LRN-020", f"candidate_groups[{idx}].source_count must equal number of source IDs")
+
+    if len(assigned) != len(set(assigned)):
+        add(errors, "LRN-021", "a source requirement ID must not belong to multiple exact candidate groups")
+    if partition_mode == "ALL_ROWS_EXACTLY_ONCE":
+        if set(assigned) != set(row_map):
+            missing = sorted(set(row_map) - set(assigned))
+            extra = sorted(set(assigned) - set(row_map))
+            add(errors, "LRN-022", f"partition must cover every source row exactly once; missing={missing}, extra={extra}")
+
+    subgroups = root.get("subgroup_candidates") or []
+    for idx, subgroup in enumerate(subgroups):
+        subgroup = subgroup or {}
+        if subgroup.get("truth") != "INFERRED":
+            add(errors, "LRN-023", f"subgroup_candidates[{idx}].truth must be INFERRED")
+        if subgroup.get("publish_canonical") is not False:
+            add(errors, "LRN-024", f"subgroup_candidates[{idx}].publish_canonical must be false")
+        parent = subgroup.get("parent_group_id")
+        if parent not in group_ids:
+            add(errors, "LRN-025", f"subgroup_candidates[{idx}] parent_group_id must reference a candidate group")
+        sids = subgroup.get("source_requirement_ids") or []
+        unknown = [sid for sid in sids if sid not in row_map]
+        if unknown:
+            add(errors, "LRN-026", f"subgroup_candidates[{idx}] references unknown source IDs {unknown}")
+
     return errors
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("kind", choices=["stage-pack", "rq-boundary"])
+    parser.add_argument("kind", choices=["stage-pack", "rq-boundary", "legacy-normalization"])
     parser.add_argument("path", type=Path)
     args = parser.parse_args()
     try:
@@ -191,7 +345,12 @@ def main():
         print(f"LOAD-001: {exc}", file=sys.stderr)
         return 2
 
-    errors = validate_stage_pack(data) if args.kind == "stage-pack" else validate_boundary(data)
+    validators = {
+        "stage-pack": validate_stage_pack,
+        "rq-boundary": validate_boundary,
+        "legacy-normalization": validate_normalization,
+    }
+    errors = validators[args.kind](data)
     if errors:
         for error in errors:
             print(error, file=sys.stderr)
