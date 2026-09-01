@@ -42,6 +42,19 @@ class StarterKitContractTest(unittest.TestCase):
             self.assertTrue((ROOT / f"sdlc/starter-kits/{mode}/README.md").is_file())
             self.assertTrue((ROOT / f"sdlc/starter-kits/{mode}/starter-manifest.example.yaml").is_file())
 
+    def test_setup_routes_to_mode_specific_starter_kits(self):
+        setup = (ROOT / ".cursor/skills/setup/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("sdlc/starter-kits/greenfield/", setup)
+        self.assertIn("sdlc/starter-kits/brownfield/", setup)
+        self.assertIn("greenfield-default", setup)
+        self.assertIn("brownfield-auto", setup)
+
+    def test_project_profile_no_longer_defaults_auto_to_brownfield(self):
+        profile = (ROOT / "sdlc/config/project-profile.example.yaml").read_text(encoding="utf-8")
+        self.assertIn("name: AUTO", profile)
+        self.assertIn("GREENFIELD: greenfield-default", profile)
+        self.assertIn("BROWNFIELD: brownfield-auto", profile)
+
 
 if __name__ == "__main__":
     unittest.main()
