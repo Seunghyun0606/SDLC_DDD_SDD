@@ -1,0 +1,32 @@
+version: 1
+status: ACTIVE_P2_CANDIDATE
+header_scan_rows: 10
+required_fields:
+  - source_requirement_id
+  - requirement_name
+  - requirement_text
+field_order:
+  - level1
+  - level2
+  - source_requirement_id
+  - requirement_name
+  - requirement_text
+  - start_date
+  - end_date
+  - assignee
+aliases:
+  level1: [Level1, 업무구분Level1, 업무구분1, 대분류]
+  level2: [Level2, 업무구분Level2, 업무구분2, 중분류]
+  source_requirement_id: [요구사항ID, 요구사항 ID, RequirementID, Requirement ID, ReqID]
+  requirement_name: [요구사항명, RequirementName, Requirement Name, 제목]
+  requirement_text: [요구사항, 요구사항내용, Requirement, RequirementText, Requirement Text, 설명]
+  start_date: [시작일, StartDate, Start Date]
+  end_date: [종료일, EndDate, End Date]
+  assignee: [담당자, Owner, Assignee]
+truth_rules:
+  workbook_cell_value: GIVEN
+  canonical_requirement_id: NEVER_CREATED_BY_INTAKE
+  missing_cell: OPEN_OR_NULL
+customization:
+  project_specific_aliases_may_extend_core: true
+  fixed_column_position_required: false
