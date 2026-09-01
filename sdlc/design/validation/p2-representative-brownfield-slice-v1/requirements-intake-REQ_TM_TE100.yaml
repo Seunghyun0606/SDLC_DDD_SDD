@@ -33,7 +33,7 @@ requirement_intake:
       메인화면: 1
       선택적근무제: 2
   records:
-  - source_row: 142
+  - source_row: 141
     truth_state: GIVEN
     level1: 근태관리
     level2: Interface
