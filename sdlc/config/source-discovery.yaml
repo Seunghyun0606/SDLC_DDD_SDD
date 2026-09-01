@@ -1,7 +1,7 @@
-version: 2
+version: 3
 status: ACTIVE_STRUCTURAL_REDESIGN_V1
 
-purpose: Source Repository/Snapshot에서 직접 확인 가능한 Evidence를 단계적으로 수집한다. 초기 Inventory는 기존 Program/Artifact 관계를 요구하지 않고, Bounded Trace 단계에서만 직접 관계를 사용한다.
+purpose: Source Repository/Snapshot에서 직접 확인 가능한 Evidence를 단계적으로 수집한다. 초기 Inventory는 기존 Program/Artifact 관계를 요구하지 않고, Bounded Trace 단계에서만 명시 Target/Analyzer Evidence를 사용한다.
 
 phases:
   INVENTORY:
@@ -19,7 +19,7 @@ phases:
   BOUNDED_TRACE:
     purpose: 현재 Requirement/Program에 필요한 Source Evidence만 추적한다.
     required_inputs: [source_root, source_revision, target_context]
-    optional_inputs: [trace_manifest, direct_relations, configured_paths]
+    optional_inputs: [analyzer_evidence, explicit_relations]
     direct_trace_required: false
     output: source_discovery_result
 
@@ -29,10 +29,9 @@ input_contract:
     - source_revision
   optional:
     - target_context
-    - trace_manifest
-    - direct_relations
+    - analyzer_evidence
+    - explicit_relations
     - configured_paths
-    - analyzer_plan
     - prior_stage_input_pack
 
 provider_states:
@@ -43,8 +42,8 @@ provider_states:
   - PARTIAL
 
 retrieval_order:
-  - explicit_direct_relation
   - explicit_target_path_or_symbol
+  - explicit_direct_relation
   - analyzer_supported_relation
   - configured_path
   - bounded_reference_search
@@ -53,6 +52,7 @@ retrieval_order:
 analyzer_boundary:
   core_responsibility:
     - bounded_inventory
+    - explicit_path_hashing
     - evidence_envelope
     - revision_and_hash
     - open_and_blind_spot_preservation
@@ -105,7 +105,10 @@ escalation:
 
 runtime:
   inventory_script: sdlc/scripts/discover_source_inventory.py
-  bounded_trace_reference_script: sdlc/scripts/discover_source_evidence.py
+  bounded_trace_script: sdlc/scripts/collect_bounded_source_evidence.py
+  target_context_template: sdlc/templates/source-target-context.yaml
   analyzer_registry: sdlc/config/source-analyzers.yaml
   output_template: sdlc/templates/source-discovery-result.yaml
   validator: sdlc/scripts/validate_p03_contracts.py
+  legacy_fixture_reference: sdlc/scripts/discover_source_evidence.py
+  legacy_fixture_core_status: DEPRECATED_REFERENCE_ONLY
