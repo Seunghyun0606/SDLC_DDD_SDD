@@ -1,0 +1,43 @@
+p1_foundation_status:
+  state: P1_FOUNDATION_READY_REAL_SLICE_REQUIRED
+  p0_baseline_required: true
+  p0_baseline_branch: SDLC_DESIGN_SESSION_SECOND/p0.final/design-baseline-exit-v1
+  production_ready: false
+  actual_customer_source_connected: false
+  actual_runtime_test_connected: false
+  representative_vertical_slice_reviewed: false
+  full_requirement_scale_out_allowed: false
+
+completed_core:
+  - FOUNDATION_BOOTSTRAP_CONTRACT
+  - LATE_BOUND_PROJECT_OVERLAY
+  - PROJECT_PROFILE_WIRING
+  - KNOWLEDGE_PROVENANCE_TEMPLATE_AND_LINT
+  - GLOSSARY_TEMPLATE_AND_LINT
+  - REFERENCE_GRAPH_TEMPLATE_AND_VALIDATION
+  - OPEN_ITEM_RUNTIME_GUARD
+  - REBUILDABLE_BASELINE_CACHE
+  - SCALE_OUT_GATE
+  - LOW_AGENT_BOOTSTRAP_SKILL
+  - CUSTOMIZATION_GUIDE
+
+customization_policy:
+  upfront_customization_required: false
+  customize_only_on_observed_difference: true
+  proposed_overlay_auto_applied: false
+  sample_specific_overlay_allowed: false
+  core_truth_copy_into_overlay_allowed: false
+
+real_project_next_gate:
+  required:
+    - REAL_SOURCE_CONNECTED
+    - PROJECT_BOOTSTRAP_MANIFEST_CREATED
+    - FIRST_REAL_RQ_SELECTED
+    - JIT_REFERENCE_GRAPH_CREATED
+    - CUSTOMIZATION_CONFLICTS_RECORDED
+    - REPRESENTATIVE_VERTICAL_SLICE_REVIEWED
+  then_state: READY_FOR_SCALE_OUT
+
+sample_policy:
+  requirement_sample_required_for_p1_foundation: false
+  sample_can_be_used_for_regression_only: true
