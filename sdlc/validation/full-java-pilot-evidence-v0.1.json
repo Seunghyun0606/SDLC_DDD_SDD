@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "source_file": "요구사항목록.xlsx",
+  "source_sha256": "d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f",
+  "requirements": 142,
+  "rq_groups": 22,
+  "fr_candidates": 142,
+  "program_candidates": 142,
+  "rq_workflow_docs_generated": 264,
+  "detailed_program_specs_generated": 142,
+  "markdown_docs_generated": 410,
+  "java_main_source_files": 73,
+  "java_compile": "PASS",
+  "java_symbol_coverage": "142/142",
+  "tc_candidates": 568,
+  "production_ready_programs": 0,
+  "verdict": "FULL_STRUCTURAL_PILOT_PASS / PRODUCTION_IMPLEMENTATION_NOT_READY",
+  "source_boundary": "SIMULATED_REFERENCE_ARCHITECTURE",
+  "gaps": [
+    {"id": "GAP-PS-001", "status": "IMPLEMENTED"},
+    {"id": "GAP-PS-002", "status": "PILOT_VALIDATED"},
+    {"id": "GAP-PS-003", "status": "IMPLEMENTED"}
+  ]
+}

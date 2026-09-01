@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "readiness_states": [
+    "READY",
+    "PARTIAL",
+    "EXECUTION_GUARDED"
+  ],
+  "rules": {
+    "ready_requires_zero_open": true,
+    "simulated_source_cannot_be_ready": true,
+    "open_real_source_cannot_be_ready": true
+  },
+  "required_fields": [
+    {"id": "entry_point", "label": "Entry Point / Target", "marker": "### Entry Point / Target"},
+    {"id": "source_evidence", "label": "Physical Artifact / Symbol Evidence", "marker": "### Physical Artifact / Symbol Evidence"},
+    {"id": "input_dto", "label": "Input DTO Contract", "marker": "### Input DTO Contract"},
+    {"id": "output_dto", "label": "Output DTO Contract", "marker": "### Output DTO Contract"},
+    {"id": "business_rule", "label": "Business Validation / Decision / State", "marker": "### Business Validation / Decision / State"},
+    {"id": "data_persistence", "label": "Data / Persistence", "marker": "### Data / Persistence"},
+    {"id": "transaction", "label": "Transaction / Concurrency / Idempotency", "marker": "### Transaction / Concurrency / Idempotency"},
+    {"id": "integration", "label": "Integration / Notification Contract", "marker": "### Integration / Notification Contract"},
+    {"id": "error", "label": "Exception / Error Contract", "marker": "### Exception / Error Contract"},
+    {"id": "security", "label": "Security / Audit / Observability", "marker": "### Security / Audit / Observability"},
+    {"id": "nfr", "label": "NFR / Operations", "marker": "### NFR / Operations"},
+    {"id": "standards", "label": "Applicable Standards / Standard Deviation", "marker": "### Applicable Standards / Standard Deviation"},
+    {"id": "ac_tc", "label": "AC / TC Mapping", "marker": "### AC / TC Mapping"},
+    {"id": "task", "label": "Development Task / Scope Guard", "marker": "### Development Task / Scope Guard"},
+    {"id": "dor", "label": "Definition of Ready", "marker": "### Definition of Ready"},
+    {"id": "traceability", "label": "Traceability", "marker": "## 관련 ID/Traceability"},
+    {"id": "next", "label": "Next Work", "marker": "## 다음 작업"}
+  ]
+}

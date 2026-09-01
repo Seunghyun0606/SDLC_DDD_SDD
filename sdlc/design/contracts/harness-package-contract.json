@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "candidate_design": "v1.5.3-rc.1",
+  "schema_version": 2,
+  "candidate_design": "v1.5.4-rc.1",
   "core_required_files": [
     ".cursor/rules/00-core.mdc",
     ".cursor/rules/10-project.mdc",
@@ -8,48 +8,17 @@
     ".cursor/skills/change/SKILL.md",
     ".cursor/skills/check/SKILL.md",
     ".cursor/skills/setup/SKILL.md",
-    "sdlc/config/source-profile.example.yaml"
+    "sdlc/config/source-profile.example.yaml",
+    "sdlc/config/program-spec-readiness.json",
+    "sdlc/scripts/validate_program_spec.py"
   ],
-  "overlay_precedence": [
-    "core",
-    "preset",
-    "project_profile",
-    "project_overlay",
-    "domain_overlay",
-    "local_override"
-  ],
-  "customization_roots": [
-    "sdlc/custom/project",
-    "sdlc/custom/domain"
-  ],
-  "work_reference_required_sections": [
-    "## Purpose",
-    "## Required Input",
-    "## Optional Input",
-    "## Retrieval Strategy",
-    "## Steps",
-    "## Output",
-    "## Quality Check",
-    "## Alert Conditions",
-    "## Token Strategy",
-    "## Do Not"
-  ],
-  "template_required_sections": [
-    "## 문서 목적",
-    "## 30초 요약",
-    "## Workflow",
-    "## 입력/Evidence",
-    "## 본문",
-    "## 미확정/Alert/Assumption",
-    "## 관련 ID/Traceability",
-    "## 다음 작업"
-  ],
-  "source_evidence_markers": [
-    "Locator",
-    "Source Hash",
-    "Confidence",
-    "Status"
-  ],
+  "overlay_precedence": ["core", "preset", "project_profile", "project_overlay", "domain_overlay", "local_override"],
+  "customization_roots": ["sdlc/custom/project", "sdlc/custom/domain"],
+  "work_reference_required_sections": ["## Purpose", "## Required Input", "## Optional Input", "## Retrieval Strategy", "## Steps", "## Output", "## Quality Check", "## Alert Conditions", "## Token Strategy", "## Do Not"],
+  "template_required_sections": ["## 문서 목적", "## 30초 요약", "## Workflow", "## 입력/Evidence", "## 본문", "## 미확정/Alert/Assumption", "## 관련 ID/Traceability", "## 다음 작업"],
+  "source_evidence_markers": ["Locator", "Source Hash", "Confidence", "Status"],
+  "program_spec_required_markers": ["### Entry Point / Target", "### Physical Artifact / Symbol Evidence", "### Input DTO Contract", "### Output DTO Contract", "### Business Validation / Decision / State", "### Data / Persistence", "### Transaction / Concurrency / Idempotency", "### Integration / Notification Contract", "### Exception / Error Contract", "### Security / Audit / Observability", "### NFR / Operations", "### Applicable Standards / Standard Deviation", "### AC / TC Mapping", "### Development Task / Scope Guard", "### Definition of Ready", "## 관련 ID/Traceability", "## 다음 작업"],
+  "program_readiness_rules": {"ready_requires_zero_open": true, "simulated_source_cannot_be_ready": true, "open_real_source_cannot_be_ready": true},
   "stage_contracts": {
     "DECOMPOSE": {"reference": "requirement.md", "template": "requirement-analysis.md"},
     "CLARIFY": {"reference": "clarify.md", "template": "interview-questions.md"},
@@ -57,16 +26,10 @@
     "DISCOVERY": {"reference": "discovery.md", "template": "impact-analysis.md", "source_evidence": true},
     "IMPACT": {"reference": "impact.md", "template": "impact-analysis.md", "source_evidence": true},
     "DESIGN": {"reference": "design.md", "template": "functional-design.md", "source_evidence": true},
-    "PROGRAM": {"reference": "program.md", "template": "program-spec.md", "source_evidence": true},
+    "PROGRAM": {"reference": "program.md", "template": "program-spec.md", "source_evidence": true, "readiness_contract": true},
     "DEVELOPMENT": {"reference": "development.md", "template": "implementation-result.md", "source_evidence": true},
     "TEST": {"reference": "test.md", "template": "test-scenario.md", "source_evidence": true},
     "VERIFY": {"reference": "verify.md", "template": "verification-result.md", "source_evidence": true}
   },
-  "core_invariant_markers": [
-    "OBSERVED",
-    "Execution Guard",
-    "외부 요구사항 ID",
-    "Canonical",
-    "Overlay"
-  ]
+  "core_invariant_markers": ["OBSERVED", "Execution Guard", "외부 요구사항 ID", "Canonical", "Overlay"]
 }

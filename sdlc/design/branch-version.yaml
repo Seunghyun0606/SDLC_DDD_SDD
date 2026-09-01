@@ -2,56 +2,65 @@ schema_version: 1
 session_namespace: SDLC_DESIGN_SESSION_FIRST
 session_base_branch: SDLC_DESIGN_SESSION_FIRST/base
 session_base_commit: bd14bf588efb95371e7c8f5f5a1515536b8cadf8
-branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.3-workflow-pilot-v0.1
+branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.4-full-requirements-java-pilot-v0.1
 legacy_branch: null
-branch_version: workflow-pilot-v0.1.0
-parent_branch: SDLC_DESIGN_SESSION_FIRST/poc/v1.5.3-overlay-resolution-v0.1
-parent_commit: d4e102be89552caea76c31552a48c16cc6192940
+branch_version: full-requirements-java-pilot-v0.1.0
+parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.3-workflow-pilot-v0.1
+parent_commit: 2e9eeeb36819d16c19c982c4d08128a19ae11472
 main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
-candidate_design_version: v1.5.3-rc.3
-status: PILOT_VALIDATED
+candidate_design_version: v1.5.4-rc.1
+status: FULL_PILOT_LOCAL_VALIDATED_CI_PENDING
 merge_to_main: false
-purpose: 실제 요구사항 XLSX 대표 RQ를 이용해 INTAKE부터 VERIFY/KNOWLEDGE까지 사용자 산출물과 Source-enabled Workflow를 파일럿 검증
+purpose: 전체 142 Requirement에 대해 Java Reference Project와 상세 Program DoR를 적용해 실제 개발 명세 깊이와 Workflow 산출물 전수 Coverage를 검증
 pilot:
-  requirement_candidate: RQ-CAND-0001
   source_file: 요구사항목록.xlsx
   source_hash: sha256:d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f
-  external_ids:
-    - REQ_TM_FL001
-    - REQ_TM_FL002
-    - REQ_TM_FL003
-  requirement_name: 탄력근로제 개선 최초근무계획 자동 설정하는 기능
-  source_evidence: SIMULATED_SOURCE_FIXTURE
-  verdict: PILOT_STRUCTURAL_PASS / REAL_SOURCE_PENDING
+  requirements: 142
+  rq_groups: 22
+  fr_candidates: 142
+  program_candidates: 142
+  rq_workflow_docs_generated: 264
+  detailed_program_specs_generated: 142
+  java_main_source_files: 73
+  tc_candidates: 568
+  production_ready_programs: 0
+  source_evidence: SIMULATED_REFERENCE_ARCHITECTURE
+  verdict: FULL_STRUCTURAL_PILOT_PASS / PRODUCTION_IMPLEMENTATION_NOT_READY
 validation:
-  pilot_tests: 7
-  pilot_tests_result: PASS
-  overlay_tests_inherited: 6
-  structure_tests_inherited: 8
-  requirement_intake_tests_inherited: 8
-  worklist_tests_inherited: 6
-  combined_unittest_count: 35
-  workflow_artifact_docs: 15
-  github_actions:
-    worklist_sync_quality_run: 49
-    worklist_sync_quality_result: SUCCESS
-    docs_quality_run: 25
-    docs_quality_result: SUCCESS
-  mermaid_markdown_files_checked: 70
-  mermaid_docs_quality: PASS
+  full_pilot_local_validator: PASS
+  java_compile: PASS
+  java_symbol_coverage: 142/142
+  program_readiness_tests_added: 6
+  program_readiness_tests_result: PASS_LOCAL
+  inherited_combined_unittest_count: 35
+  expected_combined_unittest_count: 41
+  mermaid_docs_quality: CI_PENDING
 stage_validation:
-  intake: PASS_REAL_XLSX
-  decompose: PASS_PILOT
-  clarify: PASS_WARNING_OPEN_QUESTIONS
-  process: PASS_WARNING_SIMULATED_ASIS
-  discovery: PASS_SIMULATED_SOURCE
-  impact: PASS_SIMULATED_SOURCE
-  design: PASS_WARNING_ASSUMPTION
-  program: PASS_SIMULATED_SOURCE
-  development: PASS_FIXTURE_ONLY
-  test: PASS_SPEC_FIXTURE_ONLY
-  verify: PASS_PILOT_REAL_SOURCE_PENDING
-  knowledge: NOT_PROMOTED_PILOT_ONLY
-next_step: replace simulated fixture with actual Brownfield application source and rerun DISCOVERY through VERIFY
-updated_at: 2026-09-01T19:38:00+09:00
+  intake: PASS_REAL_XLSX_142
+  decompose: PASS_ALL_RQ
+  clarify: PASS_OPEN_TRACKED
+  process: PASS_CANDIDATE
+  discovery: PASS_REFERENCE_SOURCE_REAL_SOURCE_PENDING
+  impact: PASS_CANDIDATE
+  design: PASS_PARTIAL
+  program: PASS_DETAILED_SPEC_READINESS_PARTIAL
+  development: PASS_REFERENCE_JAVA_COMPILE
+  test: PASS_568_TC_CANDIDATES
+  verify: FULL_STRUCTURAL_PASS_PRODUCTION_PENDING
+  knowledge: PATTERN_ONLY_NOT_BUSINESS_PROMOTED
+new_design_gaps:
+  - id: GAP-PS-001
+    type: Contract Gap + Implementation Gap
+    status: IMPLEMENTED_LOCAL_VALIDATED
+    title: Program Specification Implementation Readiness Contract
+  - id: GAP-PS-002
+    type: Traceability Gap
+    status: PILOT_VALIDATED
+    title: Full Requirement to Source Symbol Coverage Contract
+  - id: GAP-PS-003
+    type: Evidence Integrity Gap
+    status: IMPLEMENTED_LOCAL_VALIDATED
+    title: Candidate Architecture must not satisfy Real Source Evidence
+next_step: review full pilot outputs, then connect actual Brownfield Source and replace OPEN_REAL_SOURCE without changing the Program DoR structure
+updated_at: 2026-09-01T19:55:00+09:00

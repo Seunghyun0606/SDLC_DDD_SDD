@@ -24,43 +24,99 @@ generated_at: "{{generated_at}}"
 ## Workflow
 ```mermaid
 flowchart LR
-    I["입력/Evidence"] --> A["분석"] --> O["현재 산출물"]
+    F["FR / Functional Design"] --> E["Source Evidence"] --> P["Program Contract"] --> D["DoR"] --> T["TASK / AC / TC"]
 ```
 
 ## 입력/Evidence
 | 구분 | 값 | Truth/Evidence | Locator | Source Hash | Confidence | Status |
 |---|---|---|---|---|---|---|
 | 요구사항 | {{requirement_source}} | GIVEN | {{requirement_locator}} | - | HIGH | CURRENT |
-| Source | {{source_summary}} | OBSERVED | {{source_locator}} | {{source_hash}} | {{source_confidence}} | {{source_status}} |
+| Source | {{source_summary}} | {{source_truth_type}} | {{source_locator}} | {{source_hash}} | {{source_confidence}} | {{source_status}} |
 
 ## 본문
-### Program Identity
+### Program Identity / Traceability
 - PGM: {{program_id}}
+- FR: {{fr_id}}
+- External Requirement ID: {{external_requirement_id}}
 - Change Type: {{change_type}}
 - Spec Level: {{spec_level}}
+- Implementation Readiness: {{implementation_readiness}}
+
+### Entry Point / Target
+- Kind: {{entry_point_kind}}
+- Endpoint/Job/Adapter: {{entry_point_locator}}
+- Application Service: {{service_locator}}
+- Repository/Mapper: {{repository_locator}}
+- Target Confidence: {{target_confidence}}
 
 ### Physical Artifact / Symbol Evidence
 | Artifact | Symbol | Locator | Source Hash | Evidence Status |
 |---|---|---|---|---|
 {{artifact_evidence_rows}}
 
-### 역할 / 변경 이유
-{{role_and_reason}}
+### Input DTO Contract
+| Field | Type | Required | Evidence Status | Validation |
+|---|---|---|---|---|
+{{input_contract_rows}}
 
-### AS-IS / TO-BE
-{{program_as_is_to_be}}
+### Output DTO Contract
+| Field | Type | Evidence Status | Meaning |
+|---|---|---|---|
+{{output_contract_rows}}
 
-### Call / Data / Transaction
-{{call_data_transaction}}
+### Business Validation / Decision / State
+{{business_rules}}
 
-### Exception / Error
+### Data / Persistence
+- Logical Data: {{logical_data}}
+- Actual Table/Column: {{actual_table_column}}
+- Query/Mutation: {{persistence_operation}}
+- SQL/Mapper Evidence: {{persistence_evidence}}
+- Migration/Backfill: {{migration_backfill}}
+
+### Transaction / Concurrency / Idempotency
+- Transaction: {{transaction}}
+- Isolation/Lock: {{concurrency}}
+- Idempotency: {{idempotency}}
+- Retry/Duplicate: {{retry_duplicate}}
+
+### Integration / Notification Contract
+- Channel/System: {{integration_channel}}
+- Message Schema: {{message_schema}}
+- Timeout/Retry/DLQ: {{integration_resilience}}
+- Payload Mapping: {{payload_mapping}}
+
+### Exception / Error Contract
 {{exceptions}}
+
+### Security / Audit / Observability
+- Authorization: {{authorization}}
+- Sensitive Data / Masking: {{sensitive_data}}
+- Audit: {{audit}}
+- Logging/Metric/Trace: {{observability}}
+
+### NFR / Operations
+- SLA/Latency: {{sla}}
+- Volume/Batch Window: {{volume}}
+- Pagination/Streaming: {{pagination}}
+- Retention/Recovery: {{operations}}
 
 ### Applicable Standards / Standard Deviation
 {{standards}}
 
 ### AC / TC Mapping
 {{ac_tc_mapping}}
+
+### Development Task / Scope Guard
+{{development_tasks}}
+
+### Definition of Ready
+| DoR Field | Status | Evidence / OPEN Reason |
+|---|---|---|
+{{dor_rows}}
+
+- OPEN Count: {{dor_open_count}}
+- Readiness Verdict: {{readiness_verdict}}
 
 ## 미확정/Alert/Assumption
 {{alerts_and_assumptions}}
