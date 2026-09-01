@@ -1,0 +1,152 @@
+version: 1
+stage_input_pack:
+  metadata:
+    pack_id: SIP-P03-TM-CLOSE-IMPACT-001
+    project_id: PILOT-TM-SYNTHETIC-SOURCE
+    stage: IMPACT
+    generated_at: '2026-09-02T00:17:00+09:00'
+    source_revision: fixture-as-is
+    profile: STANDARD
+  target:
+    primary_id: RQG-CAND-6BB6D66548
+    target_type: RQ_GROUP_CANDIDATE
+    boundary_status: OPEN
+    granularity: GROUP
+    source_group_id: RQG-CAND-6BB6D66548
+    source_requirement_ids:
+      - REQ_TM_TE016
+      - REQ_TM_TE017
+      - REQ_TM_TE018
+      - REQ_TM_TE019
+      - REQ_TM_TE020
+      - REQ_TM_TE021
+      - REQ_TM_TE022
+      - REQ_TM_TE023
+      - REQ_TM_TE024
+      - REQ_TM_TE025
+      - REQ_TM_TE026
+      - REQ_TM_TE027
+      - REQ_TM_TE028
+      - REQ_TM_TE029
+      - REQ_TM_TE030
+      - REQ_TM_TE031
+      - REQ_TM_TE032
+      - REQ_TM_TE033
+      - REQ_TM_TE034
+      - REQ_TM_TE035
+      - REQ_TM_TE036
+      - REQ_TM_TE037
+      - REQ_TM_TE038
+      - REQ_TM_TE039
+      - REQ_TM_TE040
+      - REQ_TM_TE041
+      - REQ_TM_TE042
+      - REQ_TM_TE043
+      - REQ_TM_TE044
+      - REQ_TM_TE045
+      - REQ_TM_TE046
+      - REQ_TM_TE047
+      - REQ_TM_TE048
+      - REQ_TM_TE049
+      - REQ_TM_TE050
+      - REQ_TM_TE051
+      - REQ_TM_TE052
+      - REQ_TM_TE053
+      - REQ_TM_TE054
+    related_ids:
+      rq: []
+      fr: []
+      br: []
+      ac: []
+      proc: []
+      pgm: [PGM-ATT-CLOSE-001]
+      task: []
+      tc: []
+  required_inputs:
+    - id: SRC-FIXTURE-ASIS
+      type: source_snapshot
+      locator: candidate-a-mybatis-md-change-pilot/fixture/as-is
+      revision: fixture-as-is
+      required: true
+      available: true
+    - id: TRACE-MANIFEST-P03
+      type: direct_trace_manifest
+      locator: p0.3-source-discovery-reverse-sync-v1/trace-manifest.yaml
+      revision: 1
+      required: true
+      available: true
+  resolved_facts:
+    - fact_id: FACT-P03-001
+      value: PGM-ATT-CLOSE-001 directly maps to AttendanceCloseService/Mapper/Mapper.xml in the synthetic fixture manifest
+      truth: OBSERVED
+      evidence_ids: [EV-P03-001]
+      confidence: HIGH
+    - fact_id: FACT-P03-002
+      value: closeDaily truncates planned minutes to 30-minute units in AS-IS fixture
+      truth: OBSERVED
+      evidence_ids: [EV-P03-002]
+      confidence: HIGH
+    - fact_id: FACT-P03-003
+      value: Mapper XML references TB_WORK_PLAN, TB_ATT_DAILY, TB_ATT_CLOSE
+      truth: OBSERVED
+      evidence_ids: [EV-P03-003]
+      confidence: HIGH
+  evidence:
+    - evidence_id: EV-P03-001
+      provider: SOURCE_FIXTURE
+      locator: trace-manifest.yaml + PGM-ATT-CLOSE-001.md
+      revision: fixture-as-is
+      observed_value: direct PGM/artifact relation
+      confidence: HIGH
+    - evidence_id: EV-P03-002
+      provider: SOURCE_FIXTURE
+      locator: AttendanceCloseService.java#closeDaily
+      revision: fixture-as-is
+      observed_value: '(plannedMinutes / 30) * 30'
+      confidence: HIGH
+    - evidence_id: EV-P03-003
+      provider: SOURCE_FIXTURE
+      locator: AttendanceCloseMapper.xml
+      revision: fixture-as-is
+      observed_value: [TB_WORK_PLAN, TB_ATT_DAILY, TB_ATT_CLOSE]
+      confidence: HIGH
+  open_items:
+    - open_id: OPEN-P03-001
+      type: BOUNDARY_AMBIGUOUS
+      question: 근태마감 39건의 Canonical RQ/FR 경계는 아직 확정되지 않았다.
+      blocks_reasoning: false
+      blocks_action: false
+      required_evidence: [business_outcome_boundary, owner_release_acceptance_boundary]
+      escalation: L2_OR_HUMAN
+    - open_id: OPEN-P03-002
+      type: FIXTURE_ONLY_EVIDENCE
+      question: 실제 고객 Source에서도 PGM/ART/Data 관계가 동일한가?
+      blocks_reasoning: false
+      blocks_action: true
+      required_evidence: [actual_customer_repository_or_snapshot]
+      escalation: ENGINEERING_OWNER
+    - open_id: OPEN-P03-003
+      type: STATIC_ANALYSIS_BLIND_SPOT
+      question: Batch/Procedure/Trigger/Runtime consumer가 추가로 존재하는가?
+      blocks_reasoning: false
+      blocks_action: true
+      required_evidence: [runtime_or_full_static_analysis]
+      escalation: L3
+  constraints:
+    do_not_invent_missing_business_fact: true
+    source_behavior_is_not_business_truth: true
+    ambiguous_write_must_not_be_auto_selected: true
+  expected_outputs:
+    - impact_candidate
+    - blind_spot_list
+    - source_change_or_reverse_sync_candidate
+  next_actions:
+    - 실제 고객 Source가 연결되면 같은 Direct Discovery를 재실행한다.
+    - RQ Boundary는 L2/Human 검토로 별도 확정한다.
+    - Fixture diff는 Reverse Sync 기능 검증에만 사용한다.
+  validation:
+    required_field_check: PASS
+    id_reference_check: PASS
+    open_preservation_check: PASS
+    boundary_guard_check: PASS
+    granularity_check: PASS
