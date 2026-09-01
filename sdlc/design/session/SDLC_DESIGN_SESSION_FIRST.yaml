@@ -1,0 +1,41 @@
+schema_version: 1
+session_id: SDLC_DESIGN_SESSION_FIRST
+status: ACTIVE
+started_from:
+  branch: main
+  commit: bd14bf588efb95371e7c8f5f5a1515536b8cadf8
+namespace_prefix: SDLC_DESIGN_SESSION_FIRST/
+base_ref: SDLC_DESIGN_SESSION_FIRST/base
+policies:
+  create_branch_only_under_namespace: true
+  commit_only_to_namespace_branches: true
+  direct_commit_to_main: false
+  merge_to_main: false
+  preserve_legacy_session_branches_as_history: true
+  validation_branch_version_required: true
+  branch_metadata_file: sdlc/design/branch-version.yaml
+  draft_pr_between_session_branches: true
+branch_naming:
+  pattern: SDLC_DESIGN_SESSION_FIRST/<type>/<name>
+  allowed_types:
+    - design
+    - feature
+    - validation
+    - review
+    - poc
+    - task
+current_lineage:
+  - SDLC_DESIGN_SESSION_FIRST/base
+  - SDLC_DESIGN_SESSION_FIRST/design/v1.5-usability-generalization
+  - SDLC_DESIGN_SESSION_FIRST/feature/phase-0.5-worklist-sync
+  - SDLC_DESIGN_SESSION_FIRST/validation/v1.5.1-requirements-pilot-v0.1
+  - SDLC_DESIGN_SESSION_FIRST/validation/v1.5.2-requirement-intake-poc-v0.2
+legacy_aliases:
+  design/v1.5-usability-generalization: SDLC_DESIGN_SESSION_FIRST/design/v1.5-usability-generalization
+  feature/phase-0.5-worklist-sync: SDLC_DESIGN_SESSION_FIRST/feature/phase-0.5-worklist-sync
+  validation/v1.5.1-requirements-pilot-v0.1: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.1-requirements-pilot-v0.1
+  validation/v1.5.2-requirement-intake-poc-v0.2: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.2-requirement-intake-poc-v0.2
+notes:
+  - Git does not provide true parent-child branch objects; namespace and base commit lineage define this session hierarchy.
+  - Branches outside this namespace are treated as external to this project session unless explicitly imported later.
+updated_at: 2026-09-01T17:43:00+09:00
