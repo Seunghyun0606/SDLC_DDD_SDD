@@ -1,0 +1,49 @@
+schema_version: 1
+artifact_type: PROVIDER_RUNTIME_PLAN_CONFORMANCE_RESULT
+registry: provider-registry.conformance.yaml
+results:
+  - case_id: GREENFIELD-DESIGN-NO-SOURCE
+    command: /work
+    requested_capabilities: []
+    status: READY
+    resolved:
+      - {capability: command.route.work, provider_id: router-fixture, provider_type: COMMAND_ROUTER}
+    note: Existing Source가 없는 Greenfield 초기 Design을 Source Provider 부재로 차단하지 않음
+  - case_id: BROWNFIELD-SOURCE
+    command: /work
+    requested_capabilities: [source.snapshot.read, source.search]
+    status: READY
+    resolved:
+      - {capability: command.route.work, provider_id: router-fixture, provider_type: COMMAND_ROUTER}
+      - {capability: source.snapshot.read, provider_id: source-fixture, provider_type: SOURCE}
+      - {capability: source.search, provider_id: source-fixture, provider_type: SOURCE}
+  - case_id: BROWNFIELD-TEST
+    command: /work
+    requested_capabilities: [test.discover, test.execute]
+    status: READY
+    resolved:
+      - {capability: command.route.work, provider_id: router-fixture, provider_type: COMMAND_ROUTER}
+      - {capability: test.discover, provider_id: test-fixture, provider_type: TEST}
+      - {capability: test.execute, provider_id: test-fixture, provider_type: TEST}
+  - case_id: EXTENSION-DEPLOYMENT
+    command: /work
+    requested_capabilities: [deployment.release.execute]
+    status: READY
+    resolved:
+      - {capability: command.route.work, provider_id: router-fixture, provider_type: COMMAND_ROUTER}
+      - {capability: deployment.release.execute, provider_id: deploy-fixture, provider_type: DEPLOYMENT}
+    note: DEPLOYMENT Provider Type 추가를 위해 Core Router/Schema 변경이 필요하지 않음
+  - case_id: MISSING-MONITORING
+    command: /work
+    requested_capabilities: [monitoring.metric.read]
+    status: ACTION_REQUIRED
+    open_items:
+      - {capability: monitoring.metric.read, reason: MISSING_CAPABILITY}
+  - case_id: DECLARED-BUT-UNCONFIGURED
+    command: /work
+    registry_reference: sdlc/config/provider-registry.example.yaml
+    requested_capabilities: [source.snapshot.read]
+    status: ACTION_REQUIRED
+    open_items:
+      - {capability: source.snapshot.read, reason: PROVIDER_UNAVAILABLE}
+    note: Example Registry에 slot이 있어도 실제 Adapter 미연결이면 READY가 아님
