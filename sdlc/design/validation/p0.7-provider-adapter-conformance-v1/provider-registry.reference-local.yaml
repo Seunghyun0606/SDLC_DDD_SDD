@@ -1,0 +1,35 @@
+version: 1
+conformance_only: true
+production_registry: false
+registry:
+  protocol_version: P0.7-reference
+  providers:
+    - provider_id: reference-local-filesystem-source
+      provider_type: SOURCE
+      enabled: true
+      provider_state: AVAILABLE
+      mode: READ_ONLY
+      transport: REFERENCE_ADAPTER
+      capabilities:
+        - source.snapshot.read
+        - source.object.read
+        - source.search
+        - source.diff
+      extensions:
+        module: sdlc.adapters.reference.local_filesystem_source
+    - provider_id: reference-subprocess-test
+      provider_type: TEST
+      enabled: true
+      provider_state: AVAILABLE
+      mode: READ_WRITE
+      transport: REFERENCE_ADAPTER
+      capabilities:
+        - test.discover
+        - test.execute
+        - test.result.read
+      extensions:
+        module: sdlc.adapters.reference.subprocess_test
+notes:
+  - Reference adapters are for local conformance/development only.
+  - Project production registry must bind real adapters independently.
+  - No business-domain or customer-specific identifiers are part of this registry.
