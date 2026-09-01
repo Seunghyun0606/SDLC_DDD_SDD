@@ -1,0 +1,55 @@
+version: 1
+status: ACTIVE_P0_CANDIDATE
+
+source_identity:
+  preserve_source_requirement_id: true
+  source_requirement_id_is_immutable: true
+  never_reuse_source_requirement_id: true
+
+canonical_decisions:
+  - KEEP_AS_RQ
+  - MAP_TO_EXISTING_RQ_AS_FR
+  - MERGE_INTO_NEW_RQ
+  - SPLIT_TO_MULTIPLE_RQ
+  - UNRESOLVED
+
+boundary_status:
+  - CONFIRMED
+  - PROVISIONAL
+  - OPEN
+
+rules:
+  - id: RQB-001
+    statement: 원본 Requirement ID는 Canonical 판단 전에 source_requirement_id로 보존한다.
+    enforcement: HARD_VALIDATION
+  - id: RQB-002
+    statement: 이름 또는 CRUD 유사성만으로 여러 원본 행을 자동 Merge하지 않는다.
+    enforcement: AGENT_GUARD
+  - id: RQB-003
+    statement: 독립 Business Outcome인지 근거가 없으면 Canonical RQ를 자동 확정하지 않는다.
+    enforcement: AGENT_GUARD
+  - id: RQB-004
+    statement: Split 또는 Merge가 Scope, Owner, Release, AC 경계를 바꾸면 L2 이상 또는 Human 결정이 필요하다.
+    enforcement: ESCALATE
+  - id: RQB-005
+    statement: UNRESOLVED 상태에서는 canonical_rq_ids와 canonical_fr_ids를 비워 둔다.
+    enforcement: HARD_VALIDATION
+  - id: RQB-006
+    statement: SPLIT_TO_MULTIPLE_RQ는 최소 2개 canonical_rq_id와 decision evidence가 필요하다.
+    enforcement: HARD_VALIDATION
+  - id: RQB-007
+    statement: MAP_TO_EXISTING_RQ_AS_FR는 정확히 1개 RQ와 1개 이상 FR을 가져야 한다.
+    enforcement: HARD_VALIDATION
+
+safe_auto_behavior:
+  import_default: UNRESOLVED
+  keep_legacy_row_as_source_record: true
+  create_rq_candidate: true
+  publish_canonical_rq: false
+  auto_merge_by_name_similarity: false
+  auto_split_by_crud: false
+
+escalation:
+  BOUNDARY_AMBIGUOUS: L2_OR_HUMAN
+  CROSS_DOMAIN_BOUNDARY: L3_OR_HUMAN
+  CONFLICTING_SOURCE_GROUPING: HUMAN

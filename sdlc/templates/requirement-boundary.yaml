@@ -1,0 +1,15 @@
+version: 1
+boundary_records:
+  - source_requirement_id: FILL_ME
+    source_locator: FILL_ME
+    source_group_path: []
+    decision: UNRESOLVED
+    status: OPEN
+    canonical_rq_ids: []
+    canonical_fr_ids: []
+    independent_business_outcome: OPEN
+    decision_basis: OPEN
+    evidence_ids: []
+    decided_by: null
+    escalation: L2_OR_HUMAN
+    notes: null

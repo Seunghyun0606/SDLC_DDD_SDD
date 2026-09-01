@@ -1,0 +1,47 @@
+version: 1
+stage_input_pack:
+  metadata:
+    pack_id: FILL_ME
+    project_id: FILL_ME
+    stage: FILL_ME
+    generated_at: null
+    source_revision: FILL_ME
+    profile: STANDARD
+
+  target:
+    primary_id: FILL_ME
+    target_type: FILL_ME
+    boundary_status: OPEN
+    source_requirement_ids: []
+    related_ids:
+      rq: []
+      fr: []
+      br: []
+      ac: []
+      proc: []
+      pgm: []
+      task: []
+      tc: []
+
+  required_inputs: []
+
+  resolved_facts: []
+
+  evidence: []
+
+  open_items: []
+
+  constraints:
+    do_not_invent_missing_business_fact: true
+    source_behavior_is_not_business_truth: true
+    ambiguous_write_must_not_be_auto_selected: true
+
+  expected_outputs: []
+
+  next_actions: []
+
+  validation:
+    required_field_check: PENDING
+    id_reference_check: PENDING
+    open_preservation_check: PENDING
+    boundary_guard_check: PENDING

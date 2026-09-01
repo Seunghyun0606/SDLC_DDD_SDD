@@ -1,0 +1,20 @@
+version: 1
+reverse_sync_candidate:
+  change_id: FILL_ME
+  source_revision_before: FILL_ME
+  source_revision_after: FILL_ME
+  changed_files: []
+  changed_symbols: []
+  direct_program_ids: []
+  semantic_change_class: UNKNOWN
+  evidence: []
+  related_candidates:
+    rq: []
+    fr: []
+    br: []
+    ac: []
+    tc: []
+  stale_candidates: []
+  protected_human_truth: true
+  required_review: L2_OR_HUMAN
+  status: OPEN

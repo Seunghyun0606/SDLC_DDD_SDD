@@ -1,0 +1,98 @@
+version: 1
+status: ACTIVE_P0_CANDIDATE
+
+resolver:
+  default_profile: STANDARD
+  allow_project_override: true
+  allow_domain_override: true
+  expose_internal_artifacts_to_customer: false
+
+profiles:
+  LITE:
+    description: 작은 프로젝트 또는 저위험 변경에서 사람 문서를 최소화하되 Canonical Trace는 유지한다.
+    human_artifacts:
+      worklist: MUST
+      requirement_customer_view: MUST
+      engineering_design: MUST
+      impact_analysis: CONDITIONAL
+      process_analysis: CONDITIONAL
+      program_spec: CONDITIONAL_L2_ONLY
+      implementation_result: MUST
+      test_verification: MUST
+      separate_6w: OFF
+    internal_capabilities:
+      canonical_trace: MUST
+      stage_input_pack: MUST
+      deterministic_validators: MUST
+      source_analysis: CONDITIONAL_BROWNFIELD
+      knowledge_promotion: LIGHT
+      stale_propagation: DIRECT_RELATION_ONLY
+      semantic_merge: OFF
+      advanced_telemetry: OFF
+
+  STANDARD:
+    description: 일반 고객 프로젝트의 기본 프로필이다.
+    human_artifacts:
+      worklist: MUST
+      requirement_customer_view: MUST
+      engineering_design: MUST
+      impact_analysis: MUST
+      process_analysis: CONDITIONAL
+      program_spec: CONDITIONAL_L2_ONLY
+      implementation_result: MUST
+      test_verification: MUST
+      separate_6w: OPTIONAL
+    internal_capabilities:
+      canonical_trace: MUST
+      stage_input_pack: MUST
+      deterministic_validators: MUST
+      source_analysis: CONDITIONAL_BROWNFIELD
+      knowledge_promotion: MUST
+      stale_propagation: MUST
+      semantic_merge: OPTIONAL
+      advanced_telemetry: BASIC
+
+  ENTERPRISE:
+    description: 고위험, 규제, 대규모 병렬개발에서 추가 Guard와 복구 계약을 사용한다.
+    human_artifacts:
+      worklist: MUST
+      requirement_customer_view: MUST
+      engineering_design: MUST
+      impact_analysis: MUST
+      process_analysis: CONDITIONAL
+      program_spec: CONFIGURABLE_L1_L2
+      implementation_result: MUST
+      test_verification: MUST
+      separate_6w: OPTIONAL
+    internal_capabilities:
+      canonical_trace: MUST
+      stage_input_pack: MUST
+      deterministic_validators: MUST
+      source_analysis: CONDITIONAL_BROWNFIELD
+      knowledge_promotion: MUST
+      stale_propagation: MUST
+      semantic_merge: MUST
+      action_permission: MUST
+      target_write_proof: MUST
+      work_unit_recovery: MUST
+      advanced_telemetry: MUST
+
+selection_rules:
+  prefer_lite_when_all:
+    - blast_radius_low
+    - no_security_critical_change
+    - no_external_contract_change
+    - no_parallel_write_same_program
+  require_enterprise_candidate_when_any:
+    - high_blast_radius
+    - security_critical
+    - regulated_audit_required
+    - parallel_write_same_program
+    - complex_recovery_required
+  otherwise: STANDARD
+
+invariants:
+  - disabled_human_artifact_must_not_remove_canonical_entity_or_relation
+  - internal_guard_count_must_not_force_equal_number_of_human_documents
+  - profile_change_requires_impact_review_not_core_rewrite
+  - customer_input_must_not_require_internal_only_artifact
