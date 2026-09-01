@@ -1,0 +1,50 @@
+version: 1
+e2e_execution_ledger:
+  subject:
+    project_id: SAMPLE-BROWNFIELD-REQUIREMENTS
+    target_type: SOURCE_REQUIREMENT
+    target_id: REQ_TM_TE100
+    source_requirement_ids: [REQ_TM_TE100]
+  stages:
+    - stage: INTAKE
+      state: COMPLETE
+      required_for_release: true
+      artifact_refs: [requirements-intake-REQ_TM_TE100.yaml]
+      summary: Workbook row was preserved as GIVEN source requirement.
+    - stage: DISCOVERY
+      state: ACTION_REQUIRED
+      required_for_release: true
+      artifact_refs: [representative-slice-stage-pack.yaml]
+      summary: Brownfield Source Provider is not configured, so source claims are not allowed.
+    - stage: VERIFY
+      state: NOT_STARTED
+      required_for_release: true
+      artifact_refs: []
+      summary: No production source or runtime verification exists yet.
+  blockers:
+    - code: SOURCE_PROVIDER_UNAVAILABLE
+      blocks_release: true
+      action_scope: source.snapshot.read
+      owner: ENGINEERING_OWNER
+      action: Connect the real customer Source Provider and rerun bounded discovery.
+      evidence_refs: []
+    - code: INTERFACE_ANALYZER_UNCONFIGURED
+      blocks_release: true
+      action_scope: source.interface.analyze
+      owner: ENGINEERING_OWNER
+      action: Configure an interface-contract analyzer only after actual source artifacts are identified.
+      evidence_refs: []
+    - code: PRODUCTION_VERIFICATION_NOT_RUN
+      blocks_release: true
+      action_scope: release
+      owner: TEST_OWNER
+      action: Run runtime tests and production verification after source analysis and implementation.
+      evidence_refs: []
+  verification:
+    state: NOT_RUN
+    production_verified: false
+    evidence_refs: []
+  truth_guards:
+    source_behavior_is_not_business_truth: true
+    candidate_is_not_canonical: true
+    fixture_is_not_production: true
