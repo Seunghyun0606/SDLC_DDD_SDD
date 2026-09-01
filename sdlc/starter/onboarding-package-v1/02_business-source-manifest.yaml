@@ -1,0 +1,81 @@
+manifest:
+  project_id: FILL_ME
+  customer: FILL_ME
+  revision: 1
+  default_language: ko
+
+sources:
+  - source_id: BSRC-0001
+    path: 01_business-sources/requirements/요구사항목록.xlsx
+    source_type: REQUIREMENT
+    title: 요구사항 목록
+    authority: A3_PROJECT_AGREED
+    owner_role: FILL_ME
+    scope:
+      company: ALL
+      country: KR
+      domain: FILL_ME
+      organization: ALL
+    effective:
+      from: null
+      to: null
+    supersedes: null
+    confidentiality: INTERNAL
+    extraction:
+      format: XLSX
+      important_sheets: []
+      important_sections: []
+      hints:
+        id_columns: []
+        actor_columns: []
+        requirement_columns: []
+        status_columns: []
+    review_contact: FILL_ME
+
+  - source_id: BSRC-0002
+    path: 01_business-sources/process/업무_SoP.pptx
+    source_type: PROCESS
+    title: 업무 SoP
+    authority: A2_OWNER_CONFIRMED
+    owner_role: FILL_ME
+    scope:
+      company: ALL
+      country: KR
+      domain: FILL_ME
+      organization: ALL
+    effective:
+      from: null
+      to: null
+    confidentiality: INTERNAL
+    extraction:
+      format: PPTX
+      important_slides: []
+      hints:
+        actor_keywords: [담당자, 사용자, 관리자]
+        decision_keywords: [조건, 경우, 예외, 승인, 마감]
+    review_contact: FILL_ME
+
+source_type_allowed:
+  - POLICY
+  - CONTRACT
+  - REQUIREMENT
+  - PROCESS
+  - MANUAL
+  - LEGACY_DESIGN
+  - MEETING_NOTE
+  - SCREEN_SPEC
+  - DATA_DEFINITION
+  - REFERENCE
+
+authority_allowed:
+  - A1_OFFICIAL_APPROVED
+  - A2_OWNER_CONFIRMED
+  - A3_PROJECT_AGREED
+  - A4_LEGACY_DOCUMENT
+  - A5_INFORMAL_REFERENCE
+
+rules:
+  preserve_original: true
+  extracted_claim_requires_locator: true
+  latest_file_does_not_mean_highest_authority: true
+  source_document_does_not_auto_confirm_business_rule: true

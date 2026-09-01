@@ -1,0 +1,80 @@
+source_profile:
+  project_id: FILL_ME
+  revision: 1
+  verified_commit: null
+  verified_at: null
+
+repository:
+  url_or_path: FILL_ME
+  default_branch: FILL_ME
+  application_modules: []
+  excluded_paths: [.git/**, target/**, build/**]
+  protected_or_generated_paths: []
+
+technology:
+  language: Java
+  java_version: FILL_ME
+  framework: Spring
+  framework_version: FILL_ME
+  view:
+    type: JSP
+    roots: [src/main/webapp/WEB-INF/jsp]
+  persistence:
+    type: MyBatis
+    mapper_interface_roots: [src/main/java]
+    mapper_xml_roots: [src/main/resources/mapper]
+  database:
+    vendor: Oracle
+    schemas: []
+    procedure_packages: []
+
+architecture:
+  expected_flow: [JSP, Controller, Service, MapperInterface, MapperXML, Oracle]
+  transaction_owner_convention: SERVICE
+  mapper_namespace_convention: INTERFACE_FQCN
+  mapper_statement_id_convention: INTERFACE_METHOD
+  controller_patterns: []
+  service_patterns: []
+  exception_patterns: []
+  logging_patterns: []
+  audit_patterns: []
+
+data:
+  code_master:
+    tables: []
+    lookup_pattern: OPEN
+  major_tables: []
+  date_time_semantics: OPEN
+  null_semantics: OPEN
+
+security:
+  authentication: OPEN
+  authorization: OPEN
+  profile_role_mapping_source: OPEN
+  security_annotations_or_interceptors: []
+
+integration:
+  api_roots: []
+  batch_roots: []
+  scheduler_roots: []
+  file_interface_roots: []
+  message_queue: OPEN
+
+build_test:
+  build_command: FILL_ME
+  unit_test_command: FILL_ME
+  integration_test_command: OPEN
+  test_profile: OPEN
+  local_run_command: OPEN
+
+legacy_deviations:
+  known:
+    - description: FILL_ME
+      scope: FILL_ME
+      preserve: true
+
+analysis_policy:
+  actual_source_is_technical_evidence_not_business_truth: true
+  dynamic_sql_requires_special_scan: true
+  stored_procedure_requires_scan: true
+  code_master_values_must_be_observed_before_hardcoding: true
