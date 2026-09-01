@@ -1,0 +1,91 @@
+version: 1
+status: ACTIVE_P0_CANDIDATE
+p0_exit_gate:
+  success_state: P0_BASELINE_READY
+  failure_state: P0_BASELINE_BLOCKED
+  production_ready_on_p0_exit: false
+
+  required_paths:
+    - sdlc/design/baselines/AI_SDLC_Harness_Full_Design_v1.5.1.md
+    - sdlc/config/baseline-contract-index.yaml
+    - sdlc/starter/onboarding-package-v1/02_business-source-manifest.yaml
+    - sdlc/config/artifact-profiles.yaml
+    - sdlc/config/rq-boundary.yaml
+    - sdlc/config/legacy-requirement-normalizer.yaml
+    - sdlc/config/stage-pack-granularity.yaml
+    - sdlc/templates/stage-input-pack.yaml
+    - sdlc/config/requirement-review.yaml
+    - sdlc/config/canonical-publish.yaml
+    - sdlc/design/contracts/low-agent-execution-contract.md
+    - sdlc/config/source-discovery.yaml
+    - sdlc/design/contracts/source-reverse-sync-contract.md
+    - sdlc/config/test-verification.yaml
+    - sdlc/config/e2e-orchestration.yaml
+    - sdlc/design/contracts/runtime-provider-boundary.md
+    - sdlc/design/contracts/provider-adapter-conformance.md
+    - sdlc/design/contracts/runtime-invocation-recovery.md
+    - sdlc/design/contracts/command-runtime-integration.md
+    - sdlc/config/provider-registry.example.yaml
+    - sdlc/scripts/normalize_legacy_requirements.py
+    - sdlc/scripts/validate_p02_contracts.py
+    - sdlc/scripts/validate_p03_contracts.py
+    - sdlc/scripts/validate_p04_contracts.py
+    - sdlc/scripts/orchestrate_e2e_status.py
+    - sdlc/scripts/validate_p06_contracts.py
+    - sdlc/scripts/run_provider_conformance.py
+    - sdlc/scripts/invoke_provider_runtime.py
+    - sdlc/scripts/execute_command_runtime.py
+
+  required_test_definitions:
+    - sdlc/scripts/test_p0_contracts.py
+    - sdlc/scripts/test_p01_contracts.py
+    - sdlc/scripts/test_p02_contracts.py
+    - sdlc/scripts/test_p03_contracts.py
+    - sdlc/scripts/test_p04_contracts.py
+    - sdlc/scripts/test_p05_orchestration.py
+    - sdlc/scripts/test_p06_contracts.py
+    - sdlc/scripts/test_p07_conformance.py
+    - sdlc/scripts/test_p08_runtime.py
+    - sdlc/scripts/test_p09_command_runtime.py
+
+  critical_yaml_assertions:
+    provider_registry:
+      path: sdlc/config/provider-registry.example.yaml
+      source_test_must_not_default_available: true
+    runtime_invocation:
+      path: sdlc/config/runtime-invocation.yaml
+      write_retry_enabled: false
+      unknown_after_dispatch_state: UNKNOWN_AFTER_WRITE
+    baseline_index:
+      path: sdlc/config/baseline-contract-index.yaml
+      duplicate_truth_in_index: DENY
+
+  anti_overfitting:
+    forbidden_core_tokens:
+      - REQ_TM_TE
+      - RQG-CAND-6BB6D66548
+      - 근태
+      - AttendanceClose
+      - TB_ATT_
+      - 10분
+    core_paths:
+      - sdlc/design/contracts/runtime-provider-boundary.md
+      - sdlc/design/contracts/provider-adapter-conformance.md
+      - sdlc/design/contracts/runtime-invocation-recovery.md
+      - sdlc/design/contracts/command-runtime-integration.md
+      - sdlc/scripts/validate_p06_contracts.py
+      - sdlc/scripts/route_provider_command.py
+      - sdlc/adapters/reference/local_filesystem_source.py
+      - sdlc/adapters/reference/subprocess_test.py
+      - sdlc/scripts/run_provider_conformance.py
+      - sdlc/scripts/invoke_provider_runtime.py
+      - sdlc/scripts/execute_command_runtime.py
+
+  external_non_p0_blockers:
+    - actual_customer_source
+    - actual_project_runtime
+    - actual_test_command
+    - production_provider_credentials
+    - canonical_registry_implementation
+    - project_specific_human_boundary_decisions
+    - production_verification
