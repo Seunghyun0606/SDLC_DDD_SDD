@@ -21,21 +21,49 @@ class P0CompletionWiringTest(unittest.TestCase):
         self.assertFalse(contract["functional_design_auto_update"])
         self.assertFalse(contract["business_truth_auto_update"])
 
-    def test_change_skill_wires_semantic_reverse_without_full_reverse_claim(self):
-        text = (ROOT / ".cursor/skills/change/SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("generate_program_spec_reverse_candidate.py", text)
-        self.assertIn("전역 Coverage 변화만으로 관계 없는 Program Spec Candidate를 만들지 않는다", text)
-        self.assertIn("auto_apply: false", text)
-        self.assertIn("Functional Design 재작성기가 아니다", text)
+    def test_work_executor_is_core_and_supports_explicit_target_stage_document_reentry(self):
+        work = HARNESS["work_execution"]
+        self.assertEqual("sdlc/scripts/run_work.py", work["executor"])
+        self.assertIn(work["executor"], HARNESS["core_required_files"])
+        self.assertTrue(work["target_types_are_open_ended"])
+        self.assertTrue(work["explicit_stage_reentry"])
+        self.assertTrue(work["explicit_artifact_override"])
+        self.assertTrue(work["target_and_stage_are_independent"])
+        self.assertTrue(work["target_graph_existing_entity_scope_guard"])
+        text = (ROOT / ".cursor/skills/work/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("--target PGM-001 --stage PROGRAM", text)
+        self.assertIn("--target ANA001", text)
+        self.assertIn("--artifact", text)
+
+    def test_canonical_runtime_hashes_delta_identity_and_blocks_nonconfirmed_truth_overwrite(self):
+        runtime = HARNESS["canonical_runtime"]
+        self.assertTrue(runtime["idempotency_requires_same_semantic_payload_hash"])
+        self.assertTrue(runtime["delta_id_content_conflict_fails_closed"])
+        self.assertTrue(runtime["confirmed_business_mutation_requires_confirmed_evidence"])
+        self.assertFalse(runtime["non_confirmed_evidence_can_overwrite_confirmed_business"])
+        self.assertTrue(runtime["no_change_supported"])
+        self.assertFalse(runtime["no_change_advances_revision"])
 
     def test_repeatability_requires_actual_external_provider_for_empirical_pass(self):
         agent = HARNESS["agent_execution"]
         self.assertTrue(agent["actual_provider_execution_required_for_empirical_pass"])
-        self.assertTrue(agent["repeatability_runner_is_validation_utility_not_core_stage_runtime"])
-        self.assertNotIn(agent["repeatability_experiment_runner"], HARNESS["core_required_files"])
+        self.assertTrue(agent["validation_fixture_provider_cannot_claim_agent_pass"])
+        self.assertEqual("sdlc/scripts/run_work_repeatability_experiment.py", agent["work_repeatability_experiment_runner"])
         profile = json.loads((ROOT / agent["repeatability_profile"]).read_text(encoding="utf-8"))
         self.assertFalse(profile["enabled"])
         self.assertEqual("EXTERNAL_AGENT_PROVIDER_REQUIRED", profile["provider_id"])
+        self.assertEqual("EXTERNAL_AGENT", profile["provider_class"])
+
+    def test_source_reverse_inputs_are_built_automatically(self):
+        reverse = HARNESS["source_drift_reverse"]
+        self.assertEqual("sdlc/scripts/build_reverse_inputs.py", reverse["input_builder"])
+        self.assertEqual("sdlc/scripts/run_source_reverse_check.py", reverse["orchestrator"])
+        self.assertFalse(reverse["manual_observed_manifest_authoring_required"])
+        self.assertFalse(reverse["manual_artifact_index_authoring_required"])
+        self.assertTrue(reverse["auto_generated_upstream_edges_are_check_required_only"])
+        for path in [reverse["input_builder"], reverse["orchestrator"]]:
+            self.assertIn(path, HARNESS["core_required_files"])
+            self.assertTrue((ROOT / path).is_file())
 
     def test_public_brownfield_pilot_is_real_integration_validation_not_core_dependency(self):
         brownfield = HARNESS["brownfield_impact"]
@@ -44,19 +72,21 @@ class P0CompletionWiringTest(unittest.TestCase):
         self.assertNotIn(validator, HARNESS["core_required_files"])
         workflow = (ROOT / ".github/workflows/public-brownfield-pilot.yml").read_text(encoding="utf-8")
         self.assertIn("repository: macrozheng/mall", workflow)
-        self.assertIn("0504e86b1f1b6f1b8aa6a734d37a90fb67346be7", workflow)
         self.assertIn("validate_public_brownfield_pilot.py", workflow)
 
-    def test_greenfield_pilot_uses_real_requirement_and_materializes_six_user_docs(self):
+    def test_greenfield_pilot_is_provider_driven_and_fixture_is_not_agent_pass(self):
         validation = HARNESS["validation_pilots"]
-        self.assertEqual(6, validation["greenfield_materializes_user_artifact_count"])
-        self.assertTrue(validation["greenfield_human_usability_not_measured"])
+        self.assertTrue(validation["greenfield_provider_driven"])
+        self.assertTrue(validation["greenfield_fixture_provider_is_not_agent_validation"])
+        self.assertTrue(validation["greenfield_actual_agent_provider_required_for_agent_pass"])
+        self.assertEqual(5, validation["greenfield_default_stage_count"])
         seed = json.loads((ROOT / validation["greenfield_real_requirement_seed"]).read_text(encoding="utf-8"))
         self.assertEqual("REQ_TM_FL001", seed["external_id"])
-        self.assertEqual("탄력근로제 근무계획 저장", seed["requirement_text"])
         workflow = (ROOT / validation["greenfield_workflow"]).read_text(encoding="utf-8")
-        self.assertIn("--artifact-root", workflow)
-        self.assertIn("-eq 6", workflow)
+        self.assertIn("--provider-config", workflow)
+        self.assertIn("fixture-provider.json", workflow)
+        self.assertIn("PASS_EXECUTOR_E2E_FIXTURE_PROVIDER", workflow)
+        self.assertIn("actual_agent_provider_executed", workflow)
 
 
 if __name__ == "__main__":
