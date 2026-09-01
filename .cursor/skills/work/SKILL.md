@@ -94,7 +94,7 @@ Core는 특정 LLM SDK를 강제하지 않는다. Project가 실제 CLI/Agent wr
 ## 작성 원칙
 - 사용자에게 보이는 본문은 한국어 자연어를 기본으로 한다.
 - 같은 업무정보를 여러 단계 문서에 복사하지 않는다. 이전 단계의 확정 내용은 참조하고 현재 Stage에서 새로 생기는 Delta만 추가한다.
-- OPEN은 대기표시가 아니라 해소할 설계 Backlog다.
+- OPEN은 대기표시가 아니라 해소할 설계 Backlog다. CLARIFY/DESIGN/PROGRAM에서 실제 해소 작업이 필요하면 `.cursor/skills/open-resolve/SKILL.md`를 사용하고 동일 OPEN을 별도 Truth로 복제하지 않는다.
 - 설계자/개발자 경험은 Proposal이며 Business Truth로 자동 확정하지 않는다.
 - Source 관찰은 `OBSERVED`이며 고객/업무 확정과 다르다.
 - Source가 연결된 경우 Locator/Source Hash는 Machine provenance로 남긴다.
