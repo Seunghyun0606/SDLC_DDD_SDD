@@ -76,7 +76,9 @@
     "ready_requires_zero_open": true,
     "simulated_source_cannot_be_ready": true,
     "open_real_source_cannot_be_ready": true,
-    "ready_requires_developer_spec_zero_open_when_section_present": true
+    "ready_requires_functional_design_reference": true,
+    "representation": "SINGLE_READINESS_TABLE",
+    "readiness_item_count": 17
   },
   "stage_contracts": {
     "DECOMPOSE": {"reference": "requirement.md", "template": "requirement-analysis.md"},
