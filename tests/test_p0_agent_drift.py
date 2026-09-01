@@ -47,7 +47,7 @@ class AgentExecutionAndImpactBoundaryTest(unittest.TestCase):
 
     def test_project_adapter_implementation_location_is_explicit(self):
         readme = (ROOT / "sdlc/custom/project/adapters/impact/README.md").read_text(encoding="utf-8")
-        self.assertIn("프로젝트별 별도 구현", readme)
+        self.assertIn("Project에서 별도 구현", readme)
         self.assertIn("Project Custom", readme)
 
 
