@@ -10,6 +10,18 @@ preset:
   name: brownfield-auto
 source_profile:
   path: sdlc/config/source-profile.yaml
+documents:
+  language: ko-KR
+  terminology_profile: sdlc/config/terminology-profile.json
+  internal_view:
+    enabled: true
+  customer_view:
+    enabled: true
+    profile: sdlc/config/customer-document-profile.json
+    default_mode: both  # internal | customer | both
+br_intake:
+  profile: sdlc/config/br-intake-profile.json
+  preserve_original_files: true
 customization:
   overlay_order:
     - core
