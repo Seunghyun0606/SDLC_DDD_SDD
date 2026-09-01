@@ -47,10 +47,10 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
         setup=(ROOT/'.cursor/skills/setup/SKILL.md').read_text(encoding='utf-8')
         self.assertIn('5개 질문',setup)
         self.assertIn('프로젝트 유형',setup)
-        self.assertIn('요구/변경',setup)
-        self.assertIn('Source',setup)
-        self.assertIn('Build/Test',setup)
-        self.assertIn('고객문서',setup)
+        self.assertIn('요구사항 또는 변경요청 위치',setup)
+        self.assertIn('Source/Repository 위치',setup)
+        self.assertIn('Build/Test 경로',setup)
+        self.assertIn('고객용 문서 필요 여부',setup)
 
     def test_customer_documents_have_three_active_views_and_projection_runtime(self):
         harness=json.loads((ROOT/'sdlc/design/contracts/harness-package-contract.json').read_text(encoding='utf-8'))
