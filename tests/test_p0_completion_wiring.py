@@ -7,10 +7,16 @@ HARNESS = json.loads((ROOT / "sdlc/design/contracts/harness-package-contract.jso
 SOURCE_DRIFT = json.loads((ROOT / "sdlc/design/contracts/source-drift-contract.json").read_text(encoding="utf-8"))
 
 
+def deployment_files(name: str) -> set[str]:
+    value = HARNESS.get("deployment_sets", {}).get(name, [])
+    return set(value if isinstance(value, list) else [])
+
+
 class P0CompletionWiringTest(unittest.TestCase):
-    def test_semantic_reverse_candidate_is_core_executable_but_non_destructive(self):
+    def test_semantic_reverse_candidate_is_brownfield_extension_and_non_destructive(self):
         script = "sdlc/scripts/generate_program_spec_reverse_candidate.py"
-        self.assertIn(script, HARNESS["core_required_files"])
+        self.assertNotIn(script, HARNESS["core_required_files"])
+        self.assertIn(script, deployment_files("BROWNFIELD_EXTENSION"))
         reverse = HARNESS["source_drift_reverse"]
         self.assertEqual(script, reverse["program_spec_reverse_candidate_script"])
         self.assertTrue(reverse["program_spec_candidate_requires_review"])
@@ -20,6 +26,7 @@ class P0CompletionWiringTest(unittest.TestCase):
         self.assertFalse(contract["auto_apply"])
         self.assertFalse(contract["functional_design_auto_update"])
         self.assertFalse(contract["business_truth_auto_update"])
+        self.assertTrue((ROOT / script).is_file())
 
     def test_work_executor_is_core_and_supports_explicit_target_stage_document_reentry(self):
         work = HARNESS["work_execution"]
@@ -54,15 +61,17 @@ class P0CompletionWiringTest(unittest.TestCase):
         self.assertEqual("EXTERNAL_AGENT_PROVIDER_REQUIRED", profile["provider_id"])
         self.assertEqual("EXTERNAL_AGENT", profile["provider_class"])
 
-    def test_source_reverse_inputs_are_built_automatically(self):
+    def test_source_reverse_inputs_are_brownfield_extension_and_built_automatically(self):
         reverse = HARNESS["source_drift_reverse"]
         self.assertEqual("sdlc/scripts/build_reverse_inputs.py", reverse["input_builder"])
         self.assertEqual("sdlc/scripts/run_source_reverse_check.py", reverse["orchestrator"])
         self.assertFalse(reverse["manual_observed_manifest_authoring_required"])
         self.assertFalse(reverse["manual_artifact_index_authoring_required"])
         self.assertTrue(reverse["auto_generated_upstream_edges_are_check_required_only"])
+        brownfield = deployment_files("BROWNFIELD_EXTENSION")
         for path in [reverse["input_builder"], reverse["orchestrator"]]:
-            self.assertIn(path, HARNESS["core_required_files"])
+            self.assertNotIn(path, HARNESS["core_required_files"])
+            self.assertIn(path, brownfield)
             self.assertTrue((ROOT / path).is_file())
 
     def test_public_brownfield_pilot_is_real_integration_validation_not_core_dependency(self):
