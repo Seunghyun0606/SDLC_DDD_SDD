@@ -1,4 +1,4 @@
-version: 1
+version: 2
 status: ACTIVE_STRUCTURAL_REDESIGN_V1
 
 principles:
@@ -106,7 +106,7 @@ stages:
 
   TEST:
     skill: test-verification
-    required_capabilities: [test.execute]
+    required_capabilities: []
     optional_capabilities: [test.discover, test.result.read]
     output_artifacts: [test_execution_result, stage_input_pack]
     next_stage: VERIFY
@@ -144,4 +144,5 @@ invariants:
   - action_blocker_must_name_action_scope_or_global_scope
   - provider_unavailable_must_not_be_converted_to_success
   - greenfield_must_not_require_source_capability_before_source_exists
+  - side_effect_capability_must_be_requested_explicitly
   - source_behavior_must_not_auto_confirm_business_truth
