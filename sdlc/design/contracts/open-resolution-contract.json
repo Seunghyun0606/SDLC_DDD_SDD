@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "candidate_design": "v1.5.9-rc.1",
+  "purpose": "SOP나 완전한 사전 문서가 없어도 설계자/개발자가 인터뷰, 기존 시스템 분석, Source/Data 분석, 프로젝트 표준, 전문경험 기반 제안을 통해 OPEN 항목을 구조적으로 해소하기 위한 Core 공통계약",
+  "scope": "CORE_COMMON_CONTRACT_WITH_PROJECT_AUTHORITY_PROFILE",
+  "principles": {
+    "open_is_actionable_design_backlog": true,
+    "sop_is_optional": true,
+    "missing_sop_does_not_block_design": true,
+    "proposal_is_not_automatic_business_truth": true,
+    "existing_system_observation_is_not_automatic_target_policy": true,
+    "resolution_requires_method_basis_owner_and_status": true,
+    "technical_decisions_may_be_accepted_without_customer_confirmation_when_project_authority_allows": true,
+    "business_truth_requires_business_authority": true
+  },
+  "categories": [
+    "SIX_W_WHO","SIX_W_WHEN","SIX_W_WHERE","SIX_W_WHAT","SIX_W_HOW","SIX_W_WHY",
+    "BUSINESS_RULE","UI_SCREEN","FIELD","CRUD","DATA_QUERY","COMMON_CODE","INTEGRATION","AUTHORIZATION","EXCEPTION","AC_TC","NFR"
+  ],
+  "decision_domains": ["BUSINESS","FUNCTIONAL","UX","TECHNICAL","DATA","INTEGRATION","QUALITY"],
+  "resolution_methods": [
+    "CUSTOMER_INTERVIEW","BUSINESS_OWNER_INTERVIEW","WORKSHOP",
+    "EXISTING_SYSTEM_ANALYSIS","SOURCE_ANALYSIS","DATA_ANALYSIS",
+    "PROJECT_STANDARD","REFERENCE_PATTERN","REGULATION_REFERENCE",
+    "DESIGNER_PROPOSAL","DEVELOPER_PROPOSAL","ARCHITECT_DECISION","QA_ANALYSIS","DEFER"
+  ],
+  "basis_classes": [
+    "CONFIRMED_BUSINESS_INPUT","OBSERVED_AS_IS","PROJECT_STANDARD","REGULATION_OR_POLICY_REFERENCE",
+    "DESIGN_PROPOSAL","TECHNICAL_PROPOSAL","TEST_PROPOSAL","ASSUMPTION"
+  ],
+  "resolution_status": [
+    "OPEN","ANALYZING","CANDIDATE","PROPOSED","OBSERVED_AS_IS","ACCEPTED_DESIGN","CONFIRMED_BUSINESS","CONFLICT","DEFERRED","N_A"
+  ],
+  "required_item_fields": [
+    "open_item_id","related_id","category","decision_domain","question_or_gap","resolution_method",
+    "basis_class","proposed_or_observed_value","evidence_or_rationale","decision_owner_role","resolution_status","downstream_impact"
+  ],
+  "resolution_rules": {
+    "business_domain": "DESIGNER_PROPOSAL 또는 DEVELOPER_PROPOSAL은 PROPOSED까지만 가능하며 CONFIRMED_BUSINESS는 Business Authority 확인이 필요하다.",
+    "technical_domain": "PROJECT_STANDARD, SOURCE_ANALYSIS, ARCHITECT_DECISION 등 프로젝트 권한 Profile이 허용한 근거가 있으면 ACCEPTED_DESIGN으로 해소할 수 있다.",
+    "ux_domain": "디자이너가 제안할 수 있으나 고객/PO/UX Owner 확인 필요 여부는 Project Profile의 authority_matrix를 따른다.",
+    "brownfield": "EXISTING_SYSTEM_ANALYSIS/SOURCE_ANALYSIS 결과는 OBSERVED_AS_IS이며 TO-BE 업무정책으로 자동 승격하지 않는다.",
+    "greenfield": "Source가 없어도 DESIGNER_PROPOSAL/DEVELOPER_PROPOSAL/PROJECT_STANDARD로 Target 후보를 구체화할 수 있다.",
+    "non_blocking": "OPEN이 남아도 가능한 설계는 계속하되 Developer READY/Execution Guard 판정에는 미해소 항목을 반영한다."
+  },
+  "default_resolution_route": {
+    "SIX_W_WHO": ["CUSTOMER_INTERVIEW","EXISTING_SYSTEM_ANALYSIS","DESIGNER_PROPOSAL"],
+    "SIX_W_WHEN": ["BUSINESS_OWNER_INTERVIEW","EXISTING_SYSTEM_ANALYSIS","SOURCE_ANALYSIS","DESIGNER_PROPOSAL"],
+    "SIX_W_WHERE": ["EXISTING_SYSTEM_ANALYSIS","SOURCE_ANALYSIS","DESIGNER_PROPOSAL"],
+    "SIX_W_WHAT": ["CUSTOMER_INTERVIEW","EXISTING_SYSTEM_ANALYSIS","DATA_ANALYSIS"],
+    "SIX_W_HOW": ["WORKSHOP","EXISTING_SYSTEM_ANALYSIS","DESIGNER_PROPOSAL","DEVELOPER_PROPOSAL"],
+    "SIX_W_WHY": ["BUSINESS_OWNER_INTERVIEW","REGULATION_REFERENCE"],
+    "BUSINESS_RULE": ["BUSINESS_OWNER_INTERVIEW","WORKSHOP","EXISTING_SYSTEM_ANALYSIS"],
+    "UI_SCREEN": ["EXISTING_SYSTEM_ANALYSIS","DESIGNER_PROPOSAL","PROJECT_STANDARD"],
+    "FIELD": ["EXISTING_SYSTEM_ANALYSIS","SOURCE_ANALYSIS","DATA_ANALYSIS","DESIGNER_PROPOSAL"],
+    "CRUD": ["SOURCE_ANALYSIS","EXISTING_SYSTEM_ANALYSIS","DEVELOPER_PROPOSAL"],
+    "DATA_QUERY": ["SOURCE_ANALYSIS","DATA_ANALYSIS","DEVELOPER_PROPOSAL","PROJECT_STANDARD"],
+    "COMMON_CODE": ["SOURCE_ANALYSIS","DATA_ANALYSIS","PROJECT_STANDARD"],
+    "INTEGRATION": ["SOURCE_ANALYSIS","EXISTING_SYSTEM_ANALYSIS","ARCHITECT_DECISION"],
+    "AUTHORIZATION": ["BUSINESS_OWNER_INTERVIEW","EXISTING_SYSTEM_ANALYSIS","SOURCE_ANALYSIS"],
+    "EXCEPTION": ["WORKSHOP","EXISTING_SYSTEM_ANALYSIS","DEVELOPER_PROPOSAL","QA_ANALYSIS"],
+    "AC_TC": ["CUSTOMER_INTERVIEW","QA_ANALYSIS","DEVELOPER_PROPOSAL"],
+    "NFR": ["PROJECT_STANDARD","ARCHITECT_DECISION","CUSTOMER_INTERVIEW"]
+  }
+}
