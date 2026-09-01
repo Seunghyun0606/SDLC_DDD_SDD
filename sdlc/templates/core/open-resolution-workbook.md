@@ -9,92 +9,78 @@ generated_by:
 sources: []
 generated_at: "{{generated_at}}"
 ---
-# {{representative_id}} {{short_name}} OPEN 해소 워크북
+# {{representative_id}} {{short_name}} 미확정 사항 해소표
+
+<!-- 사람은 확인할 내용·확인방법·현재값/제안·담당·상태만 관리한다. category/decision_domain/resolution_method/basis_class/internal status/downstream impact 등은 가능한 경우 Agent/Script가 내부 metadata로 관리한다. -->
 
 ## 문서 목적
-SOP나 완전한 선행문서가 없어도 설계자·개발자가 인터뷰, 현행 시스템 분석, Source/Data 분석, 프로젝트 표준, 전문경험 기반 제안을 통해 미확정 항목을 구조적으로 채우고 그 근거와 확정 권한을 분리해 기록한다.
+설계와 개발을 진행하면서 아직 확정되지 않은 내용을 한 곳에서 관리한다. 고객/업무 담당자에게 확인할 것, 현행 시스템이나 Source에서 확인할 것, 설계자·개발자가 제안할 것을 구분하되 내부 분류 코드를 사용자가 직접 외우거나 입력하지 않도록 한다.
 
 ## 한눈에 보기
 | 구분 | 수량 |
 |---|---:|
-| 전체 OPEN | {{open_count}} |
-| 분석 중 | {{analyzing_count}} |
-| 제안됨 | {{proposed_count}} |
-| 현행 관찰 완료 | {{observed_count}} |
-| 설계 결정 완료 | {{accepted_design_count}} |
-| 업무 확정 완료 | {{confirmed_business_count}} |
-| 충돌/보류 | {{conflict_deferred_count}} |
+| 미확정 | {{human_open_count}} |
+| 확인중 | {{human_checking_count}} |
+| 제안 | {{human_proposed_count}} |
+| 확정 | {{human_resolved_count}} |
+| 보류 | {{human_deferred_count}} |
 
 ## 업무 흐름
 ```mermaid
 flowchart LR
-    O["OPEN 식별"] --> C["업무/UX/기술/Data 등 분류"] --> M["해소 방법 선택"] --> E["인터뷰·현행/Source 분석·제안"] --> D["근거와 제안값 기록"] --> A["권한자 판정"] --> R["설계/Program Spec 반영"]
+    O["미확정 내용 식별"] --> A["확인 방법 선택"] --> E["인터뷰·현행/Source 분석·설계 제안"] --> V["현재값/제안 기록"] --> D["담당자 확인/결정"] --> R["설계·Program Spec 반영"]
 ```
 
 ## 입력 및 근거
-| 구분 | 내용 | 근거 구분 | 위치(Locator) | 상태 |
-|---|---|---|---|---|
-| 요구사항/기존 산출물 | {{requirement_source}} | GIVEN | {{requirement_locator}} | CURRENT |
-| SOP/정책 | {{sop_source}} | GIVEN/CONFIRMED 또는 없음 | {{sop_locator}} | {{sop_status}} |
-| 기존 시스템 | {{system_evidence}} | OBSERVED | {{system_locator}} | {{system_status}} |
-| 프로그램 소스/데이터 | {{source_evidence}} | OBSERVED | {{source_locator}} | {{source_status}} |
-| 프로젝트 표준 | {{project_standard}} | PROJECT_STANDARD | {{standard_locator}} | {{standard_status}} |
+| 구분 | 내용 | 근거 위치 | 상태 |
+|---|---|---|---|
+| 요구사항/기존 산출물 | {{requirement_source}} | {{requirement_locator}} | {{requirement_status}} |
+| 업무자료/SOP/정책 | {{sop_source}} | {{sop_locator}} | {{sop_status}} |
+| 기존 시스템/화면 | {{system_evidence}} | {{system_locator}} | {{system_status}} |
+| 프로그램 Source/Data | {{source_evidence}} | {{source_locator}} | {{source_status}} |
+| 프로젝트 표준 | {{project_standard}} | {{standard_locator}} | {{standard_status}} |
 
 ## 상세 내용
 ### OPEN 해소 목록
-| OPEN ID | 관련 ID | 분류 | 결정 영역 | 현재 질문/Gap | 우선순위 | 해소 방법 | 관찰/제안 값 | 근거 또는 판단 이유 | 결정 권한자 | 상태 | 후속 영향 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-{{open_resolution_rows}}
-
-### 6하원칙 업무정의 해소표
-| 관점 | 현재 OPEN/부분정보 | 인터뷰로 확인할 질문 | 기존 시스템에서 확인할 것 | 설계자/개발자 제안 가능 내용 | 최종 값 | 근거 구분 | 상태 |
-|---|---|---|---|---|---|---|---|
-| 누가(Who) | {{who_current}} | {{who_interview}} | Role/Profile/Security/Data Scope | 역할명·권한 UX 후보 | {{who_final}} | {{who_basis}} | {{who_status}} |
-| 언제(When) | {{when_current}} | {{when_interview}} | Scheduler/Trigger/마감/상태변화 | 합리적 Default/Trigger 후보 | {{when_final}} | {{when_basis}} | {{when_status}} |
-| 어디서(Where) | {{where_current}} | {{where_interview}} | Menu/Route/Screen/Job/API | 신규 화면/메뉴 동선 후보 | {{where_final}} | {{where_basis}} | {{where_status}} |
-| 무엇을(What) | {{what_current}} | {{what_interview}} | Field/DTO/Data Object | 입력·출력 Field 후보 | {{what_final}} | {{what_basis}} | {{what_status}} |
-| 어떻게(How) | {{how_current}} | {{how_interview}} | CRUD/상태전이/호출 흐름 | UX/로직/예외 처리안 | {{how_final}} | {{how_basis}} | {{how_status}} |
-| 왜(Why) | {{why_current}} | {{why_interview}} | 기존 문서의 설명은 참고만 | 업무 목적은 임의 발명 금지 | {{why_final}} | {{why_basis}} | {{why_status}} |
-
-### 화면·필드·CRUD 해소표
-| 항목 | 현재 정보 | 현행 분석 포인트 | 설계/개발 제안 | 채택 값 | 근거/사유 | 상태 |
+| OPEN ID | 관련 항목 | 무엇을 확인하거나 결정해야 하는가 | 어떻게 확인할 것인가 | 현재 확인된 내용 또는 제안 | 누가 확인하거나 결정하는가 | 진행 상태 |
 |---|---|---|---|---|---|---|
-| 화면/메뉴/채널 | {{ui_current}} | Route/Menu config/Screen Source | Layout/동선 후보 | {{ui_final}} | {{ui_basis}} | {{ui_status}} |
-| 입력·출력 Field | {{field_current}} | UI/DTO/API/DB Validation | Field/Type/필수/Default 후보 | {{field_final}} | {{field_basis}} | {{field_status}} |
-| CRUD | {{crud_current}} | Controller/Service/Repository | 사용자 행위와 Transaction 후보 | {{crud_final}} | {{crud_basis}} | {{crud_status}} |
+{{open_resolution_human_rows}}
 
-### 업무 규칙·상태·예외 해소표
-| 구분 | 현재 정보 | 인터뷰/현행 분석 포인트 | 제안 가능 범위 | 최종 값 | 결정 영역 | 상태 |
-|---|---|---|---|---|---|---|
-| 업무 규칙 | {{br_current}} | 조건/판단/결과/예외 | 구현 관찰은 BR 후보까지만 | {{br_final}} | BUSINESS | {{br_status}} |
-| 상태 전이 | {{state_current}} | 승인/반려/마감/취소/복구 | 상태모델 후보 | {{state_final}} | FUNCTIONAL | {{state_status}} |
-| 예외/오류 | {{exception_current}} | 실패/재처리/중복/오류 메시지 | 기술 예외 처리안 | {{exception_final}} | FUNCTIONAL/TECHNICAL | {{exception_status}} |
+> 진행 상태는 `미확정 / 확인중 / 제안 / 확정 / 보류`만 사용한다. 현행 확인 결과는 TO-BE 정책으로 자동 확정하지 않는다.
 
-### 데이터·조회·공통코드 해소표
-| 구분 | 현재 정보 | 기존 시스템/Source 분석 | 개발자 제안 가능 범위 | 최종 값 | 결정 영역 | 상태 |
-|---|---|---|---|---|---|---|
-| Table/Column | {{table_current}} | Schema/Migration/Mapper | 신규 물리모델 후보 | {{table_final}} | DATA | {{table_status}} |
-| 조회 Query | {{query_current}} | WHERE/JOIN/ORDER/GROUP/Paging | Query/Index 후보 | {{query_final}} | DATA/TECHNICAL | {{query_status}} |
-| 공통코드/기준정보 | {{code_current}} | Enum/Code Table/기준정보 API | 신규 코드 필요성 제안 | {{code_final}} | FUNCTIONAL/DATA | {{code_status}} |
+### 업무 시나리오 확인
+6하원칙 중 실제 설계 결과를 바꾸는 미확정 항목만 적는다. 이미 확정된 값은 Functional Design에서 관리하고 여기에서 반복하지 않는다.
 
-### 연계·권한·NFR·테스트 해소표
-| 구분 | 현재 정보 | 확인/분석 포인트 | 제안 가능 범위 | 최종 값 | 결정 영역 | 상태 |
+| 관점 | 현재 확인된 내용 | 추가로 확인할 내용 | 확인 방법/질문 | 최종 반영 위치 | 진행 상태 |
+|---|---|---|---|---|---|
+| 누가 | {{who_current}} | {{who_gap}} | {{who_action}} | {{who_target}} | {{who_human_status}} |
+| 언제 | {{when_current}} | {{when_gap}} | {{when_action}} | {{when_target}} | {{when_human_status}} |
+| 어디서 | {{where_current}} | {{where_gap}} | {{where_action}} | {{where_target}} | {{where_human_status}} |
+| 무엇을 | {{what_current}} | {{what_gap}} | {{what_action}} | {{what_target}} | {{what_human_status}} |
+| 어떻게 | {{how_current}} | {{how_gap}} | {{how_action}} | {{how_target}} | {{how_human_status}} |
+| 왜 | {{why_current}} | {{why_gap}} | {{why_action}} | {{why_target}} | {{why_human_status}} |
+
+### 설계 확인 항목
+화면/필드/CRUD/업무규칙/Data/연계/권한/예외/NFR/테스트 중 실제로 미확정인 항목만 생성한다.
+
+| 영역 | 현재 확인된 내용 | 확인 또는 설계할 내용 | 확인 방법/제안 | 담당 역할 | 진행 상태 | 반영 대상 |
 |---|---|---|---|---|---|---|
-| 연계 | {{integration_current}} | API/Event/File/Batch/Payload/Retry | 기술 계약 후보 | {{integration_final}} | INTEGRATION | {{integration_status}} |
-| 권한 | {{auth_current}} | Role/Profile/Data Scope/Security | UX/기술 집행안 | {{auth_final}} | BUSINESS/TECHNICAL | {{auth_status}} |
-| NFR | {{nfr_current}} | SLA/보안/감사/성능 표준 | 프로젝트 표준 기반 후보 | {{nfr_final}} | TECHNICAL/QUALITY | {{nfr_status}} |
-| AC/TC | {{actc_current}} | 성공/실패/경계값/테스트 데이터 | 테스트 시나리오 후보 | {{actc_final}} | QUALITY/FUNCTIONAL | {{actc_status}} |
+{{design_resolution_rows}}
 
 ### 결정 기록
-| 결정 ID | OPEN ID | 결정 내용 | 결정자 역할 | 결정 영역 | 근거 | 날짜 | 상태 |
-|---|---|---|---|---|---|---|---|
+| 결정 ID | 관련 OPEN | 결정 내용 | 결정/확인 역할 | 근거 | 날짜 | 반영 대상 |
+|---|---|---|---|---|---|---|
 {{decision_rows}}
 
+### 내부 자동 관리 정보
+<!-- 기본 사용자/고객 View에서는 숨긴다. Agent/Validator/Trace가 필요할 때만 생성한다. -->
+{{open_resolution_machine_metadata}}
+
 ## 미확정 사항·주의·가정
-- 설계자/개발자의 경험은 `DESIGN_PROPOSAL` 또는 `TECHNICAL_PROPOSAL`로 기록하며 업무 사실로 자동 확정하지 않는다.
-- Brownfield의 현재 시스템 동작은 `OBSERVED_AS_IS`이며 개선 후 정책(TO-BE)과 동일하다고 가정하지 않는다.
-- 기술 영역은 프로젝트 권한 Profile이 허용하면 고객 확인 없이 `ACCEPTED_DESIGN`으로 해소할 수 있다.
-- 업무 목적·업무 규칙·권한 정책 등 BUSINESS 영역은 권한 있는 업무 담당자의 확인 없이 `CONFIRMED_BUSINESS`로 올리지 않는다.
+- 설계자/개발자의 경험 기반 값은 제안으로 기록하고 업무 사실로 자동 확정하지 않는다.
+- Brownfield 현행 동작은 현재 시스템 관찰 결과이며 개선 후 정책과 같다고 가정하지 않는다.
+- 프로젝트 권한으로 확정 가능한 기술 항목은 불필요하게 고객 승인 대기로 남기지 않는다.
+- 업무 목적·정책·권한 같은 Business Truth는 권한 있는 업무 담당자 확인 없이 확정하지 않는다.
 {{alerts_and_assumptions}}
 
 ## 관련 ID 및 추적성
