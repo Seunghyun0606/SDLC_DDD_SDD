@@ -17,6 +17,17 @@ CORE_RULE_ROOT = Path('.cursor/rules')
 CORE_SKILL_ROOT = Path('.cursor/skills')
 CORE_TEMPLATE_ROOT = Path('sdlc/templates/core')
 
+# v1.5.5 changed human-visible headings to Korean-first wording. Existing project/domain
+# overlays may still reference pre-v1.5.5 headings, so those anchors remain valid aliases.
+SECTION_HEADING_ALIASES = {
+    '## 30초 요약': '## 한눈에 보기',
+    '## Workflow': '## 업무 흐름',
+    '## 입력/Evidence': '## 입력 및 근거',
+    '## 본문': '## 상세 내용',
+    '## 미확정/Alert/Assumption': '## 미확정 사항·주의·가정',
+    '## 관련 ID/Traceability': '## 관련 ID 및 추적성',
+}
+
 
 def _safe_relative(value: str) -> Path:
     p = Path(value)
@@ -45,12 +56,23 @@ def _split_sections(text: str) -> tuple[str, list[tuple[str, str]]]:
     return ''.join(preamble), [(heading, ''.join(body)) for heading, body in sections]
 
 
+def _resolve_section_heading(requested: str, sections: list[tuple[str, str]]) -> str:
+    available = {heading for heading, _ in sections}
+    if requested in available:
+        return requested
+    alias = SECTION_HEADING_ALIASES.get(requested)
+    if alias in available:
+        return alias
+    return requested
+
+
 def _append_to_section(text: str, heading: str, addition: str) -> str:
     preamble, sections = _split_sections(text)
+    effective_heading = _resolve_section_heading(heading, sections)
     found = False
     out: list[str] = [preamble]
     for section_heading, body in sections:
-        if section_heading == heading:
+        if section_heading == effective_heading:
             found = True
             body = body.rstrip() + '\n\n' + addition.strip() + '\n'
         out.append(body)
@@ -61,13 +83,14 @@ def _append_to_section(text: str, heading: str, addition: str) -> str:
 
 def _insert_section_after(text: str, heading: str, new_heading: str, content: str) -> str:
     preamble, sections = _split_sections(text)
+    effective_heading = _resolve_section_heading(heading, sections)
     if any(h == new_heading for h, _ in sections):
         raise ValueError(f'duplicate inserted section: {new_heading}')
     found = False
     out: list[str] = [preamble]
     for section_heading, body in sections:
         out.append(body)
-        if section_heading == heading:
+        if section_heading == effective_heading:
             found = True
             out.append(f'\n{new_heading}\n{content.strip()}\n')
     if not found:
