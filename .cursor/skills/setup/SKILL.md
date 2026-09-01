@@ -24,7 +24,9 @@
 이 5개가 있으면 `/work`를 시작할 수 있다. 나머지 Profile 미설정은 기본값을 사용하며 프로젝트 시작을 막지 않는다.
 
 ## Fast Path 자동 기본값
-- Starter Kit과 Preset은 Project Mode에 맞게 자동 선택한다.
+- Starter Kit과 Preset은 Project Mode에 맞게 자동 선택한다. 사용자는 Preset ID를 직접 고를 필요가 없다.
+- 내부 기본 Preset Mapping은 `GREENFIELD → greenfield-default`, `BROWNFIELD → brownfield-auto`를 사용한다. `HYBRID/AUTO`는 Source 존재 여부와 Project Profile의 Mode/Preset Mapping을 따라 Candidate를 선택한다.
+- 이 Preset ID는 자동화/기존 Profile 호환을 위한 Machine 식별자이며 Fast Path 질문 수를 늘리지 않는다.
 - 문서 언어는 `ko-KR`을 기본으로 한다.
 - Terminology Profile은 기본 용어를 사용하고 고객 고유 용어가 발견되면 그때 확장한다.
 - Customer Document Profile은 표준 Customer View를 사용한다.
