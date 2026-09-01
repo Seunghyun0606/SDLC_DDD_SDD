@@ -1,0 +1,91 @@
+version: 1
+status: PROPOSAL
+purpose: "기존 프로젝트 요구사항 Excel을 Canonical RQ/FR Candidate로 안전하게 정규화하기 위한 Sample Mapping"
+
+source:
+  kind: xlsx
+  sheet: Sheet1
+  header_rows: 2
+  preserve_original: true
+  provenance:
+    include_source_file: true
+    include_source_sheet: true
+    include_source_row: true
+    include_legacy_id: true
+    include_import_rule_version: true
+
+columns:
+  sequence: "No"
+  business_level1: "업무구분.Level1"
+  business_level2: "업무구분.Level2"
+  legacy_requirement_id: "요구사항.요구사항 ID"
+  title: "요구사항.요구사항명"
+  detail: "요구사항.요구사항"
+  planned_start: "관리.시작일"
+  planned_end: "관리.종료일"
+  assignee: "관리.담당자"
+
+normalization:
+  raw_row_semantics: UNDEFINED
+  do_not_publish_row_as_rq_automatically: true
+
+  rq_group_candidate:
+    enabled: true
+    group_by:
+      - business_level1
+      - business_level2
+      - title
+    candidate_entity: RQ
+    confidence: MEDIUM
+
+  fr_candidate:
+    enabled: true
+    from: detail
+    candidate_entity: FR
+    parent: rq_group_candidate
+
+  publish:
+    requires_human_review: true
+    preserve_legacy_requirement_id_on_fr_candidate: true
+
+truth_policy:
+  imported_requirement_statement: GIVEN
+  imported_business_rule: OPEN
+  source_row_does_not_confirm_business_rule: true
+
+stage_eligibility:
+  INTAKE:
+    allow: true
+    result: CANDIDATE
+  DECOMPOSE:
+    allow: true
+    result: DRAFT
+  CLARIFY:
+    allow: true
+    result: OPEN
+  PROCESS:
+    allow: true
+    result: DRAFT
+  DISCOVERY:
+    requires:
+      - source_repository
+      - static_or_runtime_evidence
+  IMPACT:
+    requires:
+      - technical_evidence
+  PROGRAM:
+    requires:
+      - program_or_artifact_mapping
+  DEVELOPMENT:
+    requires:
+      - target_write_proof
+    guard_source_write_if_missing: true
+  KNOWLEDGE_PROMOTION:
+    imported_rows_max_level: K3
+
+worklist:
+  legacy_requirement_source_is_not_worklist: true
+  canonical_generates_worklist: true
+  worklist_views:
+    - docs/00_관리/전체작업목록.md
+    - docs/00_관리/전체작업목록.xlsx
