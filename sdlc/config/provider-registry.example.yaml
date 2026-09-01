@@ -1,6 +1,6 @@
-version: 2
+version: 3
 registry:
-  protocol_version: P0-RUNTIME-CORE-1
+  protocol_version: P0-RUNTIME-CORE-2
   default_timeout_seconds: 30
   no_implicit_fallback: true
   preserve_provider_evidence: true
@@ -15,6 +15,23 @@ registry:
       required_for_modes: [BROWNFIELD, HYBRID]
       optional_for_modes: [GREENFIELD]
       constraints: {bounded_scope_required: true, revision_required: true, write_requires_explicit_capability: true}
+
+    - provider_id: source-write-primary
+      provider_type: SOURCE
+      enabled: false
+      provider_state: DISABLED
+      mode: READ_WRITE
+      transport: ADAPTER
+      capabilities: [source.patch.apply]
+      optional_for_stages: [DEVELOPMENT]
+      constraints:
+        explicit_side_effect_request_required: true
+        expected_revision_required: true
+        idempotency_key_required: true
+        permission_proof_required: true
+        ambiguous_target_must_block: true
+        unknown_after_write_requires_recovery: true
+        default_execution_mode: PROPOSAL_ONLY
 
     - provider_id: source-analyzer-primary
       provider_type: SOURCE_ANALYZER
@@ -63,3 +80,4 @@ capability_policy:
   unavailable_provider_behavior: PRESERVE_OPEN
   adapter_specific_fields_location: extensions
   analyzer_implementation_location: sdlc/adapters/analyzers/
+  source_write_contract: sdlc/design/contracts/source-write-capability.md
