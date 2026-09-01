@@ -1,7 +1,7 @@
 {
-  "schema_version": 2,
-  "candidate_design": "v1.6.0-rc.1",
-  "purpose": "저수준 Agent가 Stage별 문서를 읽고 추가 암묵지 없이 유사한 품질의 산출물을 생성하고, 그 결과를 공통 Runtime에서 검증할 수 있게 하는 Core 공통 실행계약",
+  "schema_version": 3,
+  "candidate_design": "v1.6.0-rc.1-p0-runtime-hardening",
+  "purpose": "저수준 Agent가 Stage별 문서를 읽고 추가 암묵지 없이 유사한 품질의 산출물을 생성하며, 사용자가 Target/Stage/Artifact를 명시적으로 다시 선택해도 공통 Runtime에서 안전하게 검증할 수 있게 하는 Core 실행계약",
   "scope": "CORE_COMMON_CONTRACT",
   "required_reference_sections": [
     "## Purpose",
@@ -35,7 +35,10 @@
     "quality_gate_failure_is_reported_not_hidden": true,
     "dangerous_source_write_uses_execution_guard": true,
     "stage_result_must_be_machine_verifiable": true,
-    "artifact_and_canonical_delta_must_reference_same_stage_output": true
+    "artifact_and_canonical_delta_must_reference_same_stage_output": true,
+    "target_stage_and_artifact_can_be_selected_independently": true,
+    "explicit_stage_selection_does_not_authorize_business_truth_change": true,
+    "existing_entity_mutation_is_scoped_to_selected_target_graph": true
   },
   "runtime_output_envelope": {
     "schema_version": 1,
@@ -43,6 +46,8 @@
     "required_fields": ["stage", "artifact_path", "canonical_delta", "quality_gate", "alerts", "uncertainty"],
     "quality_gate_status": ["PASS", "WARNING", "FAIL"],
     "canonical_delta_required": true,
+    "canonical_no_change_supported": true,
+    "canonical_no_change_requires_reason": true,
     "artifact_must_exist": true,
     "unresolved_template_placeholder_allowed": false,
     "artifact_path_must_be_repository_relative": true,
@@ -50,12 +55,28 @@
     "delta_source_artifact_must_match_artifact_path": true,
     "quality_fail_is_not_executable": true
   },
+  "work_executor": {
+    "script": "sdlc/scripts/run_work.py",
+    "target_id_open_ended": true,
+    "explicit_stage_reentry": true,
+    "explicit_artifact_override": true,
+    "canonical_target_optional_when_stage_or_artifact_is_explicit": true,
+    "stage_selection_order": ["USER_STAGE_OVERRIDE", "EXPLICIT_ARTIFACT_STAGE", "TARGET_PROVENANCE_NEXT_STAGE", "TARGET_TYPE_DEFAULT"],
+    "target_graph_scope_guard": true,
+    "confirmed_business_change_requires_explicit_authorization": true,
+    "provider_command_required_for_generation": true,
+    "provider_disabled_result": "NOT_EXECUTED_PROVIDER_UNAVAILABLE_OR_DISABLED"
+  },
   "repeatability": {
     "semantic_fingerprint_supported": true,
     "volatile_fields_ignored": ["generated_at", "updated_at", "created_at", "checked_at", "observed_at"],
     "same_input_clean_run_expectation": "SEMANTIC_MATCH",
     "semantic_mismatch_must_be_reported": true,
-    "validator_does_not_claim_llm_determinism": true
+    "validator_does_not_claim_llm_determinism": true,
+    "full_work_runner": "sdlc/scripts/run_work_repeatability_experiment.py",
+    "validation_fixture_provider_may_test_wiring": true,
+    "validation_fixture_provider_may_claim_agent_empirical_pass": false,
+    "actual_agent_provider_class": "EXTERNAL_AGENT"
   },
   "format_guidance": {
     "reference_document_is_executable_instruction": true,
