@@ -1,0 +1,34 @@
+version: 1
+registry:
+  protocol_version: P0.6-1
+  providers:
+    - provider_id: router-fixture
+      provider_type: COMMAND_ROUTER
+      enabled: true
+      provider_state: AVAILABLE
+      mode: READ_ONLY
+      capabilities: [command.route.work, command.route.change, command.route.check]
+    - provider_id: source-fixture
+      provider_type: SOURCE
+      enabled: true
+      provider_state: AVAILABLE
+      mode: READ_ONLY
+      capabilities: [source.snapshot.read, source.search, source.diff]
+      extensions:
+        fixture_adapter: in-memory-source
+    - provider_id: test-fixture
+      provider_type: TEST
+      enabled: true
+      provider_state: AVAILABLE
+      mode: READ_WRITE
+      capabilities: [test.discover, test.execute, test.result.read]
+      extensions:
+        fixture_adapter: in-memory-test
+    - provider_id: deploy-fixture
+      provider_type: DEPLOYMENT
+      enabled: true
+      provider_state: AVAILABLE
+      mode: READ_WRITE
+      capabilities: [deployment.release.execute]
+      extensions:
+        fixture_adapter: in-memory-deployment
