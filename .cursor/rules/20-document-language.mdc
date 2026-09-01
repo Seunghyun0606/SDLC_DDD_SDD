@@ -1,0 +1,16 @@
+---
+description: 사용자/고객 산출물의 한국어 표현과 고객 View 파생 규칙
+alwaysApply: true
+---
+
+# Document Language & Audience Rule
+
+1. 사용자에게 보이는 산출물의 제목, 단락, 표 머리글, 질문, 설명은 한국어 자연어를 기본으로 한다.
+2. Canonical ID와 machine metadata는 안정성을 위해 기존 키를 유지할 수 있다.
+3. RQ/FR/BR/PGM/TASK/AC/TC는 첫 등장 시 `기능 요구사항(FR)`처럼 한국어 의미를 함께 표시한다.
+4. 고객 커뮤니케이션 문서는 내부 Canonical/산출물에서 파생하며 별도의 Business Truth를 만들지 않는다.
+5. 고객 View의 필수 단락은 제거하지 않는다. 선택 단락은 Customer Document Profile로 제어한다.
+6. Source Hash, Confidence, 내부 구현 상세는 고객 본문에서 기본 숨김이며 필요할 때 부록으로 제공한다.
+7. 고객별 용어 차이는 Terminology Profile의 표시 용어만 바꾸고 Canonical ID는 바꾸지 않는다.
+8. 고객 비정형 문서는 원본을 보존하고 Manifest + Evidence locator를 통해 BR 후보로 정규화한다.
+9. 문서 간 BR 충돌은 자동 해결하지 않고 BR_CONFLICT와 확인 질문으로 남긴다.
