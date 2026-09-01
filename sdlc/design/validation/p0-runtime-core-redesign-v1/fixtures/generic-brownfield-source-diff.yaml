@@ -1,0 +1,21 @@
+version: 2
+source_diff_evidence:
+  metadata:
+    change_id: CHANGE-GENERIC-001
+    project_id: GENERIC-BROWNFIELD-001
+    source_revision_before: rev-a
+    source_revision_after: rev-b
+  changed_items:
+    - path: src/order/service.py
+      before_hash: hash-a
+      after_hash: hash-b
+      changed_symbols: [cancel_order]
+      data_refs: []
+      interface_refs: []
+  semantic_change_class: FUNCTIONAL_BEHAVIOR
+  secondary_classes: []
+  evidence:
+    - evidence_id: EV-DIFF-GENERIC-001
+      truth: OBSERVED
+      locator: src/order/service.py
+      revision: rev-a..rev-b
