@@ -1,0 +1,69 @@
+version: 1
+registry:
+  protocol_version: P0.6-1
+  default_timeout_seconds: 30
+  no_implicit_fallback: true
+  preserve_provider_evidence: true
+  providers:
+    - provider_id: source-primary
+      provider_type: SOURCE
+      enabled: true
+      mode: READ_ONLY
+      transport: ADAPTER
+      capabilities:
+        - source.snapshot.read
+        - source.object.read
+        - source.search
+        - source.diff
+      required_for_modes: [BROWNFIELD, HYBRID]
+      optional_for_modes: [GREENFIELD]
+      constraints:
+        bounded_scope_required: true
+        revision_required: true
+        write_requires_explicit_capability: true
+    - provider_id: test-primary
+      provider_type: TEST
+      enabled: true
+      mode: READ_WRITE
+      transport: ADAPTER
+      capabilities:
+        - test.discover
+        - test.execute
+        - test.result.read
+      required_for_stages: [TEST, VERIFY]
+      constraints:
+        executable_command_or_native_runner_required: true
+        execution_evidence_required_for_pass: true
+    - provider_id: canonical-primary
+      provider_type: CANONICAL_REGISTRY
+      enabled: false
+      mode: READ_WRITE
+      transport: ADAPTER
+      capabilities:
+        - canonical.entity.read
+        - canonical.id.reserve
+        - canonical.publish
+      constraints:
+        idempotency_key_required_for_write: true
+        explicit_write_permission_required: true
+    - provider_id: command-router
+      provider_type: COMMAND_ROUTER
+      enabled: true
+      mode: READ_ONLY
+      transport: LOCAL
+      capabilities:
+        - command.route.work
+        - command.route.change
+        - command.route.check
+      constraints:
+        router_must_not_invent_provider_result: true
+        router_must_not_bypass_blocker: true
+
+capability_policy:
+  provider_statuses: [AVAILABLE, DEGRADED, UNAVAILABLE, DISABLED]
+  response_statuses: [OK, PARTIAL, BLOCKED, ERROR]
+  write_modes: [READ_ONLY, READ_WRITE]
+  missing_required_capability: BLOCKED
+  missing_optional_capability: OPEN
+  unavailable_provider_behavior: PRESERVE_OPEN
+  adapter_specific_fields_location: extensions
