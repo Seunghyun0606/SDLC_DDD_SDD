@@ -1,36 +1,53 @@
 project:
   name: example-project
   mode: AUTO  # AUTO | BROWNFIELD | GREENFIELD | HYBRID
+
+delivery:
+  profile: STANDARD  # FAST | STANDARD | FULL
+  customer_documentation: MINIMAL  # NONE | MINIMAL | STANDARD
+  reverse_analysis: DIRECT_ONLY  # OFF | DIRECT_ONLY | RELATED_GRAPH
+
 bootstrap:
+  executable: sdlc/scripts/bootstrap_project.py
   reuse_existing_guides: true
   reuse_source_conventions: true
   reuse_test_conventions: true
   require_manual_confirmation: false
+
 starter_kit:
   mode_specific: true
   greenfield: sdlc/starter-kits/greenfield/starter-manifest.example.yaml
   brownfield: sdlc/starter-kits/brownfield/starter-manifest.example.yaml
+
+# Compatibility hint only. New projects do not need to understand this layer to start.
 preset:
-  name: AUTO  # /setup이 project.mode에 맞는 preset을 선택한다.
+  name: AUTO
   mode_mapping:
     GREENFIELD: greenfield-default
     BROWNFIELD: brownfield-auto
     HYBRID: brownfield-auto
     AUTO: AUTO_DISCOVER
+
 source_profile:
   path: sdlc/config/source-profile.yaml
+agent_provider:
+  path: sdlc/config/agent-provider.json
+
 documents:
   language: ko-KR
+  human_metadata_mode: FRIENDLY
   terminology_profile: sdlc/config/terminology-profile.json
   internal_view:
     enabled: true
   customer_view:
     enabled: true
     profile: sdlc/config/customer-document-profile.json
-    default_mode: both  # internal | customer | both
+    default_mode: both
+
 br_intake:
   profile: sdlc/config/br-intake-profile.json
   preserve_original_files: true
+
 open_resolution:
   profile: sdlc/config/open-resolution-profile.yaml
   sop_required: false
@@ -39,21 +56,24 @@ open_resolution:
   allow_developer_proposal: true
   allow_existing_system_analysis: true
   allow_source_data_analysis: true
-  # 실제 승인권자/위임 규칙은 프로젝트에서 open-resolution-profile.yaml로 조정한다.
+
+# Default customization path is deliberately three levels only.
+# Domain/preset overlays remain compatibility/advanced options, not first-use concepts.
 customization:
   overlay_order:
     - core
-    - preset
-    - project_profile
     - project_overlay
-    - domain_overlay
     - local_override
   project_overlay: sdlc/custom/project
-  domain_overlay_root: sdlc/custom/domain
-  domain_overlays: []
+  advanced_domain_overlays: []
+
 workflow:
   process_blocking: false
   execution_guard_enabled: true
+  protected_branches:
+    - main
+    - master
+
 pm_tracking:
   assignee_required: false
   schedule_required: false
