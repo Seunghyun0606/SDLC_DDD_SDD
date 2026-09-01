@@ -1,0 +1,56 @@
+version: 1
+status: ACTIVE_P0_5_CANDIDATE
+
+purpose: >-
+  P0.1~P0.4 산출물을 다시 해석하지 않고 동일 Work Unit의 현재 상태,
+  Blocker, 다음 Action을 하나의 /check View로 조합한다.
+
+principles:
+  - orchestrator_is_read_model_only: true
+  - never_create_business_truth: true
+  - never_promote_candidate_to_canonical: true
+  - never_promote_fixture_to_production: true
+  - never_treat_contract_coverage_as_runtime_pass: true
+  - preserve_open_and_blocked_state: true
+
+identity_guards:
+  source_group_id_must_match_across_stages: true
+  source_requirement_ids_must_match_normalization_and_review: true
+  source_count_must_match_ids: true
+
+stage_order:
+  - NORMALIZE
+  - BOUNDARY_REVIEW
+  - CANONICAL_PUBLISH
+  - SOURCE_DISCOVERY_REVERSE_SYNC
+  - TEST_VERIFY
+
+stage_state_priority:
+  - FAILED
+  - BLOCKED
+  - BLOCKED_RUNTIME
+  - ACTION_REQUIRED
+  - REVIEW_REQUIRED
+  - READY
+  - COMPLETE
+
+release_gate:
+  require_no_blockers: true
+  require_production_verified: true
+  require_actual_customer_source: true
+  require_runtime_execution: true
+  require_business_boundary_review: true
+
+next_action_priority:
+  - BOUNDARY_REVIEW_OPEN
+  - ACTUAL_SOURCE_REQUIRED
+  - BUSINESS_RULE_REVIEW_REQUIRED
+  - TEST_COMMAND_OPEN
+  - RUNTIME_ENVIRONMENT_UNAVAILABLE
+
+user_view:
+  max_primary_next_actions: 5
+  show_internal_p0_version_names: false
+  show_candidate_vs_canonical: true
+  show_fixture_vs_production: true
+  show_contract_vs_runtime: true
