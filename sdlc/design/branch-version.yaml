@@ -1,0 +1,19 @@
+schema_version: 1
+branch: feature/phase-0.5-worklist-sync
+branch_version: phase0.5-worklist-v0.1.0
+base_branch: main
+base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
+design_baseline: v1.5.1
+status: VALIDATION
+merge_to_main: false
+purpose: 전체작업목록 MD-XLSX 양방향 동기화 PoC 구현 및 검증
+scope:
+  - sync_worklist.py
+  - 전체작업목록.xlsx
+  - round-trip tests
+  - sync conflict handling
+validation:
+  unit_tests: 6
+  xlsx_independent_read: PASS
+  mermaid_docs_quality: inherited
+updated_at: 2026-09-01T17:35:00+09:00
