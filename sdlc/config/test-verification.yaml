@@ -1,0 +1,71 @@
+version: 1
+status: ACTIVE_P0_4
+
+truth_policy:
+  source_observation: OBSERVED
+  test_execution: EXECUTED_EVIDENCE
+  human_business_truth: PROTECTED
+
+required_test_states:
+  - NOT_EXECUTED
+  - PASSED
+  - FAILED
+  - BLOCKED
+  - SKIPPED_WITH_REASON
+
+verification_states:
+  - NOT_VERIFIED
+  - CONTRACT_PASS_RUNTIME_NOT_EXECUTED
+  - PARTIAL_EVIDENCE
+  - VERIFIED_PASS
+  - VERIFIED_FAIL
+
+coverage_policy:
+  required_ac_coverage_percent: 100
+  allow_one_tc_to_cover_multiple_ac: true
+  require_each_required_tc_to_map_ac: true
+  duplicate_tc_id: DENY
+  unknown_ac_reference: DENY
+
+execution_policy:
+  pass_requires_evidence: true
+  fail_requires_evidence: true
+  blocked_requires_reason: true
+  skipped_requires_reason: true
+  not_executed_must_not_have_runtime_result: true
+  source_evidence_set_must_match_contract: true
+  actual_runtime_environment_required_for_verified_pass: true
+
+verification_gate:
+  VERIFIED_PASS:
+    requires:
+      - all_required_ac_covered
+      - all_required_tc_executed
+      - all_required_tc_passed
+      - evidence_present_for_all_passed_tc
+      - source_evidence_set_matches
+      - runtime_environment_is_actual
+      - no_open_blockers
+      - no_unreviewed_business_rule_candidate
+  CONTRACT_PASS_RUNTIME_NOT_EXECUTED:
+    allows:
+      - full_static_trace_coverage
+      - source_to_test_contract_match
+    denies:
+      - runtime_pass_claim
+      - production_verification_claim
+
+fail_safe_codes:
+  TV-001: required field missing
+  TV-002: duplicate test case id
+  TV-003: required AC is not covered
+  TV-004: test case references unknown AC
+  TV-005: PASSED/FAILED without execution evidence
+  TV-006: NOT_EXECUTED contains runtime result
+  TV-007: BLOCKED/SKIPPED_WITH_REASON without reason
+  TV-008: source evidence set mismatch
+  TV-009: VERIFIED_PASS with non-passed required test
+  TV-010: VERIFIED_PASS without actual runtime environment
+  TV-011: VERIFIED_PASS with open blocker
+  TV-012: VERIFIED_PASS while business rule candidate is unreviewed
+  TV-013: production verification claim from synthetic fixture
