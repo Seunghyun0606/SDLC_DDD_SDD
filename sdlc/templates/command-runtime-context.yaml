@@ -1,16 +1,32 @@
-schema_version: 1
+schema_version: 2
 command_id: CMD-001
 command: /check
+
 project_context:
   project_id: PROJECT-001
   mode: AUTO
   stage: CHECK
+  profile: STANDARD
+  source_revision: OPEN
+
 target:
   target_type: WORK_UNIT
   target_id: WORK-001
+  related_ids: {}
+
 requested_capabilities: []
+required_capabilities: []
 write_capabilities: []
+write_intent: false
+permission_proof_ref: null
+idempotency_key: null
+
 capability_inputs: {}
 write_proofs: {}
 human_actions: []
 adapter_configs: {}
+
+stage_execution:
+  skill: null
+  expected_outputs: []
+  next_stage: null
