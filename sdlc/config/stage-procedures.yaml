@@ -1,0 +1,180 @@
+version: 1
+status: ACTIVE_P0_REDESIGN
+purpose: >-
+  도구 실행 규칙이 특별하지 않은 SDLC Stage의 Atomic Steps/Decision/Quality/Stop/Escalation을
+  하나의 Config Authority에서 관리해 Stage별 SKILL.md 난립을 방지한다.
+
+profiles:
+  DECOMPOSE:
+    purpose_ko: 요구사항을 구현방식이 아니라 사용자/업무 결과 기준으로 FR/BR/AC 후보로 분해한다.
+    atomic_steps:
+      - 원본 Requirement ID와 현재 Boundary 상태를 확인한다.
+      - 독립 사용자/업무 동작을 FR 후보로 분리한다.
+      - 명시된 정책/조건/예외만 BR 후보로 기록한다.
+      - 검증 가능한 완료조건을 AC 후보로 만든다.
+      - 모르는 정책/Actor/예외는 OPEN Item으로 남긴다.
+      - 생성한 모든 후보를 원본 Evidence와 Trace한다.
+    decision_rules:
+      - Source 구현방식으로 FR을 정의하지 않는다.
+      - BR 근거가 없으면 OPEN/INFERRED로 유지한다.
+      - Candidate를 Canonical로 자동 승격하지 않는다.
+    quality_checks: [SOURCE_ID_PRESERVED, ALL_CANDIDATES_HAVE_TRACE, OPEN_NOT_INVENTED]
+    alerts: [BOUNDARY_AMBIGUOUS, BUSINESS_RULE_EVIDENCE_MISSING]
+    stop_conditions: [REQUIRED_OUTPUT_FILLED_OR_OPEN, NEXT_DECISION_REQUIRES_BUSINESS_AUTHORITY]
+    escalation: {BOUNDARY_AMBIGUOUS: L2_OR_HUMAN, BUSINESS_RULE_CONFLICT: HUMAN}
+    do_not: [INVENT_BUSINESS_RULE, AUTO_CANONICAL_PUBLISH]
+
+  CLARIFY:
+    purpose_ko: 후속 Stage 품질에 영향을 주는 미확정 사항을 질문/가정/필요 Evidence로 구조화한다.
+    atomic_steps:
+      - Stage Input Pack의 OPEN과 충돌 Evidence를 수집한다.
+      - 질문마다 필요한 Evidence와 답변 권한자를 정한다.
+      - 비차단 OPEN과 Side-effect 차단 OPEN을 구분한다.
+      - 답이 없어도 가능한 다음 작업을 기록한다.
+    decision_rules:
+      - 정보 부족 자체로 전체 Workflow를 중지하지 않는다.
+      - Source/DB/Publish/Test Execute 등 Side-effect만 필요 시 Guard한다.
+    quality_checks: [EVERY_OPEN_HAS_OWNER_OR_ESCALATION, GUARDED_ACTION_EXPLICIT]
+    alerts: [EVIDENCE_CONFLICT, AUTHORITY_UNKNOWN]
+    stop_conditions: [ALL_OPEN_CLASSIFIED, NEXT_EVIDENCE_REQUIRES_NEW_AUTHORITY_OR_TOOL]
+    escalation: {EVIDENCE_CONFLICT: L2_OR_HUMAN, AUTHORITY_UNKNOWN: HUMAN}
+    do_not: [SILENTLY_RESOLVE_OPEN, BLOCK_ALL_WORK_FOR_NON_SIDE_EFFECT_OPEN]
+
+  PROCESS:
+    purpose_ko: 현재/목표 업무 흐름과 Actor, Trigger, State, Exception을 Source 구현과 분리해 정리한다.
+    atomic_steps:
+      - Actor와 Trigger를 확인한다.
+      - AS-IS가 Evidence로 확인 가능한 범위만 기록한다.
+      - TO-BE 업무 흐름을 FR/AC와 연결한다.
+      - 주요 상태 전이와 예외를 기록한다.
+      - Source에서만 보이는 동작은 OBSERVED로 분리한다.
+    decision_rules:
+      - Source Behavior를 Business Policy로 자동 확정하지 않는다.
+      - 없는 AS-IS는 추측하지 않고 OPEN으로 둔다.
+    quality_checks: [ACTOR_TRIGGER_PRESENT_OR_OPEN, TO_BE_TRACED_TO_FR_AC, OBSERVED_SEPARATED]
+    alerts: [AS_IS_EVIDENCE_MISSING, PROCESS_OWNER_UNKNOWN]
+    stop_conditions: [PROCESS_PATHS_FILLED_OR_OPEN, NEXT_DECISION_REQUIRES_OWNER]
+    escalation: {PROCESS_CONFLICT: L2_OR_HUMAN}
+    do_not: [SOURCE_BEHAVIOR_TO_CONFIRMED_BR]
+
+  IMPACT:
+    purpose_ko: Requirement와 Evidence를 기반으로 Business/Functional/Technical 영향 후보를 분리한다.
+    atomic_steps:
+      - RQ/FR/BR/AC와 현재 Evidence 관계를 확인한다.
+      - 직접 관계가 있는 PGM/ART/SYMBOL/DATA/INT를 우선 수집한다.
+      - Business, Functional, Technical Impact를 분리한다.
+      - 직접 근거 없는 영향은 Candidate/OPEN으로 유지한다.
+      - Blast Radius와 재검토 대상을 기록한다.
+    decision_rules:
+      - Name Similarity만으로 영향 확정 금지.
+      - High Blast Radius는 L2/L3 Review 대상으로 올린다.
+    quality_checks: [DIRECT_RELATION_PRIORITIZED, IMPACT_CLASS_SEPARATED, BLIND_SPOT_PRESERVED]
+    alerts: [HIGH_BLAST_RADIUS, AMBIGUOUS_TARGET, DOWNSTREAM_UNKNOWN]
+    stop_conditions: [DIRECT_SCOPE_ANALYZED, CONFIGURED_SEARCH_BUDGET_EXHAUSTED]
+    escalation: {HIGH_BLAST_RADIUS: L3, AMBIGUOUS_TARGET: L2_OR_HUMAN}
+    do_not: [UNBOUNDED_REPOSITORY_SCAN, SIMILARITY_AS_CONFIRMED_IMPACT]
+
+  DESIGN:
+    purpose_ko: 구현 파일명이 아니라 목표 시스템 동작, Validation, Data, Interface, Transaction을 설계한다.
+    atomic_steps:
+      - RQ/FR/BR/AC와 Impact를 확인한다.
+      - AS-IS/TO-BE 동작을 분리한다.
+      - 입력/출력/Validation/State/Error를 정의한다.
+      - Data/Transaction/Interface 변경 후보를 정의한다.
+      - AC와 설계 항목을 Trace한다.
+      - 미확정 Architecture Decision은 OPEN/Escalation한다.
+    decision_rules:
+      - 특정 Framework Layer를 근거 없이 새로 만들지 않는다.
+      - Architecture Decision은 L2/L3/Human 권한을 따른다.
+    quality_checks: [AC_MAPPING_PRESENT, DATA_INTERFACE_IMPACT_EXPLICIT, OPEN_VISIBLE]
+    alerts: [ARCHITECTURE_DECISION_REQUIRED, DATA_CONTRACT_OPEN, INTERFACE_CONTRACT_OPEN]
+    stop_conditions: [DESIGN_SECTIONS_FILLED_OR_OPEN, NEXT_DECISION_IS_ARCHITECTURE_AUTHORITY]
+    escalation: {ARCHITECTURE_DECISION_REQUIRED: L3_OR_HUMAN}
+    do_not: [INVENT_FRAMEWORK, HIDE_UNRESOLVED_CONTRACT]
+
+  PROGRAM:
+    purpose_ko: 기능설계를 Logical Program, Physical Artifact 후보, Development Task로 분해한다.
+    atomic_steps:
+      - Feature/Design 단위를 Logical Program으로 나눈다.
+      - Brownfield는 기존 PGM 재사용 후보를 우선 확인한다.
+      - PGM과 ART/SYMBOL/DATA 관계를 기록한다.
+      - 구현 가능한 Development Task를 만든다.
+      - 각 Task를 AC/Test 대상과 연결한다.
+    decision_rules:
+      - 기존 Program과 이름이 유사하다는 이유로 동일 Program으로 확정하지 않는다.
+      - 신규 Program 생성은 기존 책임과 충돌 여부를 확인한다.
+    quality_checks: [PGM_HAS_RESPONSIBILITY, TASK_HAS_SCOPE, AC_TEST_TRACE_PRESENT]
+    alerts: [PROGRAM_RESPONSIBILITY_AMBIGUOUS, PARALLEL_WRITE_RISK]
+    stop_conditions: [PROGRAM_AND_TASK_SCOPE_FILLED_OR_OPEN]
+    escalation: {PROGRAM_RESPONSIBILITY_AMBIGUOUS: L2, PARALLEL_WRITE_RISK: L3}
+    do_not: [AUTO_REUSE_BY_NAME, UNRELATED_REFACTOR_TASK]
+
+  KNOWLEDGE:
+    purpose_ko: 검증 완료 후 재사용 가치가 있는 사실만 provenance와 함께 Knowledge Candidate로 만든다.
+    atomic_steps:
+      - Verification 결과와 Evidence를 확인한다.
+      - 재사용 가능한 Business/Technical/Operational 사실을 후보로 분리한다.
+      - Source 관찰인지 Human Truth인지 구분한다.
+      - provenance와 관련 Entity ID를 연결한다.
+      - Business Truth 승격이 필요하면 Review 대상으로 둔다.
+    decision_rules:
+      - OBSERVED Source Behavior는 자동 CONFIRMED Business Knowledge가 아니다.
+      - Verification 없는 구현 추측은 Promotion하지 않는다.
+    quality_checks: [PROVENANCE_PRESENT, VERIFICATION_REFERENCE_PRESENT, TRUTH_CLASS_PRESERVED]
+    alerts: [KNOWLEDGE_AUTHORITY_REQUIRED, VERIFICATION_EVIDENCE_MISSING]
+    stop_conditions: [CANDIDATES_CREATED_OR_EXPLICITLY_NONE]
+    escalation: {BUSINESS_KNOWLEDGE_PROMOTION: HUMAN}
+    do_not: [AUTO_PROMOTE_OBSERVED_TO_BUSINESS_TRUTH]
+
+  CHANGE_CONTROL:
+    purpose_ko: 자연어/Source Diff 변경을 CR과 영향/STALE/Review 후보로 구조화한다.
+    atomic_steps:
+      - 변경 Source와 Revision을 기록한다.
+      - 변경 의도와 실제 Source Diff를 분리한다.
+      - 직접 Trace된 PGM/ART를 찾는다.
+      - FR/BR/AC/TC 영향은 Candidate로 계산한다.
+      - Technical Artifact는 STALE Candidate, Human Truth는 Review Candidate로 구분한다.
+      - 필요한 재분석/재테스트 Action을 만든다.
+    decision_rules:
+      - Source Diff로 Human Truth를 자동 수정하지 않는다.
+      - UNKNOWN 의미 변경은 Review 없이 Current Truth로 적용하지 않는다.
+    quality_checks: [REVISION_PRESERVED, DIRECT_TRACE_FIRST, HUMAN_TRUTH_PROTECTED]
+    alerts: [BUSINESS_RULE_CHANGE_CANDIDATE, REVERSE_SYNC_UNKNOWN]
+    stop_conditions: [CHANGE_CLASSIFIED_OR_UNKNOWN, REVIEW_ACTION_CREATED]
+    escalation: {BUSINESS_RULE_CHANGE_CANDIDATE: HUMAN, REVERSE_SYNC_UNKNOWN: L2_OR_HUMAN}
+    do_not: [AUTO_OVERWRITE_REQUIREMENT, KEYWORD_ONLY_STALE_CONFIRM]
+
+  STATUS_READ_MODEL:
+    purpose_ko: 현재 Work Unit의 Stage, OPEN, Guard, Evidence, 다음 Action을 Truth 생성 없이 읽기 View로 조합한다.
+    atomic_steps:
+      - 현재 Stage와 Stage Input Pack을 읽는다.
+      - OPEN/Guard/Partial/Failed 상태를 보존한다.
+      - Expected Output의 완료/미완료를 계산한다.
+      - 다음 Stage와 Action을 Stage Routing에서 읽는다.
+      - 사용자에게 최대 5개의 우선 다음 Action을 보여준다.
+    decision_rules:
+      - Read Model이 Business Truth를 만들지 않는다.
+      - Candidate를 Canonical로 승격하지 않는다.
+      - Runtime 미실행을 PASS로 표시하지 않는다.
+    quality_checks: [NO_TRUTH_CREATION, OPEN_PRESERVED, NEXT_ACTION_FROM_ROUTING]
+    alerts: [STALE_DOCUMENT, RUNTIME_NOT_EXECUTED, PROVIDER_PARTIAL]
+    stop_conditions: [STATUS_VIEW_BUILT]
+    escalation: {}
+    do_not: [PROMOTE_STATE, HIDE_BLOCKER]
+
+  PROJECT_SETUP:
+    purpose_ko: 최소 Project Identity/Mode/Provider State로 시작하고 사전 과도한 Customization을 요구하지 않는다.
+    atomic_steps:
+      - Project ID와 Mode를 기록한다.
+      - Source/Test Provider State를 명시적으로 기록한다.
+      - Brownfield/Hybrid면 현재 작업에 필요한 Existing Asset만 JIT 탐색 후보로 둔다.
+      - Greenfield면 Preset을 시작점으로 둔다.
+      - 프로젝트 차이는 실제 관찰 후 Overlay 후보로 만든다.
+    decision_rules:
+      - 모든 경로/표준/Provider를 시작 전에 요구하지 않는다.
+      - Sample 값으로 Project Customization을 만들지 않는다.
+    quality_checks: [PROJECT_ID_PRESENT, MODE_KNOWN_OR_AUTO, PROVIDER_STATE_EXPLICIT]
+    alerts: [SOURCE_PROVIDER_UNCONFIGURED, PROJECT_MODE_AMBIGUOUS]
+    stop_conditions: [MINIMUM_BOOTSTRAP_RECORDED]
+    escalation: {PROJECT_MODE_AMBIGUOUS: L2_OR_HUMAN}
+    do_not: [REQUIRE_ALL_CUSTOMIZATION_UPFRONT, COPY_CORE_CONFIG_TO_PROJECT]
