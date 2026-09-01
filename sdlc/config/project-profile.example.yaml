@@ -3,6 +3,8 @@ project:
   mode: AUTO  # AUTO | BROWNFIELD | GREENFIELD | HYBRID
 
 bootstrap:
+  runtime_config: sdlc/config/bootstrap-runtime.yaml
+  runtime_script: sdlc/scripts/bootstrap_project.py
   reuse_existing_guides: true
   reuse_source_conventions: true
   reuse_test_conventions: true
@@ -10,6 +12,7 @@ bootstrap:
   p1_foundation_config: sdlc/config/p1-foundation.yaml
   project_bootstrap_manifest: sdlc/templates/project-bootstrap-manifest.yaml
   jit_discovery: true
+  unlimited_recursive_scan: false
 
 preset:
   name: brownfield-auto
@@ -17,7 +20,9 @@ preset:
 artifacts:
   profile: STANDARD  # LITE | STANDARD | ENTERPRISE
   profile_config: sdlc/config/artifact-profiles.yaml
+  resolver: sdlc/scripts/resolve_artifact_profile.py
   legacy_selection_matrix: sdlc/starter/onboarding-package-v1/04_artifact-selection-matrix.csv
+  legacy_selection_matrix_status: COMPATIBILITY_ONLY
   precedence: PROFILE_OVER_LEGACY_DEFAULT_REQUIRED
 
 requirement_boundary:
@@ -28,6 +33,9 @@ requirement_boundary:
 handoff:
   stage_input_pack_template: sdlc/templates/stage-input-pack.yaml
   validate_before_next_stage: true
+  stage_routing_config: sdlc/config/stage-routing.yaml
+  stage_resolver: sdlc/scripts/resolve_stage_execution.py
+  command_context_builder: sdlc/scripts/build_command_context.py
 
 providers:
   registry: sdlc/config/provider-registry.example.yaml
@@ -37,10 +45,20 @@ providers:
   write_requires_permission_proof: true
   write_requires_idempotency_key: true
 
+source_discovery:
+  config: sdlc/config/source-discovery.yaml
+  analyzer_registry: sdlc/config/source-analyzers.yaml
+  inventory_script: sdlc/scripts/discover_source_inventory.py
+  reverse_sync_config: sdlc/config/reverse-sync-classification.yaml
+  reverse_sync_script: sdlc/scripts/build_reverse_sync_from_signals.py
+
 commands:
   public_commands: [/work, /change, /check]
+  setup_entry: sdlc/scripts/bootstrap_project.py
+  setup_is_runtime_command: false
   provider_runtime_skill: sdlc/starter/onboarding-package-v1/skills/provider-runtime/SKILL.md
   router_must_not_invent_provider_result: true
+  caller_must_not_invent_required_capabilities: true
 
 customization:
   strategy: LATE_BOUND_OVERLAY
@@ -60,6 +78,8 @@ workflow:
   process_blocking: false
   execution_guard_enabled: true
   open_item_template: sdlc/templates/open-item.yaml
+  nonblocking_open_must_not_stop_read_only_progress: true
+  action_guard_requires_action_scope: true
 
 scale_out:
   representative_vertical_slice_required: true
