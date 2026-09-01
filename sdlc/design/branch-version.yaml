@@ -7,7 +7,7 @@ design_baseline: v1.5.1
 candidate_design_version: v1.6.0-rc.1
 status: IMPLEMENTATION_IN_PROGRESS
 merge_to_main: false
-purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고 Requirement/Analysis 및 Functional Design/Program Spec 책임을 단순화하며 /setup 진입 복잡도를 낮춘다.
+purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고 Requirement/Analysis, Functional Design/Program Spec, 고객 커뮤니케이션 View의 책임을 단순화하며 /setup 진입 복잡도를 낮춘다.
 principles:
   same_business_information_written_once: true
   single_active_requirement_artifact: true
@@ -16,6 +16,10 @@ principles:
   human_open_status_count: 5
   machine_metadata_hidden_by_default: true
   setup_fast_path_questions: 5
+  active_customer_view_count: 3
+  legacy_customer_document_ids_are_aliases: true
+  customer_projection_requires_internal_evidence: true
+  customer_projection_invents_missing_business_fact: false
   project_adapter_boundary_preserved: true
   reverse_capability_name: SOURCE_DRIFT_AND_REVERSE_REVIEW_CANDIDATE
 changes_in_scope:
@@ -26,20 +30,33 @@ changes_in_scope:
   - single-table 17-item program readiness
   - simplified open-resolution human view
   - setup five-question fast path
-  - work/requirement/program/clarify reference alignment
+  - customer document 8-to-3 active-view consolidation
+  - legacy eight customer document type aliases
+  - internal Markdown and Canonical JSON customer projection runtime
+  - customer projection machine-metadata hiding and status translation
+  - work/requirement/program/clarify/customer guide alignment
   - validator and regression-test alignment
 not_in_scope_yet:
-  - customer document 8-to-3 consolidation
-  - real customer projection engine
   - canonical delta executor
   - low-level-agent repeated-run behavioral validation
   - Java/Spring/MyBatis project impact adapter implementation
   - semantic reverse program-spec regeneration
 validation:
   source_review: COMPLETED_BY_DIRECT_FILE_INSPECTION
-  local_unittest_execution: NOT_RUN_ENVIRONMENT_GITHUB_DNS_UNAVAILABLE
-  github_ci_result: NOT_YET_CONFIRMED
+  local_full_unittest_execution: NOT_RUN_ENVIRONMENT_GITHUB_DNS_UNAVAILABLE
+  local_projection_runtime_syntax: PASS_REPRODUCED
+  local_projection_sample_behavior: PASS_REPRODUCED
+  local_projection_sample_checks:
+    actual_internal_content_projected: true
+    internal_ids_hidden: true
+    source_hash_hidden: true
+    open_status_translated_for_customer: true
+    legacy_alias_resolved: true
+    unresolved_placeholder_absent: true
+  draft_pull_request: 51
+  pull_request_base: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.9-open-resolution-workbook-v0.1
+  github_ci_result: NO_PULL_REQUEST_WORKFLOW_RUN_FOUND
   self_assessment_is_not_validation: true
 verdict: RC_IMPLEMENTATION_NOT_YET_VALIDATED
-next_step: 회귀 테스트와 branch diff를 검토하고, CI 결과가 확보되기 전에는 PASS/VALIDATED로 승격하지 않는다.
-updated_at: 2026-09-02T00:00:00+09:00
+next_step: Draft PR #51에서 전체 회귀 테스트/CI 실행 경로를 확보하고, 실제 Greenfield/Brownfield 내부 산출물을 입력한 고객 Projection Pilot과 저수준 Agent behavioral validation을 수행한 뒤 PASS/VALIDATED 승격 여부를 판단한다.
+updated_at: 2026-09-02T01:42:45+09:00
