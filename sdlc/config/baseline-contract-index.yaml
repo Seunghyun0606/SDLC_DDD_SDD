@@ -1,9 +1,9 @@
-version: 3
-status: P0_RUNTIME_CORE_REDESIGN_ACTIVE
+version: 4
+status: P0_RUNTIME_CORE_REDESIGN_EXIT_CANDIDATE
 purpose: >-
   Phase 0의 분산형 authoritative artifact를 연결하되, P0 Runtime Core 재설계에서
-  Stage Routing/Procedure/Handoff/Provider/Skill 실행 Authority를 명확히 지정하는 index다.
-  이 파일 자체는 원본 truth를 복제하지 않는다.
+  Stage Routing/Procedure/Handoff/Provider/Skill/Exit Gate 실행 Authority를 명확히 지정하는 index다.
+  이 파일 자체는 원본 truth나 CI 결과를 복제하지 않는다.
 
 baseline_roles:
   design_baseline:
@@ -16,6 +16,7 @@ baseline_roles:
 
   artifact_profile:
     authority: sdlc/config/artifact-profiles.yaml
+    physical_document_count_must_not_equal_logical_role_count: true
 
   project_profile:
     authority: sdlc/config/project-profile.example.yaml
@@ -69,7 +70,12 @@ baseline_roles:
   development:
     authority: sdlc/starter/onboarding-package-v1/skills/source-change/SKILL.md
     default_write_mode: PROPOSAL_ONLY
-    source_write_capability_standardized: false
+    source_write_capability: source.patch.apply
+    source_write_contract: sdlc/design/contracts/source-write-capability.md
+    provider_registry: sdlc/config/provider-registry.example.yaml
+    source_write_capability_standardized: true
+    reference_writer_enabled_by_default: false
+    production_writer_is_project_adapter: true
 
   reverse_sync:
     authority: sdlc/design/contracts/source-reverse-sync-contract.md
@@ -117,8 +123,13 @@ baseline_roles:
     active_routed_skill_check: sdlc/scripts/validate_routed_skills.py
 
   p0_runtime_core_validation:
-    test: sdlc/design/validation/p0-runtime-core-redesign-v1/test_runtime_core.py
-    runtime_execution_evidence: NOT_RUN_IN_THIS_SESSION
+    exit_gate: sdlc/config/p0-runtime-core-exit.yaml
+    validator: sdlc/scripts/validate_p0_runtime_core.py
+    conformance_test: sdlc/design/validation/p0-runtime-core-redesign-v1/test_runtime_core.py
+    generic_fixtures: sdlc/design/validation/p0-runtime-core-redesign-v1/fixtures
+    ci_workflow: .github/workflows/p0-runtime-core.yml
+    result_artifact: sdlc/design/validation/p0-runtime-core-redesign-v1/2026-09-02_p0-runtime-core-redesign-result.md
+    ci_result_is_authoritative_for_execution: true
 
 original_phase0_mapping:
   manifest.yaml:
@@ -129,7 +140,7 @@ original_phase0_mapping:
   capabilities.yaml:
     current_model: PROVIDER_CAPABILITY_REGISTRY
     primary_authority: sdlc/config/provider-registry.example.yaml
-    note: Capability는 Provider Registry가 관리하며 Stage/Command는 stage-routing.yaml에서 Capability 후보만 요청한다.
+    note: Capability는 Provider Registry가 관리하며 Stage/Command는 stage-routing.yaml에서 Capability 후보와 명시적 Side-effect 허용 범위만 선언한다.
 
   decisions.yaml:
     current_model: TYPED_DECISION_ARTIFACTS
@@ -152,3 +163,4 @@ truth_ownership:
   stage_procedure_authority: sdlc/config/stage-procedures.yaml
   stage_handoff_authority: sdlc/templates/stage-input-pack.yaml
   reverse_sync_trace_authority: sdlc/templates/reference-graph.yaml
+  execution_result_authority: .github/workflows/p0-runtime-core.yml
