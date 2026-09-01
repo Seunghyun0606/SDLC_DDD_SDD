@@ -7,7 +7,7 @@ design_baseline: v1.5.1
 candidate_design_version: v1.6.0-rc.1
 status: IMPLEMENTATION_IN_PROGRESS
 merge_to_main: false
-purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고 Requirement/Analysis, Functional Design/Program Spec, 고객 커뮤니케이션 View의 책임을 단순화하며 /setup 진입 복잡도를 낮춘다.
+purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고 Requirement/Analysis, Functional Design/Program Spec, 고객 커뮤니케이션 View의 책임을 단순화하며 /setup 진입 복잡도를 낮추고 Canonical 갱신을 실행 가능한 Runtime으로 연결한다.
 principles:
   same_business_information_written_once: true
   single_active_requirement_artifact: true
@@ -20,6 +20,13 @@ principles:
   legacy_customer_document_ids_are_aliases: true
   customer_projection_requires_internal_evidence: true
   customer_projection_invents_missing_business_fact: false
+  canonical_runtime_is_executable: true
+  canonical_delta_all_or_nothing: true
+  canonical_delta_optimistic_revision: true
+  canonical_delta_idempotent: true
+  canonical_delete_supported: false
+  source_derived_can_overwrite_confirmed_business: false
+  source_derived_can_downgrade_confirmed_business_status: false
   project_adapter_boundary_preserved: true
   reverse_capability_name: SOURCE_DRIFT_AND_REVERSE_REVIEW_CANDIDATE
 changes_in_scope:
@@ -34,11 +41,15 @@ changes_in_scope:
   - legacy eight customer document type aliases
   - internal Markdown and Canonical JSON customer projection runtime
   - customer projection machine-metadata hiding and status translation
+  - existing RQ-CAND-0001 workflow customer projection replay
+  - minimal canonical JSON store and delta apply runtime
+  - work/change canonical dry-run and apply execution path
+  - canonical revision conflict, idempotency, relation integrity and business-truth guard tests
   - work/requirement/program/clarify/customer guide alignment
   - validator and regression-test alignment
 not_in_scope_yet:
-  - canonical delta executor
-  - low-level-agent repeated-run behavioral validation
+  - low-level-agent repeated-run behavioral validation across full stages
+  - automatic stage artifact to canonical delta generation
   - Java/Spring/MyBatis project impact adapter implementation
   - semantic reverse program-spec regeneration
 validation:
@@ -46,13 +57,20 @@ validation:
   local_full_unittest_execution: NOT_RUN_ENVIRONMENT_GITHUB_DNS_UNAVAILABLE
   local_projection_runtime_syntax: PASS_REPRODUCED
   local_projection_sample_behavior: PASS_REPRODUCED
-  local_projection_sample_checks:
-    actual_internal_content_projected: true
-    internal_ids_hidden: true
-    source_hash_hidden: true
-    open_status_translated_for_customer: true
-    legacy_alias_resolved: true
-    unresolved_placeholder_absent: true
+  customer_projection_existing_workflow_replay: PASS_GITHUB_CI
+  canonical_runtime_behavioral_validation: PASS_GITHUB_CI
+  canonical_runtime_checks:
+    create_store_on_apply: true
+    revision_advances: true
+    dry_run_does_not_write: true
+    stale_revision_preserves_store: true
+    idempotent_replay_preserves_store: true
+    relation_endpoints_fail_closed: true
+    all_or_nothing: true
+    confirmed_business_field_overwrite_blocked: true
+    confirmed_business_status_downgrade_blocked: true
+    provenance_can_attach_without_truth_change: true
+    delete_is_unsupported: true
   draft_pull_request: 51
   pull_request_base: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.9-open-resolution-workbook-v0.1
   github_ci:
@@ -62,14 +80,15 @@ validation:
       cause: setup_starter_preset_ids_removed_by_fast_path_refactor
       failing_tests: 1
       total_tests: 117
-    regression_fix_head: 40d28487a6240637df728b1402fd0aab310238ae
+    latest_behavioral_head: 2ff8b2f0dae82f3e6ac99dbedd8a0bb6bf8271c1
     worklist_sync_quality: PASS
-    unittest_count: 117
+    unittest_count: 138
     unittest_result: PASS
-    mermaid_markdown_files_checked: 111
+    canonical_behavioral_test_count: 15
+    mermaid_markdown_files_checked: 112
     mermaid_result: PASS
     docs_quality: PASS
   self_assessment_is_not_validation: true
 verdict: RC_IMPLEMENTATION_NOT_YET_VALIDATED
-next_step: CI 회귀는 통과했다. 실제 Greenfield/Brownfield 내부 산출물 묶음을 입력한 Customer Projection Pilot과 저수준 Agent behavioral validation을 수행한 뒤 RC 검증 범위를 확대한다.
-updated_at: 2026-09-02T01:48:00+09:00
+next_step: Canonical Delta Runtime의 기본 실행/안전 동작은 CI에서 검증했다. 다음은 저수준 Agent가 동일 입력에서 Stage 산출물과 Delta를 반복 생성했을 때 결과가 안정적인지 behavioral validation을 추가하고, 실제 Brownfield Java/Spring/MyBatis Adapter를 별도 Project 구현으로 검증한다.
+updated_at: 2026-09-02T02:10:59+09:00
