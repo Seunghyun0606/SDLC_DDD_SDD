@@ -1,0 +1,189 @@
+version: 1
+status: ACTIVE_P0_REDESIGN
+purpose: >-
+  /work가 호출자에게 requested_capabilities를 미리 주입받지 않고 현재 Stage와 Project Mode를 기준으로
+  다음 Skill, 입력 계약, 외부 Capability 후보, 기대 산출물과 다음 Stage를 결정하기 위한 단일 Routing Authority다.
+
+principles:
+  config_driven_stage_selection: true
+  public_commands: [/work, /change, /check]
+  admin_commands: [/setup]
+  missing_read_capability_preserves_open: true
+  side_effect_capability_requires_explicit_action: true
+  stage_route_must_not_create_business_truth: true
+  stage_route_must_not_skip_execution_guard: true
+
+commands:
+  /work:
+    route_by: project_context.stage
+    default_stage: INTAKE
+  /change:
+    skill: change-and-reverse-sync
+    expected_outputs: [CHANGE_REQUEST, STALE_OR_REVIEW_CANDIDATES, STAGE_INPUT_PACK]
+  /check:
+    skill: status-read-model
+    expected_outputs: [SDLC_STATUS_VIEW]
+  /setup:
+    skill: project-foundation-bootstrap
+    expected_outputs: [PROJECT_BOOTSTRAP_MANIFEST]
+
+stage_order:
+  - INTAKE
+  - DECOMPOSE
+  - CLARIFY
+  - PROCESS
+  - DISCOVERY
+  - IMPACT
+  - DESIGN
+  - PROGRAM
+  - DEVELOPMENT
+  - TEST
+  - VERIFY
+  - KNOWLEDGE
+
+stages:
+  INTAKE:
+    display_name_ko: 요구사항 접수
+    skill: sop-business-extraction
+    agent_level: L1_WITH_DETERMINISTIC_GUARDS
+    required_input_types: [REQUIREMENT_SOURCE]
+    capability_candidates: []
+    expected_outputs: [REQUIREMENT_CANDIDATE, STAGE_INPUT_PACK]
+    next_stage: DECOMPOSE
+
+  DECOMPOSE:
+    display_name_ko: 요구사항 분해
+    skill: requirement-decomposition
+    agent_level: L1_WITH_DETERMINISTIC_GUARDS
+    required_input_types: [STAGE_INPUT_PACK, REQUIREMENT_CANDIDATE]
+    capability_candidates: []
+    expected_outputs: [FR_CANDIDATE, BR_CANDIDATE, AC_CANDIDATE, STAGE_INPUT_PACK]
+    next_stage: CLARIFY
+
+  CLARIFY:
+    display_name_ko: 미확정 사항 정리
+    skill: requirement-clarification
+    agent_level: L2_AGENT_REQUIRED
+    required_input_types: [STAGE_INPUT_PACK]
+    capability_candidates: []
+    expected_outputs: [OPEN_ITEM_SET, STAGE_INPUT_PACK]
+    next_stage: PROCESS
+
+  PROCESS:
+    display_name_ko: 업무 프로세스 분석
+    skill: business-process-analysis
+    agent_level: L2_AGENT_REQUIRED
+    required_input_types: [STAGE_INPUT_PACK]
+    capability_candidates: []
+    expected_outputs: [PROCESS_ANALYSIS, STAGE_INPUT_PACK]
+    next_stage: DISCOVERY
+
+  DISCOVERY:
+    display_name_ko: 기존 자산 탐색
+    skill: source-discovery
+    agent_level: L2_AGENT_REQUIRED
+    required_input_types: [STAGE_INPUT_PACK]
+    capability_candidates:
+      - capability: source.search
+        modes: [BROWNFIELD, HYBRID, AUTO]
+        missing_behavior: OPEN
+      - capability: source.object.read
+        modes: [BROWNFIELD, HYBRID, AUTO]
+        missing_behavior: OPEN
+      - capability: source.snapshot.read
+        modes: [BROWNFIELD, HYBRID, AUTO]
+        missing_behavior: OPEN
+    expected_outputs: [SOURCE_EVIDENCE_SET, STAGE_INPUT_PACK]
+    next_stage: IMPACT
+
+  IMPACT:
+    display_name_ko: 영향분석
+    skill: impact-analysis
+    agent_level: L2_AGENT_REQUIRED
+    required_input_types: [STAGE_INPUT_PACK]
+    capability_candidates: []
+    expected_outputs: [IMPACT_ANALYSIS, STAGE_INPUT_PACK]
+    next_stage: DESIGN
+
+  DESIGN:
+    display_name_ko: 기능설계
+    skill: functional-design
+    agent_level: L2_AGENT_REQUIRED
+    required_input_types: [STAGE_INPUT_PACK]
+    capability_candidates: []
+    expected_outputs: [ENGINEERING_DESIGN, STAGE_INPUT_PACK]
+    next_stage: PROGRAM
+
+  PROGRAM:
+    display_name_ko: 프로그램설계
+    skill: program-design
+    agent_level: L2_AGENT_REQUIRED
+    required_input_types: [STAGE_INPUT_PACK, ENGINEERING_DESIGN]
+    capability_candidates: []
+    expected_outputs: [PROGRAM_SPEC, DEVELOPMENT_TASK_SET, STAGE_INPUT_PACK]
+    next_stage: DEVELOPMENT
+
+  DEVELOPMENT:
+    display_name_ko: 개발
+    skill: source-change
+    agent_level: L2_AGENT_REQUIRED
+    required_input_types: [STAGE_INPUT_PACK, PROGRAM_SPEC]
+    capability_candidates:
+      - capability: source.object.read
+        modes: [BROWNFIELD, HYBRID, AUTO]
+        missing_behavior: OPEN
+      - capability: source.diff
+        modes: [BROWNFIELD, HYBRID, AUTO]
+        missing_behavior: OPEN
+    side_effect_capabilities: []
+    expected_outputs: [SOURCE_CHANGE_PROPOSAL_OR_RESULT, IMPLEMENTATION_RESULT, STAGE_INPUT_PACK]
+    next_stage: TEST
+
+  TEST:
+    display_name_ko: 테스트
+    skill: test-verification
+    agent_level: L1_WITH_DETERMINISTIC_GUARDS
+    required_input_types: [STAGE_INPUT_PACK, AC_SET]
+    capability_candidates:
+      - capability: test.discover
+        modes: [BROWNFIELD, GREENFIELD, HYBRID, AUTO]
+        missing_behavior: OPEN
+      - capability: test.result.read
+        modes: [BROWNFIELD, GREENFIELD, HYBRID, AUTO]
+        missing_behavior: OPEN
+    side_effect_capabilities: [test.execute]
+    expected_outputs: [TEST_CONTRACT, TEST_EXECUTION_RESULT, STAGE_INPUT_PACK]
+    next_stage: VERIFY
+
+  VERIFY:
+    display_name_ko: 검증
+    skill: test-verification
+    agent_level: L2_AGENT_REQUIRED
+    required_input_types: [STAGE_INPUT_PACK, TEST_CONTRACT, TEST_EXECUTION_RESULT]
+    capability_candidates:
+      - capability: test.result.read
+        modes: [BROWNFIELD, GREENFIELD, HYBRID, AUTO]
+        missing_behavior: OPEN
+    expected_outputs: [VERIFICATION_RESULT, STAGE_INPUT_PACK]
+    next_stage: KNOWLEDGE
+
+  KNOWLEDGE:
+    display_name_ko: 지식 반영
+    skill: knowledge-promotion
+    agent_level: L1_WITH_DETERMINISTIC_GUARDS
+    required_input_types: [STAGE_INPUT_PACK, VERIFICATION_RESULT]
+    capability_candidates: []
+    expected_outputs: [KNOWLEDGE_CANDIDATE, REFERENCE_GRAPH_UPDATE]
+    next_stage: null
+
+side_effect_policy:
+  require_explicit_requested_action: true
+  require_permission_proof: true
+  require_idempotency_key: true
+  unknown_after_write_requires_recovery: true
+
+analyzer_boundary:
+  core_must_not_parse_stack_specific_syntax: true
+  stack_specific_analysis_location: sdlc/adapters/analyzers/
+  core_consumes: [SOURCE_EVIDENCE_SET, ANALYZER_EVIDENCE]
+  unsupported_stack_behavior: OPEN_AND_ESCALATE
