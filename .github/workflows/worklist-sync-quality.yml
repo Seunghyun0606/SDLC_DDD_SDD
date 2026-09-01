@@ -1,0 +1,22 @@
+name: Worklist sync quality
+
+on:
+  push:
+    branches:
+      - feature/phase-0.5-worklist-sync
+      - 'validation/**'
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  worklist-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run worklist sync tests
+        run: python -m unittest discover -s tests -v
+      - name: Validate Mermaid labels
+        run: python sdlc/scripts/normalize_mermaid.py --check .
