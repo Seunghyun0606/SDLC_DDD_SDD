@@ -31,7 +31,7 @@
 3. 조건-판단-행동-결과-예외 형태의 문장을 Business Rule Candidate로 분리한다.
 4. 순서가 있는 단계는 Process Candidate로 분리하고 Actor/Trigger/Pre-State/Post-State를 찾는다.
 5. 표/양식/화면 설명에서는 Field, 필수 여부, 코드값, 계산식, Validation, 표시 조건을 추출한다.
-6. 코드표/분류표에서는 코드 그룹, 코드값, 명칭, 유효기간, 우선순위를 추출한다.
+6. 코드표/분류표에서는 **공통코드/코드 그룹**, 코드값, 명칭, 유효기간, 우선순위를 추출한다.
 7. 승인/반려/취소/마감/확정 등은 상태 전이와 권한 조건으로 추출한다.
 8. 외부 시스템·배치·메시지·파일·API가 언급되면 Integration Candidate로 추출한다.
 9. 예외, 재처리, Escalation, Deadline, SLA, 감사·통제 조건을 별도 항목으로 추출한다.
@@ -44,7 +44,7 @@
 |---|---|
 | 입력 필드 | Evidence Chunk와 문서 메타데이터를 사용한다. 원본 파일 자체를 임의 변환하거나 수정하지 않는다. |
 | 근거 분류 | 문서에 직접 있는 내용은 GIVEN/OBSERVED_DOCUMENT, 구조적 연결은 INFERRED, 비어 있는 항목은 OPEN으로 둔다. |
-| 실행 순서 | 문서 맥락 → 6W 시나리오 → Actor/권한 → 절차 → BR → 상태/예외 → Data/Code → Screen → Integration → Control/SLA → Conflict/Question 순서로 추출한다. |
+| 실행 순서 | 문서 맥락 → 6W 시나리오 → Actor/권한 → 절차 → BR → 상태/예외 → Data/공통코드 → Screen → Integration → Control/SLA → Conflict/Question 순서로 추출한다. |
 | 계속/중단 조건 | 일부 Chunk 추출 실패는 PARTIAL로 계속한다. 문서 전체가 읽히지 않으면 `EXTRACTION_REQUIRED`로 종료하고 규칙 부재로 해석하지 않는다. |
 | 출력 필드 매핑 | SCENARIO/PROC/BR/FR/DATA/SCREEN/INTEGRATION/CLARIFICATION Candidate와 provenance를 출력한다. |
 | 품질 게이트 | 모든 Candidate가 원문 Locator로 돌아갈 수 있고, 6W 누락은 OPEN이며, 표/셀 관계가 가능한 한 보존되어야 한다. |
