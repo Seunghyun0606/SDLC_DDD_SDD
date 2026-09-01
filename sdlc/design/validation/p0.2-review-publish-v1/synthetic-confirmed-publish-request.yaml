@@ -1,0 +1,33 @@
+version: 1
+synthetic_test_only: true
+canonical_publish_request:
+  review_snapshot:
+    review_id: RQR-SYNTH0001
+    source_group_id: RQG-CAND-SYNTH0001
+    source_requirement_ids:
+      - LEG-S-001
+      - LEG-S-002
+    source_count: 2
+    decision: KEEP_AS_RQ
+    boundary_status: CONFIRMED
+    decision_basis: Synthetic authorized decision for validator test
+    evidence_ids:
+      - EV-SYNTH-001
+    decided_by: SYNTHETIC_REVIEWER
+    decided_at: 2026-09-02T00:17:00+09:00
+    decision_revision: 1
+    source_revision: synthetic-rev-1
+  id_allocation:
+    status: PREALLOCATED
+    canonical_rq_ids:
+      - RQ-SYNTH-0001
+    canonical_fr_ids: []
+  publish:
+    canonical_rq_ids:
+      - RQ-SYNTH-0001
+    canonical_fr_ids: []
+  trace:
+    review_id: RQR-SYNTH0001
+    decision_revision: 1
+    evidence_ids:
+      - EV-SYNTH-001
