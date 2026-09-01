@@ -68,6 +68,7 @@ changes_in_scope:
   - provider-driven Greenfield /work E2E runner with no hardcoded time-domain stage outputs
   - deterministic validation fixture provider that cannot claim Agent E2E
   - actual /work repeatability runner against the same Canonical snapshot
+  - legacy repeatability runner provider-class hardening to prevent fixture-as-agent overclaim
   - automatic source manifest and artifact evidence index generation
   - end-to-end source reverse check orchestrator
   - external Agent repeatability experiment runner and disabled-by-default provider profile
@@ -91,21 +92,36 @@ validation:
   source_review: COMPLETED_BY_DIRECT_FILE_INSPECTION
   local_targeted_p0_unit_execution: PASS_IN_ISOLATED_SCRATCH_FOR_CANONICAL_WORK_REVERSE_GREENFIELD_REPEATABILITY
   local_full_unittest_execution: NOT_RUN_ENVIRONMENT_GITHUB_DNS_UNAVAILABLE
-  github_ci_current_head: PENDING
-  customer_projection_existing_workflow_replay: PREVIOUSLY_PASS_GITHUB_CI_NOT_REEXECUTED_CURRENT_HEAD
-  canonical_runtime_behavioral_validation: CURRENT_HEAD_CI_PENDING
-  post_agent_stage_result_validation: CURRENT_HEAD_CI_PENDING
-  agent_repeatability_runner_behavioral_validation: PREVIOUSLY_PASS_GITHUB_CI_CURRENT_HEAD_PENDING
-  work_executor_behavioral_validation: CURRENT_HEAD_CI_PENDING
-  work_repeatability_runner_behavioral_validation: CURRENT_HEAD_CI_PENDING
-  reverse_input_automation_behavioral_validation: CURRENT_HEAD_CI_PENDING
+  github_ci_validated_implementation_head: 4650338b040e0481558360f69fc0a4a5aff4eaed
+  github_ci:
+    draft_pull_request: 52
+    pull_request_base: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.9-open-resolution-workbook-v0.1
+    restored_base_commit: 242bef3acf674febd35e7cf16b7280eaac1a1db6
+    docs_quality_run: 163
+    docs_quality_result: SUCCESS
+    worklist_sync_quality_run: 441
+    worklist_sync_quality_result: SUCCESS
+    unittest_count: 210
+    unittest_result: PASS
+    mermaid_result: PASS
+    greenfield_work_executor_e2e_run: 9
+    greenfield_work_executor_e2e_result: SUCCESS_FIXTURE_PROVIDER_NOT_AGENT_VALIDATION
+    public_brownfield_pilot_run: 22
+    public_brownfield_pilot_result: PASS_REAL_REPOSITORY_PARTIAL_COVERAGE
+  customer_projection_existing_workflow_replay: PASS_GITHUB_CI_WITHIN_FULL_210_TEST_SUITE
+  canonical_runtime_behavioral_validation: PASS_GITHUB_CI
+  post_agent_stage_result_validation: PASS_GITHUB_CI
+  agent_repeatability_runner_behavioral_validation: PASS_GITHUB_CI_PROVIDER_CLASS_SEPARATION
+  work_executor_behavioral_validation: PASS_GITHUB_CI
+  work_repeatability_runner_behavioral_validation: PASS_GITHUB_CI_FIXTURE_PROVIDER_ONLY
+  reverse_input_automation_behavioral_validation: PASS_GITHUB_CI
   actual_llm_generation_repeatability: NOT_EXECUTED_PROVIDER_UNAVAILABLE
-  greenfield_executor_fixture_e2e: CURRENT_HEAD_CI_PENDING
+  greenfield_executor_fixture_e2e: PASS_GITHUB_CI_FIXTURE_PROVIDER_NOT_AGENT_VALIDATION
   greenfield_actual_agent_e2e: NOT_EXECUTED_PROVIDER_UNAVAILABLE
   greenfield_human_usability_measurement: NOT_EXECUTED_HUMAN_STUDY_UNAVAILABLE
-  semantic_reverse_candidate_behavioral_validation: PREVIOUSLY_PASS_GITHUB_CI_CURRENT_HEAD_PENDING
-  java_spring_mybatis_adapter_simulated_fixture: PREVIOUSLY_PASS_GITHUB_CI_CURRENT_HEAD_PENDING
-  java_spring_mybatis_real_public_repository: PREVIOUSLY_PASS_REAL_REPOSITORY_PARTIAL_COVERAGE_CURRENT_HEAD_PENDING
+  semantic_reverse_candidate_behavioral_validation: PASS_GITHUB_CI
+  java_spring_mybatis_adapter_simulated_fixture: PASS_GITHUB_CI
+  java_spring_mybatis_real_public_repository: PASS_REAL_REPOSITORY_PARTIAL_COVERAGE
   customer_production_repository_validation: NOT_EXECUTED_REPOSITORY_NOT_PROVIDED
   work_executor:
     script: sdlc/scripts/run_work.py
@@ -156,6 +172,7 @@ validation:
     disabled_without_provider: true
     validation_fixture_can_test_wiring: true
     validation_fixture_can_claim_agent_empirical_pass: false
+    external_agent_class_required_for_agent_empirical_pass: true
     actual_provider_empirical_result: NOT_EXECUTED_PROVIDER_UNAVAILABLE
     llm_determinism_proven: false
   adapter_pilot:
@@ -163,11 +180,19 @@ validation:
     implementation: sdlc/custom/project/adapters/impact/java_spring_mybatis.py
     core_required: false
     default_enabled: false
-    completion_status: PARTIAL_COVERAGE_GAPS
-    business_impact_confirmed: false
-  draft_pull_request: 51
-  pull_request_base: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.9-open-resolution-workbook-v0.1
+    real_public_repository:
+      repository: macrozheng/mall
+      commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+      source_root: mall-admin
+      nodes: 570
+      edges: 271
+      required_checks_passed: 6
+      required_checks_total: 6
+      coverage_gaps: 7
+      completion_status: PARTIAL_COVERAGE_GAPS
+      business_impact_confirmed: false
+      known_real_world_gap: JAVA_INTERFACE_IMPLEMENTATION_RESOLUTION_REQUIRED
   self_assessment_is_not_validation: true
 verdict: RC_P0_IMPLEMENTED_EXTERNAL_EMPIRICAL_VALIDATION_PENDING
-next_step: 현재 Head의 GitHub CI 회귀를 확인하고, 실제 EXTERNAL_AGENT Provider가 제공되면 provider-driven Greenfield E2E와 run_work_repeatability_experiment를 반복 실행한다. 사람 사용성 및 고객 Production Repository 검증은 별도 외부 실증으로 유지한다.
-updated_at: 2026-09-02T12:00:00+09:00
+next_step: P0 Runtime/CI 검증은 완료했다. 실제 EXTERNAL_AGENT Provider가 제공되면 provider-driven Greenfield E2E와 run_work_repeatability_experiment를 반복 실행하고, 사람 사용성 및 고객 Production Repository 검증은 별도 외부 실증으로 수행한다.
+updated_at: 2026-09-02T12:20:00+09:00
