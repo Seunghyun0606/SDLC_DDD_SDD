@@ -1,0 +1,56 @@
+schema_version: 1
+artifact_type: PROVIDER_CONFORMANCE_FIXTURES
+purpose: Core Provider Contract의 도메인/기술 비종속성을 검증하기 위한 비파일럿 합성 사례
+cases:
+  - case_id: GREENFIELD-DESIGN-NO-SOURCE
+    domain_example: customer-notification
+    technology_example: none-yet
+    project_context:
+      mode: GREENFIELD
+      stage: DESIGN
+    command: /work
+    requested_capabilities: []
+    expected:
+      source_provider_required: false
+      routing_status: READY
+  - case_id: BROWNFIELD-SOURCE-PYTHON
+    domain_example: product-catalog
+    technology_example: python-fastapi-postgresql
+    project_context:
+      mode: BROWNFIELD
+      stage: DISCOVERY
+    command: /work
+    requested_capabilities: [source.snapshot.read, source.search]
+    provider_extensions:
+      language: python
+      framework: fastapi
+      datastore: postgresql
+    expected:
+      routing_status: READY
+      provider_type: SOURCE
+  - case_id: BROWNFIELD-TEST-TYPESCRIPT
+    domain_example: shipment-event-processing
+    technology_example: typescript-event-worker
+    project_context:
+      mode: BROWNFIELD
+      stage: TEST
+    command: /work
+    requested_capabilities: [test.discover, test.execute]
+    provider_extensions:
+      language: typescript
+      runtime: node
+      integration_style: event-driven
+    expected:
+      routing_status: READY
+      provider_type: TEST
+  - case_id: UNSUPPORTED-CAPABILITY
+    domain_example: generic-service
+    technology_example: unspecified
+    project_context:
+      mode: HYBRID
+      stage: RELEASE
+    command: /work
+    requested_capabilities: [deployment.release.execute]
+    expected:
+      routing_status: ACTION_REQUIRED
+      reason: MISSING_CAPABILITY
