@@ -1,0 +1,33 @@
+schema_version: 1
+mode: BROWNFIELD
+contract: sdlc/design/contracts/brownfield-impact-contract.json
+adapter:
+  enabled: false
+  adapter_id: PROJECT_SPECIFIC_REQUIRED
+  implementation_root: sdlc/custom/project/adapters/impact
+project_context:
+  language: UNKNOWN
+  framework: UNKNOWN
+  build_system: UNKNOWN
+  persistence: []
+  messaging: []
+  database: []
+  dynamic_features: []
+coverage:
+  required_dimensions:
+    - ENTRY_POINT
+    - CALLER
+    - CALLEE
+    - DATA_READ_WRITE
+    - TRANSACTION
+    - EXTERNAL_INTERFACE
+    - EVENT
+    - CONFIG_FEATURE_FLAG
+    - TEST
+    - MODULE_BUILD_DEPENDENCY
+    - DYNAMIC_RUNTIME_GAP
+  missing_adapter_status: PARTIAL_PROJECT_ADAPTER_REQUIRED
+rules:
+  not_found_does_not_mean_no_impact: true
+  report_unsupported_patterns: true
+  source_relation_does_not_confirm_business_impact: true
