@@ -1,0 +1,97 @@
+version: 1
+stage_input_pack:
+  metadata:
+    pack_id: SIP-PILOT-TM-017-DECOMPOSE-001
+    project_id: PILOT-TM
+    stage: DECOMPOSE
+    generated_at: 2026-09-01T23:00:00+09:00
+    source_revision: requirements-xlsx-upload-2026-09-01
+    profile: STANDARD
+
+  target:
+    primary_id: RQ-CANDIDATE-TM-CLOSE
+    target_type: RQ_CANDIDATE
+    boundary_status: OPEN
+    source_requirement_ids:
+      - REQ_TM_TE017
+    related_ids:
+      rq: []
+      fr: []
+      br: []
+      ac: []
+      proc: []
+      pgm: []
+      task: []
+      tc: []
+
+  required_inputs:
+    - id: SRC-REQ-XLSX-001
+      type: business_source
+      locator: 요구사항목록.xlsx / Sheet1 / REQ_TM_TE017 row
+      revision: upload-2026-09-01
+      required: true
+      available: true
+
+  resolved_facts:
+    - fact_id: FACT-TM-017-01
+      value: 근태관리
+      truth: GIVEN
+      evidence_ids: [EV-TM-017-01]
+      confidence: HIGH
+    - fact_id: FACT-TM-017-02
+      value: 근태마감
+      truth: GIVEN
+      evidence_ids: [EV-TM-017-01]
+      confidence: HIGH
+    - fact_id: FACT-TM-017-03
+      value: 일근태입력/마감 조회
+      truth: GIVEN
+      evidence_ids: [EV-TM-017-01]
+      confidence: HIGH
+
+  evidence:
+    - evidence_id: EV-TM-017-01
+      provider: BUSINESS_DOCUMENT
+      locator: 요구사항목록.xlsx / Sheet1 / requirement_id=REQ_TM_TE017
+      revision: upload-2026-09-01
+      observed_value: 근태관리 > 근태마감 > 일근태입력/마감 조회
+      confidence: HIGH
+
+  open_items:
+    - open_id: OPEN-TM-017-01
+      type: BOUNDARY_AMBIGUOUS
+      question: REQ_TM_TE017을 독립 Canonical RQ로 유지할지 근태마감 상위 RQ의 FR로 묶을지 결정 필요
+      blocks_reasoning: true
+      blocks_action: false
+      required_evidence:
+        - 고객의 변경 Outcome 기준
+        - 기존 Requirement 관리 단위 정책
+      escalation: L2_OR_HUMAN
+    - open_id: OPEN-TM-017-02
+      type: MISSING_INFORMATION
+      question: 조회 기능의 사용자와 권한 주체는 누구인가?
+      blocks_reasoning: false
+      blocks_action: false
+      required_evidence:
+        - 사용자 역할 또는 권한 정책
+      escalation: BUSINESS_OWNER
+
+  constraints:
+    do_not_invent_missing_business_fact: true
+    source_behavior_is_not_business_truth: true
+    ambiguous_write_must_not_be_auto_selected: true
+
+  expected_outputs:
+    - requirement_boundary_candidate
+    - fr_candidate_or_open
+    - prioritized_questions
+
+  next_actions:
+    - boundary evidence 확인
+    - Source가 제공되면 Discovery Stage에서 별도 분석
+
+  validation:
+    required_field_check: PENDING
+    id_reference_check: PENDING
+    open_preservation_check: PENDING
+    boundary_guard_check: PENDING

@@ -1,0 +1,18 @@
+version: 1
+boundary_records:
+  - source_requirement_id: REQ_TM_TE017
+    source_locator: 요구사항목록.xlsx / Sheet1 / REQ_TM_TE017 row
+    source_group_path:
+      - 근태관리
+      - 근태마감
+    decision: UNRESOLVED
+    status: OPEN
+    canonical_rq_ids: []
+    canonical_fr_ids: []
+    independent_business_outcome: OPEN
+    decision_basis: 원본 행만으로 독립 RQ인지 근태마감 상위 RQ의 FR인지 확정할 근거가 부족함
+    evidence_ids:
+      - EV-TM-017-01
+    decided_by: null
+    escalation: L2_OR_HUMAN
+    notes: CRUD/조회 이름 유사성으로 자동 grouping하지 않음
