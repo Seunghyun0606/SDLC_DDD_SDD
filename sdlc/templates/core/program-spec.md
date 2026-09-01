@@ -15,7 +15,7 @@ generated_at: "{{generated_at}}"
 ---
 <!-- 작성 안내: Functional Design의 업무/기능 의미를 반복하지 않는다. 실제 구현 Target, Mapping 차이, Source/Data/Integration 근거, 실행 제어와 구현 준비도만 기록한다. -->
 <!-- FAST profile: 구현 준비도 표에서 [FAST 필수] 7개 행만 필수다. STANDARD/FULL에서만 나머지 행을 요구한다. 비적용 행을 채우기 위해 문서를 늘리지 않는다. -->
-<!-- Machine evidence mapping: 근거 위치=Locator / 원본 식별값=Source Hash / 현재 상태=Status -->
+<!-- Machine evidence mapping: 근거 위치=Locator / 원본 식별값=Source Hash / 신뢰 수준=Confidence / 현재 상태=Status -->
 # {{representative_id}} {{short_name}} 프로그램 구현 명세
 
 ## 문서 목적
