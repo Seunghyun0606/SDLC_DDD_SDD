@@ -37,6 +37,7 @@ REQUIRED = {"level1", "level2", "external_requirement_id", "source_requirement_n
 @dataclass
 class IntakeProfile:
     effective_header_row: int = 2
+    preserve_group_header_row: bool = True
     mapping: dict[str, str] | None = None
 
     def __post_init__(self):
@@ -48,6 +49,8 @@ def _scalar(v: str):
     v = v.strip()
     if len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
         return v[1:-1]
+    if v.lower() in {"true", "false"}:
+        return v.lower() == "true"
     try:
         return int(v)
     except ValueError:
@@ -59,6 +62,7 @@ def load_profile(path: Path | None) -> IntakeProfile:
         return IntakeProfile()
     lines = path.read_text(encoding="utf-8").splitlines()
     effective = 2
+    preserve_group_header_row = True
     mapping: dict[str, str] = {}
     current: dict[str, str] | None = None
     in_mapping = False
@@ -68,6 +72,8 @@ def load_profile(path: Path | None) -> IntakeProfile:
             continue
         if s.startswith("effective_row:"):
             effective = int(_scalar(s.split(":", 1)[1]))
+        if s.startswith("preserve_group_header_row:"):
+            preserve_group_header_row = bool(_scalar(s.split(":", 1)[1]))
         if s == "mapping:":
             in_mapping = True
             continue
@@ -82,7 +88,11 @@ def load_profile(path: Path | None) -> IntakeProfile:
             current[k.strip()] = str(_scalar(v))
     if current and "source_label" in current and "key" in current:
         mapping[current["source_label"]] = current["key"]
-    return IntakeProfile(effective_header_row=effective, mapping=mapping or dict(DEFAULT_MAPPING))
+    return IntakeProfile(
+        effective_header_row=effective,
+        preserve_group_header_row=preserve_group_header_row,
+        mapping=mapping or dict(DEFAULT_MAPPING),
+    )
 
 
 def colnum(ref: str) -> int:
@@ -181,7 +191,12 @@ def map_rows(matrix: list[list[object]], profile: IntakeProfile, source_file: st
         missing = sorted(k for k in REQUIRED if not mapped.get(k))
         excel_row = matrix_idx + 1
         if missing:
-            invalid.append({"source_row": excel_row, "missing": missing, "external_requirement_id": mapped.get("external_requirement_id", ""), "status": "INVALID_ROW"})
+            invalid.append({
+                "source_row": excel_row,
+                "missing": missing,
+                "external_requirement_id": mapped.get("external_requirement_id", ""),
+                "status": "INVALID_ROW",
+            })
             continue
         records.append({
             "source_record_id": f"SRCREQ-{len(records)+1:06d}",
@@ -199,6 +214,11 @@ def group_key(record: dict) -> tuple[str, str, str]:
     return record["level1"], record["level2"], record["source_requirement_name"]
 
 
+def stable_group_key(key: tuple[str, str, str]) -> str:
+    payload = "\x1f".join(key).encode("utf-8")
+    return "rqgrp:sha256:" + hashlib.sha256(payload).hexdigest()
+
+
 def similarity_key(text: str) -> str:
     return re.sub(r"[\s\W_]+", "", text.lower(), flags=re.UNICODE)
 
@@ -209,14 +229,21 @@ def transform(records: list[dict], invalid: list[dict] | None = None, similarity
     for r in records:
         groups.setdefault(group_key(r), []).append(r)
         external_seen.setdefault(r["external_requirement_id"], []).append(r["source_record_id"])
-    duplicates = [{"external_requirement_id": ext, "source_record_ids": ids, "type": "DUPLICATE_EXTERNAL_ID"} for ext, ids in sorted(external_seen.items()) if len(ids) > 1]
+    duplicates = [
+        {"external_requirement_id": ext, "source_record_ids": ids, "type": "DUPLICATE_EXTERNAL_ID"}
+        for ext, ids in sorted(external_seen.items()) if len(ids) > 1
+    ]
 
     rq_candidates, fr_candidates = [], []
     for idx, (key, members) in enumerate(groups.items(), 1):
         rq_id = f"RQ-CAND-{idx:04d}"
+        rq_stable_key = stable_group_key(key)
         rq_candidates.append({
             "candidate_id": rq_id,
-            "level1": key[0], "level2": key[1], "name": key[2],
+            "stable_key": rq_stable_key,
+            "level1": key[0],
+            "level2": key[1],
+            "name": key[2],
             "source_record_ids": [m["source_record_id"] for m in members],
             "external_requirement_ids": [m["external_requirement_id"] for m in members],
             "current_problem": "OPEN",
@@ -226,7 +253,9 @@ def transform(records: list[dict], invalid: list[dict] | None = None, similarity
         for member in members:
             fr_candidates.append({
                 "candidate_id": f"FR-CAND-{len(fr_candidates)+1:05d}",
+                "stable_key": f'external:{member["external_requirement_id"]}',
                 "parent_rq_candidate_id": rq_id,
+                "parent_rq_stable_key": rq_stable_key,
                 "external_requirement_id": member["external_requirement_id"],
                 "name": member["source_requirement_text"],
                 "source_record_id": member["source_record_id"],
@@ -235,7 +264,7 @@ def transform(records: list[dict], invalid: list[dict] | None = None, similarity
 
     reviews = []
     for i, a in enumerate(rq_candidates):
-        for b in rq_candidates[i+1:]:
+        for b in rq_candidates[i + 1:]:
             if (a["level1"], a["level2"]) != (b["level1"], b["level2"]):
                 continue
             sa, sb = similarity_key(a["name"]), similarity_key(b["name"])
@@ -245,40 +274,96 @@ def transform(records: list[dict], invalid: list[dict] | None = None, similarity
             if score >= similarity_threshold:
                 reviews.append({
                     "type": "GROUPING_REVIEW",
-                    "candidate_a": a["candidate_id"], "candidate_b": b["candidate_id"],
-                    "name_a": a["name"], "name_b": b["name"],
-                    "similarity": round(score, 4), "auto_merged": False,
+                    "candidate_a": a["candidate_id"],
+                    "candidate_b": b["candidate_id"],
+                    "stable_key_a": a["stable_key"],
+                    "stable_key_b": b["stable_key"],
+                    "name_a": a["name"],
+                    "name_b": b["name"],
+                    "similarity": round(score, 4),
+                    "auto_merged": False,
                 })
 
     alerts = []
     if rq_candidates:
-        alerts.append({"type": "MISSING_BUSINESS_CONTEXT", "scope": "RQ_CANDIDATES", "count": len(rq_candidates), "fields": ["current_problem", "confirmed_desired_result", "business_rules"], "blocking": False})
+        alerts.append({
+            "type": "MISSING_BUSINESS_CONTEXT",
+            "scope": "RQ_CANDIDATES",
+            "count": len(rq_candidates),
+            "fields": ["current_problem", "confirmed_desired_result", "business_rules"],
+            "blocking": False,
+        })
     alerts.extend({**d, "blocking": False} for d in duplicates)
     alerts.extend({**d, "blocking": False} for d in invalid)
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "import_result": {
-            "source_rows": len(records) + len(invalid), "imported_rows": len(records), "invalid_rows": len(invalid),
-            "duplicate_external_ids": len(duplicates), "rq_candidate_count": len(rq_candidates),
-            "fr_candidate_count": len(fr_candidates), "grouping_review_count": len(reviews), "non_blocking": True,
+            "source_rows": len(records) + len(invalid),
+            "imported_rows": len(records),
+            "invalid_rows": len(invalid),
+            "duplicate_external_ids": len(duplicates),
+            "rq_candidate_count": len(rq_candidates),
+            "fr_candidate_count": len(fr_candidates),
+            "grouping_review_count": len(reviews),
+            "non_blocking": True,
         },
-        "source_records": records, "rq_candidates": rq_candidates, "fr_candidates": fr_candidates,
-        "grouping_reviews": reviews, "alerts": alerts,
+        "source_records": records,
+        "rq_candidates": rq_candidates,
+        "fr_candidates": fr_candidates,
+        "grouping_reviews": reviews,
+        "alerts": alerts,
     }
+
+
+def build_source_metadata(
+    matrix: list[list[object]], profile: IntakeProfile, source_file: str, sheet_name: str, file_hash: str
+) -> dict:
+    header_idx = profile.effective_header_row - 1
+    metadata = {
+        "source_file": source_file,
+        "source_sheet": sheet_name,
+        "source_hash": file_hash,
+        "effective_header_row": profile.effective_header_row,
+        "effective_headers": [_raw(x) for x in matrix[header_idx]],
+        "group_header_rows": [],
+    }
+    if profile.preserve_group_header_row:
+        metadata["group_header_rows"] = [
+            {"source_row": idx + 1, "values": [_raw(x) for x in matrix[idx]]}
+            for idx in range(0, header_idx)
+        ]
+    return metadata
 
 
 def render_report(data: dict, source_name: str) -> str:
     r = data["import_result"]
     lines = [
-        "# 요구사항 Bulk Intake 결과", "", f"> Source: `{source_name}`", "", "```mermaid", "flowchart LR",
+        "# 요구사항 Bulk Intake 결과",
+        "",
+        f"> Source: `{source_name}`",
+        "",
+        "```mermaid",
+        "flowchart LR",
         f'    A["Source {r["source_rows"]} rows"] --> B["Imported {r["imported_rows"]}"]',
         f'    B --> C["RQ Candidates {r["rq_candidate_count"]}"]',
         f'    C --> D["FR Candidates {r["fr_candidate_count"]}"]',
-        f'    D --> E["Grouping Reviews {r["grouping_review_count"]}"]', "```", "", "## Summary", "",
-        "| 항목 | 건수 |", "|---|---:|", f'| 원본 행 | {r["source_rows"]} |', f'| Import 성공 | {r["imported_rows"]} |',
-        f'| Invalid 행 | {r["invalid_rows"]} |', f'| 중복 외부 ID | {r["duplicate_external_ids"]} |',
-        f'| RQ Candidate | {r["rq_candidate_count"]} |', f'| FR Candidate | {r["fr_candidate_count"]} |',
-        f'| Grouping Review | {r["grouping_review_count"]} |', "", "## Grouping Review", "",
+        f'    D --> E["Grouping Reviews {r["grouping_review_count"]}"]',
+        "```",
+        "",
+        "## Summary",
+        "",
+        "| 항목 | 건수 |",
+        "|---|---:|",
+        f'| 원본 행 | {r["source_rows"]} |',
+        f'| Import 성공 | {r["imported_rows"]} |',
+        f'| Invalid 행 | {r["invalid_rows"]} |',
+        f'| 중복 외부 ID | {r["duplicate_external_ids"]} |',
+        f'| RQ Candidate | {r["rq_candidate_count"]} |',
+        f'| FR Candidate | {r["fr_candidate_count"]} |',
+        f'| Grouping Review | {r["grouping_review_count"]} |',
+        "",
+        "## Grouping Review",
+        "",
     ]
     if data["grouping_reviews"]:
         lines += ["| A | B | 유사도 | 자동병합 |", "|---|---|---:|---|"]
@@ -286,15 +371,28 @@ def render_report(data: dict, source_name: str) -> str:
             lines.append(f'| {item["name_a"]} | {item["name_b"]} | {item["similarity"]:.4f} | 아니오 |')
     else:
         lines.append("- 없음")
-    lines += ["", "## 원칙", "", "- 유사 제목은 자동 병합하지 않는다.", "- Invalid/중복 행이 있어도 정상 행 Import는 계속한다.", "- 원문과 외부 요구사항 ID를 Source Record에 보존한다.", "- Business Context가 부족하면 OPEN/Alert로 남긴다.", ""]
+    lines += [
+        "",
+        "## 원칙",
+        "",
+        "- 유사 제목은 자동 병합하지 않는다.",
+        "- Invalid/중복 행이 있어도 정상 행 Import는 계속한다.",
+        "- 원문과 외부 요구사항 ID를 Source Record에 보존한다.",
+        "- 재-import 비교용 stable key를 Candidate에 보존한다.",
+        "- 설정된 경우 상위 그룹 Header도 Source Metadata에 보존한다.",
+        "- Business Context가 부족하면 OPEN/Alert로 남긴다.",
+        "",
+    ]
     return "\n".join(lines)
 
 
 def run_import(xlsx: Path, profile_path: Path | None, json_out: Path, report_out: Path | None) -> dict:
     profile = load_profile(profile_path)
     sheet, matrix = read_xlsx_matrix(xlsx)
-    records, invalid = map_rows(matrix, profile, xlsx.name, sheet, source_hash(xlsx))
+    file_hash = source_hash(xlsx)
+    records, invalid = map_rows(matrix, profile, xlsx.name, sheet, file_hash)
     data = transform(records, invalid)
+    data["source_metadata"] = build_source_metadata(matrix, profile, xlsx.name, sheet, file_hash)
     json_out.parent.mkdir(parents=True, exist_ok=True)
     json_out.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     if report_out:
@@ -310,7 +408,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--json-out", default="sdlc/canonical/intake/requirements-import.json")
     p.add_argument("--report-out", default="docs/00_관리/요구사항_인입결과.md")
     args = p.parse_args(argv)
-    data = run_import(Path(args.xlsx), Path(args.profile) if args.profile else None, Path(args.json_out), Path(args.report_out) if args.report_out else None)
+    data = run_import(
+        Path(args.xlsx),
+        Path(args.profile) if args.profile else None,
+        Path(args.json_out),
+        Path(args.report_out) if args.report_out else None,
+    )
     print(json.dumps(data["import_result"], ensure_ascii=False))
     return 0
 
