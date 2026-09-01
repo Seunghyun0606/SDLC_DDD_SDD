@@ -1,57 +1,58 @@
 ---
 document_id: "{{document_id}}"
-document_type: requirement_analysis
+document_type: requirement_analysis_legacy_view
 requirement_id: "{{requirement_id}}"
 version: "{{version}}"
-status: "{{status}}"
-quality: "{{quality}}"
-validity: "{{validity}}"
+status: "DEPRECATED_COMPATIBILITY_VIEW"
 generated_by:
   skill: work
   stage: DECOMPOSE
 sources: []
-knowledge_used: []
 generated_at: "{{generated_at}}"
 ---
-<!-- 작성 안내: 본문은 Agent 용어를 전제로 하지 않고 한국어 자연어로 작성한다. RQ/FR/BR/PGM/AC/TC 같은 코드는 첫 등장 시 한국어 명칭을 함께 적고 이후 추적용 식별자로 사용한다. -->
-# {{representative_id}} {{short_name}} 요구사항 분석
+<!-- Legacy compatibility only. 신규 Workflow는 sdlc/templates/core/requirement.md 하나에서 원문/FR/BR 후보/AC를 함께 관리한다. 이 View에 새 업무정보를 작성하지 않는다. -->
+# {{representative_id}} {{short_name}} 요구사항 분석 — 호환용 View
 
 ## 문서 목적
-{{purpose}}
+기존 링크나 자동화가 `requirement-analysis.md`를 참조하는 동안 사용할 임시 호환 View다. 신규 요구사항 분석의 기준 문서는 `requirement.md`이며 이 문서는 별도 Source of Truth가 아니다.
 
 ## 한눈에 보기
-{{summary}}
+- 기준 요구사항 문서: {{requirement_ref}}
+- 호환 상태: DEPRECATED_COMPATIBILITY_VIEW
+- 신규 작성 허용: 아니오
 
 ## 업무 흐름
 ```mermaid
 flowchart LR
-    I["입력 자료와 근거"] --> A["분석 및 확인"] --> O["현재 단계 산출물"]
+    L["기존 링크"] --> R["requirement.md 기준 문서"] --> N["신규 내용은 기준 문서에만 반영"]
 ```
 
 ## 입력 및 근거
-| 구분 | 내용 | 사실/근거 구분 | 위치(Locator) | 원본 해시(Source Hash) | 신뢰도(Confidence) | 상태(Status) |
-|---|---|---|---|---|---|---|
-| 요구사항 | {{requirement_source}} | GIVEN | {{requirement_locator}} | - | HIGH | CURRENT |
-| 프로그램 소스/시스템 근거 | {{source_summary}} | OBSERVED | {{source_locator}} | {{source_hash}} | {{source_confidence}} | {{source_status}} |
+<!-- Source Evidence Machine Contract: Locator / Source Hash / Confidence / Status -->
+| 구분 | 내용 | 위치(Locator) | 원본 해시(Source Hash) | 신뢰도(Confidence) | 상태(Status) |
+|---|---|---|---|---|---|
+| 기준 Requirement | {{requirement_ref}} | {{requirement_locator}} | {{requirement_hash}} | HIGH | CURRENT |
 
 ## 상세 내용
-### 업무 목표
-{{business_goal}}
+### 기준 문서 참조
+{{requirement_ref}}
 
-### 기능 요구사항(FR)
-{{fr_table}}
-
-### 업무 규칙(BR) 후보
-{{business_rule_candidates}}
-
-### 인수 조건(AC)
-{{acceptance_criteria}}
+이 View에서 FR/BR/AC를 다시 작성하지 않는다. 기존 소비자가 상세 내용이 필요하면 기준 Requirement Artifact의 다음 Section을 읽는다.
+- 원문과 식별정보
+- 현재 문제 또는 요청 내용
+- 업무 목표와 기대 결과
+- 범위와 반드시 유지할 조건
+- 기능 요구사항(FR)
+- 업무 규칙(BR) 후보
+- 인수 조건(AC)
 
 ## 미확정 사항·주의·가정
+- 이 파일이 존재한다는 이유로 Requirement와 Requirement Analysis를 두 개의 활성 산출물로 취급하지 않는다.
+- 호환 소비자가 제거되면 파일 삭제를 검토한다.
 {{alerts_and_assumptions}}
 
 ## 관련 ID 및 추적성
 {{traceability}}
 
 ## 다음 작업
-{{next_step}}
+기준 문서 `{{requirement_ref}}`를 사용해 CLARIFY 또는 PROCESS로 진행한다.
