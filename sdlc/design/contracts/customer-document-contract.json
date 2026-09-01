@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "language": "ko-KR",
+  "principles": [
+    "고객 문서는 내부 Canonical 및 기존 단계 산출물에서 파생하며 새로운 업무 사실을 임의 생성하지 않는다.",
+    "본문은 한국어 자연어를 기본으로 하고 내부 ID는 필요 시 괄호 또는 부록에 표시한다.",
+    "필수 단락은 제거할 수 없고 선택 단락은 고객/프로젝트 Profile로 활성화한다.",
+    "기술 상세, Source Hash, 내부 신뢰도 상태는 기본적으로 고객 본문에서 숨기고 필요 시 부록으로 선택한다."
+  ],
+  "required_base_sections": ["문서 목적","한눈에 보기","고객과 함께 확인할 내용","합의된 내용","미확정 사항","다음 단계"],
+  "optional_section_catalog": {
+    "요청_배경":"요청 또는 변경 배경을 설명한다.",
+    "현재와_개선후_비교":"현재(AS-IS)와 개선(TO-BE)을 자연어와 그림으로 비교한다.",
+    "업무_영향":"사용자, 부서, 절차, 정책 영향만 고객 관점으로 설명한다.",
+    "범위와_제외범위":"포함/제외 범위를 명확히 한다.",
+    "결정_필요사항":"고객 의사결정이 필요한 항목과 선택지를 정리한다.",
+    "테스트와_인수기준":"고객이 확인할 인수 기준과 시나리오를 정리한다.",
+    "일정과_역할":"필요 시 일정, 담당, 의존관계를 정리한다.",
+    "위험과_대응":"업무/운영 위험과 대응방안을 정리한다.",
+    "운영_인수":"운영 절차, 문의/장애 확인, 교육 포인트를 정리한다.",
+    "기술_상세_부록":"API, 프로그램, 테이블 등 기술 세부사항을 선택적으로 표시한다.",
+    "근거_상세_부록":"파일/심볼/해시/신뢰도 등 내부 근거 상세를 선택적으로 표시한다."
+  },
+  "document_types": {
+    "requirement_discussion":{"stages":["INTAKE","DECOMPOSE","CLARIFY"],"title":"요구사항 협의서","required_add":["요청_배경","결정_필요사항"],"optional":["범위와_제외범위","일정과_역할","근거_상세_부록"]},
+    "process_discussion":{"stages":["PROCESS"],"title":"업무 프로세스 협의서","required_add":["현재와_개선후_비교"],"optional":["업무_영향","결정_필요사항","근거_상세_부록"]},
+    "impact_discussion":{"stages":["DISCOVERY","IMPACT"],"title":"영향 범위 협의서","required_add":["업무_영향","범위와_제외범위"],"optional":["위험과_대응","기술_상세_부록","근거_상세_부록"]},
+    "design_review":{"stages":["DESIGN"],"title":"기능 설계 협의서","required_add":["현재와_개선후_비교","결정_필요사항"],"optional":["범위와_제외범위","테스트와_인수기준","기술_상세_부록"]},
+    "development_scope":{"stages":["PROGRAM","DEVELOPMENT"],"title":"개발 범위 및 구현 결과 공유서","required_add":["범위와_제외범위"],"optional":["일정과_역할","위험과_대응","기술_상세_부록"]},
+    "test_acceptance":{"stages":["TEST"],"title":"테스트 및 인수 협의서","required_add":["테스트와_인수기준"],"optional":["일정과_역할","위험과_대응","기술_상세_부록"]},
+    "verification_approval":{"stages":["VERIFY"],"title":"검증 및 승인 결과서","required_add":["테스트와_인수기준"],"optional":["위험과_대응","근거_상세_부록"]},
+    "operations_handover":{"stages":["KNOWLEDGE_PROMOTION"],"title":"운영 인수 가이드","required_add":["운영_인수"],"optional":["기술_상세_부록","일정과_역할"]}
+  }
+}
