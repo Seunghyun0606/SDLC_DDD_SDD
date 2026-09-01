@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "candidate_design": "v1.5.6-rc.1",
+  "schema_version": 2,
+  "candidate_design": "v1.5.7-rc.1",
   "modes": {
     "GREENFIELD": {
       "starter_path": "sdlc/starter-kits/greenfield",
@@ -26,6 +26,8 @@
       ],
       "impact_required_result_classes": ["DIRECT_IMPACT", "INDIRECT_IMPACT", "CHECK_REQUIRED", "OUT_OF_SCOPE"],
       "coverage_gaps_must_be_reported": true,
+      "project_specific_impact_adapter_required": true,
+      "missing_project_adapter_status": "PARTIAL_PROJECT_ADAPTER_REQUIRED",
       "readiness_states": ["STARTABLE", "IMPACT_ANALYSIS_READY", "IMPLEMENTATION_READY"]
     }
   },
@@ -38,8 +40,11 @@
     "canonical_ids_remain_stable": true
   },
   "reverse_engineering": {
-    "status": "DESIGN_REVIEW_ONLY_NOT_CORE_ENABLED",
-    "reserved_scopes": ["INVENTORY", "DRIFT_CHECK", "REVERSE_SPEC", "SOURCE_DIFF"],
+    "status": "PARTIAL_CORE_ENABLED",
+    "core_enabled_scopes": ["DRIFT_CHECK"],
+    "enhancement_scopes": ["INVENTORY", "REVERSE_SPEC", "SEMANTIC_SOURCE_DIFF", "AUTOMATIC_ARTIFACT_REWRITE"],
+    "drift_contract": "sdlc/design/contracts/source-drift-contract.json",
+    "automatic_artifact_rewrite": false,
     "automatic_business_truth_promotion": false
   }
 }
