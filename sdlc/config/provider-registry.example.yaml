@@ -8,59 +8,40 @@ registry:
     - provider_id: source-primary
       provider_type: SOURCE
       enabled: true
+      provider_state: UNCONFIGURED
       mode: READ_ONLY
       transport: ADAPTER
-      capabilities:
-        - source.snapshot.read
-        - source.object.read
-        - source.search
-        - source.diff
+      capabilities: [source.snapshot.read, source.object.read, source.search, source.diff]
       required_for_modes: [BROWNFIELD, HYBRID]
       optional_for_modes: [GREENFIELD]
-      constraints:
-        bounded_scope_required: true
-        revision_required: true
-        write_requires_explicit_capability: true
+      constraints: {bounded_scope_required: true, revision_required: true, write_requires_explicit_capability: true}
     - provider_id: test-primary
       provider_type: TEST
       enabled: true
+      provider_state: UNCONFIGURED
       mode: READ_WRITE
       transport: ADAPTER
-      capabilities:
-        - test.discover
-        - test.execute
-        - test.result.read
+      capabilities: [test.discover, test.execute, test.result.read]
       required_for_stages: [TEST, VERIFY]
-      constraints:
-        executable_command_or_native_runner_required: true
-        execution_evidence_required_for_pass: true
+      constraints: {executable_command_or_native_runner_required: true, execution_evidence_required_for_pass: true}
     - provider_id: canonical-primary
       provider_type: CANONICAL_REGISTRY
       enabled: false
+      provider_state: DISABLED
       mode: READ_WRITE
       transport: ADAPTER
-      capabilities:
-        - canonical.entity.read
-        - canonical.id.reserve
-        - canonical.publish
-      constraints:
-        idempotency_key_required_for_write: true
-        explicit_write_permission_required: true
+      capabilities: [canonical.entity.read, canonical.id.reserve, canonical.publish]
+      constraints: {idempotency_key_required_for_write: true, explicit_write_permission_required: true}
     - provider_id: command-router
       provider_type: COMMAND_ROUTER
       enabled: true
+      provider_state: AVAILABLE
       mode: READ_ONLY
       transport: LOCAL
-      capabilities:
-        - command.route.work
-        - command.route.change
-        - command.route.check
-      constraints:
-        router_must_not_invent_provider_result: true
-        router_must_not_bypass_blocker: true
-
+      capabilities: [command.route.work, command.route.change, command.route.check]
+      constraints: {router_must_not_invent_provider_result: true, router_must_not_bypass_blocker: true}
 capability_policy:
-  provider_statuses: [AVAILABLE, DEGRADED, UNAVAILABLE, DISABLED]
+  provider_statuses: [AVAILABLE, DEGRADED, UNAVAILABLE, UNCONFIGURED, DISABLED]
   response_statuses: [OK, PARTIAL, BLOCKED, ERROR]
   write_modes: [READ_ONLY, READ_WRITE]
   missing_required_capability: BLOCKED
