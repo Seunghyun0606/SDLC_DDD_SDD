@@ -83,6 +83,7 @@ def apply_stage_route(context: dict[str, Any], routing: dict[str, Any]):
             "skill": command_rule.get("skill"),
             "procedure_profile": command_rule.get("procedure_profile"),
             "agent_level": command_rule.get("agent_level"),
+            "required_input_types": command_rule.get("required_input_types") or [],
             "expected_outputs": command_rule.get("expected_outputs") or [],
         })
 
