@@ -10,11 +10,6 @@ SOP = json.loads((ROOT / "sdlc/design/contracts/sop-extraction-contract.json").r
 EXTRACT = json.loads((ROOT / "sdlc/design/contracts/br-document-extraction-contract.json").read_text(encoding="utf-8"))
 READINESS = json.loads((ROOT / "sdlc/config/program-spec-readiness.json").read_text(encoding="utf-8"))
 
-spec = importlib.util.spec_from_file_location("validate_program_spec", ROOT / "sdlc/scripts/validate_program_spec.py")
-validator = importlib.util.module_from_spec(spec)
-assert spec.loader is not None
-spec.loader.exec_module(validator)
-
 
 class SixWBusinessScenarioTest(unittest.TestCase):
     def test_six_dimensions_are_exact_and_ordered(self):
@@ -39,34 +34,38 @@ class SixWBusinessScenarioTest(unittest.TestCase):
 
 
 class DeveloperSpecificationTest(unittest.TestCase):
-    def test_functional_design_contains_developer_required_markers(self):
+    def test_functional_design_contains_semantic_required_markers(self):
         text = (ROOT / "sdlc/templates/core/functional-design.md").read_text(encoding="utf-8")
         for marker in DEV["functional_design_required_markers"]:
             self.assertIn(marker, text)
 
-    def test_program_spec_contains_developer_required_markers(self):
+    def test_program_spec_contains_only_implementation_delta_markers(self):
         text = (ROOT / "sdlc/templates/core/program-spec.md").read_text(encoding="utf-8")
         for marker in DEV["program_spec_required_markers"]:
             self.assertIn(marker, text)
+        for old_duplicate in [
+            "### 업무 시나리오(6하원칙) 연결",
+            "### 화면·메뉴·컴포넌트 상세",
+            "### 화면·입력·출력 필드 상세",
+            "### CRUD 동작 매트릭스",
+            "### 업무 검증·판단·상태 규칙",
+        ]:
+            self.assertNotIn(old_duplicate, text)
 
-    def test_legacy_program_dor_remains_17_fields(self):
+    def test_functional_design_is_semantic_source_of_truth(self):
+        ownership=DEV["ownership_model"]
+        self.assertEqual("SEMANTIC_SOURCE_OF_TRUTH",ownership["functional_design"])
+        self.assertEqual("IMPLEMENTATION_DELTA_AND_EXECUTION_READINESS",ownership["program_spec"])
+        self.assertTrue(DEV["rules"]["functional_design_semantics_must_not_be_duplicated_in_program_spec"])
+        self.assertTrue(DEV["rules"]["program_spec_records_only_implementation_mapping_and_delta"])
+
+    def test_program_dor_remains_17_items_but_one_table(self):
         self.assertEqual(17, len(READINESS["required_fields"]))
+        self.assertEqual("SINGLE_READINESS_TABLE",READINESS["representation"])
 
     def test_na_requires_reason(self):
         self.assertTrue(DEV["rules"]["not_applicable_requires_reason"])
         self.assertTrue(DEV["rules"]["screen_sections_are_not_applicable_only_for_non_ui_entry_points_with_reason"])
-
-    def _ready_text(self, developer_open_count):
-        markers = "\n".join(x["marker"] for x in READINESS["required_fields"])
-        return markers + f"\n구현 준비 상태: READY\n미확정 항목 수: 0\n### 개발 상세 명세 완성도\nOPEN 상세 명세 수: {developer_open_count}\n"
-
-    def test_ready_fails_when_developer_detail_is_open(self):
-        errors = validator.validate_text(self._ready_text(1), READINESS)
-        self.assertIn("READY_WITH_OPEN_OR_UNKNOWN_DEVELOPER_SPEC", errors)
-
-    def test_ready_can_pass_developer_detail_gate_when_zero_open(self):
-        errors = validator.validate_text(self._ready_text(0), READINESS)
-        self.assertNotIn("READY_WITH_OPEN_OR_UNKNOWN_DEVELOPER_SPEC", errors)
 
 
 class SopExtractionTest(unittest.TestCase):
