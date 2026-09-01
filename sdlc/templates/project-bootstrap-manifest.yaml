@@ -1,0 +1,40 @@
+project_bootstrap:
+  project_id: ""
+  project_name: ""
+  mode: AUTO  # AUTO | BROWNFIELD | GREENFIELD | HYBRID
+  bootstrap_revision: 1
+  status: OPEN  # OPEN | PARTIAL | READY
+
+providers:
+  source_provider_state: UNCONFIGURED
+  test_provider_state: UNCONFIGURED
+  other_provider_refs: []
+
+assets:
+  - asset_type: SOURCE_ROOT
+    locator: ""
+    state: OPEN  # OPEN | DISCOVERED | ADOPTED | OVERRIDDEN | IGNORED
+    truth_state: OPEN
+    evidence_ids: []
+    notes: ""
+
+standards:
+  discovered: []
+  adopted: []
+  deviations: []
+
+terminology:
+  glossary_sources: []
+  unresolved_terms: []
+
+customization:
+  active_overlay_ids: []
+  proposed_overlay_ids: []
+  upfront_customization_complete_required: false
+
+open_items: []
+
+entry_gate:
+  first_work_allowed: false
+  blockers: []
+  warnings: []
