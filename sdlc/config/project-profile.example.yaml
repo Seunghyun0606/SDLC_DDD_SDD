@@ -49,6 +49,9 @@ source_discovery:
   config: sdlc/config/source-discovery.yaml
   analyzer_registry: sdlc/config/source-analyzers.yaml
   inventory_script: sdlc/scripts/discover_source_inventory.py
+  bounded_trace_script: sdlc/scripts/collect_bounded_source_evidence.py
+  target_context_template: sdlc/templates/source-target-context.yaml
+  source_change_template: sdlc/templates/source-change-evidence.yaml
   reverse_sync_config: sdlc/config/reverse-sync-classification.yaml
   reverse_sync_script: sdlc/scripts/build_reverse_sync_from_signals.py
 
