@@ -1,10 +1,34 @@
-schema_version: 1
+schema_version: 2
 mode: BROWNFIELD
 contract: sdlc/design/contracts/brownfield-impact-contract.json
 adapter:
   enabled: false
   adapter_id: PROJECT_SPECIFIC_REQUIRED
   implementation_root: sdlc/custom/project/adapters/impact
+  # 아래 Pilot은 사용 가능한 Project Adapter 예시일 뿐 기본 활성화 대상이 아니다.
+  available_pilots:
+    - adapter_id: JAVA_SPRING_MYBATIS_STATIC_PILOT_V0_1
+      implementation: sdlc/custom/project/adapters/impact/java_spring_mybatis.py
+      status: PILOT_PARTIAL_COVERAGE
+      auto_enable: false
+      supported:
+        - JAVA_DIRECT_FIELD_MEMBER_CALLS
+        - SPRING_METHOD_MAPPING_ANNOTATION
+        - CONTROLLER_NAMING_ENTRY_CANDIDATE
+        - MYBATIS_STATEMENT
+        - MYBATIS_SQL_TABLE_READ_WRITE
+        - SQL_CREATE_TABLE_ASSET
+      not_supported:
+        - JAVA_FULL_AST_TYPE_RESOLUTION
+        - SPRING_RUNTIME_PROXY_WIRING
+        - REFLECTION_DYNAMIC_DISPATCH
+        - TRANSACTION_PROPAGATION
+        - JPA_JDBC_STORED_PROCEDURE_ETL
+        - EXTERNAL_API_CONTRACT
+        - KAFKA_JMS_EVENT
+        - CONFIG_FEATURE_FLAG_SCHEDULER
+        - BUILD_DEPENDENCY_GRAPH
+        - TEST_SEMANTIC_COVERAGE
 project_context:
   language: UNKNOWN
   framework: UNKNOWN
@@ -31,3 +55,5 @@ rules:
   not_found_does_not_mean_no_impact: true
   report_unsupported_patterns: true
   source_relation_does_not_confirm_business_impact: true
+  pilot_fixture_pass_does_not_mean_production_complete: true
+  project_adapter_is_not_core_required: true
