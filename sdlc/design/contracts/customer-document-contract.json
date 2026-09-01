@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "candidate_design": "v1.6.0-rc.1",
   "language": "ko-KR",
   "principles": [
@@ -8,7 +8,9 @@
     "필수 단락은 제거할 수 없고 선택 단락은 고객/프로젝트 Profile로 활성화한다.",
     "기술 상세, Source Hash, 내부 신뢰도 상태는 기본적으로 고객 본문에서 숨기고 필요 시 부록으로 선택한다.",
     "고객 문서 종류를 단계마다 하나씩 만들지 않고 고객과 실제로 합의·공유·인수하는 목적 기준의 3개 표준 View로 통합한다.",
-    "Projection은 내부 산출물의 의미 있는 Section을 재사용하되 Machine metadata와 근거 관리용 표현을 고객 본문에서 제거한다."
+    "Projection은 내부 산출물의 의미 있는 Section을 재사용하되 Machine metadata와 근거 관리용 표현을 고객 본문에서 제거한다.",
+    "구형 산출물은 파일명/제목에서 Stage를 안전하게 추론할 수 있으나 추론되지 않은 문서는 기본 Projection 입력에서 제외한다.",
+    "구형 산출물의 단일 본문 fallback은 Stage별로 지정된 고객 Section에만 사용하며 여러 고객 Section에 임의 복제하지 않는다."
   ],
   "required_base_sections": ["문서 목적","한눈에 보기","고객과 함께 확인할 내용","합의된 내용","미확정 사항","다음 단계"],
   "optional_section_catalog": {
@@ -36,6 +38,16 @@
         "요청 및 기대 결과": ["현재 문제 또는 요청 내용","요청 내용","기대하는 결과","업무 목표","고객 요청 내용과 기대 결과"],
         "업무 흐름과 개선 내용": ["현재와 개선후 비교","AS-IS","TO-BE","업무 정의(6하원칙)","자연어 업무 정의","개선 후 사용 흐름","화면·채널 및 사용자 동선"],
         "주요 기능과 업무 규칙": ["기능 요구사항(FR)","업무 규칙(BR) 후보","핵심 업무 로직과 판단 규칙","권한·상태·예외","인수 조건(AC) 연결"]
+      },
+      "legacy_stage_body_fallback": {
+        "요청 및 기대 결과": ["INTAKE","DECOMPOSE"],
+        "업무 흐름과 개선 내용": ["PROCESS"],
+        "주요 기능과 업무 규칙": ["DESIGN"]
+      },
+      "legacy_catalog_stage_body_fallback": {
+        "요청_배경": ["INTAKE"],
+        "현재와_개선후_비교": ["PROCESS","DESIGN"],
+        "결정_필요사항": ["CLARIFY"]
       }
     },
     "delivery_scope": {
@@ -48,6 +60,16 @@
         "업무 및 시스템 영향": ["Business 영향","Functional 영향","업무 영향","영향 범위","영향 분석","변경 영향"],
         "개발 범위": ["실제 구현 Target","구현 매핑과 차이","개발 작업(TASK)과 변경 범위","TASK·AC·TC·Source 연결","개발 범위","변경되는 기능"],
         "구현 상태와 제약": ["구현 결과","변경 결과","구현 준비도","미수행 또는 제한 사항","위험 및 제약","검증 결과"]
+      },
+      "legacy_stage_body_fallback": {
+        "업무 및 시스템 영향": ["DISCOVERY","IMPACT"],
+        "개발 범위": ["PROGRAM"],
+        "구현 상태와 제약": ["DEVELOPMENT"]
+      },
+      "legacy_catalog_stage_body_fallback": {
+        "업무_영향": ["IMPACT"],
+        "범위와_제외범위": ["IMPACT","PROGRAM"],
+        "위험과_대응": ["IMPACT","DEVELOPMENT"]
       }
     },
     "acceptance_handover": {
@@ -60,6 +82,16 @@
         "인수 기준과 테스트 결과": ["인수 조건(AC)","인수 조건(AC) 연결","고객이 확인할 인수 기준","주요 테스트 시나리오","테스트 결과","TC 결과"],
         "검증 결과와 남은 사항": ["검증 결과","검증 판정","미수행 또는 제한 사항","실패/미수행","잔여 위험"],
         "운영 인수 내용": ["운영 인수","업무 처리 방법","운영 중 확인할 사항","장애/문의 발생 시 확인 순서","운영 지식","운영 절차"]
+      },
+      "legacy_stage_body_fallback": {
+        "인수 기준과 테스트 결과": ["TEST"],
+        "검증 결과와 남은 사항": ["VERIFY"],
+        "운영 인수 내용": ["KNOWLEDGE_PROMOTION"]
+      },
+      "legacy_catalog_stage_body_fallback": {
+        "테스트와_인수기준": ["TEST","VERIFY"],
+        "운영_인수": ["KNOWLEDGE_PROMOTION"],
+        "위험과_대응": ["VERIFY"]
       }
     }
   },
@@ -76,10 +108,10 @@
   "projection": {
     "input_kinds": ["INTERNAL_MARKDOWN_ARTIFACT","CANONICAL_JSON_BUNDLE"],
     "base_section_sources": {
-      "한눈에 보기": ["한눈에 보기","요약","summary"],
-      "고객과 함께 확인할 내용": ["고객과 함께 확인할 내용","미확정 사항·주의·가정","미확정 사항","OPEN","open_items"],
+      "한눈에 보기": ["한눈에 보기","30초 요약","요약","summary"],
+      "고객과 함께 확인할 내용": ["고객과 함께 확인할 내용","미확정 사항·주의·가정","미확정/Alert/Assumption","미확정 사항","OPEN","open_items"],
       "합의된 내용": ["합의된 내용","확정된 내용","confirmed_items","agreed_items"],
-      "미확정 사항": ["미확정 사항·주의·가정","미확정 사항","OPEN","open_items"],
+      "미확정 사항": ["미확정 사항·주의·가정","미확정/Alert/Assumption","미확정 사항","OPEN","open_items"],
       "다음 단계": ["다음 작업","다음 단계","next_step","next_steps"]
     },
     "catalog_section_sources": {
@@ -87,16 +119,26 @@
       "현재와_개선후_비교": ["AS-IS","TO-BE","현재와 개선후 비교","현재와 개선 후 비교","개선 후 사용 흐름"],
       "업무_영향": ["Business 영향","Functional 영향","업무 영향","영향 범위","변경 영향"],
       "범위와_제외범위": ["반드시 유지해야 할 조건과 범위","범위와 제외범위","범위","제외 범위","개발 범위","변경되지 않는 범위"],
-      "결정_필요사항": ["고객과 함께 확인할 내용","미확정 사항·주의·가정","미확정 사항","OPEN","open_items"],
+      "결정_필요사항": ["고객과 함께 확인할 내용","미확정 사항·주의·가정","미확정/Alert/Assumption","미확정 사항","OPEN","open_items"],
       "테스트와_인수기준": ["인수 조건(AC)","인수 조건(AC) 연결","고객이 확인할 인수 기준","주요 테스트 시나리오","테스트 결과"],
       "일정과_역할": ["일정과 역할","일정","담당","역할"],
       "위험과_대응": ["위험과 대응","위험 및 제약","잔여 위험","미수행 또는 제한 사항"],
       "운영_인수": ["운영 인수","업무 처리 방법","운영 중 확인할 사항","장애/문의 발생 시 확인 순서","운영 절차"],
       "기술_상세_부록": ["실제 구현 Target","구현 매핑과 차이","Query·Table·Source 구현 근거","연계 구현 계약","기술 제어와 운영 조건"],
-      "근거_상세_부록": ["입력 및 근거","실제 파일·심볼 근거","관련 ID 및 추적성"]
+      "근거_상세_부록": ["입력 및 근거","입력/Evidence","실제 파일·심볼 근거","관련 ID 및 추적성","관련 ID/Traceability"]
+    },
+    "legacy_heading_aliases": {
+      "30초 요약": "한눈에 보기",
+      "입력/Evidence": "입력 및 근거",
+      "미확정/Alert/Assumption": "미확정 사항·주의·가정",
+      "관련 ID/Traceability": "관련 ID 및 추적성"
+    },
+    "legacy_stage_name_aliases": {
+      "KNOWLEDGE": "KNOWLEDGE_PROMOTION"
     },
     "customer_body_hidden_patterns": ["Source Hash","원본 해시","Confidence","Locator","generated_by","generated_at"],
     "hide_internal_ids_by_default": true,
+    "unclassified_input_policy": "EXCLUDE_BY_DEFAULT",
     "empty_section_policy": "EXPLICIT_NOT_FOUND",
     "empty_section_text": "현재 제공된 내부 산출물에서 고객에게 공유할 확정 내용을 찾지 못했습니다."
   }
