@@ -1,32 +1,24 @@
 {
-  "schema_version": 1,
-  "readiness_states": [
-    "READY",
-    "PARTIAL",
-    "EXECUTION_GUARDED"
-  ],
-  "rules": {
-    "ready_requires_zero_open": true,
-    "simulated_source_cannot_be_ready": true,
-    "open_real_source_cannot_be_ready": true
-  },
+  "schema_version": 2,
+  "readiness_states": ["READY","PARTIAL","EXECUTION_GUARDED"],
+  "rules": {"ready_requires_zero_open":true,"simulated_source_cannot_be_ready":true,"open_real_source_cannot_be_ready":true},
   "required_fields": [
-    {"id": "entry_point", "label": "Entry Point / Target", "marker": "### Entry Point / Target"},
-    {"id": "source_evidence", "label": "Physical Artifact / Symbol Evidence", "marker": "### Physical Artifact / Symbol Evidence"},
-    {"id": "input_dto", "label": "Input DTO Contract", "marker": "### Input DTO Contract"},
-    {"id": "output_dto", "label": "Output DTO Contract", "marker": "### Output DTO Contract"},
-    {"id": "business_rule", "label": "Business Validation / Decision / State", "marker": "### Business Validation / Decision / State"},
-    {"id": "data_persistence", "label": "Data / Persistence", "marker": "### Data / Persistence"},
-    {"id": "transaction", "label": "Transaction / Concurrency / Idempotency", "marker": "### Transaction / Concurrency / Idempotency"},
-    {"id": "integration", "label": "Integration / Notification Contract", "marker": "### Integration / Notification Contract"},
-    {"id": "error", "label": "Exception / Error Contract", "marker": "### Exception / Error Contract"},
-    {"id": "security", "label": "Security / Audit / Observability", "marker": "### Security / Audit / Observability"},
-    {"id": "nfr", "label": "NFR / Operations", "marker": "### NFR / Operations"},
-    {"id": "standards", "label": "Applicable Standards / Standard Deviation", "marker": "### Applicable Standards / Standard Deviation"},
-    {"id": "ac_tc", "label": "AC / TC Mapping", "marker": "### AC / TC Mapping"},
-    {"id": "task", "label": "Development Task / Scope Guard", "marker": "### Development Task / Scope Guard"},
-    {"id": "dor", "label": "Definition of Ready", "marker": "### Definition of Ready"},
-    {"id": "traceability", "label": "Traceability", "marker": "## 관련 ID/Traceability"},
-    {"id": "next", "label": "Next Work", "marker": "## 다음 작업"}
+    {"id":"entry_point","label":"진입점과 실제 변경 대상","marker":"### 진입점과 실제 변경 대상"},
+    {"id":"source_evidence","label":"실제 파일·심볼 근거","marker":"### 실제 파일·심볼 근거"},
+    {"id":"input_dto","label":"입력 데이터 계약(DTO)","marker":"### 입력 데이터 계약(DTO)"},
+    {"id":"output_dto","label":"출력 데이터 계약(DTO)","marker":"### 출력 데이터 계약(DTO)"},
+    {"id":"business_rule","label":"업무 검증·판단·상태 규칙","marker":"### 업무 검증·판단·상태 규칙"},
+    {"id":"data_persistence","label":"데이터 저장 및 조회","marker":"### 데이터 저장 및 조회"},
+    {"id":"transaction","label":"트랜잭션·동시성·중복 처리","marker":"### 트랜잭션·동시성·중복 처리"},
+    {"id":"integration","label":"외부 시스템 연계 및 알림","marker":"### 외부 시스템 연계 및 알림"},
+    {"id":"error","label":"오류 및 예외 처리","marker":"### 오류 및 예외 처리"},
+    {"id":"security","label":"권한·보안·감사·관측성","marker":"### 권한·보안·감사·관측성"},
+    {"id":"nfr","label":"성능 및 운영 조건","marker":"### 성능 및 운영 조건"},
+    {"id":"standards","label":"적용 표준과 예외","marker":"### 적용 표준과 예외"},
+    {"id":"ac_tc","label":"인수 조건과 테스트케이스 연결","marker":"### 인수 조건(AC)과 테스트케이스(TC) 연결"},
+    {"id":"task","label":"개발 작업과 변경 범위","marker":"### 개발 작업(TASK)과 변경 범위"},
+    {"id":"dor","label":"구현 준비도 점검","marker":"### 구현 준비도(DoR) 점검"},
+    {"id":"traceability","label":"관련 ID 및 추적성","marker":"## 관련 ID 및 추적성"},
+    {"id":"next","label":"다음 작업","marker":"## 다음 작업"}
   ]
 }
