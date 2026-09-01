@@ -26,6 +26,19 @@ handoff:
   stage_input_pack_template: sdlc/templates/stage-input-pack.yaml
   validate_before_next_stage: true
 
+providers:
+  registry: sdlc/config/provider-registry.example.yaml
+  runtime_plan_template: sdlc/templates/provider-runtime-plan.yaml
+  no_implicit_fallback: true
+  adapter_specific_fields_location: extensions
+  write_requires_permission_proof: true
+  write_requires_idempotency_key: true
+
+commands:
+  public_commands: [/work, /change, /check]
+  provider_runtime_skill: sdlc/starter/onboarding-package-v1/skills/provider-runtime/SKILL.md
+  router_must_not_invent_provider_result: true
+
 customization:
   project_overlay: sdlc/custom/project
   domain_overlays: []
