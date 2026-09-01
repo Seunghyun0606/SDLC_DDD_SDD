@@ -1,0 +1,27 @@
+version: 1
+source: 요구사항목록.xlsx/Sheet1
+source_rows: 142
+candidate_groups: 22
+crosswalk:
+  - {legacy_pilot_group_id: RQG-CAND-001, stable_group_id: RQG-CAND-028D38F493, level2: 근무계획 수립(탄력근로제), requirement_name: 탄력근로제 개선 최초근무계획 자동 설정하는 기능, source_count: 3, first_source_id: REQ_TM_FL001, last_source_id: REQ_TM_FL003}
+  - {legacy_pilot_group_id: RQG-CAND-002, stable_group_id: RQG-CAND-030B9B2589, level2: 근무계획 수립(탄력근로제), requirement_name: 탄력근로제 개선 고과제 예외사항 요청하는 기능, source_count: 4, first_source_id: REQ_TM_FL004, last_source_id: REQ_TM_FL007}
+  - {legacy_pilot_group_id: RQG-CAND-003, stable_group_id: RQG-CAND-04BBCD0CB1, level2: 근무계획 수립(탄력근로제), requirement_name: 탄력근로제 개선 연봉제 예외사항 요청하는 기능, source_count: 6, first_source_id: REQ_TM_FL008, last_source_id: REQ_TM_FL013}
+  - {legacy_pilot_group_id: RQG-CAND-004, stable_group_id: RQG-CAND-DC49AB42B6, level2: 근무계획 수립(탄력근로제), requirement_name: 탄력근로제 개선 고과제/연봉제 예외사항 요청하는 기능, source_count: 8, first_source_id: REQ_TM_FL014, last_source_id: REQ_TM_FL021}
+  - {legacy_pilot_group_id: RQG-CAND-005, stable_group_id: RQG-CAND-46CD66CFFF, level2: 근무계획 수립(탄력근로제), requirement_name: 탄력근로제 개선 근무계획 확정/안내하는 기능, source_count: 4, first_source_id: REQ_TM_FL022, last_source_id: REQ_TM_FL025}
+  - {legacy_pilot_group_id: RQG-CAND-006, stable_group_id: RQG-CAND-9FC3171D29, level2: 근무계획 수립(탄력근로제), requirement_name: 탄력근로제 개선 운영이력 조회하는 기능, source_count: 1, first_source_id: REQ_TM_FL026, last_source_id: REQ_TM_FL026}
+  - {legacy_pilot_group_id: RQG-CAND-007, stable_group_id: RQG-CAND-0D56D32CD9, level2: 근태/휴가 (ESS), requirement_name: 탄력근로제 개선 확정 조회하는 기능, source_count: 1, first_source_id: REQ_TM_FL027, last_source_id: REQ_TM_FL027}
+  - {legacy_pilot_group_id: RQG-CAND-008, stable_group_id: RQG-CAND-E54DE37493, level2: 근태 Report, requirement_name: 탄력근로제 개선 검증 Report 조회하는 기능, source_count: 8, first_source_id: REQ_TM_FL028, last_source_id: REQ_TM_FL035}
+  - {legacy_pilot_group_id: RQG-CAND-009, stable_group_id: RQG-CAND-F89662070A, level2: Interface, requirement_name: 탄력근로제 개선 데이터 HR Analytics 송신하는 기능, source_count: 1, first_source_id: REQ_TM_FL036, last_source_id: REQ_TM_FL036}
+  - {legacy_pilot_group_id: RQG-CAND-010, stable_group_id: RQG-CAND-A904E4EF15, level2: 근태기록, requirement_name: 탄력근로제 개선 휴가내역 근태 집계하는 기능, source_count: 1, first_source_id: REQ_TM_FL037, last_source_id: REQ_TM_FL037}
+  - {legacy_pilot_group_id: RQG-CAND-011, stable_group_id: RQG-CAND-EE542A8A62, level2: 근태기록, requirement_name: 탄력근로제 개선 근무내역 근태 집계하는 기능, source_count: 1, first_source_id: REQ_TM_FL038, last_source_id: REQ_TM_FL038}
+  - {legacy_pilot_group_id: RQG-CAND-012, stable_group_id: RQG-CAND-809A396BB8, level2: 근태기록, requirement_name: 탄력근로제 개선 출장/교육내역 집계하는 기능, source_count: 1, first_source_id: REQ_TM_FL039, last_source_id: REQ_TM_FL039}
+  - {legacy_pilot_group_id: RQG-CAND-013, stable_group_id: RQG-CAND-5BAC94F471, level2: 근태/휴가 (ESS), requirement_name: 10분단위 근무계획 개선 근무계획 반영을 구현, source_count: 9, first_source_id: REQ_TM_TE001, last_source_id: REQ_TM_TE009}
+  - {legacy_pilot_group_id: RQG-CAND-014, stable_group_id: RQG-CAND-5B8364704F, level2: 선택적근무제, requirement_name: 10분단위 근무계획 개선 선택적근무관리 반영을 구현, source_count: 1, first_source_id: REQ_TM_TE010, last_source_id: REQ_TM_TE010}
+  - {legacy_pilot_group_id: RQG-CAND-015, stable_group_id: RQG-CAND-20E73FDA68, level2: 선택적근무제, requirement_name: 10분단위 근무계획 개선 선택적근무관리 반영하는 기능, source_count: 1, first_source_id: REQ_TM_TE011, last_source_id: REQ_TM_TE011}
+  - {legacy_pilot_group_id: RQG-CAND-016, stable_group_id: RQG-CAND-BDD035C4A2, level2: 근태기록, requirement_name: 10분단위 근무계획 개선 근태기록 반영을 구현, source_count: 4, first_source_id: REQ_TM_TE012, last_source_id: REQ_TM_TE015}
+  - {legacy_pilot_group_id: RQG-CAND-017, stable_group_id: RQG-CAND-6BB6D66548, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현, source_count: 39, first_source_id: REQ_TM_TE016, last_source_id: REQ_TM_TE054}
+  - {legacy_pilot_group_id: RQG-CAND-018, stable_group_id: RQG-CAND-8E538471B6, level2: 근태현황/통계, requirement_name: 10분단위 근무계획 개선 근태현황/통계 반영을 구현, source_count: 22, first_source_id: REQ_TM_TE055, last_source_id: REQ_TM_TE076}
+  - {legacy_pilot_group_id: RQG-CAND-019, stable_group_id: RQG-CAND-D89319F3D1, level2: Batch, requirement_name: 10분단위 근무계획 개선 근무집계 반영을 구현, source_count: 23, first_source_id: REQ_TM_TE077, last_source_id: REQ_TM_TE099}
+  - {legacy_pilot_group_id: RQG-CAND-020, stable_group_id: RQG-CAND-2E5426B334, level2: Interface, requirement_name: 10분단위 근무계획 개선 Yellow Page 송신 반영을 구현, source_count: 1, first_source_id: REQ_TM_TE100, last_source_id: REQ_TM_TE100}
+  - {legacy_pilot_group_id: RQG-CAND-021, stable_group_id: RQG-CAND-251531B196, level2: 근태/휴가 (ESS), requirement_name: 10분단위 근무계획 개선 입출문시간 정보에 반영을 구현, source_count: 2, first_source_id: REQ_TM_TE101, last_source_id: REQ_TM_TE102}
+  - {legacy_pilot_group_id: RQG-CAND-022, stable_group_id: RQG-CAND-27FA51D279, level2: 메인화면, requirement_name: 10분단위 근무계획 개선 주간스케쥴 반영을 구현, source_count: 1, first_source_id: REQ_TM_TE103, last_source_id: REQ_TM_TE103}
