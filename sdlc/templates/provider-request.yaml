@@ -1,0 +1,23 @@
+schema_version: 1
+provider_request:
+  request_id: REQ-PROVIDER-001
+  provider_type: SOURCE
+  operation: source.snapshot.read
+  project_context:
+    project_id: PROJECT-001
+    mode: BROWNFIELD
+    stage: DISCOVERY
+    profile: STANDARD
+  target:
+    target_type: WORK_UNIT
+    target_id: WORK-001
+    scope: null
+  inputs: []
+  write_intent: false
+  expected_revision: null
+  idempotency_key: null
+  permission_proof_ref: null
+  constraints:
+    bounded_scope_required: true
+    do_not_invent_missing_result: true
+  extensions: {}
