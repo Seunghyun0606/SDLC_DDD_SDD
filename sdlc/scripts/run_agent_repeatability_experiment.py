@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
-"""Execute the same external Agent command repeatedly and measure semantic repeatability.
+"""Execute the same provider command repeatedly and measure Stage Result repeatability.
 
-This runner does not provide an LLM. A real provider/Agent command must be supplied by the
-project environment. Each run must write a Stage Result JSON and its referenced artifact
-inside the run directory. Results are validated with validate_agent_stage_result.py and
-compared using the same semantic fingerprint rules.
+This utility does not provide an LLM. A project command must write a Stage Result JSON
+and its referenced artifact inside each run directory. Results are validated with
+validate_agent_stage_result.py and compared using semantic fingerprints.
+
+Provider classification is explicit:
+- EXTERNAL_AGENT: an actual Agent/LLM provider; only this class may produce an Agent empirical PASS.
+- VALIDATION_FIXTURE: deterministic/local fixture used only to prove runner mechanics.
+- any other class: executable provider, but not accepted as Agent empirical evidence.
+
+For full Harness repeatability including target/stage/artifact planning and Canonical
+execution, prefer run_work_repeatability_experiment.py.
 """
 from __future__ import annotations
 
@@ -59,6 +66,7 @@ def _format_command(command: list[str], *, run_dir: Path, run_index: int, result
 def run_experiment(config: dict[str, Any], output_root: Path) -> dict[str, Any]:
     _validate_config(config)
     provider_id = str(config["provider_id"])
+    provider_class = str(config.get("provider_class") or "UNCLASSIFIED_PROVIDER")
     run_count = int(config["run_count"])
     result_filename = str(config.get("result_filename") or "stage-result.json")
 
@@ -66,13 +74,16 @@ def run_experiment(config: dict[str, Any], output_root: Path) -> dict[str, Any]:
         return {
             "schema_version": 1,
             "provider_id": provider_id,
+            "provider_class": provider_class,
             "run_count_requested": run_count,
             "run_count_executed": 0,
             "verdict": "NOT_EXECUTED_PROVIDER_UNAVAILABLE_OR_DISABLED",
             "runs": [],
             "semantic_match_count": 0,
             "semantic_match_rate": None,
+            "provider_command_executed": False,
             "actual_provider_executed": False,
+            "actual_agent_provider_executed": False,
             "llm_determinism_proven": False,
         }
 
@@ -138,21 +149,30 @@ def run_experiment(config: dict[str, Any], output_root: Path) -> dict[str, Any]:
         verdict = "FAIL_STAGE_RESULT_VALIDATION"
     elif not all_match:
         verdict = "FAIL_SEMANTIC_REPEATABILITY_MISMATCH"
+    elif provider_class == "EXTERNAL_AGENT":
+        verdict = "PASS_REPEATED_AGENT_OUTPUT_SEMANTIC_MATCH"
+    elif provider_class == "VALIDATION_FIXTURE":
+        verdict = "PASS_REPEATABILITY_FIXTURE_PROVIDER"
     else:
-        verdict = "PASS_REPEATED_PROVIDER_OUTPUT_SEMANTIC_MATCH"
+        verdict = "PASS_REPEATABILITY_UNCLASSIFIED_PROVIDER"
 
+    command_executed = len(runs) > 0
+    actual_agent = provider_class == "EXTERNAL_AGENT" and all_commands_ok and all_valid
     return {
         "schema_version": 1,
         "provider_id": provider_id,
+        "provider_class": provider_class,
         "run_count_requested": run_count,
         "run_count_executed": len(runs),
         "verdict": verdict,
         "runs": runs,
         "semantic_match_count": match_count,
         "semantic_match_rate": (match_count / run_count) if run_count else None,
-        "actual_provider_executed": True,
+        "provider_command_executed": command_executed,
+        "actual_provider_executed": command_executed,
+        "actual_agent_provider_executed": actual_agent,
         "llm_determinism_proven": False,
-        "interpretation": "동일 Provider 명령의 관측된 Stage Result 의미 일치율이며 LLM의 이론적 결정론을 증명하지 않는다.",
+        "interpretation": "동일 Provider 명령의 관측된 Stage Result 의미 일치율이다. VALIDATION_FIXTURE 성공은 Agent/LLM 실증이 아니며 LLM의 이론적 결정론을 증명하지 않는다.",
     }
 
 
@@ -172,12 +192,16 @@ def main(argv: list[str] | None = None) -> int:
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({
         "provider_id": result["provider_id"],
+        "provider_class": result["provider_class"],
         "verdict": result["verdict"],
         "run_count_executed": result["run_count_executed"],
         "semantic_match_rate": result["semantic_match_rate"],
+        "actual_agent_provider_executed": result["actual_agent_provider_executed"],
     }, ensure_ascii=False))
     return 0 if result["verdict"] in {
-        "PASS_REPEATED_PROVIDER_OUTPUT_SEMANTIC_MATCH",
+        "PASS_REPEATED_AGENT_OUTPUT_SEMANTIC_MATCH",
+        "PASS_REPEATABILITY_FIXTURE_PROVIDER",
+        "PASS_REPEATABILITY_UNCLASSIFIED_PROVIDER",
         "NOT_EXECUTED_PROVIDER_UNAVAILABLE_OR_DISABLED",
     } else 1
 
