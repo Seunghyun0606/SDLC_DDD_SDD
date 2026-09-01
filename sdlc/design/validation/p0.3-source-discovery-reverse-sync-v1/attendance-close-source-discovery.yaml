@@ -1,0 +1,74 @@
+version: 1
+source_discovery_result:
+  metadata:
+    discovery_id: DISC-ATT-CLOSE-FIXTURE-001
+    source_root: sdlc/design/validation/candidate-a-mybatis-md-change-pilot/fixture/as-is
+    source_revision: fixture-as-is
+    provider_state: AVAILABLE
+    fixture_evidence: true
+  target:
+    source_group_id: RQG-CAND-6BB6D66548
+    canonical_rq_ids: []
+    program_ids:
+      - PGM-ATT-CLOSE-001
+  direct_relations:
+    - program_id: PGM-ATT-CLOSE-001
+      artifact_path: src/main/java/com/acme/attendance/AttendanceCloseService.java
+      relation: DIRECT_MANIFEST
+    - program_id: PGM-ATT-CLOSE-001
+      artifact_path: src/main/java/com/acme/attendance/AttendanceCloseMapper.java
+      relation: DIRECT_MANIFEST
+    - program_id: PGM-ATT-CLOSE-001
+      artifact_path: src/main/resources/mapper/AttendanceCloseMapper.xml
+      relation: DIRECT_MANIFEST
+  artifacts:
+    - path: src/main/java/com/acme/attendance/AttendanceCloseService.java
+      artifact_type: JAVA
+      file_hash: 76b6b52fd825111a42b78b7f20eaff6df8654a6840639605471d710351f22877
+      direct_program_ids: [PGM-ATT-CLOSE-001]
+      symbols: [closeDaily]
+      mapper_statement_ids: []
+      table_names: []
+      transaction_markers: ['@Transactional']
+    - path: src/main/java/com/acme/attendance/AttendanceCloseMapper.java
+      artifact_type: JAVA
+      file_hash: ab8d0c378ae7ebaffde71d410a0a3d60b251de109f7b07a72efd5cea633a2608
+      direct_program_ids: [PGM-ATT-CLOSE-001]
+      symbols: []
+      mapper_statement_ids: []
+      table_names: []
+      transaction_markers: []
+    - path: src/main/resources/mapper/AttendanceCloseMapper.xml
+      artifact_type: XML
+      file_hash: 48bd496402f8d191de67415d7e80e53b3b3ce8a890c88bfd130e7678fc0cac08
+      direct_program_ids: [PGM-ATT-CLOSE-001]
+      symbols: []
+      mapper_statement_ids: [selectPlannedMinutes, updateCloseStatus, upsertDailyAttendance]
+      table_names: [TB_ATT_CLOSE, TB_ATT_DAILY, TB_WORK_PLAN]
+      transaction_markers: []
+  blind_spots:
+    - runtime callers outside fixture are not proven complete
+    - database trigger/procedure dependencies are not scanned by this fixture-only discovery
+    - batch/external consumers outside direct manifest remain OPEN
+  evidence:
+    - evidence_id: EV-DISC-001
+      truth: OBSERVED
+      locator: AttendanceCloseService.java
+      value: closeDaily is transactional and reflects planned minutes before closing status
+    - evidence_id: EV-DISC-002
+      truth: OBSERVED
+      locator: AttendanceCloseService.java
+      value: planned minutes are truncated to 30-minute units in AS-IS fixture
+    - evidence_id: EV-DISC-003
+      truth: OBSERVED
+      locator: AttendanceCloseMapper.xml
+      value: READ TB_WORK_PLAN; WRITE TB_ATT_DAILY and TB_ATT_CLOSE
+  open_items:
+    - type: FIXTURE_ONLY_EVIDENCE
+      question: 실제 고객 Repository에서 동일 관계가 성립하는가?
+      escalation: ENGINEERING_OWNER
+  validation:
+    source_revision_present: PASS
+    file_hash_present: PASS
+    direct_relation_check: PASS
+    evidence_truth_check: PASS
