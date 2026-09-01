@@ -10,7 +10,7 @@ parent_commit: 8a88015e71e4bf19498cb18292444a7b0383675e
 main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
 candidate_design_version: v1.5.2-rc.2
-status: IMPLEMENTED_LOCAL_VALIDATED_CI_PENDING
+status: IMPLEMENTED_VALIDATED
 merge_to_main: false
 branch_policy:
   create_new_branches_under_session_namespace: true
@@ -34,10 +34,16 @@ validation:
   duplicate_external_ids: 0
   invalid_rows: 0
   requirement_intake_tests: 8
-  requirement_intake_tests_result: PASS_LOCAL
+  requirement_intake_tests_result: PASS
   inherited_worklist_tests: 6
-  inherited_worklist_tests_result: CI_PENDING
-  mermaid_docs_quality: PASS_LOCAL_NEW_DOCS
+  inherited_worklist_tests_result: PASS
+  combined_unittest_count: 14
+  mermaid_docs_quality: PASS
+  github_actions:
+    worklist_sync_quality_run: 36
+    worklist_sync_quality_result: SUCCESS
+    docs_quality_run: 18
+    docs_quality_result: SUCCESS
 actual_uploaded_requirements:
   file: 요구사항목록.xlsx
   source_hash: sha256:d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f
@@ -68,4 +74,4 @@ new_design_gaps:
     status: ENHANCED_POC_IMPLEMENTED
     title: Group Header Provenance Execution
 next_step: connect an actual Brownfield application source repository and validate DISCOVERY to PROGRAM on the selected RQ vertical slice
-updated_at: 2026-09-01T18:15:00+09:00
+updated_at: 2026-09-01T18:22:00+09:00
