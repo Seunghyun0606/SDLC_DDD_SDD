@@ -4,13 +4,23 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
+import yaml
 
 from bootstrap_project import bootstrap
+from build_command_context import build as build_command_context
 from build_reverse_sync_from_signals import build as build_reverse_sync
+from collect_bounded_source_evidence import collect as collect_bounded_source
 from execute_command_runtime import execute
 from resolve_artifact_profile import resolve as resolve_profile
 from resolve_stage_execution import resolve as resolve_stage
 from route_provider_command import build_plan
+from validate_p1_foundation import validate_bootstrap
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def load_actual(rel):
+    return yaml.safe_load((ROOT / rel).read_text(encoding="utf-8")) or {}
 
 
 def registry(source_state="UNCONFIGURED"):
@@ -27,12 +37,12 @@ def routing():
     }}
 
 
-def pack(stage, open_items=None, requested_actions=None, requested_outputs=None):
+def pack(stage, open_items=None, requested_actions=None, requested_outputs=None, write_proofs=None):
     return {"stage_input_pack":{
         "metadata":{"pack_id":"PACK-1","project_id":"GENERIC-1","project_mode":"BROWNFIELD","stage":stage,"source_revision":"rev-1","profile":"STANDARD"},
         "target":{"primary_id":"RQ-1","target_type":"RQ","related_ids":{}},
         "open_items":open_items or [],
-        "execution":{"requested_actions":requested_actions or [],"requested_outputs":requested_outputs or []},
+        "execution":{"requested_actions":requested_actions or [],"requested_outputs":requested_outputs or [],"write_proofs":write_proofs or {}},
     }}
 
 
@@ -55,12 +65,19 @@ def test_stage_nonblocking_open():
     assert result["nonblocking_open_ids"]==["OPEN-1"]
 
 
-def test_action_guard():
+def test_action_guard_and_write_proof():
     item={"open_id":"OPEN-WRITE","blocks_reasoning":False,"blocks_action":True,"action_scopes":["source.write"]}
     result=resolve_stage(routing(),pack("DEVELOPMENT",[item],["source.write"]))["stage_execution"]
     assert "source.write" in result["required_capabilities"]
     action=[x for x in result["side_effect_actions"] if x["action"]=="source.write"][0]
     assert action["state"]=="GUARDED"
+
+    clear_pack=pack("DEVELOPMENT",requested_actions=["source.write"])
+    clear_plan=resolve_stage(routing(),clear_pack)
+    context=build_command_context(clear_pack,clear_plan,"/work")
+    missing=[x for x in context["human_actions"] if x.get("type")=="WRITE_PROOF_REQUIRED"]
+    assert len(missing)==3
+    assert context["write_intent"] is True
 
 
 def test_optional_provider_missing_is_partial():
@@ -90,18 +107,35 @@ def bootstrap_config():
     return {"bootstrap":{"scan_policy":{"max_depth":2},"brownfield_markers":{"source_directories":["src"],"build_files":["pom.xml"]},"document_candidates":["README.md"],"data_candidates":["db"]},"greenfield_decisions":["development_language","framework"]}
 
 
-def test_bootstrap_modes():
+def test_bootstrap_modes_and_p1_compatibility():
     with tempfile.TemporaryDirectory() as td:
         root=Path(td)
         profile={"project":{"name":"generic","mode":"AUTO"},"artifacts":{"profile":"LITE"}}
-        result=bootstrap(root,profile,registry(),bootstrap_config())["project_bootstrap"]
+        doc=bootstrap(root,profile,registry(),bootstrap_config())
+        result=doc["project_bootstrap"]
         assert result["resolved_mode"]=="GREENFIELD"
         assert all(x["state"]=="OPEN" for x in result["technology_decisions"])
+        assert validate_bootstrap(doc)==[]
         (root/"pom.xml").write_text("<project/>",encoding="utf-8")
-        result=bootstrap(root,profile,registry(),bootstrap_config())["project_bootstrap"]
+        doc=bootstrap(root,profile,registry(),bootstrap_config())
+        result=doc["project_bootstrap"]
         assert result["resolved_mode"]=="BROWNFIELD"
         assert result["entry_gate"]["first_work_allowed"] is True
         assert result["entry_gate"]["source_claim_allowed"] is False
+        assert validate_bootstrap(doc)==[]
+
+
+def test_bounded_source_collection():
+    with tempfile.TemporaryDirectory() as td:
+        root=Path(td)
+        (root/"src").mkdir()
+        (root/"src"/"service.py").write_text("def run():\n    return 1\n",encoding="utf-8")
+        target={"source_target":{"target_id":"RQ-CAND-1","target_type":"RQ_CANDIDATE","direct_paths":["src/service.py"],"explicit_relations":[]}}
+        result=collect_bounded_source(root,"rev-1",target)["source_discovery_result"]
+        assert result["artifacts"][0]["path"]=="src/service.py"
+        assert result["artifacts"][0]["file_hash"]
+        assert result["constraints"]["source_behavior_is_not_business_truth"] is True
+        assert result["metadata"]["language_specific_parsing"] is False
 
 
 def test_generic_reverse_sync():
@@ -122,15 +156,62 @@ def test_generic_reverse_sync():
     assert result["protected_human_truth"] is True
 
 
+def test_repository_contract_shapes_and_no_pilot_leak():
+    graph_template=load_actual("sdlc/templates/reference-graph.yaml")["reference_graph"]
+    assert "nodes" in graph_template and "edges" in graph_template
+
+    open_template=load_actual("sdlc/templates/open-item.yaml")["open_item"]
+    for key in ("open_id","blocks_reasoning","blocks_action","action_scopes","required_evidence","escalation"):
+        assert key in open_template, key
+    assert "blocks_side_effecting_action" not in open_template
+
+    stage_routing=load_actual("sdlc/config/stage-routing.yaml")["stages"]
+    test_stage=stage_routing["TEST"]
+    assert "test.execute" not in (test_stage.get("required_capabilities") or [])
+    assert "test.execute" in (test_stage.get("side_effect_actions") or [])
+
+    profile=load_actual("sdlc/config/project-profile.example.yaml")
+    refs=[
+        profile["bootstrap"]["runtime_script"],
+        profile["artifacts"]["resolver"],
+        profile["handoff"]["stage_resolver"],
+        profile["handoff"]["command_context_builder"],
+        profile["source_discovery"]["inventory_script"],
+        profile["source_discovery"]["reverse_sync_script"],
+    ]
+    for rel in refs:
+        assert (ROOT/rel).is_file(), rel
+
+    active_core=[
+        "sdlc/config/stage-routing.yaml",
+        "sdlc/config/bootstrap-runtime.yaml",
+        "sdlc/config/source-discovery.yaml",
+        "sdlc/config/source-analyzers.yaml",
+        "sdlc/config/reverse-sync-classification.yaml",
+        "sdlc/scripts/bootstrap_project.py",
+        "sdlc/scripts/discover_source_inventory.py",
+        "sdlc/scripts/collect_bounded_source_evidence.py",
+        "sdlc/scripts/build_reverse_sync_from_signals.py",
+        "sdlc/scripts/route_provider_command.py",
+        "sdlc/scripts/execute_command_runtime.py",
+    ]
+    forbidden=["REQ_TM_TE","RQG-CAND-6BB6D66548","AttendanceClose","ATT-CLOSE","FORCE_CLOSE","TB_ATT_","10분"]
+    text="\n".join((ROOT/x).read_text(encoding="utf-8") for x in active_core)
+    for token in forbidden:
+        assert token not in text, f"pilot token leaked into active core: {token}"
+
+
 def main():
     tests=[
         test_profile,
         test_stage_nonblocking_open,
-        test_action_guard,
+        test_action_guard_and_write_proof,
         test_optional_provider_missing_is_partial,
         test_required_provider_missing_blocks_action,
-        test_bootstrap_modes,
+        test_bootstrap_modes_and_p1_compatibility,
+        test_bounded_source_collection,
         test_generic_reverse_sync,
+        test_repository_contract_shapes_and_no_pilot_leak,
     ]
     for test in tests:
         test()
