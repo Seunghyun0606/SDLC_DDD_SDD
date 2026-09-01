@@ -24,16 +24,19 @@ commands:
     skill: stage-procedure
     procedure_profile: CHANGE_CONTROL
     agent_level: L2_AGENT_REQUIRED
+    required_input_types: [STAGE_INPUT_PACK, CHANGE_SOURCE]
     expected_outputs: [CHANGE_REQUEST, STALE_OR_REVIEW_CANDIDATES, STAGE_INPUT_PACK]
   /check:
     skill: stage-procedure
     procedure_profile: STATUS_READ_MODEL
     agent_level: L1_WITH_DETERMINISTIC_GUARDS
+    required_input_types: [STAGE_INPUT_PACK]
     expected_outputs: [SDLC_STATUS_VIEW]
   /setup:
     skill: stage-procedure
     procedure_profile: PROJECT_SETUP
     agent_level: L1_WITH_DETERMINISTIC_GUARDS
+    required_input_types: [PROJECT_IDENTITY, PROJECT_MODE, PROVIDER_STATE]
     expected_outputs: [PROJECT_BOOTSTRAP_MANIFEST]
 
 stage_order:
