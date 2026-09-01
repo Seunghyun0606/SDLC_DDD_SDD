@@ -1,8 +1,9 @@
 open_item:
-  open_item_id: OPEN-<sequence>
+  open_id: OPEN-<sequence>
   project_id: ""
   scope_id: ""
   title: ""
+  question: ""
   description: ""
   state: OPEN  # OPEN | ASSUMED | RESOLVED | DEFERRED | GUARDED
   severity: WARNING  # INFO | WARNING | CRITICAL
@@ -10,10 +11,13 @@ open_item:
   created_at_stage: ""
   evidence_ids: []
   assumption: ""
-  blocks_analysis: false
-  blocks_design: false
-  blocks_side_effecting_action: false
-  deferred_action: ""
+
+  blocks_reasoning: false
+  blocks_action: false
+  action_scopes: []  # e.g. source.write, db.write, test.execute, canonical.publish, deploy.execute, or '*'
+  required_evidence: []
+  escalation: NONE
+
   resolution_criteria: ""
   resolved_by: ""
   resolved_at: ""
