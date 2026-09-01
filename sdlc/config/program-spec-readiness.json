@@ -1,6 +1,6 @@
 {
-  "schema_version": 4,
-  "candidate_design": "v1.6.0-rc.1",
+  "schema_version": 5,
+  "candidate_design": "v1.6-p0-p1-remediation",
   "readiness_states": ["READY", "PARTIAL", "EXECUTION_GUARDED"],
   "rules": {
     "ready_requires_zero_open": true,
@@ -9,7 +9,21 @@
     "ready_requires_functional_design_reference": true
   },
   "developer_spec_contract": "sdlc/design/contracts/developer-spec-contract.json",
-  "representation": "SINGLE_READINESS_TABLE",
+  "representation": "PROFILE_AWARE_SINGLE_READINESS_TABLE",
+  "profiles": {
+    "FAST": {
+      "purpose": "XS/S 변경에서 실제 구현·검증에 직접 필요한 항목만 필수로 한다.",
+      "required_field_ids": ["functional_design_ref", "implementation_target", "source_evidence", "query_data", "task_source", "ac_tc", "open_guard"]
+    },
+    "STANDARD": {
+      "purpose": "일반 SI/SM 기능의 전체 구현 준비도를 확인한다.",
+      "required_field_ids": ["functional_design_ref", "implementation_target", "source_evidence", "io_mapping", "query_data", "common_code", "transaction", "concurrency", "integration", "error", "security", "observability", "nfr", "standards", "task_source", "ac_tc", "open_guard"]
+    },
+    "FULL": {
+      "purpose": "대형/고위험 기능. STANDARD 전체 항목을 동일하게 요구하고 추가 Governance는 Project Overlay에서 다룬다.",
+      "required_field_ids": ["functional_design_ref", "implementation_target", "source_evidence", "io_mapping", "query_data", "common_code", "transaction", "concurrency", "integration", "error", "security", "observability", "nfr", "standards", "task_source", "ac_tc", "open_guard"]
+    }
+  },
   "required_fields": [
     {"id": "functional_design_ref", "label": "기능 설계 기준", "marker": "| 기능 설계 기준 |"},
     {"id": "implementation_target", "label": "실제 구현 대상", "marker": "| 실제 구현 대상 |"},
