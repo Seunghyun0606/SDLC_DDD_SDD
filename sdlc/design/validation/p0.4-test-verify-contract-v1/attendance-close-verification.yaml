@@ -1,0 +1,38 @@
+schema_version: 1
+artifact_type: VERIFICATION_RESULT
+verification_result_id: VER-TEX-RQG-6BB6D66548-P017-v1
+subject:
+  test_contract_id: TCN-RQG-6BB6D66548-P017-v1
+  test_execution_result_id: TEX-RQG-6BB6D66548-P017-v1
+  rq_group_candidate_id: RQG-CAND-6BB6D66548
+source_binding:
+  source_evidence_set_id: 113e74710f9147f1482621b95962585d4c20a700f08cf51f1c3df5d55ddb4497
+  production_source: false
+verification:
+  state: CONTRACT_PASS_RUNTIME_NOT_EXECUTED
+  contract_coverage_pass: true
+  runtime_execution_complete: false
+  all_required_tests_passed: false
+  actual_runtime_environment: false
+  business_rule_candidate_reviewed: false
+claims:
+  runtime_pass: false
+  production_verified: false
+stale_resolution:
+  impact: FIXTURE_CONTRACT_MATCH_ONLY
+  pgm_spec: FIXTURE_CONTRACT_MATCH_ONLY
+  test_scenarios: CONTRACT_COVERAGE_CURRENT_RUNTIME_UNVERIFIED
+  requirement: REVIEW_CANDIDATE
+open_blockers:
+  - TEST_COMMAND_OPEN
+  - RUNTIME_ENVIRONMENT_UNAVAILABLE
+  - BUSINESS_RULE_REVIEW_OPEN
+required_next_actions:
+  - Provide actual runtime environment and execute all required tests
+  - Resolve BUSINESS_RULE_REVIEW_OPEN with L2/Human
+  - Re-run against actual customer source before production verification
+evidence:
+  - AC-01~05 to TC-P017-01~04 direct mapping
+  - P0.3 source evidence set binding
+  - Explicit NOT_EXECUTED state for all required tests
+status: CONTRACT_PASS_RUNTIME_NOT_EXECUTED
