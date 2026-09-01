@@ -1,0 +1,17 @@
+schema_version: 1
+artifact_type: SOURCE_CHANGE_EVIDENCE
+source_change_evidence:
+  change_id: FILL_ME
+  source_revision_before: FILL_ME
+  source_revision_after: FILL_ME
+  changed_files:
+    - path: FILL_ME
+      before_hash: FILL_ME
+      after_hash: FILL_ME
+      signals: []
+      analyzer_id: FILL_ME
+  open_items: []
+  constraints:
+    signals_are_candidates: true
+    source_behavior_is_not_business_truth: true
+    no_human_truth_overwrite: true
