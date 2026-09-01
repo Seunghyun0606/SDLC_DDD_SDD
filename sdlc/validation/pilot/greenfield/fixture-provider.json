@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "provider_id": "DETERMINISTIC_STAGE_PROVIDER",
+  "provider_class": "VALIDATION_FIXTURE",
+  "enabled": true,
+  "timeout_seconds": 30,
+  "result_filename": "stage-result.json",
+  "command": [
+    "python",
+    "sdlc/validation/providers/deterministic_stage_provider.py",
+    "--context",
+    "{context_path}",
+    "--result",
+    "{result_path}"
+  ],
+  "note": "CI에서 /work executor wiring만 검증하는 deterministic fixture다. 실제 Agent/LLM 품질 검증 근거로 사용하지 않는다."
+}
