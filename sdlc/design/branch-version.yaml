@@ -10,27 +10,36 @@ parent_commit: d4e102be89552caea76c31552a48c16cc6192940
 main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
 candidate_design_version: v1.5.3-rc.3
-status: PILOT_LOCAL_VALIDATED_CI_PENDING
+status: PILOT_VALIDATED
 merge_to_main: false
 purpose: 실제 요구사항 XLSX 대표 RQ를 이용해 INTAKE부터 VERIFY/KNOWLEDGE까지 사용자 산출물과 Source-enabled Workflow를 파일럿 검증
 pilot:
   requirement_candidate: RQ-CAND-0001
   source_file: 요구사항목록.xlsx
   source_hash: sha256:d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f
-  external_ids: [REQ_TM_FL001, REQ_TM_FL002, REQ_TM_FL003]
+  external_ids:
+    - REQ_TM_FL001
+    - REQ_TM_FL002
+    - REQ_TM_FL003
   requirement_name: 탄력근로제 개선 최초근무계획 자동 설정하는 기능
   source_evidence: SIMULATED_SOURCE_FIXTURE
   verdict: PILOT_STRUCTURAL_PASS / REAL_SOURCE_PENDING
 validation:
   pilot_tests: 7
-  pilot_tests_result: PASS_LOCAL
+  pilot_tests_result: PASS
   overlay_tests_inherited: 6
   structure_tests_inherited: 8
   requirement_intake_tests_inherited: 8
   worklist_tests_inherited: 6
-  combined_unittest_count_expected: 35
+  combined_unittest_count: 35
   workflow_artifact_docs: 15
-  github_actions: PENDING
+  github_actions:
+    worklist_sync_quality_run: 49
+    worklist_sync_quality_result: SUCCESS
+    docs_quality_run: 25
+    docs_quality_result: SUCCESS
+  mermaid_markdown_files_checked: 70
+  mermaid_docs_quality: PASS
 stage_validation:
   intake: PASS_REAL_XLSX
   decompose: PASS_PILOT
@@ -45,4 +54,4 @@ stage_validation:
   verify: PASS_PILOT_REAL_SOURCE_PENDING
   knowledge: NOT_PROMOTED_PILOT_ONLY
 next_step: replace simulated fixture with actual Brownfield application source and rerun DISCOVERY through VERIFY
-updated_at: 2026-09-01T19:30:00+09:00
+updated_at: 2026-09-01T19:38:00+09:00
