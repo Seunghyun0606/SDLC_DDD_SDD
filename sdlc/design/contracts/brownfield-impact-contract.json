@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "candidate_design": "v1.5.7-rc.1",
+  "purpose": "Brownfield 영향분석에서 프로젝트와 무관하게 지켜야 할 공통 Graph/Coverage/Output 계약",
+  "scope": "CORE_COMMON_CONTRACT_ONLY",
+  "core_responsibility": {
+    "node_vocabulary": ["ENTRY_POINT", "SOURCE_SYMBOL", "DATA_ASSET", "EXTERNAL_INTERFACE", "EVENT", "CONFIG", "TEST", "MODULE", "CANONICAL_ARTIFACT"],
+    "edge_vocabulary": ["CALLER", "CALLEE", "READS", "WRITES", "TRANSACTION", "PUBLISHES", "SUBSCRIBES", "CONFIGURED_BY", "TESTED_BY", "MODULE_DEPENDS_ON", "TRACES_TO"],
+    "impact_states": ["DIRECT_IMPACT", "INDIRECT_IMPACT", "CHECK_REQUIRED", "OUT_OF_SCOPE"],
+    "coverage_dimensions": ["ENTRY_POINT", "CALLER", "CALLEE", "DATA_READ_WRITE", "TRANSACTION", "EXTERNAL_INTERFACE", "EVENT", "CONFIG_FEATURE_FLAG", "TEST", "MODULE_BUILD_DEPENDENCY", "DYNAMIC_RUNTIME_GAP"],
+    "coverage_gaps_must_be_reported": true,
+    "not_found_does_not_mean_no_impact": true
+  },
+  "project_adapter_boundary": {
+    "adapter_required_for_project_specific_resolution": true,
+    "core_does_not_implement_language_framework_specific_resolution": true,
+    "examples": ["Java/Spring call graph", "MyBatis/JPA/SQL lineage", "Stored Procedure/Trigger", "Kafka/JMS/Event mapping", "Reflection/Dynamic dispatch", "Framework-specific configuration"],
+    "adapter_location": "sdlc/custom/project/adapters/impact/",
+    "profile": "sdlc/config/impact-adapter-profile.example.yaml"
+  },
+  "adapter_output_contract": {
+    "required": ["adapter_id", "project_context", "nodes", "edges", "coverage", "coverage_gaps", "unsupported_patterns"],
+    "node_required": ["id", "type", "locator", "confidence", "status"],
+    "edge_required": ["from", "to", "type", "evidence", "confidence", "status"],
+    "coverage_required": ["dimension", "status", "evidence_or_gap"]
+  },
+  "completion_rules": {
+    "without_project_adapter": "PARTIAL_PROJECT_ADAPTER_REQUIRED",
+    "with_adapter_but_coverage_gap": "PARTIAL_COVERAGE_GAPS",
+    "all_required_dimensions_checked": "STRUCTURAL_COVERAGE_COMPLETE",
+    "structural_coverage_does_not_confirm_business_impact": true
+  }
+}
