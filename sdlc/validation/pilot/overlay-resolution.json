@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "project_overlay": "sdlc/validation/pilot/project-overlay.json",
+  "domain_overlays": ["sdlc/validation/pilot/time-domain-overlay.json"]
+}

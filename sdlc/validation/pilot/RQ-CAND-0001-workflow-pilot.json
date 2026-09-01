@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "pilot_id": "PILOT-RQ-CAND-0001",
+  "input": {
+    "xlsx": "요구사항목록.xlsx",
+    "sha256": "sha256:d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f",
+    "external_ids": ["REQ_TM_FL001", "REQ_TM_FL002", "REQ_TM_FL003"]
+  },
+  "source_evidence_type": "SIMULATED_SOURCE_FIXTURE",
+  "workflow": ["INTAKE", "DECOMPOSE", "CLARIFY", "PROCESS", "DISCOVERY", "IMPACT", "DESIGN", "PROGRAM", "DEVELOPMENT", "TEST", "VERIFY", "KNOWLEDGE"],
+  "fixture_hashes": {
+    "fixture/as-is/src/main/java/com/acme/tm/FlexibleWorkPlanController.java": "sha256:9bdf4da5e5a0d54354cb437c04450095fe68590d7025285c6334ec5b71d6475c",
+    "fixture/as-is/src/main/java/com/acme/tm/FlexibleWorkPlanService.java": "sha256:490fd18a0e8a006d71805e9675dfd0707b764bb63fdd3758a128d76f1313fab4",
+    "fixture/as-is/src/main/resources/mapper/FlexibleWorkPlanMapper.xml": "sha256:080ef6f36e761984065d9e36b8127f7c58ab3de54156e17bb15be991c6153612",
+    "fixture/as-is/db/schema.sql": "sha256:6004b749a4dc613e0a9c3781c03c0d08afd0ea1d7528a06fbc83577960b76b50",
+    "fixture/to-be/src/main/java/com/acme/tm/FlexibleWorkPlanController.java": "sha256:48254e505cc2353aed6bd20e34b296155bd2eb90f0aa07fa971b292dea2bce2f",
+    "fixture/to-be/src/main/java/com/acme/tm/FlexibleWorkPlanService.java": "sha256:6e370964640c92b0001da72f40e15b92b9a07d423619086d77be9e53dfd570a0",
+    "fixture/to-be/src/main/resources/mapper/FlexibleWorkPlanMapper.xml": "sha256:080ef6f36e761984065d9e36b8127f7c58ab3de54156e17bb15be991c6153612",
+    "fixture/to-be/db/schema.sql": "sha256:6004b749a4dc613e0a9c3781c03c0d08afd0ea1d7528a06fbc83577960b76b50",
+    "fixture/to-be/tests/FlexibleWorkPlanServiceTest.md": "sha256:43fa42c7aa6ad83976ce1a123261ce33e869623e338cf5204bcf07beef603766"
+  },
+  "verdict": "PILOT_STRUCTURAL_PASS / REAL_SOURCE_PENDING"
+}

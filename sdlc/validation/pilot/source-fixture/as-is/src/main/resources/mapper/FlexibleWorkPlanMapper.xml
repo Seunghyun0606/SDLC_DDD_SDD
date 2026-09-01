@@ -1,0 +1,5 @@
+<mapper namespace="com.acme.tm.FlexibleWorkPlanMapper">
+  <select id="selectPlan">SELECT * FROM TB_TM_FLEX_PLAN WHERE EMP_ID = #{employeeId} AND PERIOD_ID = #{periodId}</select>
+  <select id="selectDefaultSchedule">SELECT * FROM TB_TM_DEFAULT_SCHEDULE WHERE EMP_ID = #{employeeId} AND PERIOD_ID = #{periodId}</select>
+  <update id="upsertPlan">MERGE INTO TB_TM_FLEX_PLAN T USING DUAL ON (T.EMP_ID = #{employeeId} AND T.PERIOD_ID = #{periodId}) WHEN MATCHED THEN UPDATE SET T.PLAN_JSON = #{plan} WHEN NOT MATCHED THEN INSERT (EMP_ID, PERIOD_ID, PLAN_JSON) VALUES (#{employeeId}, #{periodId}, #{plan})</update>
+</mapper>

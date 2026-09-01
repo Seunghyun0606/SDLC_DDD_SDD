@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "name": "pilot-java-mybatis-oracle",
+  "templates": {
+    "program-spec.md": {
+      "append_sections": {
+        "## 본문": "### Pilot Project Context\n- SIMULATED Java/MyBatis/Oracle fixture를 기준으로 Source Evidence 항목을 확인한다."
+      }
+    }
+  }
+}

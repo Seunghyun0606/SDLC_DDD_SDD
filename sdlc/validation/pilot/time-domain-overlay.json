@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "name": "pilot-time-domain",
+  "templates": {
+    "program-spec.md": {
+      "append_sections": {
+        "## 본문": "### Pilot Time Domain Context\n- 근무계획/기본스케줄 관계는 fixture 관찰이며 Business Rule로 자동 확정하지 않는다."
+      }
+    }
+  }
+}
