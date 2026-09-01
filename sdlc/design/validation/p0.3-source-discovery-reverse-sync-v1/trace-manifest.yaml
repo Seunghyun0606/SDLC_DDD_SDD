@@ -1,0 +1,64 @@
+version: 1
+synthetic_fixture_only: true
+trace_manifest:
+  source_root_before: sdlc/design/validation/candidate-a-mybatis-md-change-pilot/fixture/as-is
+  source_root_after: sdlc/design/validation/candidate-a-mybatis-md-change-pilot/fixture/after-cr
+  source_revision_before: fixture-as-is
+  source_revision_after: fixture-after-cr
+  source_group_id: RQG-CAND-6BB6D66548
+  requirement_context:
+    source_requirement_ids:
+      - REQ_TM_TE016
+      - REQ_TM_TE017
+      - REQ_TM_TE018
+      - REQ_TM_TE019
+      - REQ_TM_TE020
+      - REQ_TM_TE021
+      - REQ_TM_TE022
+      - REQ_TM_TE023
+      - REQ_TM_TE024
+      - REQ_TM_TE025
+      - REQ_TM_TE026
+      - REQ_TM_TE027
+      - REQ_TM_TE028
+      - REQ_TM_TE029
+      - REQ_TM_TE030
+      - REQ_TM_TE031
+      - REQ_TM_TE032
+      - REQ_TM_TE033
+      - REQ_TM_TE034
+      - REQ_TM_TE035
+      - REQ_TM_TE036
+      - REQ_TM_TE037
+      - REQ_TM_TE038
+      - REQ_TM_TE039
+      - REQ_TM_TE040
+      - REQ_TM_TE041
+      - REQ_TM_TE042
+      - REQ_TM_TE043
+      - REQ_TM_TE044
+      - REQ_TM_TE045
+      - REQ_TM_TE046
+      - REQ_TM_TE047
+      - REQ_TM_TE048
+      - REQ_TM_TE049
+      - REQ_TM_TE050
+      - REQ_TM_TE051
+      - REQ_TM_TE052
+      - REQ_TM_TE053
+      - REQ_TM_TE054
+    boundary_status: OPEN
+    canonical_rq_ids: []
+  programs:
+    - program_id: PGM-ATT-CLOSE-001
+      relation_source: existing_fixture_program_spec
+      artifacts:
+        - src/main/java/com/acme/attendance/AttendanceCloseService.java
+        - src/main/java/com/acme/attendance/AttendanceCloseMapper.java
+        - src/main/resources/mapper/AttendanceCloseMapper.xml
+      related_documents:
+        impact_analysis: sdlc/design/validation/candidate-a-mybatis-md-change-pilot/docs/03_impact/RQ-PILOT-017/impact-analysis.md
+        program_spec: sdlc/design/validation/candidate-a-mybatis-md-change-pilot/docs/05_program/RQ-PILOT-017/specs/PGM-ATT-CLOSE-001.md
+        test_scenarios: sdlc/design/validation/candidate-a-mybatis-md-change-pilot/docs/07_test/RQ-PILOT-017/test-scenarios.md
+        requirement: sdlc/design/validation/candidate-a-mybatis-md-change-pilot/docs/01_requirements/RQ-PILOT-017/requirement.md
+        change_request: sdlc/design/validation/candidate-a-mybatis-md-change-pilot/docs/01_requirements/RQ-PILOT-017/CR-PILOT-001.md
