@@ -1,0 +1,33 @@
+overlay:
+  overlay_id: OVL-DEMO-GENERIC-001
+  scope:
+    project_id: DEMO-GENERIC-001
+    domain: ""
+    applies_to: [SOURCE_DISCOVERY]
+  state: ACTIVE
+  revision: 1
+  trigger:
+    type: PROVIDER_OR_PATH_REQUIRES_PROJECT_BINDING
+    reason: actual project source root differs from generic default
+    detected_at_stage: FOUNDATION_BOOTSTRAP
+    detected_by: bootstrap-agent
+  basis:
+    truth_state: OBSERVED
+    evidence_ids: [EVID-SRC-ROOT-001]
+    source_refs: [src]
+    project_fact: source root is src
+  change:
+    target_key: bootstrap.source_root
+    core_or_profile_value: null
+    project_value: src
+    rationale: bind the discovered project source root only
+  safety:
+    copies_core_truth: false
+    sample_specific_only: false
+    affects_side_effecting_action: false
+    requires_human_review: false
+  lifecycle:
+    activated_by: bootstrap-agent
+    activated_at: "2026-09-02T00:00:00+09:00"
+    supersedes: ""
+    next_review_trigger: SOURCE_LAYOUT_CHANGE
