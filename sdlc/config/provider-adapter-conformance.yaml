@@ -1,0 +1,61 @@
+version: 1
+status: ACTIVE_P0_CANDIDATE
+
+adapter_contract:
+  required_functions: [describe, invoke]
+  request_schema: sdlc/templates/provider-request.yaml
+  response_schema: sdlc/templates/provider-response.yaml
+  exact_capability_match: true
+  request_response_correlation_required: true
+  unsupported_operation_must_not_return_ok: true
+
+provider_result_semantics:
+  provider_statuses: [OK, PARTIAL, BLOCKED, ERROR]
+  test_outcome_is_separate_from_provider_status: true
+  source_test_evidence_default_truth: OBSERVED
+  business_truth_auto_promotion_forbidden: true
+
+runtime_safety:
+  automatic_retry_in_reference_adapter: false
+  timeout_must_be_bounded: true
+  partial_must_preserve_warning: true
+  blocked_or_error_requires_reason: true
+  source_scope_must_be_bounded: true
+  subprocess_shell_mode_forbidden: true
+
+reference_adapters:
+  production_ready: false
+  purposes: [CONFORMANCE, DEVELOPMENT, LOCAL_PILOT]
+  source:
+    module: sdlc.adapters.reference.local_filesystem_source
+    read_only: true
+    stack_neutral: true
+  test:
+    module: sdlc.adapters.reference.subprocess_test
+    stack_neutral: true
+    production_sandbox: false
+    discovery_patterns_must_be_injected: true
+
+conformance:
+  runner: sdlc/scripts/run_provider_conformance.py
+  required_cases:
+    - SUCCESS
+    - PARTIAL_OR_BOUNDED_LIMIT
+    - UNSUPPORTED_OPERATION
+    - UNAVAILABLE_INPUT
+    - TEST_PASS
+    - TEST_FAIL
+    - TIMEOUT
+  core_change_required_when_adapter_replaced: false
+
+anti_overfitting:
+  pilot_data_may_define_core_contract: false
+  pilot_data_role: REGRESSION_FIXTURE_ONLY
+  require_generic_conformance: true
+  forbidden_core_tokens:
+    - REQ_TM_TE
+    - RQG-CAND-6BB6D66548
+    - 근태
+    - AttendanceClose
+    - TB_ATT_
+    - 10분
