@@ -18,6 +18,9 @@
 - Source가 연결된 경우 DISCOVERY 이후에는 가능한 위치(파일/심볼/라인/Locator)와 Source Hash를 남긴다.
 - Source write 전 Target confidence와 Execution Guard를 확인한다.
 - Output은 Canonical relation을 갱신하고 해당 Template 기반 Artifact를 생성/갱신한다.
+- 모든 Stage Reference의 `## 실행 계약(Agent Execution Contract)`을 실행 지침으로 사용한다. 저수준 Agent가 임의 순서를 만들지 않고 `입력 필드 → 근거 분류 → 실행 순서 → 계속/중단 → 출력 매핑 → 품질 게이트 → 미확정/실패 처리`를 따른다.
+- 공통 실행계약은 `sdlc/design/contracts/agent-execution-contract.json`을 따른다.
+- 프로젝트 고유 탐색/Framework 해석은 Core Reference에 발명하지 않고 Project Profile/Adapter에서 제공한다.
 
 ## References
 - `references/requirement.md`
