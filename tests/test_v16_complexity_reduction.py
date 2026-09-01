@@ -29,6 +29,7 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
         rules=harness['program_readiness_rules']
         self.assertEqual('SINGLE_READINESS_TABLE',rules['representation'])
         self.assertEqual(17,rules['readiness_item_count'])
+        self.assertEqual(7,rules['fast_required_item_count'])
         program=(ROOT/'sdlc/templates/core/program-spec.md').read_text(encoding='utf-8')
         self.assertEqual(1,program.count('### 구현 준비도'))
 
@@ -82,11 +83,12 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
         self.assertFalse(harness['source_drift_reverse']['auto_rewrite_artifact'])
         self.assertFalse(harness['source_drift_reverse']['auto_update_business_truth'])
 
-    def test_branch_metadata_does_not_self_validate(self):
+    def test_branch_metadata_records_ci_without_self_declaring_production_validation(self):
         text=(ROOT/'sdlc/design/branch-version.yaml').read_text(encoding='utf-8')
-        self.assertIn('status: P0_IMPLEMENTATION_COMPLETE_EXTERNAL_VALIDATION_PENDING',text)
-        self.assertIn('verdict: RC_P0_IMPLEMENTED_EXTERNAL_EMPIRICAL_VALIDATION_PENDING',text)
+        self.assertIn('status: P0_P1_CI_BEHAVIORAL_AND_INTEGRATION_PASS_EXTERNAL_EMPIRICAL_PENDING',text)
+        self.assertIn('verdict: CONTROLLED_PILOT_READY_CI_PASS_EXTERNAL_AGENT_HUMAN_VALIDATION_PENDING',text)
         self.assertIn('self_assessment_is_not_validation: true',text)
+        self.assertIn('production_ready_claimed: false',text)
         self.assertNotIn('status: VALIDATED',text)
         self.assertNotIn('verdict: VALIDATED',text)
         self.assertNotIn('verdict: PASS\n',text)
