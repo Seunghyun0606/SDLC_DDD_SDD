@@ -1,13 +1,14 @@
 ---
 document_type: customer_functional_spec
 requirement_id: RQ-PILOT-017
-revision: 2
+revision: 3
 customer_view_status: REVIEW_REQUIRED
-scope_version: 2
+scope_version: 3
 source_artifacts:
   - requirement-analysis.md#rev2
   - process-analysis.md#rev2
   - functional-design.md#rev2
+  - sample/RQ-PILOT-017_development-blueprint.md
 ---
 # 근태마감 10분 단위 근무계획 반영 — 고객 기능 정의서
 
@@ -30,14 +31,38 @@ source_artifacts:
 - 전자결재 시스템 자체 기능 변경
 - 근무계획 수립 화면 변경
 
-## 3. AS-IS / TO-BE
+## 3. 6W 업무정의
+
+| 관점 | 고객이 확인할 내용 | 현재 상태 |
+|---|---|---|
+| Who — 누가 | 근태마감 권한을 가진 업무담당자 또는 마감 Batch가 처리한다 | 실제 권한/Profile 확인 필요 |
+| When — 언제 | 일근태 마감 시, 또는 월마감 후 승인 수정요청에 따라 재집계할 때 | 일부 확인 |
+| Where — 어디서 | 근태마감 업무기능에서 수행한다 | 실제 메뉴/Batch Entry 확인 필요 |
+| What — 무엇을 | 대상 사원/근무일자의 근무계획 시간을 근태 일집계에 반영한다 | 확인 |
+| How — 어떻게 | 월마감/강제마감/승인여부를 확인하고 10분 단위로 계산하여 반영한다 | 설계안 |
+| Why — 왜 | 계획시간과 실제 근태마감 결과의 단위를 일치시키고 월마감 후 변경을 통제하기 위해 | 확인 |
+
+### 고객 관점 업무문장
+
+```text
+근태마감 권한을 가진 사용자 또는 마감 Batch가
+일근태 마감 시 또는 승인된 월마감 수정요청 재집계 시
+근태마감 기능에서
+대상 사원/근무일자의 근무계획 시간을
+마감상태와 승인조건을 검증한 뒤 10분 단위로 계산해 일집계에 반영한다.
+이는 계획과 근태마감 결과를 일치시키고 월마감 후 임의 수정을 방지하기 위함이다.
+```
+
+Who/Where의 실제 Profile/Menu가 확인되면 이 문장을 Revision한다.
+
+## 4. AS-IS / TO-BE
 | 항목 | AS-IS | TO-BE |
 |---|---|---|
 | 근무계획 반영 단위 | 30분 단위 절삭 | 10분 단위 반영 |
 | 월마감 후 수정 | 정책/구현 불명확 | 승인 수정요청만 재집계 허용 |
 | 강제마감 | 별도 예외 없음 | 월마감 후 재집계 불가 |
 
-## 4. 업무 흐름
+## 5. 업무 흐름
 ```text
 근태마감 요청
 → 월마감 여부 확인
@@ -51,20 +76,21 @@ source_artifacts:
                  └ 미승인: 재집계 불가
 ```
 
-## 5. 업무 규칙
+## 6. 업무 규칙
 | 규칙 | 조건 | 결과 | 예외 | 확인상태 |
 |---|---|---|---|---|
 | BR-P017-01 | 일반 근태마감 | 근무계획을 10분 단위로 반영 | 없음 | 제안 |
 | BR-P017-02 | 월마감 + 승인 수정요청 | 재집계 허용 | FORCE_CLOSE 제외 | 고객확인 필요 |
 | BR-P017-03 | 월마감 + FORCE_CLOSE | 재집계 불가 | 없음 | 고객확인 필요 |
 
-## 6. 고객 접점 영향
-- 화면: 직접 UI 변경 없음으로 가정
+## 7. 고객 접점 영향
+- 화면: 직접 UI 변경 없음으로 가정. 실제 근태마감 메뉴/Action은 확인 필요
+- 입력/표시 Field: 신규 Field 없음으로 가정. 실제 `마감유형/수정요청` 입력 위치 확인 필요
 - 운영: 월마감 후 수정요청 승인 절차와 연계됨
 - Data: 근태 일집계 결과가 변경될 수 있음
-- Interface: 본 Pilot 범위에서는 직접 변경 없음
+- Interface: 본 Pilot 범위에서는 직접 변경 없음. 승인상태의 Upstream 생성경로는 확인 필요
 
-## 7. 완료 조건
+## 8. 완료 조건
 | AC | 고객 관점 완료 조건 | 확인 방법 |
 |---|---|---|
 | AC-01 | 485분 계획이 480분으로 반영 | Test 결과 확인 |
@@ -72,19 +98,22 @@ source_artifacts:
 | AC-04 | 월마감 후 미승인 요청은 재집계 실패 | Test 결과 확인 |
 | AC-05 | 승인 요청이어도 FORCE_CLOSE는 재집계 실패 | Test 결과 확인 |
 
-## 8. 고객 확인 필요사항
+## 9. 고객 확인 필요사항
+- [ ] 실제 처리 주체의 권한/Profile
+- [ ] 실제 근태마감 메뉴/Batch Entry
 - [ ] 승인 수정요청의 공식 승인 상태값/승인주체
 - [ ] FORCE_CLOSE의 업무 정의와 실행 권한
 - [ ] 기존 월마감 데이터 중 소급 재처리 대상 존재 여부
 - [ ] 10분 미만 잔여분 처리 정책
 
-## 9. 참고/근거
+## 10. 참고/근거
 - Legacy Requirement: REQ_TM_TE016~REQ_TM_TE054
 - Change: CR-PILOT-001
 - Pilot Source: AttendanceCloseService / MyBatis Mapper Fixture
 
-## 10. 변경 이력
+## 11. 변경 이력
 | Revision | 변경내용 | 원인 | 상태 |
 |---:|---|---|---|
 | 1 | 10분 단위 근무계획 반영 | Legacy RQ | DRAFT |
 | 2 | 월마감 승인 수정요청/FORCE_CLOSE 정책 추가 | CR-PILOT-001 | REVIEW_REQUIRED |
+| 3 | 6W 업무정의 및 고객 접점 명시 | Design improvement | REVIEW_REQUIRED |
