@@ -45,6 +45,38 @@ def validate(root: Path) -> list[str]:
             if spec.get('source_evidence'):
                 for marker in c['source_evidence_markers']:
                     if marker not in txt: errors.append(f'{stage}: source-enabled template missing {marker}')
+            if stage == 'PROCESS':
+                for marker in c.get('process_sixw_required_markers', []):
+                    if marker not in txt: errors.append(f'{stage}: six-w marker missing {marker}')
+            if stage == 'DESIGN':
+                for marker in c.get('functional_design_required_markers', []):
+                    if marker not in txt: errors.append(f'{stage}: developer design marker missing {marker}')
+            if stage == 'PROGRAM':
+                for marker in c.get('program_spec_required_markers', []):
+                    if marker not in txt: errors.append(f'{stage}: program detail marker missing {marker}')
+
+    sixw_path=root/c['business_scenario']['contract']
+    if sixw_path.is_file():
+        sixw=json.loads(sixw_path.read_text(encoding='utf-8'))
+        dims=sixw.get('required_dimensions', [])
+        if [x.get('id') for x in dims] != ['who','when','where','what','how','why']:
+            errors.append('business scenario contract must define who/when/where/what/how/why in order')
+        if not sixw.get('rules', {}).get('missing_dimension_must_be_open_not_invented'):
+            errors.append('business scenario missing dimension must remain OPEN')
+
+    dev_path=root/c['developer_specification']['contract']
+    if dev_path.is_file():
+        dev=json.loads(dev_path.read_text(encoding='utf-8'))
+        if not dev.get('rules', {}).get('not_applicable_requires_reason'):
+            errors.append('developer spec N/A must require a reason')
+        if not c['developer_specification'].get('legacy_program_dor_17_fields_preserved'):
+            errors.append('legacy 17-field Program DoR must remain preserved')
+
+    sop_path=root/c['sop_extraction']['skill']
+    if sop_path.is_file():
+        sop=sop_path.read_text(encoding='utf-8')
+        for marker in ['누가(Who)','언제(When)','어디서(Where)','무엇을(What)','어떻게(How)','왜(Why)','Business Rule Candidate','structured_content']:
+            if marker not in sop: errors.append(f'SOP extraction skill missing marker {marker}')
 
     core=(root/'.cursor/rules/00-core.mdc').read_text(encoding='utf-8') if (root/'.cursor/rules/00-core.mdc').exists() else ''
     for marker in c['core_invariant_markers']:
