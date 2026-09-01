@@ -1,0 +1,74 @@
+version: 1
+status: P0_BASELINE_CANDIDATE
+purpose: >-
+  Phase 0의 논리적 manifest/capabilities/decisions/contracts 역할을 현재 분산형
+  authoritative artifact에 연결하는 index다. 이 파일은 원본 truth를 복제하지 않는다.
+
+baseline_roles:
+  design_baseline:
+    authority: sdlc/design/baselines/AI_SDLC_Harness_Full_Design_v1.5.1.md
+  business_source_manifest:
+    authority: sdlc/starter/onboarding-package-v1/02_business-source-manifest.yaml
+    original_phase0_role: manifest
+  artifact_profile:
+    authority: sdlc/config/artifact-profiles.yaml
+  project_profile:
+    authority: sdlc/config/project-profile.example.yaml
+  requirement_boundary:
+    authority: sdlc/config/rq-boundary.yaml
+    decision_artifacts:
+      - sdlc/templates/requirement-review-decision.yaml
+      - sdlc/config/requirement-review.yaml
+  stage_handoff:
+    authority: sdlc/templates/stage-input-pack.yaml
+    granularity: sdlc/config/stage-pack-granularity.yaml
+  canonical_publish:
+    authority: sdlc/config/canonical-publish.yaml
+    request: sdlc/templates/canonical-publish-request.yaml
+  source_discovery:
+    authority: sdlc/config/source-discovery.yaml
+  reverse_sync:
+    authority: sdlc/design/contracts/source-reverse-sync-contract.md
+    classification: sdlc/config/reverse-sync-classification.yaml
+  test_verification:
+    authority: sdlc/config/test-verification.yaml
+  provider_capabilities:
+    authority: sdlc/config/provider-registry.example.yaml
+    original_phase0_role: capabilities
+  provider_boundary:
+    authority: sdlc/design/contracts/runtime-provider-boundary.md
+  adapter_conformance:
+    authority: sdlc/design/contracts/provider-adapter-conformance.md
+  invocation_recovery:
+    authority: sdlc/design/contracts/runtime-invocation-recovery.md
+  command_runtime:
+    authority: sdlc/design/contracts/command-runtime-integration.md
+  e2e_status:
+    authority: sdlc/config/e2e-orchestration.yaml
+  low_agent_execution:
+    authority: sdlc/design/contracts/low-agent-execution-contract.md
+
+original_phase0_mapping:
+  manifest.yaml:
+    current_model: INDEXED_DISTRIBUTED
+    primary_authority: sdlc/starter/onboarding-package-v1/02_business-source-manifest.yaml
+    note: 단일 전역 manifest로 모든 truth를 복제하지 않는다.
+  capabilities.yaml:
+    current_model: PROVIDER_CAPABILITY_REGISTRY
+    primary_authority: sdlc/config/provider-registry.example.yaml
+    note: Capability는 provider registry와 project overlay에서 관리한다.
+  decisions.yaml:
+    current_model: TYPED_DECISION_ARTIFACTS
+    primary_authorities:
+      - sdlc/templates/requirement-review-decision.yaml
+      - sdlc/config/canonical-publish.yaml
+      - sdlc/config/rq-boundary.yaml
+    note: 단일 decisions 파일에 서로 다른 decision lifecycle을 중복 저장하지 않는다.
+  contracts:
+    current_model: DISTRIBUTED_CONTRACTS
+    root: sdlc/design/contracts
+
+truth_ownership:
+  index_is_authoritative_for_content: false
+  referenced_artifact_is_authoritative: true
+  duplicate_truth_in_index: DENY
