@@ -31,8 +31,8 @@ class HarnessStructureTest(unittest.TestCase):
     def test_templates_keep_traceability_and_uncertainty_sections(self):
         for p in (ROOT/'sdlc/templates/core').glob('*.md'):
             txt=p.read_text(encoding='utf-8')
-            self.assertIn('## 미확정/Alert/Assumption',txt,p.name)
-            self.assertIn('## 관련 ID/Traceability',txt,p.name)
+            self.assertIn('## 미확정 사항·주의·가정',txt,p.name)
+            self.assertIn('## 관련 ID 및 추적성',txt,p.name)
 
     def test_overlay_precedence_is_portable(self):
         profile=(ROOT/'sdlc/config/project-profile.example.yaml').read_text(encoding='utf-8')
