@@ -42,6 +42,7 @@ def validate_request(data,registry=None):
  if req.get("write_intent") is True:
   for k in ("expected_revision","idempotency_key","permission_proof_ref"):
    if not req.get(k):add(e,"P06-026",f"write request requires {k}")
+ if not isinstance(req.get("extensions",{}),dict):add(e,"P06-027","extensions must be an object")
  if registry:
   c=[p for p in registry_root(registry).get("providers") or [] if p.get("enabled") is True and p.get("provider_state") in {"AVAILABLE","DEGRADED"} and p.get("provider_type")==req.get("provider_type") and req.get("operation") in (p.get("capabilities") or [])]
   if not c:add(e,"P06-028","no usable provider advertises requested capability")
