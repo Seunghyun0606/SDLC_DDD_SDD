@@ -28,8 +28,14 @@ jobs:
             sdlc/scripts/build_command_context.py \
             sdlc/scripts/route_provider_command.py \
             sdlc/scripts/execute_command_runtime.py \
+            sdlc/scripts/evaluate_open_items.py \
             sdlc/scripts/discover_source_inventory.py \
+            sdlc/scripts/collect_bounded_source_evidence.py \
             sdlc/scripts/build_reverse_sync_from_signals.py \
             sdlc/scripts/test_structural_redesign.py
+      - name: Run P1 compatibility tests
+        run: |
+          python sdlc/scripts/test_p1_foundation.py
+          python sdlc/scripts/test_p1_runtime.py
       - name: Run structural redesign tests
         run: python sdlc/scripts/test_structural_redesign.py
