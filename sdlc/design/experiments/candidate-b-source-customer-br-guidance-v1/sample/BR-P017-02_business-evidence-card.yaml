@@ -1,0 +1,68 @@
+business_evidence_card:
+  source:
+    source_id: BSRC-PILOT-001
+    source_type: POLICY
+    title: "근태 운영 정책"
+    uri: "policy/근태운영정책_2026.pdf"
+    revision: 5
+    authority:
+      level: A1
+      owner_role: 인사운영팀
+    scope:
+      country: KR
+      company: ALL
+      organization: null
+      domain: ATTENDANCE
+    effective:
+      from: 2026-01-01
+      to: null
+    supersedes: [BSRC-PILOT-OLD]
+    freshness:
+      state: CURRENT_FOR_PILOT_FIXTURE
+      last_verified_at: 2026-09-01
+      content_hash: PILOT_HASH_POLICY_V5
+  locator:
+    page: 17
+    section: "5.3 월마감 이후 수정"
+  evidence_fragment:
+    id: BEV-PILOT-001-01
+    statement: "월마감 이후에는 승인된 수정요청만 재집계할 수 있다."
+    extraction_confidence: HIGH
+  br_candidate:
+    id: BR-P017-02
+    statement: "월마감 이후에는 승인된 수정요청만 재집계할 수 있다."
+    conditions:
+      - "month_close_status = CLOSED"
+    result: ALLOW_RECALCULATION
+    exceptions:
+      - "close_type = FORCE_CLOSE"
+    scope:
+      country: KR
+      company: ALL
+      domain: ATTENDANCE
+    effective:
+      from: 2026-01-01
+      to: null
+    authority:
+      level: A1
+      owner_role: 인사운영팀
+    evidence_ids:
+      - BEV-PILOT-001-01
+      - CR-PILOT-001
+    conflicts: []
+    blast_radius: HIGH
+    status: CANDIDATE
+  action_permissions:
+    use_for_analysis: ALLOW
+    use_for_draft_design: ALLOW
+    use_for_source_generation: REQUIRES_DEVELOPMENT_EVIDENCE_PACK
+    k1_promotion: REQUIRES_HUMAN_CONFIRMATION
+  human_confirmation:
+    required: true
+    required_fields:
+      - scope
+      - effective
+      - authority
+      - exceptions
+    owner_role: 인사운영책임자
+    reason: "High-blast 근태 월마감 정책이며 실제 고객 정책문서는 Pilot Fixture임"
