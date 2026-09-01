@@ -1,0 +1,70 @@
+version: 1
+status: ACTIVE_P0_1_CANDIDATE
+
+purpose: >
+  Legacy Requirement Inventory를 Canonical RQ/FR로 직접 승격하지 않고,
+  재현 가능한 Review Candidate로 정규화한다.
+
+pipeline:
+  - SOURCE_ROW
+  - GROUP_CANDIDATE
+  - SUBGROUP_CANDIDATE
+  - BOUNDARY_REVIEW
+  - CANONICAL_RQ_FR
+
+source_identity:
+  preserve_source_requirement_id: true
+  immutable: true
+  duplicate_id: HARD_FAIL
+
+default_strategy:
+  id: EXACT_LEVEL2_REQUIREMENT_NAME
+  description: Level2와 요구사항명이 정확히 같은 Row만 1차 Review Group 후보로 묶는다.
+  allowed_auto_result: GROUP_CANDIDATE_ONLY
+  canonical_publication: DENY
+
+partition:
+  default_mode: ALL_ROWS_EXACTLY_ONCE
+  source_row_must_belong_to_one_group: true
+  group_overlap: DENY
+
+candidate_group:
+  required_fields:
+    - group_id
+    - grouping_key.level2
+    - grouping_key.requirement_name
+    - source_requirement_ids
+    - boundary_status
+    - canonical_decision
+    - publish_canonical
+  defaults:
+    boundary_status: OPEN
+    canonical_decision: UNRESOLVED
+    publish_canonical: false
+  truth_semantics:
+    exact_grouping_membership: OBSERVED
+    same_business_outcome: OPEN
+
+subgroup_candidate:
+  auto_creation: CONDITIONAL
+  allowed_when:
+    - explicit_repeated_prefix_or_label_exists
+    - candidate_reduces_review_load
+  truth: INFERRED
+  publish_canonical: false
+  prohibited:
+    - infer_business_outcome_from_crud_only
+    - publish_rq_or_fr
+    - delete_or_renumber_source_rows
+
+escalation:
+  group_is_too_large: L2_REVIEW
+  cross_domain_group: L3_OR_HUMAN
+  conflicting_grouping_evidence: HUMAN
+  candidate_changes_owner_release_or_ac_boundary: L2_OR_HUMAN
+
+invariants:
+  - normalizer_never_publishes_canonical_rq_or_fr
+  - every_source_row_remains_traceable
+  - exact_grouping_is_review_evidence_not_business_truth
+  - semantic_merge_or_split_requires_boundary_review
