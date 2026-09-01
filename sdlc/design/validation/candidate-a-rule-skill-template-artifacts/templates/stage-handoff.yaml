@@ -1,0 +1,52 @@
+schema_version: 1
+handoff_id: HO-{{id}}
+from_stage: {{from_stage}}
+to_stage: {{to_stage}}
+target:
+  candidate_id: {{candidate_id}}
+  rq_id: {{rq_id_or_null}}
+  scope_revision: {{scope_revision}}
+requirement_scope_snapshot:
+  business_goal:
+    value: {{value_or_null}}
+    truth: {{GIVEN|OBSERVED|INFERRED|CONFIRMED|OPEN}}
+  actor_trigger:
+    actor: {{value_or_null}}
+    trigger: {{value_or_null}}
+    truth: {{truth}}
+  observable_outcome:
+    value: {{value_or_null}}
+    truth: {{truth}}
+  policy_state_scope:
+    policy: {{value_or_null}}
+    states: {{list}}
+    truth: {{truth}}
+  acceptance_release_scope:
+    independent_acceptance: {{true|false|null}}
+    independent_release: {{true|false|null}}
+    truth: {{truth}}
+legacy_provenance:
+  source_document: 요구사항목록.xlsx
+  source_ids: {{legacy_ids}}
+  raw_item_count: {{count}}
+decomposition:
+  fr_candidates: {{fr_ids}}
+  split_review:
+    required: {{true|false}}
+    reasons: {{reasons}}
+truth_summary:
+  given: {{ids}}
+  observed: {{ids}}
+  inferred: {{ids}}
+  confirmed: {{ids}}
+  open: {{ids}}
+alerts: {{alerts}}
+assumptions: {{assumptions}}
+artifacts:
+  produced: {{paths}}
+  stale: {{paths}}
+next_stage_contract:
+  required_input_present: {{true|false}}
+  missing_required: {{items}}
+  allowed_work: {{items}}
+  prohibited_work: {{items}}

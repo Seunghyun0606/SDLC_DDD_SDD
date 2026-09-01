@@ -1,0 +1,52 @@
+project_onboarding:
+  project:
+    project_id: FILL_ME
+    customer: FILL_ME
+    project_name: FILL_ME
+    domain: FILL_ME
+    mode: BROWNFIELD
+    language: ko
+    timezone: Asia/Seoul
+
+  execution:
+    default_mode: PROPOSAL_ONLY
+    source_write: DENY
+    merge: DENY
+    release: DENY
+    require_human_decision_for_scope_change: true
+
+  business_source:
+    manifest: 02_business-source-manifest.yaml
+    glossary: 03_glossary-template.csv
+    preserve_original: true
+    require_locator: true
+
+  artifacts:
+    selection_matrix: 04_artifact-selection-matrix.csv
+
+  source:
+    profile: 05_source-profile.yaml
+    repository_path_or_url: FILL_ME
+    allowed_analysis_roots: []
+    protected_paths: []
+
+  analysis:
+    six_w_required_for_core_scenarios: true
+    unknown_as_open: true
+    source_is_not_business_truth: true
+    customer_document_is_not_auto_confirmed_br: true
+
+  skillization:
+    enabled: true
+    candidate_only_by_default: true
+    require_repeatability_or_standard_evidence: true
+
+  development:
+    blueprint_required: true
+    source_analysis_required: true
+    actual_common_code_required_before_hardcode: true
+    current_source_revision_required: true
+
+  verification:
+    traceability_required: true
+    executed_test_required_for_verify_pass: true

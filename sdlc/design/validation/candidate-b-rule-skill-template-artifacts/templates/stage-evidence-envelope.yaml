@@ -1,0 +1,47 @@
+schema_version: 1
+stage_evidence_envelope:
+  envelope_id: ENV-{{id}}
+  stage: {{stage}}
+  subject:
+    type: {{RQ|FR|PGM|TASK}}
+    id: {{id}}
+  progress: {{NOT_STARTED|WORKING|COMPLETE}}
+  quality: {{OK|WARNING|CRITICAL}}
+  validity: {{CURRENT|STALE|INVALID}}
+  workflow_exit: {{OPEN|HOLD}}
+  evidence_revision:
+    canonical: {{revision}}
+    source: {{commit_or_hash_or_null}}
+  required_input:
+    present: {{items}}
+    missing: {{items}}
+  optional_input:
+    present: {{items}}
+    missing: {{items}}
+  evidence:
+    given: {{refs}}
+    observed: {{refs}}
+    inferred: {{refs}}
+    confirmed: {{refs}}
+  missing_evidence: {{items}}
+  blind_spots: {{items}}
+  assumptions:
+    - id: {{asm_id}}
+      statement: {{statement}}
+      status: {{ACTIVE|CONFIRMED|REJECTED}}
+  alerts: {{items}}
+  action_permissions:
+    draft_source_write: {{ALLOW|DENY|CANDIDATE_ONLY|PROPOSAL_ONLY|REQUIRES_DECISION}}
+    source_write: {{ALLOW|DENY|CANDIDATE_ONLY|PROPOSAL_ONLY|REQUIRES_DECISION}}
+    merge: {{ALLOW|DENY|REQUIRES_DECISION}}
+    release: {{ALLOW|DENY|REQUIRES_DECISION}}
+    verify_pass: {{ALLOW|DENY|REQUIRES_DECISION}}
+    knowledge_k1: {{ALLOW|DENY|CANDIDATE_ONLY|REQUIRES_DECISION}}
+    knowledge_k2: {{ALLOW|DENY|CANDIDATE_ONLY|REQUIRES_DECISION}}
+  execution_guards:
+    target_write_proof: {{PASS|FAIL|NOT_REQUIRED}}
+    central_store: {{AVAILABLE|UNAVAILABLE|NOT_REQUIRED}}
+    program_lane: {{OWNED|BUSY|NOT_REQUIRED}}
+  next:
+    recommended_stage: {{stage}}
+    safe_actions: {{items}}

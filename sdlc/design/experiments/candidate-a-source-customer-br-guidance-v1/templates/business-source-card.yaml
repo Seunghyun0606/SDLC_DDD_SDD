@@ -1,0 +1,48 @@
+business_source_card:
+  source:
+    source_id: null
+    path_or_uri: null
+    source_type: null
+    title: null
+    language: ko-KR
+    authority:
+      level: null
+      owner_role: null
+    scope:
+      company: null
+      country: null
+      organization: null
+      domain: null
+    effective:
+      from: null
+      to: null
+    supersedes: []
+    confidentiality: INTERNAL
+  locator:
+    page: null
+    section: null
+    sheet: null
+    row: null
+    slide: null
+    legacy_id: null
+  evidence_fragment:
+    id: null
+    extracted_statement: null
+    context_before: null
+    context_after: null
+    truth: GIVEN_DOCUMENT
+  br_candidate:
+    id: null
+    statement: null
+    conditions: []
+    action_or_result: null
+    exceptions: []
+    scope: {}
+    effective: {}
+    evidence_ids: []
+    conflict_with: []
+    status: CANDIDATE
+  review:
+    missing_fields: []
+    human_confirmation_required: true
+    confirmation_owner_role: null

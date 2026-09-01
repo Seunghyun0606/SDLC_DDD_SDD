@@ -1,0 +1,55 @@
+development_evidence_pack:
+  metadata:
+    pack_id: DEP-<TASK-ID>-<REV>
+    project_id: null
+    branch: null
+    generated_at: null
+  subject:
+    rq_id: null
+    task_id: null
+    program_id: null
+  evidence_revision:
+    canonical: null
+    source_commit: null
+    source_hashes: {}
+  intent:
+    fr_ids: []
+    br_ids: []
+    ac_ids: []
+    change_request_ids: []
+  target:
+    files: []
+    symbols: []
+    mapper_statements: []
+  source_context:
+    as_is: null
+    to_be: null
+    calls: []
+    called_by: []
+    reads: []
+    writes: []
+    transaction_owner: null
+    authorization: []
+  brownfield_convention:
+    profile_revision: null
+    applicable_standards: []
+    similar_references: []
+    protected_paths: []
+    legacy_deviations: []
+  blind_spots: []
+  assumptions: []
+  target_write_proof:
+    result: NOT_EVALUATED
+    evidence: []
+    invariant_checks: []
+    ambiguity: null
+  execution:
+    central_store: UNKNOWN
+    pgm_lane_required: true
+    work_unit_required: true
+  action_permissions:
+    proposal: ALLOW
+    draft_source_write: DENY
+    merge: DENY
+    release: DENY
+    verify_pass: DENY

@@ -1,0 +1,45 @@
+brownfield_source_profile:
+  project_id: null
+  profile_revision: 1
+  verified_against_commit: null
+  repository:
+    language: Java
+    framework: Spring
+    persistence: MyBatis
+    database: Oracle
+    source_roots: []
+    resource_roots: []
+    test_roots: []
+  architecture:
+    layers: [Controller, Service, MapperInterface, MapperXML, Database]
+    transaction_owner_layer: Service
+    mapper:
+      namespace_equals_interface_fqcn: true
+      statement_id_equals_method_name: true
+  discovery:
+    static_index_refs: []
+    trace_refs: []
+    dynamic_call_patterns: []
+    batch_patterns: []
+    interface_patterns: []
+  conventions:
+    error_handling: null
+    logging: null
+    audit: null
+    security: null
+    null_handling: null
+    naming: null
+  database:
+    default_schema: null
+    code_master_tables: []
+    procedure_packages: []
+  build:
+    build_command: null
+    test_command: null
+  protected:
+    generated_paths: []
+    do_not_edit_paths: []
+  legacy_deviations: []
+  freshness:
+    state: CURRENT
+    last_verified_at: null

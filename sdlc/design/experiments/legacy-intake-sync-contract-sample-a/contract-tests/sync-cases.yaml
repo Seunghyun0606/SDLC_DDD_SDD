@@ -1,0 +1,128 @@
+version: 1
+experiment: legacy-intake-sync-contract-sample-a
+subject: worklist-md-excel-sync
+
+invariants:
+  stable_work_item_id: true
+  preserve_parent_relation: true
+  preserve_source_requirement_id: true
+  preserve_null_optional_fields: true
+  last_write_wins: false
+  silent_delete: false
+  silent_overwrite: false
+  generated_field_editable: false
+
+cases:
+  - id: SYNC-001
+    name: excel_only_update
+    base_revision: 3
+    canonical_revision: 3
+    md_change: null
+    excel_change:
+      field: assignee
+      before: null
+      after: A
+    expected:
+      result: APPLY
+      next_revision: 4
+      conflict: false
+
+  - id: SYNC-002
+    name: md_only_update
+    base_revision: 7
+    canonical_revision: 7
+    md_change:
+      field: note
+      before: null
+      after: 검토 필요
+    excel_change: null
+    expected:
+      result: APPLY
+      next_revision: 8
+      conflict: false
+
+  - id: SYNC-003
+    name: non_overlapping_concurrent_update
+    base_revision: 10
+    canonical_revision: 10
+    md_change:
+      field: note
+      before: null
+      after: 운영 확인 예정
+    excel_change:
+      field: assignee
+      before: null
+      after: A
+    expected:
+      result: AUTO_MERGE
+      next_revision: 11
+      conflict: false
+
+  - id: SYNC-004
+    name: same_field_conflict
+    base_revision: 12
+    canonical_revision: 12
+    md_change:
+      field: assignee
+      before: null
+      after: A
+    excel_change:
+      field: assignee
+      before: null
+      after: B
+    expected:
+      result: SYNC_CONFLICT
+      canonical_change: false
+      user_decision_required: true
+
+  - id: SYNC-005
+    name: stale_view
+    view_base_revision: 3
+    canonical_revision: 5
+    incoming_change:
+      field: planned_end
+      value: 2026-10-31
+    expected:
+      result: THREE_WAY_COMPARE
+      blind_apply: false
+
+  - id: SYNC-006
+    name: generated_field_edit
+    incoming_change:
+      field: revision
+      value: 999
+    expected:
+      result: GENERATED_FIELD_EDIT
+      apply: false
+      alert: true
+
+  - id: SYNC-007
+    name: row_delete
+    incoming_operation: DELETE_ROW
+    expected:
+      result: DELETE_CANDIDATE
+      hard_delete: false
+
+  - id: SYNC-008
+    name: published_id_edit
+    incoming_change:
+      field: work_item_id
+      before: FR-0001-01
+      after: FR-NEW-01
+    expected:
+      result: IMMUTABLE_ID_VIOLATION
+      apply: false
+
+  - id: SYNC-009
+    name: optional_fields_roundtrip
+    input:
+      assignee: null
+      planned_start: null
+      planned_end: null
+      estimated_effort: null
+    expected:
+      after_md_excel_roundtrip:
+        assignee: null
+        planned_start: null
+        planned_end: null
+        estimated_effort: null

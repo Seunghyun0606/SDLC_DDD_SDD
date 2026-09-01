@@ -1,0 +1,94 @@
+context_pack:
+  metadata:
+    context_pack_id: DCP-TASK-P017-DEV-01-R3
+    generated_for: DEVELOPMENT
+    project_id: PILOT-MYBATIS
+    branch: pilot/rq-p017-close-10min
+    role: MANIFEST_NOT_COMPLETE_SPEC
+
+  artifact_manifest:
+    business_definition_6w: sample/RQ-PILOT-017_customer-functional-spec.md#6W
+    development_blueprint: sample/RQ-PILOT-017_development-blueprint.md
+    program_spec: ../candidate-a-mybatis-md-change-pilot/docs/05_program/RQ-PILOT-017/specs/PGM-ATT-CLOSE-001.md
+    test_spec: ../candidate-a-mybatis-md-change-pilot/docs/07_test/RQ-PILOT-017/test-scenarios.md
+    change_request: ../candidate-a-mybatis-md-change-pilot/docs/01_requirements/RQ-PILOT-017/CR-PILOT-001.md
+
+  usage_rule:
+    - "이 YAML만으로 Source를 구현하지 않는다."
+    - "development_blueprint + current source + PGM spec + test spec을 함께 읽는다."
+    - "Blueprint의 CRITICAL OPEN 영역은 실제 고객 Source Write 전 해결한다."
+
+  intent:
+    rq_id: RQ-PILOT-017
+    fr_ids: [FR-P017-01, FR-P017-03, FR-P017-04]
+    br_ids: [BR-P017-01, BR-P017-02, BR-P017-03]
+    ac_ids: [AC-01, AC-03, AC-04, AC-05]
+    change_request_ids: [CR-PILOT-001]
+
+  target:
+    task_id: TASK-P017-DEV-01
+    program_id: PGM-ATT-CLOSE-001
+    files:
+      - src/main/java/com/acme/attendance/AttendanceCloseService.java
+      - src/main/java/com/acme/attendance/AttendanceCloseMapper.java
+      - src/main/resources/mapper/AttendanceCloseMapper.xml
+    symbols:
+      - AttendanceCloseService.closeDaily
+      - AttendanceCloseMapper.selectPlannedMinutes
+      - AttendanceCloseMapper.isMonthClosed
+      - AttendanceCloseMapper.hasApprovedCorrection
+      - AttendanceCloseMapper.upsertDailyAttendance
+    source_revision:
+      base_commit: fixture-v1
+      hashes:
+        AttendanceCloseService.java: FIXTURE_HASH_SERVICE_V1
+        AttendanceCloseMapper.java: FIXTURE_HASH_MAPPER_V1
+        AttendanceCloseMapper.xml: FIXTURE_HASH_XML_V1
+
+  behavior_summary:
+    as_is: "계획분을 30분 단위로 절삭하여 TB_ATT_DAILY에 반영. 월마감 후 수정요청 예외 없음."
+    to_be: "10분 단위로 반영. 월마감 후 승인된 수정요청만 재집계 허용. FORCE_CLOSE는 허용하지 않음."
+    detailed_logic_ref: sample/RQ-PILOT-017_development-blueprint.md#5
+
+  design_coverage:
+    six_w: PARTIAL_OPEN
+    ui_and_fields: EXPLICIT_NO_UI_CHANGE_ASSUMED_WITH_OPEN_ENTRY_POINT
+    crud: PRESENT
+    core_logic: PRESENT
+    integration: PARTIAL_OPEN
+    query_and_data: PRESENT_WITH_SCHEMA_OPEN
+    common_code: OPEN_REAL_CODE_MASTER
+    transaction_auth_error: PARTIAL_OPEN
+    source_mapping: PRESENT
+    test_mapping: PRESENT
+
+  data_contract_summary:
+    reads: [TB_WORK_PLAN, TB_ATT_CLOSE, TB_ATT_CORRECTION_REQ]
+    writes: [TB_ATT_DAILY, TB_ATT_CLOSE]
+    mapper_statements: [selectPlannedMinutes, isMonthClosed, hasApprovedCorrection, upsertDailyAttendance]
+
+  brownfield_conventions:
+    architecture_pattern: "Spring Service -> MyBatis Mapper interface -> Mapper XML -> Oracle"
+    applicable_standards:
+      - "Mapper interface method와 XML statement id 일치"
+      - "Transaction은 Service layer에서 유지"
+      - "관련 없는 refactoring 금지"
+    protected_paths: ["generated/**"]
+
+  verification:
+    required_acceptance_criteria: [AC-01, AC-03, AC-04, AC-05]
+    build_command: "./mvnw test"
+
+  critical_open:
+    - actual_authorization_profile
+    - actual_menu_or_entry_point
+    - month_close_scope_and_key
+    - actual_close_and_approval_common_codes
+    - actual_correction_request_schema_and_index
+
+  readiness:
+    target_known: true
+    fixture_source_current: true
+    detailed_blueprint_present: true
+    source_write_ready: "PILOT_FIXTURE_ONLY"
+    real_customer_source_write_ready: false

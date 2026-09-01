@@ -1,0 +1,56 @@
+business_evidence_card:
+  source:
+    source_id: null
+    source_type: null
+    title: null
+    uri: null
+    revision: null
+    authority:
+      level: null
+      owner_role: null
+    scope:
+      country: null
+      company: null
+      organization: null
+      domain: null
+    effective:
+      from: null
+      to: null
+    supersedes: []
+    freshness:
+      state: UNKNOWN
+      last_verified_at: null
+      content_hash: null
+  locator:
+    page: null
+    section: null
+    sheet: null
+    row: null
+    slide: null
+    legacy_id: null
+  evidence_fragment:
+    id: null
+    statement: null
+    extraction_confidence: null
+  br_candidate:
+    id: null
+    statement: null
+    conditions: []
+    result: null
+    exceptions: []
+    scope: {}
+    effective: {}
+    authority: {}
+    evidence_ids: []
+    conflicts: []
+    blast_radius: null
+    status: CANDIDATE
+  action_permissions:
+    use_for_analysis: ALLOW
+    use_for_draft_design: ALLOW
+    use_for_source_generation: REQUIRES_CONTEXT
+    k1_promotion: DENY
+  human_confirmation:
+    required: true
+    required_fields: [scope, effective, authority, exceptions]
+    owner_role: null
