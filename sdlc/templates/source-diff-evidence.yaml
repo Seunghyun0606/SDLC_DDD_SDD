@@ -1,27 +1,32 @@
-version: 1
+version: 2
 source_diff_evidence:
   metadata:
-    change_id: FILL_ME
-    source_revision_before: FILL_ME
-    source_revision_after: FILL_ME
-    before_root: FILL_ME
-    after_root: FILL_ME
+    change_id: CHANGE-FILL_ME
+    project_id: FILL_ME
+    source_revision_before: OPEN
+    source_revision_after: OPEN
+    provider_evidence_ids: []
 
-  changed_files: []
+  changed_items:
+    # - path: src/example.py
+    #   before_hash: OPEN
+    #   after_hash: OPEN
+    #   changed_symbols: []
+    #   data_refs: []
+    #   interface_refs: []
+    #   evidence_ids: []
+    []
 
-  changed_symbols: []
-  added_mapper_statement_ids: []
-  removed_mapper_statement_ids: []
-  added_table_names: []
-  removed_table_names: []
+  semantic_change_class: UNKNOWN  # TECHNICAL_ONLY | FUNCTIONAL_BEHAVIOR | BUSINESS_RULE_CANDIDATE | DATA_CONTRACT | INTERFACE_CONTRACT | SECURITY_BEHAVIOR | UNKNOWN
+  secondary_classes: []
 
-  signals:
-    - signal: FILL_ME
-      evidence: FILL_ME
-
-  direct_program_ids: []
+  constraints:
+    stack_specific_signal_inference_in_core: false
+    source_change_is_observed_not_business_truth: true
+    unknown_semantics_require_review: true
 
   validation:
-    changed_file_hashes_present: PENDING
-    direct_relation_check: PENDING
-    signal_evidence_check: PENDING
+    revision_check: PENDING
+    changed_item_hash_check: PENDING
+    trace_reference_check: PENDING
+    semantic_class_check: PENDING
