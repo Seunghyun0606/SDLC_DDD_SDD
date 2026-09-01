@@ -20,6 +20,7 @@ def load_module(name, path):
 
 runtime = load_module("runtime_core", SCRIPTS / "execute_command_runtime.py")
 validator = load_module("runtime_validator", SCRIPTS / "validate_p0_runtime_core.py")
+skill_validator = load_module("skill_validator", SCRIPTS / "validate_routed_skills.py")
 
 
 def load(rel):
@@ -73,8 +74,12 @@ def main():
     procedures = load("sdlc/config/stage-procedures.yaml")
     pack = load("sdlc/templates/stage-input-pack.yaml")
     assert validator.validate_stage_routing(routing) == []
+    assert validator.validate_stage_procedures(procedures) == []
+    assert validator.validate_routing_procedure_refs(routing, procedures) == []
     assert validator.validate_stage_pack(pack) == []
     assert_routing_references_exist(routing, procedures)
+    for name in skill_validator.routed_skill_names(routing):
+        assert skill_validator.validate_skill(SKILLS / name / "SKILL.md") == [], name
 
     # Brownfield discovery with no Source/Analyzer Provider must remain PARTIAL/OPEN, not globally blocked.
     result = runtime.execute(registry_with_states(), context(stage="DISCOVERY", mode="BROWNFIELD"), routing)
@@ -108,6 +113,7 @@ def main():
     assert body["state"] == "COMPLETE", body
     assert body["stage_route"]["skill"] == "stage-procedure"
     assert body["stage_route"]["procedure_profile"] == "PROJECT_SETUP"
+    assert body["stage_route"]["required_input_types"] == ["PROJECT_IDENTITY", "PROJECT_MODE", "PROVIDER_STATE"]
 
     # Unknown stage must fail deterministically instead of guessing.
     bad_context = context(stage="UNKNOWN_STAGE", mode="AUTO")
