@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any
 import yaml
 
+CONDITIONAL_RULES = {"OPTIONAL", "CONDITIONAL", "CONDITIONAL_L2_ONLY", "CONFIGURABLE_L1_L2"}
+
 
 def load(path: Path) -> dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
@@ -58,19 +60,20 @@ def resolve(routing: dict[str, Any], pack_doc: dict[str, Any], artifact_plan: di
     capabilities = unique(required + optional)
 
     outputs = list(stage_cfg.get("output_artifacts") or [])
+    requested_outputs = set(execution.get("requested_outputs") or [])
+    suppressed = []
     if artifact_plan:
         human = artifact_plan.get("human_artifacts") or {}
         filtered = []
-        suppressed = []
         for output in outputs:
             rule = human.get(output)
             if rule in {"OFF", "DISABLED", False}:
-                suppressed.append(output)
+                suppressed.append({"artifact": output, "reason": "PROFILE_DISABLED", "rule": rule})
+            elif rule in CONDITIONAL_RULES and output not in requested_outputs:
+                suppressed.append({"artifact": output, "reason": "CONDITIONAL_NOT_REQUESTED", "rule": rule})
             else:
                 filtered.append(output)
         outputs = filtered
-    else:
-        suppressed = []
 
     open_items = list(pack.get("open_items") or [])
     reasoning_blockers = [item for item in open_items if item.get("blocks_reasoning") is True]
