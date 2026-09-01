@@ -1,4 +1,4 @@
-name: Greenfield E2E Pilot
+name: Greenfield Work Executor E2E
 
 on:
   pull_request:
@@ -8,21 +8,22 @@ permissions:
   contents: read
 
 jobs:
-  requirement-seed:
+  executor-fixture:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Run real requirement Greenfield replay
+      - name: Run provider-driven Greenfield work executor with validation fixture
         run: |
           python sdlc/scripts/run_greenfield_e2e_pilot.py \
             --seed sdlc/validation/pilot/greenfield/REQ_TM_FL001-seed.json \
-            --output /tmp/greenfield-pilot.json \
-            --artifact-root /tmp/greenfield-artifacts
-      - name: Verify six compact user artifacts
+            --provider-config sdlc/validation/pilot/greenfield/fixture-provider.json \
+            --runtime-root sdlc/runtime/validation/greenfield/ci \
+            --output /tmp/greenfield-pilot.json
+      - name: Verify executor wiring without Agent overclaim
         run: |
-          test "$(find /tmp/greenfield-artifacts -maxdepth 1 -name '*.md' | wc -l)" -eq 6
-          grep -q 'REQ_TM_FL001' /tmp/greenfield-artifacts/requirement.md
-          grep -q '미확정' /tmp/greenfield-artifacts/open-resolution-workbook.md
-          grep -q 'NOT READY' /tmp/greenfield-artifacts/program-spec.md
+          test "$(find sdlc/runtime/validation/greenfield/ci/artifacts -maxdepth 1 -name '*.md' | wc -l)" -eq 5
+          grep -q 'PASS_EXECUTOR_E2E_FIXTURE_PROVIDER' /tmp/greenfield-pilot.json
+          grep -q '"actual_agent_provider_executed": false' /tmp/greenfield-pilot.json
+          grep -q '탄력근로제 근무계획 저장' sdlc/runtime/validation/greenfield/ci/artifacts/DECOMPOSE_requirement.md
           cat /tmp/greenfield-pilot.json
