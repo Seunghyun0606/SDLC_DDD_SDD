@@ -23,7 +23,7 @@ flowchart LR
 - `/work RQR-6BB6D66548`
 - `아까 하던 요구사항 계속 진행해줘`
 
-P0~P0.2 규칙:
+P0~P0.3 규칙:
 
 1. 원본 Requirement ID를 먼저 보존한다.
 2. Legacy Inventory는 `SOURCE_ROW → deterministic Candidate Group`으로 정규화한다.
@@ -31,9 +31,10 @@ P0~P0.2 규칙:
 4. RQ Boundary가 모호하면 `RQ_GROUP_CANDIDATE + OPEN`으로 유지한다.
 5. Candidate Group은 전체작업목록에서 Canonical 요구사항이 아니라 `RQ_GROUP_REVIEW` 작업으로 보인다.
 6. Human/L2가 Boundary를 `CONFIRMED`하기 전에는 Canonical Publish를 허용하지 않는다.
-7. Stage Input Pack에 Target, Evidence, OPEN, Constraint, 다음 Action을 기록한다.
-8. Validator가 실패하면 잘못된 상태를 다음 Stage의 확정 사실로 전달하지 않는다.
-9. Target이 애매하면 Source write만 보류하고 후보 분석과 다른 비차단 작업은 계속한다.
+7. Source가 연결되면 Direct Trace 또는 bounded retrieval로 PGM/ART/Symbol/Data Evidence를 `OBSERVED`로 수집한다.
+8. RQ Boundary가 OPEN이어도 Technical Discovery/Impact Candidate는 진행할 수 있다.
+9. Source Diff는 Semantic Change Candidate와 STALE/Review Candidate를 만들지만 Human Truth를 자동 수정하지 않는다.
+10. Validator가 실패하면 잘못된 상태를 다음 Stage의 확정 사실로 전달하지 않는다.
 
 ### Legacy Requirement Review 흐름
 
@@ -50,12 +51,28 @@ Legacy Row
 
 `OPEN / PROVISIONAL / UNRESOLVED` 상태는 Publish 대상이 아니다.
 
+### Brownfield Discovery / Reverse Sync 흐름
+
+```text
+Candidate/RQ Context
+→ Direct Trace Manifest 또는 bounded retrieval
+→ Source File/Symbol/Mapper/Table Evidence
+→ Impact Candidate
+→ Source Diff
+→ Semantic Change Candidate
+→ Direct Technical Artifact = STALE_CANDIDATE
+→ Requirement/BR = REVIEW_CANDIDATE
+→ Human Truth = PROTECTED
+```
+
+Source 조건식은 `OBSERVED Behavior`이며 자동 `CONFIRMED Business Rule`이 아니다.
+
 ## `/change`
 
 자연어 변경 또는 Source Diff를 구조화한다.
 
 - 사람이 알려준 변경: CR → 영향 관계 → STALE 후보
-- Source에서 발견한 변경: Source Diff → PGM/ART → Semantic Change Candidate → 관련 RQ/FR/BR/AC/TC → STALE 후보
+- Source에서 발견한 변경: Source Diff → PGM/ART → Semantic Change Candidate → 관련 RQ/FR/BR/AC/TC → STALE/Review 후보
 
 Source 변경을 Business Truth로 자동 승격하지 않는다. `BUSINESS_RULE_CANDIDATE`, `SECURITY_BEHAVIOR`, `UNKNOWN`은 검토가 필요하다.
 
@@ -68,6 +85,10 @@ Source 변경을 Business Truth로 자동 승격하지 않는다. `BUSINESS_RULE
 - Boundary 상태
 - Candidate Review 상태
 - Canonical Publish 가능 여부
+- Source Provider/Revision
+- Direct PGM/ART Evidence
+- Reverse Sync / STALE Candidate
+- Blind Spot
 - Open Alert/Execution Guard
 - 담당자/일정(있는 경우)
 - 다음 추천 작업과 Escalation 대상
@@ -82,7 +103,7 @@ flowchart TD
     A --> F["Artifact Profile"]
     F --> B["Existing Asset 또는 Preset"]
     B --> O["Overlay"]
-    O --> V["P0 Contract Validation"]
+    O --> V["Contract Validation"]
 ```
 
 Artifact Profile 기본값은 `STANDARD`다.
@@ -137,6 +158,18 @@ python sdlc/scripts/test_p02_contracts.py
 ```
 
 Canonical ID allocator와 실제 Registry Write Adapter는 P0.2 범위 밖이다. ID를 추측해서 만들지 않고, 사전 할당된 ID가 없으면 `PUBLISH_READY` 이전에 중단한다.
+
+### P0.3
+
+```text
+python sdlc/scripts/discover_source_evidence.py <source-root> <trace-manifest.yaml> -o <discovery.yaml>
+python sdlc/scripts/validate_p03_contracts.py discovery <discovery.yaml>
+python sdlc/scripts/build_reverse_sync_candidate.py <before-root> <after-root> <trace-manifest.yaml> -o <reverse-sync.yaml>
+python sdlc/scripts/validate_p03_contracts.py reverse-sync <reverse-sync.yaml>
+python sdlc/scripts/test_p03_contracts.py
+```
+
+Direct Trace가 없으면 파일명/이름 similarity만으로 PGM을 Confirmed하지 않는다. Runtime/Procedure/Trigger/외부 Consumer는 별도 Evidence가 없으면 Blind Spot으로 남긴다.
 
 ## Mermaid 작성 주의
 
