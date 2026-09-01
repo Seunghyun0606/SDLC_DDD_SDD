@@ -1,4 +1,4 @@
-version: 1
+version: 1.1
 stage_input_pack:
   metadata:
     pack_id: FILL_ME
@@ -7,6 +7,8 @@ stage_input_pack:
     generated_at: null
     source_revision: FILL_ME
     profile: STANDARD
+    granularity: GROUP
+    source_group_id: FILL_ME
 
   target:
     primary_id: FILL_ME
@@ -45,3 +47,4 @@ stage_input_pack:
     id_reference_check: PENDING
     open_preservation_check: PENDING
     boundary_guard_check: PENDING
+    granularity_check: PENDING
