@@ -35,6 +35,10 @@ def delta(delta_id="DELTA-001", *, base_revision=0, stage="DECOMPOSE", operation
     }
 
 
+def write_delta(path: Path, payload: dict) -> None:
+    path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+
 class CanonicalDeltaBehaviorTest(unittest.TestCase):
     def test_first_delta_creates_store_revision_and_entity(self):
         result, store = MOD.apply_delta(MOD.empty_store(), delta())
@@ -162,7 +166,7 @@ class CanonicalDeltaBehaviorTest(unittest.TestCase):
             delta_path = root / "delta.json"
             store_path = root / "store.json"
             result_path = root / "result.json"
-            delta_path.write_text(json.dumps(delta(), ensure_ascii=False), encoding="utf-8")
+            write_delta(delta_path, delta())
             rc = MOD.main([
                 "--store", str(store_path),
                 "--delta", str(delta_path),
@@ -174,6 +178,69 @@ class CanonicalDeltaBehaviorTest(unittest.TestCase):
             result = json.loads(result_path.read_text(encoding="utf-8"))
             self.assertTrue(result["dry_run"])
             self.assertFalse(result["store_written"])
+
+    def test_cli_apply_creates_store_and_advances_revision(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            store_path = root / "nested/canonical/store.json"
+            first_path = root / "first.json"
+            second_path = root / "second.json"
+            write_delta(first_path, delta())
+            write_delta(second_path, delta(
+                "DELTA-002",
+                base_revision=1,
+                stage="DESIGN",
+                operations=[entity_op("FR-001", entity_type="FR", fields={"name":"기능 요구"})],
+            ))
+
+            self.assertEqual(0, MOD.main(["--store", str(store_path), "--delta", str(first_path)]))
+            first_store = json.loads(store_path.read_text(encoding="utf-8"))
+            self.assertEqual(1, first_store["revision"])
+            self.assertIn("RQ-001", first_store["entities"])
+
+            self.assertEqual(0, MOD.main(["--store", str(store_path), "--delta", str(second_path)]))
+            second_store = json.loads(store_path.read_text(encoding="utf-8"))
+            self.assertEqual(2, second_store["revision"])
+            self.assertIn("FR-001", second_store["entities"])
+            self.assertEqual(["DELTA-001", "DELTA-002"], [x["delta_id"] for x in second_store["applied_deltas"]])
+
+    def test_cli_stale_revision_conflict_preserves_store_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            store_path = root / "store.json"
+            first_path = root / "first.json"
+            stale_path = root / "stale.json"
+            result_path = root / "conflict-result.json"
+            write_delta(first_path, delta())
+            write_delta(stale_path, delta(
+                "DELTA-STALE",
+                base_revision=0,
+                operations=[entity_op("FR-001", entity_type="FR")],
+            ))
+            self.assertEqual(0, MOD.main(["--store", str(store_path), "--delta", str(first_path)]))
+            before = store_path.read_bytes()
+            rc = MOD.main([
+                "--store", str(store_path),
+                "--delta", str(stale_path),
+                "--result-out", str(result_path),
+            ])
+            self.assertEqual(2, rc)
+            self.assertEqual(before, store_path.read_bytes())
+            result = json.loads(result_path.read_text(encoding="utf-8"))
+            self.assertEqual("CONFLICT", result["status"])
+            self.assertEqual("STALE_BASE_REVISION", result["conflicts"][0]["code"])
+            self.assertFalse(result["store_written"])
+
+    def test_cli_idempotent_replay_preserves_store_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            store_path = root / "store.json"
+            delta_path = root / "delta.json"
+            write_delta(delta_path, delta())
+            self.assertEqual(0, MOD.main(["--store", str(store_path), "--delta", str(delta_path)]))
+            before = store_path.read_bytes()
+            self.assertEqual(0, MOD.main(["--store", str(store_path), "--delta", str(delta_path)]))
+            self.assertEqual(before, store_path.read_bytes())
 
 
 if __name__ == "__main__":
