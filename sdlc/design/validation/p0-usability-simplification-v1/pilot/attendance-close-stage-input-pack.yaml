@@ -1,0 +1,245 @@
+version: 1
+stage_input_pack:
+  metadata:
+    pack_id: SIP-PILOT-TM-CLOSE-DECOMPOSE-002
+    project_id: PILOT-TM
+    stage: DECOMPOSE
+    generated_at: '2026-09-02T00:00:00+09:00'
+    source_revision: 요구사항목록.xlsx-upload
+    profile: STANDARD
+  target:
+    primary_id: RQ-CANDIDATE-TM-CLOSE
+    target_type: RQ_CANDIDATE
+    boundary_status: OPEN
+    source_requirement_ids:
+    - REQ_TM_TE016
+    - REQ_TM_TE017
+    - REQ_TM_TE018
+    - REQ_TM_TE019
+    - REQ_TM_TE020
+    - REQ_TM_TE021
+    - REQ_TM_TE022
+    - REQ_TM_TE023
+    - REQ_TM_TE024
+    - REQ_TM_TE025
+    - REQ_TM_TE026
+    - REQ_TM_TE027
+    - REQ_TM_TE028
+    - REQ_TM_TE029
+    - REQ_TM_TE030
+    - REQ_TM_TE031
+    - REQ_TM_TE032
+    - REQ_TM_TE033
+    - REQ_TM_TE034
+    - REQ_TM_TE035
+    - REQ_TM_TE036
+    - REQ_TM_TE037
+    - REQ_TM_TE038
+    - REQ_TM_TE039
+    - REQ_TM_TE040
+    - REQ_TM_TE041
+    - REQ_TM_TE042
+    - REQ_TM_TE043
+    - REQ_TM_TE044
+    - REQ_TM_TE045
+    - REQ_TM_TE046
+    - REQ_TM_TE047
+    - REQ_TM_TE048
+    - REQ_TM_TE049
+    - REQ_TM_TE050
+    - REQ_TM_TE051
+    - REQ_TM_TE052
+    - REQ_TM_TE053
+    - REQ_TM_TE054
+    related_ids:
+      rq: []
+      fr: []
+      br: []
+      ac: []
+      proc: []
+      pgm: []
+      task: []
+      tc: []
+  required_inputs:
+  - id: SRC-REQ-XLSX-TM-CLOSE
+    type: business_source
+    locator: 요구사항목록.xlsx / Sheet1 / REQ_TM_TE016~REQ_TM_TE054
+    revision: upload
+    required: true
+    available: true
+  resolved_facts:
+  - fact_id: FACT-TM-CLOSE-001
+    value: 근태관리
+    truth: GIVEN
+    evidence_ids:
+    - EV-TM-CLOSE-001
+    confidence: HIGH
+  - fact_id: FACT-TM-CLOSE-002
+    value: 근태마감
+    truth: GIVEN
+    evidence_ids:
+    - EV-TM-CLOSE-001
+    confidence: HIGH
+  - fact_id: FACT-TM-CLOSE-003
+    value: 10분단위 근무계획 개선 근태마감 반영을 구현
+    truth: GIVEN
+    evidence_ids:
+    - EV-TM-CLOSE-001
+    confidence: HIGH
+  - fact_id: FACT-TM-CLOSE-004
+    value: 39 source rows share the same Level2 and requirement_name
+    truth: OBSERVED
+    evidence_ids:
+    - EV-TM-CLOSE-001
+    confidence: HIGH
+  evidence:
+  - evidence_id: EV-TM-CLOSE-001
+    provider: BUSINESS_DOCUMENT
+    locator: 요구사항목록.xlsx / Sheet1 / REQ_TM_TE016~REQ_TM_TE054
+    revision: upload
+    observed_value: 39 rows under 근태관리 > 근태마감 with one repeated 요구사항명
+    confidence: HIGH
+  candidate_subgroups:
+  - subgroup_candidate_id: SG-01
+    label: 월근태확인
+    source_requirement_ids:
+    - REQ_TM_TE016
+    source_count: 1
+    status: CANDIDATE_ONLY
+    truth: INFERRED
+    publish_canonical: false
+  - subgroup_candidate_id: SG-02
+    label: 일근태입력/마감
+    source_requirement_ids:
+    - REQ_TM_TE017
+    - REQ_TM_TE018
+    - REQ_TM_TE019
+    - REQ_TM_TE020
+    - REQ_TM_TE021
+    - REQ_TM_TE022
+    - REQ_TM_TE023
+    - REQ_TM_TE024
+    source_count: 8
+    status: CANDIDATE_ONLY
+    truth: INFERRED
+    publish_canonical: false
+  - subgroup_candidate_id: SG-03
+    label: 월마감
+    source_requirement_ids:
+    - REQ_TM_TE025
+    - REQ_TM_TE026
+    - REQ_TM_TE027
+    - REQ_TM_TE028
+    - REQ_TM_TE029
+    - REQ_TM_TE030
+    - REQ_TM_TE031
+    - REQ_TM_TE032
+    source_count: 8
+    status: CANDIDATE_ONLY
+    truth: INFERRED
+    publish_canonical: false
+  - subgroup_candidate_id: SG-04
+    label: 일/월마감후 수정요청
+    source_requirement_ids:
+    - REQ_TM_TE033
+    - REQ_TM_TE034
+    - REQ_TM_TE035
+    - REQ_TM_TE036
+    - REQ_TM_TE037
+    - REQ_TM_TE038
+    - REQ_TM_TE039
+    source_count: 7
+    status: CANDIDATE_ONLY
+    truth: INFERRED
+    publish_canonical: false
+  - subgroup_candidate_id: SG-05
+    label: 퇴직자근태마감
+    source_requirement_ids:
+    - REQ_TM_TE040
+    - REQ_TM_TE041
+    - REQ_TM_TE042
+    - REQ_TM_TE043
+    - REQ_TM_TE044
+    source_count: 5
+    status: CANDIDATE_ONLY
+    truth: INFERRED
+    publish_canonical: false
+  - subgroup_candidate_id: SG-06
+    label: 전사근태마감
+    source_requirement_ids:
+    - REQ_TM_TE045
+    - REQ_TM_TE046
+    source_count: 2
+    status: CANDIDATE_ONLY
+    truth: INFERRED
+    publish_canonical: false
+  - subgroup_candidate_id: SG-07
+    label: 일근태 강제마감
+    source_requirement_ids:
+    - REQ_TM_TE047
+    - REQ_TM_TE048
+    source_count: 2
+    status: CANDIDATE_ONLY
+    truth: INFERRED
+    publish_canonical: false
+  - subgroup_candidate_id: SG-08
+    label: 선택적 근로마감
+    source_requirement_ids:
+    - REQ_TM_TE049
+    - REQ_TM_TE050
+    - REQ_TM_TE051
+    - REQ_TM_TE052
+    - REQ_TM_TE053
+    - REQ_TM_TE054
+    source_count: 6
+    status: CANDIDATE_ONLY
+    truth: INFERRED
+    publish_canonical: false
+  open_items:
+  - open_id: OPEN-TM-CLOSE-001
+    type: BOUNDARY_AMBIGUOUS
+    question: 39개 source row를 하나의 Canonical RQ로 유지할지 여러 RQ로 분할할지 결정이 필요하다.
+    blocks_reasoning: true
+    blocks_action: false
+    required_evidence:
+    - 고객이 관리하는 Business Outcome 단위
+    - Owner/Release/Acceptance Criteria 경계
+    - 일마감/월마감/전자결재/선택적근로마감 간 독립 배포 여부
+    escalation: L2_OR_HUMAN
+  - open_id: OPEN-TM-CLOSE-002
+    type: PROCESS_UNDERDEFINED
+    question: 마감, 강제마감, 수정요청, 전자결재의 Actor/State/승인·반려·취소 규칙이 입력에 없다.
+    blocks_reasoning: false
+    blocks_action: true
+    required_evidence:
+    - 업무 프로세스/정책
+    - 권한 역할
+    - 마감 상태전이 및 예외 정책
+    escalation: BUSINESS_OWNER
+  - open_id: OPEN-TM-CLOSE-003
+    type: MISSING_REQUIRED_SOURCE
+    question: Source Repository 또는 Static Analysis evidence가 없어 PGM/ART/DB 영향도를 확정할 수 없다.
+    blocks_reasoning: false
+    blocks_action: true
+    required_evidence:
+    - Source Repository/Snapshot
+    - Static Analysis result
+    escalation: ENGINEERING_OWNER
+  constraints:
+    do_not_invent_missing_business_fact: true
+    source_behavior_is_not_business_truth: true
+    ambiguous_write_must_not_be_auto_selected: true
+  expected_outputs:
+  - candidate_group_review
+  - candidate_subgroup_review
+  - prioritized_business_questions
+  - source_discovery_request
+  next_actions:
+  - L2/Human이 RQ 경계를 결정한다.
+  - Actor/State/Approval policy를 확인한다.
+  - Brownfield라면 Source Repository/Snapshot을 연결한 뒤 DISCOVERY로 이동한다.
+  validation:
+    required_field_check: PASS
+    id_reference_check: PASS
+    open_preservation_check: PASS
+    boundary_guard_check: PASS
