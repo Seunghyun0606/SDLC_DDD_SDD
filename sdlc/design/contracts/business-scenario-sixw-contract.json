@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "candidate_design": "v1.5.8-rc.1",
+  "purpose": "업무 분석/설계 산출물이 누가·언제·어디서·무엇을·어떻게·왜의 6하원칙으로 업무 맥락을 설명하고 이후 기능/프로그램 설계가 이를 추적하도록 하는 Core 공통 계약",
+  "scope": "CORE_COMMON_CONTRACT",
+  "scenario_id_rule": "SCN-<RQ-or-FR>-NN",
+  "required_dimensions": [
+    {"id":"who","label":"누가(Who)","required_details":["actor","role_or_profile","authority_or_eligibility"]},
+    {"id":"when","label":"언제(When)","required_details":["trigger_or_frequency","timing_or_window","cutoff_or_effective_condition"]},
+    {"id":"where","label":"어디서(Where)","required_details":["channel_or_system","menu_screen_process_location"]},
+    {"id":"what","label":"무엇을(What)","required_details":["business_object","fields_or_scope","expected_result"]},
+    {"id":"how","label":"어떻게(How)","required_details":["procedure_or_user_action","validation_or_decision","crud_or_state_change"]},
+    {"id":"why","label":"왜(Why)","required_details":["business_purpose_or_obligation","business_outcome"]}
+  ],
+  "dimension_status": ["CONFIRMED","GIVEN","OBSERVED","INFERRED","OPEN","NOT_APPLICABLE"],
+  "rules": {
+    "all_six_dimensions_must_be_present": true,
+    "missing_dimension_must_be_open_not_invented": true,
+    "not_applicable_requires_reason": true,
+    "source_observation_cannot_auto_confirm_business_purpose": true,
+    "program_spec_must_trace_to_business_scenario": true,
+    "customer_facing_text_prefers_natural_korean_sentence": true
+  },
+  "natural_language_pattern": "<누가>가 <언제> <어디서> <무엇을> <어떻게> 한다. 그 이유는 <왜>이다.",
+  "example": {
+    "who":"ESS 프로파일 권한을 가진 탄력근로제 근무자",
+    "when":"매일 근무계획 입력 시",
+    "where":"탄력근로제 근무계획 메뉴에서",
+    "what":"근무 날짜와 시작/종료 시간",
+    "how":"날짜와 시간을 선택하고 근무계획을 저장한다",
+    "why":"근무자가 매일 예정 근무시간을 등록해야 하기 때문",
+    "status":"EXAMPLE_ONLY_NOT_BUSINESS_TRUTH"
+  }
+}
