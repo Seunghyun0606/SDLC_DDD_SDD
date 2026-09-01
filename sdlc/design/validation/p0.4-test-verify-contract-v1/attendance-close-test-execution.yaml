@@ -1,0 +1,49 @@
+schema_version: 1
+artifact_type: TEST_EXECUTION_RESULT
+execution_result_id: TEX-RQG-6BB6D66548-P017-v1
+subject:
+  test_contract_id: TCN-RQG-6BB6D66548-P017-v1
+  rq_group_candidate_id: RQG-CAND-6BB6D66548
+source_binding:
+  source_evidence_set_id: 113e74710f9147f1482621b95962585d4c20a700f08cf51f1c3df5d55ddb4497
+runtime_environment:
+  kind: NONE
+  actual_runtime: false
+  description: 실제 Spring/MyBatis/Oracle 실행 환경 및 test command가 제공되지 않음
+execution:
+  test_command: null
+  started_at: null
+  finished_at: null
+  cases:
+    - id: TC-P017-01
+      state: NOT_EXECUTED
+      actual_result: null
+      evidence: []
+      reason: RUNTIME_ENVIRONMENT_UNAVAILABLE
+    - id: TC-P017-02
+      state: NOT_EXECUTED
+      actual_result: null
+      evidence: []
+      reason: RUNTIME_ENVIRONMENT_UNAVAILABLE
+    - id: TC-P017-03
+      state: NOT_EXECUTED
+      actual_result: null
+      evidence: []
+      reason: RUNTIME_ENVIRONMENT_UNAVAILABLE
+    - id: TC-P017-04
+      state: NOT_EXECUTED
+      actual_result: null
+      evidence: []
+      reason: RUNTIME_ENVIRONMENT_UNAVAILABLE
+summary:
+  required: 4
+  passed: 0
+  failed: 0
+  blocked: 0
+  not_executed: 4
+  skipped: 0
+open_blockers:
+  - TEST_COMMAND_OPEN
+  - RUNTIME_ENVIRONMENT_UNAVAILABLE
+  - BUSINESS_RULE_REVIEW_OPEN
+status: NOT_EXECUTED
