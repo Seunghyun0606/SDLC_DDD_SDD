@@ -1,0 +1,40 @@
+project_bootstrap:
+  project_id: DEMO-GENERIC-001
+  project_name: Generic Legacy Application
+  mode: BROWNFIELD
+  bootstrap_revision: 1
+  status: PARTIAL
+  providers:
+    source_provider_state: AVAILABLE
+    test_provider_state: UNCONFIGURED
+    other_provider_refs: []
+  assets:
+    - asset_type: SOURCE_ROOT
+      locator: src
+      state: ADOPTED
+      truth_state: OBSERVED
+      evidence_ids: [EVID-SRC-ROOT-001]
+      notes: bounded source root discovered
+    - asset_type: BUILD_CONFIGURATION
+      locator: ""
+      state: OPEN
+      truth_state: OPEN
+      evidence_ids: []
+      notes: discover when build/test stage requires it
+  standards:
+    discovered: []
+    adopted: []
+    deviations: []
+  terminology:
+    glossary_sources: []
+    unresolved_terms: []
+  customization:
+    active_overlay_ids: []
+    proposed_overlay_ids: [OVL-DEMO-GENERIC-001]
+    upfront_customization_complete_required: false
+  open_items:
+    - OPEN-BUILD-001
+  entry_gate:
+    first_work_allowed: true
+    blockers: []
+    warnings: [BUILD_CONFIGURATION_OPEN, TEST_PROVIDER_UNCONFIGURED]
