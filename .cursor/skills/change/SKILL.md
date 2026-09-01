@@ -1,14 +1,41 @@
 # /change
 
-자연어 변경을 `CLARIFICATION / BEHAVIOR_CHANGE / TECHNICAL_CHANGE / NEW_REQUIREMENT`로 구조화한다.
+자연어 변경을 `CLARIFICATION / BEHAVIOR_CHANGE / TECHNICAL_CHANGE / NEW_REQUIREMENT`로 구조화한다. 실제 실행 Runtime은 `sdlc/scripts/run_change.py`이며 일반 사용자는 다음 단일 진입점을 사용한다.
 
-1. Target과 Before/After를 식별한다.
-2. RQ/FR/BR/PROC/PGM/TASK/AC/TC 관계를 따라 영향 범위를 계산한다.
-3. 기존 Source Evidence와 충돌하면 기존 설계/Knowledge를 `STALE` 또는 `CHECK_REQUIRED` 후보로 분류한다.
-4. 확정되지 않은 변경은 Alert/Assumption과 함께 진행하며 위험 Source write만 Guard한다.
-5. 변경 원문과 provenance를 보존한다.
-6. 변경 분석 Artifact와 Canonical Delta를 하나의 Stage Result Envelope로 묶어 `sdlc/scripts/validate_agent_stage_result.py`로 검증한다.
-7. 검증된 Canonical 값/관계/근거 변경만 `sdlc/scripts/apply_canonical_delta.py`로 적용한다. 문서에 “Canonical 반영”이라고 적는 것만으로 갱신 완료로 간주하지 않는다.
+```bash
+python sdlc/scripts/harness.py change \
+  --target <RQ/PGM/TASK/기타 ID> \
+  --change '<변경 요청 원문>'
+```
+
+## 실행 원칙
+1. Target과 변경 원문을 보존한다.
+2. Target 중심 Canonical relation graph만 변경 권한 범위로 사용한다.
+3. 변경 요청을 분류하되 분류 자체가 Business Truth 확정 권한을 만들지 않는다.
+4. Source 관찰과 고객/업무 확정을 구분한다.
+5. 확정 Business Truth 변경은 명시적 승인 없이 적용하지 않는다.
+6. Provider 실행은 `/work`와 같은 Git HEAD/branch/dirty/write-scope Guard 안에서 수행한다.
+7. 변경 결과는 Stage Result Validator를 통과한 뒤에만 locked/atomic Canonical Runtime으로 반영한다.
+8. 실패하면 이번 Provider 실행이 만든 Git working-tree 변경을 rollback한다. 자동 Merge/commit은 하지 않는다.
+
+## Plan Only
+실제 Provider 실행 전에 변경 범위와 기준점을 확인할 수 있다.
+
+```bash
+python sdlc/scripts/harness.py change \
+  --target RQ-001 \
+  --change '환불 상태 조회를 추가한다' \
+  --plan-only
+```
+
+Plan에는 최소 다음이 들어간다.
+- Target graph
+- Canonical base revision
+- Git commit/branch baseline
+- 변경 원문
+- 허용된 기존 Canonical entity 범위
+- Source write root
+- Business Truth Guard
 
 ## 변경 Stage Result 검증
 변경 분석도 `/work`와 동일한 Machine 실행 경계를 사용한다.
@@ -17,7 +44,7 @@
 {
   "schema_version": 1,
   "stage": "CHANGE",
-  "artifact_path": "docs/.../change-analysis.md",
+  "artifact_path": "sdlc/runtime/change/RQ-001/CHANGE_change-analysis.md",
   "canonical_delta": {},
   "quality_gate": {"status": "PASS", "failures": []},
   "alerts": [],
@@ -26,78 +53,95 @@
 ```
 
 검증:
-`python sdlc/scripts/validate_agent_stage_result.py --result <change-result.json> --store sdlc/canonical/store.json --out <validation-result.json>`
 
-- `validation.status = PASS`이면서 `validation.executable = true`인 경우에만 Canonical 적용 단계로 이동한다.
-- Artifact/Delta Stage 불일치, source_artifact 불일치, stale revision, 미해결 Template placeholder가 있으면 변경을 적용하지 않는다.
-- 동일 변경을 반복 실행해 비교할 때는 `--compare`로 semantic fingerprint를 확인할 수 있다.
-- 이 비교는 LLM 자체의 결정론을 보장하지 않으며 실제 생성 결과의 의미 차이를 검출하기 위한 것이다.
-
-## Canonical 변경 적용
-변경 요청이 Canonical에 영향을 주면 현재 Store revision을 기준으로 최소 Delta를 만든다.
-
-```json
-{
-  "schema_version": 1,
-  "delta_id": "change 요청을 재실행해도 동일한 ID",
-  "base_revision": 0,
-  "stage": "CHANGE",
-  "source_artifact": "변경 원문 또는 변경 분석 산출물",
-  "operations": []
-}
+```bash
+python sdlc/scripts/validate_agent_stage_result.py \
+  --result <change-result.json> \
+  --store sdlc/canonical/store.json \
+  --out <validation-result.json>
 ```
 
-지원 Operation:
-- `UPSERT_ENTITY`: 변경으로 새로 생기거나 값이 달라진 Entity만 반영
-- `UPSERT_RELATION`: 변경된 관계만 반영
-- `ADD_PROVENANCE`: 값은 유지하고 변경 원문/Source 관찰 근거만 연결
+- `validation.status = PASS`이면서 `validation.executable = true`인 경우에만 Canonical 적용 단계로 이동한다.
+- Artifact/Delta Stage 불일치, source_artifact 불일치, stale revision, 미해결 Template placeholder가 있으면 적용하지 않는다.
+- 동일 변경의 반복 실행 의미를 비교할 때는 `--compare`와 semantic fingerprint를 사용할 수 있다.
+- 이 비교는 **LLM 자체의 결정론을 보장하지 않으며** 실제 생성 결과의 의미 차이를 검출하기 위한 것이다.
 
-실행:
-1. Stage Result Validator가 해당 Delta를 현재 Store에서 `APPLIED` 또는 `IDEMPOTENT` 가능하다고 판정했는지 확인한다.
-2. `python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --dry-run`
-3. `APPLIED` 후보일 때만 실제 적용한다.
-4. `python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --result-out <result.json>`
-5. `CONFLICT`면 Store를 부분 수정하지 않는다. 최신 revision을 다시 읽고 Before/After를 재평가한다.
-6. `IDEMPOTENT`면 동일 변경이 이미 반영된 것이므로 중복 적용하지 않는다.
+## Canonical 변경 적용
+검증된 Delta는 `sdlc/scripts/apply_canonical_delta.py`의 locked atomic write 경계를 사용한다.
+
+지원 Operation:
+- `UPSERT_ENTITY`
+- `UPSERT_RELATION`
+- `ADD_PROVENANCE`
+
+DELETE는 자동 지원하지 않는다.
 
 ### Business Truth 안전 규칙
-- 고객/업무 권한자가 확인한 `CONFIRMED_BUSINESS`를 Source 관찰만으로 변경하거나 상태를 낮추지 않는다.
-- 기존 Source에서 다른 동작이 관찰되면 Business Truth 수정이 아니라 우선 `ADD_PROVENANCE`, `CHECK_REQUIRED`, 변경 Proposal 중 하나로 기록한다.
-- `CONFIRMED_BUSINESS` 신규/변경은 `evidence_class: CONFIRMED`가 필요하다.
-- DELETE는 현재 Canonical Runtime 범위가 아니다. 삭제 요구는 영향분석과 명시적 후속 처리 대상으로 둔다.
-- Canonical Delta 적용 성공과 Source Code write 승인은 별개다.
+- 기존 `CONFIRMED_BUSINESS`를 바꾸려면 `evidence_class: CONFIRMED`가 필요하다.
+- `/change`에서도 사용자가 실제 업무 확정을 명시하지 않았다면 `--allow-business-truth-change`를 사용하지 않는다.
+- Source가 기존 업무정책과 다르게 동작해도 Source 관찰을 Business Truth로 자동 승격하지 않는다.
+- 값 변경 없이 현행 근거를 연결할 때는 `ADD_PROVENANCE`를 우선한다.
+
+## Source Version / Write Guard
+`run_change.py`는 공통 `/work` executor를 사용하므로 다음 Guard를 공유한다.
+
+- 기본 `main/master` 직접 쓰기 금지
+- 실행 시작 시 Git HEAD/branch 기록
+- 이미 dirty working tree이면 기본 중단
+- Provider가 HEAD를 변경하면 중단
+- 허용 Source root/선택 Artifact 밖의 파일 변경 차단
+- DEVELOPMENT Source write는 build/test command가 없으면 기본 중단
+- Stage/Canonical 실패 시 이번 실행에서 생긴 Git 변경 rollback
+- Canonical은 file lock → 최신 revision 재읽기 → atomic replace
+
+Repository hosting의 Branch Protection 설정까지 이 Script가 대신하는 것은 아니다. 프로젝트 GitHub/GitLab 정책에서도 default branch 보호를 별도로 활성화한다.
 
 ## Source Drift Reverse 처리
-Source 기준점이 바뀌었거나 외부에서 Source가 수정된 경우 다음 공통 절차를 사용한다.
+외부에서 Source가 변경됐거나 Merge/Rebase 이후 기준점이 바뀐 경우:
 
-1. 기존 산출물과 연결된 `baseline source manifest`를 준비한다.
-2. 현재 Source의 `observed source manifest`를 준비한다.
-3. Artifact별 Source Evidence와 역방향 전파 관계를 `artifact evidence index`로 준비한다.
-4. `python sdlc/scripts/detect_source_drift.py --baseline <baseline.json> --observed <observed.json> --artifact-index <artifact-index.json> --output <reverse-report.json>`을 실행한다.
-5. `STALE_SOURCE_EVIDENCE`는 실제 Source hash가 달라진 직접 영향 산출물이다.
-6. 명시적 전파 Edge가 `STALE`이면 `STALE_PROPAGATED`, `CHECK_REQUIRED`이면 `CHECK_REQUIRED_REVERSE`로 기록한다.
-7. Reverse 결과는 Candidate만 만든다. 기존 문서나 Canonical Business Truth를 자동 덮어쓰지 않는다.
-8. 현행 Source 관찰을 Canonical에 연결해야 하면 Business 값을 덮는 `UPSERT_ENTITY`보다 `ADD_PROVENANCE`를 우선 사용한다.
-9. 재생성/검토가 끝난 뒤에만 현재 Source Evidence hash로 Artifact를 갱신한다.
+```bash
+python sdlc/scripts/run_source_reverse_check.py \
+  --source-root <source-root> \
+  --artifact-root <artifact-root> \
+  --source-ref <commit-or-ref> \
+  --baseline sdlc/runtime/reverse/baseline.json \
+  --output sdlc/runtime/reverse/result.json
+```
+
+- `STALE_SOURCE_EVIDENCE`: 직접 Source evidence가 달라진 산출물
+- `STALE_PROPAGATED`: 명시적 stale propagation
+- `CHECK_REQUIRED_REVERSE`: 상위 업무/설계가 다시 확인되어야 하는 후보
+- Source 변경은 자동 Business Truth 변경이 아니다.
 
 ## Program Spec Semantic Reverse Candidate
-Brownfield Impact Adapter의 기준점/현재 결과가 모두 있고 Program Spec과 Source Node의 Binding이 등록되어 있으면 Source 변화에서 구현 명세 갱신 후보를 만들 수 있다.
+Program Binding과 before/after impact graph가 있으면:
 
-실행:
-`python sdlc/scripts/generate_program_spec_reverse_candidate.py --baseline-impact <before-impact.json> --observed-impact <after-impact.json> --program-bindings <program-bindings.json> --output <program-reverse-candidate.json>`
+```bash
+python sdlc/scripts/generate_program_spec_reverse_candidate.py \
+  --baseline-impact <before-impact.json> \
+  --observed-impact <after-impact.json> \
+  --program-bindings <program-bindings.json> \
+  --output <program-reverse-candidate.json>
+```
 
-규칙:
-1. Program Binding은 `program_id / artifact_path / functional_design_ref / source_node_ids`를 가진다.
-2. Candidate는 해당 PGM의 Source Node와 실제 변경 Node/Edge가 설정된 hop 범위 안에서 연결될 때만 생성한다.
-3. 전역 Coverage 변화만으로 관계 없는 Program Spec Candidate를 만들지 않는다.
-4. Candidate가 수정할 수 있는 범위는 Program Spec의 구현 Target, Source 근거, 구현 Mapping/Delta, Query/Table, Transaction, Integration 기술 계약, 기술 제어, TASK/AC/TC/Source, 준비도뿐이다.
-5. 업무 시나리오, 업무 규칙, 기능 요구 의미, 업무 예외, Business Truth는 자동 갱신 금지다.
-6. 결과는 `review_required: true`, `auto_apply: false`다. Generator는 실제 Program Spec 파일을 수정하지 않는다.
-7. 검토자가 Candidate를 수용한 뒤에도 Program Spec 갱신과 Canonical Delta 적용은 별도 Stage Result 검증을 거친다.
+Candidate는 실제 Program Spec 파일을 자동 수정하지 않는다.
+- `review_required: true`
+- `auto_apply: false`
+- 구현 Target/Mapping/Query/Table/Transaction/Integration/기술 제어만 후보화
+- 업무 시나리오/업무 규칙/Business Truth 자동 변경 금지
 
-### 안전 규칙
-- 신규 Source가 생겼다는 이유만으로 관련 없는 기존 문서를 자동 STALE 처리하지 않는다.
-- Source-derived 설계/프로그램 문서는 `STALE` 전파가 가능하지만, 고객 승인 Requirement/BR 등 권위 있는 업무 사실은 기본적으로 `CHECK_REQUIRED`가 적절하다.
-- 역방향 전파는 명시된 Artifact Edge를 통해서만 수행한다.
-- Source 변경은 Business Truth 변경의 증거 후보이지 자동 정책 변경이 아니다.
-- Semantic Reverse Candidate는 Program Spec 구현정보 갱신 후보일 뿐 Functional Design 재작성기가 아니다.
+## Customer Decision Round Trip
+고객 문서 검토 결과를 다시 근거로 남겨야 할 때:
+
+```bash
+python sdlc/scripts/capture_customer_decision.py \
+  --input <customer-decision.json>
+```
+
+고객 `ACCEPT/REJECT/REQUEST_CHANGE/ACKNOWLEDGE`는 CONFIRMED provenance로 남길 수 있다. 실제 업무 필드 변경은 `field_updates`와 명시적 `--apply-business-change`가 함께 있을 때만 허용한다.
+
+## Do Not
+- Source hash 변화만으로 업무 규칙이 바뀌었다고 판단하지 않는다.
+- Change classification만으로 권한을 획득했다고 간주하지 않는다.
+- 자동 Merge/commit으로 동시 작업 충돌을 숨기지 않는다.
+- 실패한 Provider의 Source 변경을 working tree에 남겨 성공처럼 보이지 않는다.
