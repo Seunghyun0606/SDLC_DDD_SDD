@@ -1,4 +1,4 @@
-version: 1.3
+version: 1.4
 stage_input_pack:
   metadata:
     pack_id: FILL_ME
@@ -53,6 +53,9 @@ stage_input_pack:
     requested_outputs: []
     capability_inputs: {}
     write_proofs: {}
+    revision_guard:
+      decision: NOT_EVALUATED  # NOT_EVALUATED | ALLOW | DENY
+      guard_proof_ref: null
     human_actions: []
     adapter_configs: {}
 
@@ -68,3 +71,4 @@ stage_input_pack:
     granularity_check: PENDING
     execution_scope_check: PENDING
     artifact_profile_check: PENDING
+    revision_ownership_guard_check: PENDING
