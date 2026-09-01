@@ -31,6 +31,15 @@ documents:
 br_intake:
   profile: sdlc/config/br-intake-profile.json
   preserve_original_files: true
+open_resolution:
+  profile: sdlc/config/open-resolution-profile.yaml
+  sop_required: false
+  workbook_template: sdlc/templates/core/open-resolution-workbook.md
+  allow_designer_proposal: true
+  allow_developer_proposal: true
+  allow_existing_system_analysis: true
+  allow_source_data_analysis: true
+  # 실제 승인권자/위임 규칙은 프로젝트에서 open-resolution-profile.yaml로 조정한다.
 customization:
   overlay_order:
     - core
