@@ -2,39 +2,70 @@ schema_version: 1
 session_namespace: SDLC_DESIGN_SESSION_FIRST
 session_base_branch: SDLC_DESIGN_SESSION_FIRST/base
 session_base_commit: bd14bf588efb95371e7c8f5f5a1515536b8cadf8
-branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.2-requirement-intake-poc-v0.2
-legacy_branch: validation/v1.5.2-requirement-intake-poc-v0.2
-branch_version: requirement-intake-poc-v0.2.0
-parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.1-requirements-pilot-v0.1
-parent_commit: 034de9d9bd2865e12bc597bebdfa1447960e1bfb
+branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.2-requirement-intake-poc-v0.3
+legacy_branch: null
+branch_version: requirement-intake-poc-v0.3.0
+parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.2-requirement-intake-poc-v0.2
+parent_commit: 8a88015e71e4bf19498cb18292444a7b0383675e
 main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
-candidate_design_version: v1.5.2-rc.1
-status: IMPLEMENTED_VALIDATED
+candidate_design_version: v1.5.2-rc.2
+status: IMPLEMENTED_LOCAL_VALIDATED_CI_PENDING
 merge_to_main: false
 branch_policy:
   create_new_branches_under_session_namespace: true
   direct_commit_to_main: false
-  preserve_legacy_branches_as_history: true
-purpose: Bulk Requirement Intake / External ID / RQ-FR Grouping 설계 Gap의 구현 가능성 PoC
+  preserve_parent_branch_as_validation_baseline: true
+purpose: 실제 142건 Requirement XLSX End-to-End Intake 검증과 재-import identity/header provenance 보강
 scope:
-  - two-row XLSX header parsing
-  - source record provenance
-  - external requirement id preservation
-  - exact RQ grouping
-  - FR candidate creation
-  - near-duplicate GROUPING_REVIEW
-  - non-blocking invalid/duplicate handling
-  - GitHub-safe Mermaid report
+  - execute importer against actual uploaded 142-row XLSX
+  - verify external requirement id continuity and uniqueness
+  - verify exact RQ grouping and FR coverage
+  - verify raw versus normalized preservation
+  - add stable candidate key for re-import comparison
+  - preserve group header provenance from profile config
+  - validate one RQ vertical slice without inventing Brownfield source evidence
 validation:
-  requirement_intake_tests: 6
-  requirement_intake_tests_result: PASS
+  actual_source_rows: 142
+  actual_imported_rows: 142
+  rq_candidates: 22
+  fr_candidates: 142
+  grouping_reviews: 5
+  duplicate_external_ids: 0
+  invalid_rows: 0
+  requirement_intake_tests: 8
+  requirement_intake_tests_result: PASS_LOCAL
   inherited_worklist_tests: 6
-  github_actions_combined_tests: PASS
-  mermaid_docs_quality: PASS
+  inherited_worklist_tests_result: CI_PENDING
+  mermaid_docs_quality: PASS_LOCAL_NEW_DOCS
 actual_uploaded_requirements:
-  structural_validation_records: 142
-  code_execution_against_chat_attachment: NOT_MOUNTED_IN_REPO_RUNTIME
-  note: actual file structure was validated from uploaded workbook parsing; importer code was contract-tested with representative two-row XLSX fixtures
-next_step: create the next validation branch only under SDLC_DESIGN_SESSION_FIRST and validate DISCOVERY/IMPACT when an application source repository is available
-updated_at: 2026-09-01T17:43:00+09:00
+  file: 요구사항목록.xlsx
+  source_hash: sha256:d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f
+  fl_records: 39
+  te_records: 103
+  optional_assignee_empty: 142
+  optional_schedule_empty: 142
+stage_validation:
+  intake: PASS
+  decompose: CONDITIONAL_PASS
+  clarify: PASS_WARNING
+  process: CONDITIONAL_PASS
+  discovery: INPUT_REQUIRED
+  impact: CANDIDATE
+  design: PARTIAL
+  program: DEFERRED
+  development: DEFERRED
+  test: PARTIAL
+  verify: DEFERRED
+  knowledge: GIVEN_ONLY
+new_design_gaps:
+  - id: GAP-RI-004
+    type: Contract Gap
+    status: ENHANCED_POC_IMPLEMENTED
+    title: Stable Re-import Candidate Identity
+  - id: GAP-RI-005
+    type: Configuration Gap + Implementation Gap
+    status: ENHANCED_POC_IMPLEMENTED
+    title: Group Header Provenance Execution
+next_step: connect an actual Brownfield application source repository and validate DISCOVERY to PROGRAM on the selected RQ vertical slice
+updated_at: 2026-09-01T18:15:00+09:00
