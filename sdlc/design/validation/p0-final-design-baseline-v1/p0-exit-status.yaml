@@ -1,0 +1,45 @@
+schema_version: 1
+artifact_type: P0_EXIT_STATUS
+p0_exit_status:
+  state: P0_BASELINE_READY
+  production_ready: false
+  sample_or_pilot_required_for_gate: false
+  validation_basis:
+    github_tree_structural_check: PASS
+    critical_config_direct_inspection: PASS
+    repository_checkout_self_tests: NOT_EXECUTED
+    repository_checkout_reason: session environment cannot resolve github.com
+  structural_validation:
+    baseline_authority_index: PASS
+    required_core_contract_chain: PASS
+    legacy_normalization_and_boundary_guard: PASS
+    canonical_human_gate: PASS
+    source_business_truth_separation: PASS
+    test_runtime_verification_separation: PASS
+    e2e_blocker_preservation: PASS
+    provider_default_safety: PASS
+    adapter_conformance_boundary: PASS
+    write_recovery_guard: PASS
+    command_runtime_composition: PASS
+    pilot_overfitting_policy: PASS
+  critical_guards:
+    example_source_provider_default: UNCONFIGURED
+    example_test_provider_default: UNCONFIGURED
+    write_auto_retry: false
+    unknown_write_state: UNKNOWN_AFTER_WRITE
+    canonical_publish_requires_human_or_l2_confirmed_gate: true
+    verified_pass_requires_actual_runtime_and_production_source: true
+    baseline_index_duplicates_truth: false
+  external_non_p0_blockers:
+    - actual_customer_source
+    - actual_project_runtime
+    - actual_test_command
+    - production_provider_credentials
+    - canonical_registry_implementation
+    - project_specific_human_boundary_decisions
+    - production_verification
+  next_phase: P1
+  notes:
+    - P0_BASELINE_READY는 Production Ready를 의미하지 않는다.
+    - 첨부 요구사항목록 및 기존 Pilot 결과는 P0 Exit 필수 입력이 아니다.
+    - 기존 Phase 0의 manifest/capabilities/decisions 역할은 중복 Truth 파일 대신 baseline-contract-index가 현재 authoritative artifact에 연결한다.
