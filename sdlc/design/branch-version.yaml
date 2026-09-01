@@ -7,15 +7,15 @@ parent_commit: c9d1f2aafaedcd20e05adcceacdb25addbfd0c0b
 main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
 candidate_design_version: v1.5.6-rc.1
-status: CRITICAL_REVIEW_STARTER_IMPLEMENTED_CI_PENDING
+status: CRITICAL_REVIEW_VALIDATED_STARTER_KIT_IMPLEMENTED
 merge_to_main: false
 purpose: Greenfield/Brownfield Mode별 Starter Kit을 구성하고 현재 Harness의 산출물 효과성, 사용성, 저수준 Agent 재현성, Brownfield 영향분석, Reverse Engineering, Source 기반 BR/Program Spec 추출 가능성을 비판적으로 재검토
 starter_kits:
-  greenfield: IMPLEMENTED_VALIDATION_PENDING
-  brownfield: IMPLEMENTED_VALIDATION_PENDING
+  greenfield: IMPLEMENTED_VALIDATED
+  brownfield: IMPLEMENTED_VALIDATED
   contract: sdlc/design/contracts/starter-kit-contract.json
-  setup_mode_routing: IMPLEMENTED_VALIDATION_PENDING
-  auto_mode_preset_fix: IMPLEMENTED_VALIDATION_PENDING
+  setup_mode_routing: IMPLEMENTED_VALIDATED
+  auto_mode_preset_fix: IMPLEMENTED_VALIDATED
 critical_review:
   artifact_effectiveness: CONDITIONAL_PASS
   user_usability: CONDITIONAL_PASS_STARTER_IMPROVED
@@ -27,13 +27,19 @@ critical_review:
 validation:
   previous_combined_unittest_count: 53
   starter_kit_tests_added: 10
-  expected_combined_unittest_count: 63
-  github_actions: CI_PENDING
-  mermaid_docs_quality: CI_PENDING
+  combined_unittest_count: 63
+  combined_unittest_result: PASS
+  mermaid_markdown_files_checked: 95
+  mermaid_docs_quality: PASS
+  implementation_validation_ci:
+    worklist_sync_quality_run: 138
+    worklist_sync_quality_result: SUCCESS
+    docs_quality_run: 72
+    docs_quality_result: SUCCESS
 immediate_gaps:
   - id: GAP-UX-001
     priority: P0
-    status: IMPLEMENTED_VALIDATION_PENDING
+    status: IMPLEMENTED_VALIDATED
     title: Mode-specific Greenfield/Brownfield Starter Kit
   - id: GAP-AG-001
     priority: P0
@@ -64,6 +70,6 @@ enhancement_gaps:
     priority: P1
     status: IDENTIFIED_NOT_IMPLEMENTED
     title: Source-derived Observed BR Candidate Extraction
-verdict: STARTER_KIT_IMPLEMENTED / CRITICAL_GAPS_IDENTIFIED / CI_PENDING
-next_step: validate starter kits and full regression, then decide whether to implement P0 Agent/Brownfield/Drift gaps before the next real-source pilot
-updated_at: 2026-09-01T22:00:00+09:00
+verdict: STARTER_KIT_STRUCTURAL_PASS / CRITICAL_GAPS_IDENTIFIED / REVERSE_ENGINEERING_NOT_CORE_READY
+next_step: decide whether to implement P0 Agent/Brownfield/Drift gaps before the next real-source pilot; keep full automatic reverse rewrite and language-specific deep analysis as enhancement candidates
+updated_at: 2026-09-01T22:14:00+09:00
