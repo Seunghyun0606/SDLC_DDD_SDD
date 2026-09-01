@@ -1,0 +1,17 @@
+project:
+  name: FILL_ME
+  mode: AUTO  # AUTO | GREENFIELD | BROWNFIELD | HYBRID
+
+artifacts:
+  profile: STANDARD  # LITE | STANDARD | ENTERPRISE
+
+providers:
+  registry: sdlc/config/provider-registry.example.yaml
+
+customization:
+  overlays: []
+
+notes:
+  - AUTO는 bounded bootstrap evidence로 Greenfield/Brownfield 후보를 결정한다.
+  - 미확정 기술/업무 정보는 임의 확정하지 않고 OPEN으로 유지한다.
+  - 프로젝트 차이는 관찰된 경우에만 Overlay로 추가한다.
