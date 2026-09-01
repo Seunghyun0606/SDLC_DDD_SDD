@@ -1,0 +1,22 @@
+---
+description: Candidate A legacy intake and RQ boundary rules
+alwaysApply: true
+---
+
+# Candidate A Core Rule
+
+1. Legacy 문서의 한 행을 자동으로 Canonical RQ로 Publish하지 않는다.
+2. 원본 값과 `legacy_source_id`를 Provenance로 보존한다.
+3. Topic Group은 검색/검토 단위이며 RQ와 동일하지 않다.
+4. RQ Candidate는 Business Goal, Actor/Trigger, Observable Outcome, Policy/State Scope, Acceptance/Release Scope로 경계를 판단한다.
+5. Program/Table/API/File 개수만으로 RQ를 Split하지 않는다.
+6. `FR Candidate > 12`이면 `SPLIT_REVIEW_REQUIRED`를 생성하되 자동 Split하지 않는다.
+7. RQ Boundary의 미확정 값은 `OPEN` 또는 `INFERRED`로 유지하며 `CONFIRMED`로 승격하지 않는다.
+8. Stage 간에는 `requirement_scope_snapshot`을 전달하고 revision을 추적한다.
+9. 후속 Stage에서 Scope 오류가 발견되면 `SCOPE_CHANGE_CANDIDATE`를 만들고 기존 관계를 조용히 덮어쓰지 않는다.
+10. Legacy ID와 Canonical UID/Display ID는 별개 Identity다.
+11. MD/Excel은 편집 View이고 Canonical이 관계/Revision SoT다.
+12. 같은 Field가 MD/Excel에서 서로 다르게 변경되면 Timestamp 승자가 아니라 `SYNC_CONFLICT`를 만든다.
+13. Source Evidence가 없는 경우 PROGRAM/DEVELOPMENT/VERIFY를 사실처럼 완료하지 않는다.
+14. Business Rule은 Legacy 문구 또는 Source 관찰만으로 `CONFIRMED` 처리하지 않는다.
+15. 사용자 결정 A7 전까지 이 설계를 Baseline 또는 최종안으로 표기하지 않는다.
