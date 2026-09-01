@@ -9,7 +9,8 @@
     "ready_requires_functional_design_reference": true
   },
   "developer_spec_contract": "sdlc/design/contracts/developer-spec-contract.json",
-  "representation": "PROFILE_AWARE_SINGLE_READINESS_TABLE",
+  "representation": "SINGLE_READINESS_TABLE",
+  "profile_aware": true,
   "profiles": {
     "FAST": {
       "purpose": "XS/S 변경에서 실제 구현·검증에 직접 필요한 항목만 필수로 한다.",
