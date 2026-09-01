@@ -3,26 +3,46 @@ from __future__ import annotations
 import argparse, json
 from pathlib import Path
 
+
 def validate_text(text: str, config: dict) -> list[str]:
     errors=[]
     for field in config["required_fields"]:
         if field["marker"] not in text:
-            errors.append(f"MISSING_SECTION:{field['id']}:{field['marker']}")
-    ready = any(x in text for x in ["구현 준비 상태: READY","구현 준비 판정: READY","Implementation Readiness: READY","Readiness Verdict: READY"])
+            errors.append(f"MISSING_READINESS_ITEM:{field['id']}:{field['label']}")
+
+    ready = any(x in text for x in [
+        "구현 준비 상태: READY",
+        "구현 준비 판정: READY",
+        "Implementation Readiness: READY",
+        "Readiness Verdict: READY",
+    ])
+
     if ready and config["rules"].get("simulated_source_cannot_be_ready") and "SIMULATED_REFERENCE_ARCHITECTURE" in text:
         errors.append("READY_WITH_SIMULATED_SOURCE")
     if ready and config["rules"].get("open_real_source_cannot_be_ready") and "OPEN_REAL_SOURCE" in text:
         errors.append("READY_WITH_OPEN_REAL_SOURCE")
-    zero_open = any(x in text for x in ["미확정 항목 수: 0","미확정 항목 수: `0`","OPEN Count: 0","OPEN Count: `0`"])
+
+    zero_open = any(x in text for x in [
+        "남은 구현 OPEN 수: 0",
+        "남은 구현 OPEN 수: `0`",
+        "미확정 항목 수: 0",
+        "미확정 항목 수: `0`",
+        "OPEN Count: 0",
+        "OPEN Count: `0`",
+    ])
     if ready and config["rules"].get("ready_requires_zero_open") and not zero_open:
         errors.append("READY_WITH_NONZERO_OR_UNKNOWN_OPEN")
 
-    dev_section_present = "### 개발 상세 명세 완성도" in text
-    if ready and dev_section_present and config["rules"].get("ready_requires_developer_spec_zero_open_when_section_present"):
-        dev_zero_open = any(x in text for x in ["OPEN 상세 명세 수: 0","OPEN 상세 명세 수: `0`"])
-        if not dev_zero_open:
-            errors.append("READY_WITH_OPEN_OR_UNKNOWN_DEVELOPER_SPEC")
+    if ready and config["rules"].get("ready_requires_functional_design_reference"):
+        has_reference = any(x in text for x in [
+            "기능 설계 문서/버전:",
+            "Functional Design Ref:",
+        ])
+        if not has_reference:
+            errors.append("READY_WITHOUT_FUNCTIONAL_DESIGN_REFERENCE")
+
     return errors
+
 
 def main() -> int:
     parser=argparse.ArgumentParser()
@@ -38,4 +58,5 @@ def main() -> int:
         else:
             print(f"PASS {p}")
     return 1 if failed else 0
+
 if __name__=="__main__": raise SystemExit(main())
