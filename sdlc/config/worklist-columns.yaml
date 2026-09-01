@@ -1,0 +1,74 @@
+version: 1
+locale: ko-KR
+columns:
+  - key: work_item_id
+    label: 작업ID
+    required: true
+  - key: parent_id
+    label: 상위작업ID
+    required: false
+  - key: requirement_id
+    label: 요구사항ID
+    required: false
+  - key: item_type
+    label: 작업구분
+    required: true
+  - key: name
+    label: 작업명
+    required: true
+  - key: stage
+    label: 단계
+    required: true
+  - key: status
+    label: 상태
+    required: true
+  - key: quality
+    label: 품질상태
+    required: false
+  - key: validity
+    label: 유효상태
+    required: false
+  - key: assignee
+    label: 담당자
+    required: false
+  - key: planned_start
+    label: 계획시작일
+    required: false
+  - key: planned_end
+    label: 계획종료일
+    required: false
+  - key: estimated_effort
+    label: 예상공수
+    required: false
+  - key: actual_start
+    label: 실제시작일
+    required: false
+  - key: actual_end
+    label: 실제종료일
+    required: false
+  - key: actual_effort
+    label: 실제공수
+    required: false
+  - key: dependency_ids
+    label: 선행작업ID
+    required: false
+  - key: program_ids
+    label: 관련프로그램ID
+    required: false
+  - key: acceptance_test_ids
+    label: 완료기준ID
+    required: false
+  - key: alerts
+    label: 경고·확인사항
+    required: false
+  - key: updated_at
+    label: 최근변경일시
+    required: false
+    generated: true
+  - key: revision
+    label: 변경버전
+    required: false
+    generated: true
+  - key: note
+    label: 비고
+    required: false

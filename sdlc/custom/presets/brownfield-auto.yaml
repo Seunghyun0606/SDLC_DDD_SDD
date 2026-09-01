@@ -1,0 +1,23 @@
+profile: brownfield-auto
+project_mode: BROWNFIELD
+discovery:
+  existing_assets_first: true
+  scan:
+    - README*
+    - CONTRIBUTING*
+    - docs/**
+    - .github/**
+    - .cursor/**
+    - pom.xml
+    - build.gradle*
+    - package.json
+    - src/**
+    - tests/**
+  adoption_status:
+    - DISCOVERED
+    - ADOPTED
+    - OVERRIDDEN
+    - IGNORED
+workflow:
+  process_blocking: false
+  dangerous_action_policy: EXECUTION_GUARD

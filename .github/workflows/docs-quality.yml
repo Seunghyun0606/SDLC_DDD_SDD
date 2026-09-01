@@ -1,0 +1,19 @@
+name: Docs quality
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  mermaid-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate GitHub-safe Mermaid labels
+        run: python sdlc/scripts/normalize_mermaid.py --check .
