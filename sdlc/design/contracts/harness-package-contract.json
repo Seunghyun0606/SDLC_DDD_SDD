@@ -16,7 +16,8 @@
     "sdlc/config/customer-document-profile.example.json",
     "sdlc/config/br-intake-profile.example.json",
     "sdlc/design/contracts/customer-document-contract.json",
-    "sdlc/design/contracts/br-candidate.schema.json"
+    "sdlc/design/contracts/br-candidate.schema.json",
+    "sdlc/design/contracts/br-document-extraction-contract.json"
   ],
   "overlay_precedence": ["core","preset","project_profile","project_overlay","domain_overlay","local_override"],
   "customization_roots": ["sdlc/custom/project","sdlc/custom/domain"],
@@ -43,6 +44,7 @@
   "document_experience": {
     "visible_language":"ko-KR",
     "customer_document_contract":"sdlc/design/contracts/customer-document-contract.json",
-    "br_candidate_schema":"sdlc/design/contracts/br-candidate.schema.json"
+    "br_candidate_schema":"sdlc/design/contracts/br-candidate.schema.json",
+    "br_document_extraction_contract":"sdlc/design/contracts/br-document-extraction-contract.json"
   }
 }
