@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "candidate_design": "v1.5.6-rc.1",
+  "modes": {
+    "GREENFIELD": {
+      "starter_path": "sdlc/starter-kits/greenfield",
+      "startable_minimum": ["project.objective", "requirement_sources"],
+      "source_required_to_start": false,
+      "readiness_states": ["STARTABLE", "DESIGN_READY", "IMPLEMENTATION_READY"]
+    },
+    "BROWNFIELD": {
+      "starter_path": "sdlc/starter-kits/brownfield",
+      "startable_minimum": ["analysis_seed.text", "repository.reference"],
+      "source_required_to_confirm_source_analysis": true,
+      "impact_required_relation_types": [
+        "ENTRY_POINT",
+        "CALLER",
+        "CALLEE",
+        "DATA_READ_WRITE",
+        "TRANSACTION",
+        "EXTERNAL_INTERFACE",
+        "EVENT",
+        "CONFIG_FEATURE_FLAG",
+        "TEST",
+        "MODULE_BUILD_DEPENDENCY"
+      ],
+      "impact_required_result_classes": ["DIRECT_IMPACT", "INDIRECT_IMPACT", "CHECK_REQUIRED", "OUT_OF_SCOPE"],
+      "coverage_gaps_must_be_reported": true,
+      "readiness_states": ["STARTABLE", "IMPACT_ANALYSIS_READY", "IMPLEMENTATION_READY"]
+    }
+  },
+  "shared_invariants": {
+    "missing_recommended_input_is_non_blocking": true,
+    "customer_originals_are_preserved": true,
+    "secrets_must_not_be_in_starter_kit": true,
+    "business_truth_is_not_inferred_from_source_automatically": true,
+    "implementation_ready_requires_program_dor": true,
+    "canonical_ids_remain_stable": true
+  },
+  "reverse_engineering": {
+    "status": "DESIGN_REVIEW_ONLY_NOT_CORE_ENABLED",
+    "reserved_scopes": ["INVENTORY", "DRIFT_CHECK", "REVERSE_SPEC", "SOURCE_DIFF"],
+    "automatic_business_truth_promotion": false
+  }
+}
