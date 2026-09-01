@@ -1,10 +1,15 @@
-version: 1
-status: ACTIVE_P0_CANDIDATE
+version: 1.1
+status: ACTIVE_P0_1_CANDIDATE
 
 source_identity:
   preserve_source_requirement_id: true
   source_requirement_id_is_immutable: true
   never_reuse_source_requirement_id: true
+
+scope_types:
+  - ROW
+  - GROUP
+  - SUBGROUP
 
 canonical_decisions:
   - KEEP_AS_RQ
@@ -40,6 +45,15 @@ rules:
   - id: RQB-007
     statement: MAP_TO_EXISTING_RQ_AS_FR는 정확히 1개 RQ와 1개 이상 FR을 가져야 한다.
     enforcement: HARD_VALIDATION
+  - id: RQB-008
+    statement: 여러 원본 Row를 한 번에 판정할 때 scope_type은 GROUP 또는 SUBGROUP이고 source_group_id를 보존한다.
+    enforcement: HARD_VALIDATION
+  - id: RQB-009
+    statement: 동일 source_requirement_id를 동시에 둘 이상의 Boundary Record에 소속시키지 않는다.
+    enforcement: HARD_VALIDATION
+  - id: RQB-010
+    statement: Group Boundary의 Split은 Canonical Split과 동일하지 않으며, 확정 전까지 Group Candidate 상태를 유지한다.
+    enforcement: AGENT_GUARD
 
 safe_auto_behavior:
   import_default: UNRESOLVED
@@ -48,8 +62,10 @@ safe_auto_behavior:
   publish_canonical_rq: false
   auto_merge_by_name_similarity: false
   auto_split_by_crud: false
+  group_candidate_is_canonical: false
 
 escalation:
   BOUNDARY_AMBIGUOUS: L2_OR_HUMAN
   CROSS_DOMAIN_BOUNDARY: L3_OR_HUMAN
   CONFLICTING_SOURCE_GROUPING: HUMAN
+  GROUP_TOO_LARGE: L2_REVIEW
