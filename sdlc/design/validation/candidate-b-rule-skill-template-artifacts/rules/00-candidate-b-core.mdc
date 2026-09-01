@@ -1,0 +1,22 @@
+# Candidate B Core Rule
+
+1. Stage 진행상태와 실행권한을 분리한다.
+2. `progress=COMPLETE`만으로 코드변경, 병합, 배포, 검증완료, Knowledge Promotion을 허용하지 않는다.
+3. 변경 행위 전에는 현재 `action_permissions`를 조회한다.
+4. 중요 업무 가정이 남아 있어도 short-lived branch 초안 변경은 가능하되 Target Proof, Work Unit, assumption lineage가 필요하다.
+5. 중요 업무 가정이 해소되기 전 Merge/Release permission은 DENY다.
+6. 동일 `project_id + program_id`의 코드 변경은 Serial Ownership을 사용한다.
+7. 동일 PGM의 분석/설계/Test 준비는 병렬 가능하다.
+8. Task 배분 시 Developer Work Group과 PGM Write Lane을 분리한다.
+9. 영향범위가 큰 K1은 Candidate까지만 자동 생성하고 사람의 scope/effective 확인 후 승격한다.
+10. PM Task/Assignment/Schedule/Effort의 SoT는 Harness Canonical이다.
+11. Excel은 editable projection이며 Stable Task ID와 revision을 가진다.
+12. 같은 PM Field가 양쪽에서 다르게 바뀌면 `PM_SYNC_CONFLICT`로 처리한다.
+13. 코드 변경 전 중앙 Durable Work Unit Journal 등록이 성공해야 한다.
+14. Work Unit은 PREPARED, APPLIED, VERIFIED, COMMITTED 상태를 사용하고 예외는 RECOVERY_REQUIRED 또는 ABORTED다.
+15. Crash 후 APPLIED 상태를 새 작업처럼 재적용하지 않고 fingerprint 확인 후 Resume/Recovery한다.
+16. Central Store를 사용할 수 없으면 코드 변경, Merge/Release, PM Import Commit은 기본 DENY다.
+17. Resolver Confidence와 Target Write Proof를 분리한다.
+18. Static Impact의 HIGH confidence를 completeness로 해석하지 않는다.
+19. Stale summary만으로 Target Write Proof를 만들지 않는다.
+20. 사용자 View에 가정 기반 Draft와 Merge/Release 제한을 명시한다.
