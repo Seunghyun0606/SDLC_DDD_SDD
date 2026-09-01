@@ -1,0 +1,54 @@
+business_source_card:
+  source:
+    source_id: BSRC-PILOT-001
+    path_or_uri: "policy/근태운영정책_2026.pdf"
+    source_type: POLICY
+    title: "근태 운영 정책"
+    language: ko-KR
+    authority:
+      level: A1
+      owner_role: 인사운영팀
+    scope:
+      company: ALL
+      country: KR
+      organization: null
+      domain: ATTENDANCE
+    effective:
+      from: 2026-01-01
+      to: null
+    supersedes: [BSRC-PILOT-OLD]
+    confidentiality: INTERNAL
+  locator:
+    page: 17
+    section: "5.3 월마감 이후 수정"
+  evidence_fragment:
+    id: BEV-PILOT-001-01
+    extracted_statement: "월마감 이후에는 승인된 수정요청만 재집계할 수 있다."
+    context_before: "월마감 완료 후 일반 사용자의 직접 수정은 제한한다."
+    context_after: "강제마감 상태에서는 승인 여부와 관계없이 재집계하지 않는다."
+    truth: GIVEN_DOCUMENT
+  br_candidate:
+    id: BR-P017-02
+    statement: "월마감 이후에는 승인된 수정요청만 재집계할 수 있다."
+    conditions:
+      - "month_close_status = CLOSED"
+    action_or_result: ALLOW_RECALCULATION
+    exceptions:
+      - "close_type = FORCE_CLOSE"
+    scope:
+      company: ALL
+      country: KR
+      domain: ATTENDANCE
+    effective:
+      from: 2026-01-01
+      to: null
+    evidence_ids:
+      - BEV-PILOT-001-01
+      - "CR-PILOT-001"
+    conflict_with: []
+    status: CANDIDATE
+  review:
+    missing_fields:
+      - "실제 고객 정책문서 미제공 — Pilot Fixture"
+    human_confirmation_required: true
+    confirmation_owner_role: 인사운영책임자
