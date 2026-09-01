@@ -1,0 +1,32 @@
+version: 1
+requirement_review_decision:
+  review_id: FILL_ME
+  source_group_id: FILL_ME
+  source_revision: FILL_ME
+  source_requirement_ids: []
+  source_count: 0
+
+  decision: UNRESOLVED
+  boundary_status: OPEN
+  decision_basis: OPEN
+  evidence_ids: []
+  decided_by: null
+  decided_at: null
+  decision_revision: 0
+
+  canonical_rq_ids: []
+  canonical_fr_ids: []
+  publish_allowed: false
+
+  required_evidence:
+    - business_outcome_boundary
+    - owner_release_acceptance_boundary
+
+  reviewer_checklist:
+    independent_business_outcome_checked: false
+    owner_boundary_checked: false
+    release_boundary_checked: false
+    acceptance_boundary_checked: false
+    source_coverage_checked: false
+
+  next_action: COLLECT_EVIDENCE_OR_REVIEW
