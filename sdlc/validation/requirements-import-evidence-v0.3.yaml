@@ -1,0 +1,83 @@
+schema_version: 1
+branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.2-requirement-intake-poc-v0.3
+source:
+  file: 요구사항목록.xlsx
+  sheet: Sheet1
+  sha256: sha256:d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f
+  worksheet_rows_including_headers: 144
+  effective_header_row: 2
+  group_header_preserved: true
+import_result:
+  source_rows: 142
+  imported_rows: 142
+  invalid_rows: 0
+  duplicate_external_ids: 0
+  rq_candidate_count: 22
+  fr_candidate_count: 142
+  grouping_review_count: 5
+  non_blocking: true
+external_id_coverage:
+  REQ_TM_FL:
+    count: 39
+    first: REQ_TM_FL001
+    last: REQ_TM_FL039
+    sequence_complete: true
+  REQ_TM_TE:
+    count: 103
+    first: REQ_TM_TE001
+    last: REQ_TM_TE103
+    sequence_complete: true
+optional_fields:
+  assignee_empty: 142
+  planned_start_empty: 142
+  planned_end_empty: 142
+text_preservation:
+  records_with_normalization_change: 53
+  raw_to_normalized_derivation_lossless: true
+  normalization_rule: NBSP_TO_SPACE_AND_TRIM
+rq_groups:
+  - {id: RQ-CAND-0001, fr_count: 3, external_first: REQ_TM_FL001, external_last: REQ_TM_FL003}
+  - {id: RQ-CAND-0002, fr_count: 4, external_first: REQ_TM_FL004, external_last: REQ_TM_FL007}
+  - {id: RQ-CAND-0003, fr_count: 6, external_first: REQ_TM_FL008, external_last: REQ_TM_FL013}
+  - {id: RQ-CAND-0004, fr_count: 8, external_first: REQ_TM_FL014, external_last: REQ_TM_FL021}
+  - {id: RQ-CAND-0005, fr_count: 4, external_first: REQ_TM_FL022, external_last: REQ_TM_FL025}
+  - {id: RQ-CAND-0006, fr_count: 1, external_first: REQ_TM_FL026, external_last: REQ_TM_FL026}
+  - {id: RQ-CAND-0007, fr_count: 1, external_first: REQ_TM_FL027, external_last: REQ_TM_FL027}
+  - {id: RQ-CAND-0008, fr_count: 8, external_first: REQ_TM_FL028, external_last: REQ_TM_FL035}
+  - {id: RQ-CAND-0009, fr_count: 1, external_first: REQ_TM_FL036, external_last: REQ_TM_FL036}
+  - {id: RQ-CAND-0010, fr_count: 1, external_first: REQ_TM_FL037, external_last: REQ_TM_FL037}
+  - {id: RQ-CAND-0011, fr_count: 1, external_first: REQ_TM_FL038, external_last: REQ_TM_FL038}
+  - {id: RQ-CAND-0012, fr_count: 1, external_first: REQ_TM_FL039, external_last: REQ_TM_FL039}
+  - {id: RQ-CAND-0013, fr_count: 9, external_first: REQ_TM_TE001, external_last: REQ_TM_TE009}
+  - {id: RQ-CAND-0014, fr_count: 1, external_first: REQ_TM_TE010, external_last: REQ_TM_TE010}
+  - {id: RQ-CAND-0015, fr_count: 1, external_first: REQ_TM_TE011, external_last: REQ_TM_TE011}
+  - {id: RQ-CAND-0016, fr_count: 4, external_first: REQ_TM_TE012, external_last: REQ_TM_TE015}
+  - {id: RQ-CAND-0017, fr_count: 39, external_first: REQ_TM_TE016, external_last: REQ_TM_TE054}
+  - {id: RQ-CAND-0018, fr_count: 22, external_first: REQ_TM_TE055, external_last: REQ_TM_TE076}
+  - {id: RQ-CAND-0019, fr_count: 23, external_first: REQ_TM_TE077, external_last: REQ_TM_TE099}
+  - {id: RQ-CAND-0020, fr_count: 1, external_first: REQ_TM_TE100, external_last: REQ_TM_TE100}
+  - {id: RQ-CAND-0021, fr_count: 2, external_first: REQ_TM_TE101, external_last: REQ_TM_TE102}
+  - {id: RQ-CAND-0022, fr_count: 1, external_first: REQ_TM_TE103, external_last: REQ_TM_TE103}
+grouping_reviews:
+  - {a: RQ-CAND-0002, b: RQ-CAND-0003, similarity: 0.9000, auto_merged: false}
+  - {a: RQ-CAND-0002, b: RQ-CAND-0004, similarity: 0.9302, auto_merged: false}
+  - {a: RQ-CAND-0003, b: RQ-CAND-0004, similarity: 0.9302, auto_merged: false}
+  - {a: RQ-CAND-0010, b: RQ-CAND-0011, similarity: 0.8947, auto_merged: false}
+  - {a: RQ-CAND-0014, b: RQ-CAND-0015, similarity: 0.8511, auto_merged: false}
+selected_vertical_slice:
+  rq_candidate: RQ-CAND-0001
+  fr_count: 3
+  discovery: INPUT_REQUIRED
+  impact: CANDIDATE
+  design: PARTIAL
+  program: DEFERRED
+  development: DEFERRED
+  test: PARTIAL
+  verify: DEFERRED
+new_design_gaps:
+  - id: GAP-RI-004
+    type: Contract Gap
+    status: ENHANCED_POC_IMPLEMENTED
+  - id: GAP-RI-005
+    type: Configuration Gap + Implementation Gap
+    status: ENHANCED_POC_IMPLEMENTED
