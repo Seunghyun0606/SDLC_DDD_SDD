@@ -1,0 +1,196 @@
+version: 1
+status: DECISION_REQUIRED
+
+stage_input_pack:
+  metadata:
+    pack_id: SIP-PILOT-TM-017-ANALYSIS-001
+    project_id: PILOT-TM
+    stage: DECOMPOSE
+    generated_at: 2026-09-01T23:00:00+09:00
+    source_revision: requirements-xlsx-upload-2026-09-01
+    profile: STANDARD
+
+  target:
+    primary_id: RQ-CANDIDATE-TM-CLOSE
+    target_type: RQ_CANDIDATE
+    source_requirement_ids:
+      - REQ_TM_TE017
+    related_ids:
+      rq: []
+      fr: []
+      br: []
+      ac: []
+      proc: []
+      pgm: []
+      task: []
+      tc: []
+
+  required_inputs:
+    - id: SRC-REQ-XLSX-001
+      type: business_source
+      locator: 요구사항목록.xlsx / Sheet1 / REQ_TM_TE017 row
+      revision: upload-2026-09-01
+      required: true
+      available: true
+    - id: SRC-POLICY-TM-001
+      type: business_policy_or_process
+      locator: OPEN
+      revision: null
+      required: false
+      available: false
+    - id: SRC-CODE-TM-001
+      type: source_repository
+      locator: OPEN
+      revision: null
+      required: false
+      available: false
+
+  resolved_facts:
+    - fact_id: FACT-TM-017-01
+      value: 근태관리
+      truth: GIVEN
+      evidence_ids: [EV-TM-017-01]
+      confidence: HIGH
+    - fact_id: FACT-TM-017-02
+      value: 근태마감
+      truth: GIVEN
+      evidence_ids: [EV-TM-017-01]
+      confidence: HIGH
+    - fact_id: FACT-TM-017-03
+      value: 일근태입력/마감 조회
+      truth: GIVEN
+      evidence_ids: [EV-TM-017-01]
+      confidence: HIGH
+    - fact_id: FACT-TM-017-04
+      value: 10분단위 근무계획 개선 근태마감 반영을 구현
+      truth: GIVEN
+      evidence_ids: [EV-TM-017-01]
+      confidence: HIGH
+
+  evidence:
+    - evidence_id: EV-TM-017-01
+      provider: BUSINESS_DOCUMENT
+      locator: 요구사항목록.xlsx / Sheet1 / requirement_id=REQ_TM_TE017
+      revision: upload-2026-09-01
+      observed_value: 근태관리 > 근태마감 > 일근태입력/마감 조회
+      confidence: HIGH
+
+  open_items:
+    - open_id: OPEN-TM-017-01
+      type: BOUNDARY_AMBIGUOUS
+      question: REQ_TM_TE017을 독립 Canonical RQ로 유지할지, 근태마감 상위 RQ의 FR로 묶을지 결정 필요
+      blocks_reasoning: true
+      blocks_action: false
+      required_evidence:
+        - 고객의 변경 Outcome 기준
+        - 기존 Requirement 관리 단위 정책
+      escalation: L2_OR_HUMAN
+    - open_id: OPEN-TM-017-02
+      type: MISSING_INFORMATION
+      question: 이 조회 기능의 사용자/권한 주체는 누구인가?
+      blocks_reasoning: false
+      blocks_action: false
+      required_evidence: [업무정의서 또는 담당자 확인]
+      escalation: NONE
+    - open_id: OPEN-TM-017-03
+      type: MISSING_INFORMATION
+      question: 언제 어떤 Trigger로 조회하는가?
+      blocks_reasoning: false
+      blocks_action: false
+      required_evidence: [업무 Process 또는 화면 설명]
+      escalation: NONE
+    - open_id: OPEN-TM-017-04
+      type: MISSING_INFORMATION
+      question: 어떤 화면/채널/메뉴에서 수행하는가?
+      blocks_reasoning: false
+      blocks_action: false
+      required_evidence: [화면/PPT 또는 Source]
+      escalation: NONE
+    - open_id: OPEN-TM-017-05
+      type: MISSING_INFORMATION
+      question: 10분단위 근무계획 개선이 조회 결과의 어떤 항목/계산/상태를 바꾸는가?
+      blocks_reasoning: true
+      blocks_action: false
+      required_evidence: [TO-BE 정책/예시]
+      escalation: L2_OR_HUMAN
+    - open_id: OPEN-TM-017-06
+      type: MISSING_REQUIRED_SOURCE
+      question: 영향 프로그램/Table/API를 확인할 Source Repository 또는 기존 설계가 없음
+      blocks_reasoning: true
+      blocks_action: true
+      required_evidence: [Source repository/profile/current revision]
+      escalation: HUMAN_OR_SOURCE_PROVIDER
+
+  alerts:
+    - code: BOUNDARY_AMBIGUOUS
+      severity: WARNING
+      message: Legacy Requirement ID를 자동으로 Canonical RQ/FR로 변환하지 않는다.
+    - code: SOURCE_NOT_AVAILABLE
+      severity: WARNING
+      message: PGM/Data/Impact를 CONFIRMED로 생성하지 않는다.
+
+  assumptions: []
+
+  task_contract:
+    purpose: 원본 Requirement의 의미를 보존하면서 RQ/FR Boundary 후보와 부족한 정보를 식별한다.
+    allowed_scope:
+      - source requirement provenance preservation
+      - 6W candidate extraction
+      - boundary candidate generation
+      - OPEN question generation
+    prohibited_scope:
+      - invented actor
+      - invented timing
+      - invented screen or URL
+      - source program guess
+      - business rule confirmation without evidence
+    output_schema: requirement-boundary-candidate
+    minimum_agent_level: L1
+    escalation_conditions:
+      - BOUNDARY_AMBIGUOUS
+      - MISSING_REQUIRED_SOURCE
+
+  retrieval_plan:
+    ordered_sources:
+      - REQ_TM_TE017 row
+      - adjacent 근태마감 rows REQ_TM_TE016..REQ_TM_TE031 for grouping context only
+      - business policy/process if supplied
+      - source profile/repository only after available
+    max_documents: 3
+    max_source_files: 0
+    stop_when:
+      - legacy_row_facts_extracted
+      - boundary_options_recorded
+      - unknown_6w_fields_marked_open
+
+  output_requirements:
+    preserve_ids: true
+    preserve_open_items: true
+    preserve_truth_status: true
+    no_silent_confirmation: true
+    no_silent_id_merge: true
+    next_stage_handoff_required: true
+
+  deterministic_validators:
+    - SOURCE_REQUIREMENT_ID_PRESERVED
+    - REQUIRED_FIELD_CHECK
+    - OPEN_PRESERVATION_CHECK
+    - NO_CONFIRMED_PGM_WITHOUT_SOURCE
+    - NO_CONFIRMED_BR_FROM_TITLE_ONLY
+
+  candidate_boundary_options:
+    - option: A
+      description: REQ_TM_TE017을 독립 Canonical RQ로 유지
+      confidence: LOW
+    - option: B
+      description: 근태마감 상위 RQ 아래 조회 FR로 변환
+      confidence: LOW
+    - option: C
+      description: 일마감/월마감/전자결재 단위로 복수 RQ 재그룹화
+      confidence: LOW
+
+  completion:
+    status: COMPLETE
+    quality: WARNING
+    next_action: L2 또는 고객/BA가 RQ Boundary를 결정하고, 업무 Process/Source Evidence를 추가 수집한다.
+    escalation_target: L2_OR_HUMAN
