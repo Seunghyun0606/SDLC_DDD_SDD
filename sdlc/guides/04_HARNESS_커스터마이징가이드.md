@@ -6,7 +6,7 @@ Core Script를 먼저 수정하지 않는다. 아래 우선순위로 차이만 �
 
 ```mermaid
 flowchart LR
-    C[Core Default] --> P[Preset] --> R[Project Profile] --> D[Domain Overlay] --> L[Local Override]
+    C["Core Default"] --> P["Preset"] --> R["Project Profile"] --> D["Domain Overlay"] --> L["Local Override"]
 ```
 
 ## 1. 기존 프로젝트
@@ -15,10 +15,10 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A[Existing Assets] --> D[DISCOVERED] --> X{관리자 선택}
-    X --> AD[ADOPTED]
-    X --> OV[OVERRIDDEN]
-    X --> IG[IGNORED]
+    A["Existing Assets"] --> D["DISCOVERED"] --> X{"관리자 선택"}
+    X --> AD["ADOPTED"]
+    X --> OV["OVERRIDDEN"]
+    X --> IG["IGNORED"]
 ```
 
 기존 프로젝트 규칙과 실제 구조를 재사용하여 처음부터 Harness 설정을 다시 쓰는 일을 줄인다.
@@ -50,3 +50,7 @@ sdlc/custom/
 ## 5. 변경 검증
 
 Override가 기존 ACTIVE Capability를 제거하면 Continuity Validator가 경고한다. 이 경고는 Harness 배포 품질에 반영하지만 사용자의 일반 업무 프로세스 자체를 강제로 멈추지는 않는다.
+
+## 6. Mermaid 작성 규칙
+
+커스터마이징된 용어가 `/`, `?`, `(`, `)` 등 특수문자를 포함할 수 있으므로 Diagram Template의 라벨은 `A["라벨"]`, `Q{"질문?"}` 형태를 기본값으로 사용한다.
