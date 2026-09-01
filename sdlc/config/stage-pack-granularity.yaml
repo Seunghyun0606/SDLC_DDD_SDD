@@ -1,0 +1,41 @@
+version: 1
+status: ACTIVE_P0_1_CANDIDATE
+
+purpose: Stage Input Pack 수가 Legacy Row 수에 비례해 폭증하지 않도록 Work Unit 단위 handoff를 강제한다.
+
+legacy_inventory:
+  default_granularity_by_stage:
+    INTAKE: GROUP
+    DECOMPOSE: GROUP
+    CLARIFY: GROUP
+    PROCESS: GROUP
+    DISCOVERY: GROUP
+  allowed:
+    - ROW
+    - GROUP
+    - SUBGROUP
+    - CANONICAL_ENTITY
+  rules:
+    - id: SIPG-001
+      statement: 2개 이상 Source Requirement ID를 포함하면 GROUP 또는 SUBGROUP이어야 한다.
+      enforcement: HARD_VALIDATION
+    - id: SIPG-002
+      statement: GROUP/SUBGROUP Pack은 source_group_id를 가져야 한다.
+      enforcement: HARD_VALIDATION
+    - id: SIPG-003
+      statement: Candidate Group이 존재하는 경우 Row별 Pack 자동 대량생성을 기본 금지한다.
+      enforcement: AGENT_GUARD
+    - id: SIPG-004
+      statement: Subgroup Pack은 서로 다른 질문, Owner, Process, Source Path 또는 Boundary 검토가 필요할 때만 분리한다.
+      enforcement: REVIEW_RULE
+
+auto_pack_policy:
+  max_auto_packs_per_candidate_group: 1
+  split_requires_reason: true
+  row_pack_bulk_generation: DENY
+  preserve_all_source_requirement_ids_in_group_pack: true
+
+invariants:
+  - pack_count_should_scale_with_work_units_not_legacy_rows
+  - split_pack_must_preserve_parent_group_trace
+  - pack_split_must_not_imply_canonical_split
