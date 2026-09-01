@@ -10,7 +10,7 @@ parent_commit: cdd9878bd4f291b77a01e5627a1e47bef2cd9e22
 main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
 candidate_design_version: v1.5.3-rc.1
-status: IMPLEMENTED_LOCAL_VALIDATED_CI_PENDING
+status: STRUCTURAL_IMPLEMENTED_VALIDATED
 merge_to_main: false
 purpose: Source가 연결된 프로젝트에서 필요한 Rule/Skill/Template 구조와 다른 프로젝트 이식/Custom 경계를 실제 파일과 Contract로 검증
 scope:
@@ -22,11 +22,18 @@ scope:
   - validate source evidence fields for DISCOVERY through VERIFY
 validation:
   structural_contract_tests: 8
-  structural_contract_tests_result: PASS_LOCAL
+  structural_contract_tests_result: PASS
   inherited_requirement_intake_tests: 8
   inherited_worklist_tests: 6
-  inherited_regression_result: CI_PENDING
-  mermaid_docs_quality: PASS_LOCAL_NEW_DOCS
+  combined_unittest_count: 22
+  inherited_regression_result: PASS
+  mermaid_docs_quality: PASS
+  mermaid_markdown_files_checked: 51
+  github_actions:
+    worklist_sync_quality_run: 41
+    worklist_sync_quality_result: SUCCESS
+    docs_quality_run: 20
+    docs_quality_result: SUCCESS
 stage_validation:
   intake: PASS_INHERITED
   decompose: STRUCTURE_PASS
@@ -56,5 +63,9 @@ new_design_gaps:
     type: Design Gap + Configuration Gap
     status: ENHANCED_POC_IMPLEMENTED
     title: Core and Overlay Isolation
+  - id: GAP-HS-005
+    type: Implementation Gap
+    status: DESIGNED_NOT_IMPLEMENTED
+    title: Runtime Overlay Resolution
 next_step: apply the portable structure to an actual Brownfield application repository and validate semantic DISCOVERY/IMPACT/PROGRAM accuracy
-updated_at: 2026-09-01T18:40:00+09:00
+updated_at: 2026-09-01T18:48:00+09:00

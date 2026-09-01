@@ -80,4 +80,6 @@ flowchart LR
 - Standard Resolver의 Stack별 Section 선택
 - 실제 `/work TASK` Source write scope correctness
 
-따라서 현재 결과는 Structure/Contract에는 PASS이고, 실제 프로젝트 Source 의미 검증은 다음 Branch에서 수행한다.
+추가로 Project/Domain Overlay의 폴더와 precedence는 검증했지만 실제 Template Section merge/Rule materialization을 수행하는 Runtime Overlay Resolver는 아직 구현하지 않았다.
+
+따라서 현재 결과는 Structure/Contract에는 PASS이고, **Runtime Overlay Resolution과 실제 프로젝트 Source 의미 검증은 다음 단계에서 수행한다.**
