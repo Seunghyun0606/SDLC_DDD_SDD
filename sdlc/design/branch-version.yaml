@@ -7,9 +7,10 @@ design_baseline: v1.5.1
 candidate_design_version: v1.6.0-rc.1
 status: IMPLEMENTATION_IN_PROGRESS
 merge_to_main: false
-purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고 Functional Design과 Program Spec의 책임을 분리하며 /setup 진입 복잡도를 낮춘다.
+purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고 Requirement/Analysis 및 Functional Design/Program Spec 책임을 단순화하며 /setup 진입 복잡도를 낮춘다.
 principles:
   same_business_information_written_once: true
+  single_active_requirement_artifact: true
   functional_design_is_semantic_source_of_truth: true
   program_spec_is_implementation_delta: true
   human_open_status_count: 5
@@ -18,15 +19,16 @@ principles:
   project_adapter_boundary_preserved: true
   reverse_capability_name: SOURCE_DRIFT_AND_REVERSE_REVIEW_CANDIDATE
 changes_in_scope:
+  - requirement and requirement-analysis active artifact consolidation
+  - requirement-analysis legacy compatibility view
   - developer-spec-contract ownership split
   - program-spec implementation-delta template
   - single-table 17-item program readiness
   - simplified open-resolution human view
   - setup five-question fast path
-  - work/program/clarify reference alignment
+  - work/requirement/program/clarify reference alignment
   - validator and regression-test alignment
 not_in_scope_yet:
-  - requirement and requirement-analysis merge
   - customer document 8-to-3 consolidation
   - real customer projection engine
   - canonical delta executor
