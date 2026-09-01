@@ -1,100 +1,132 @@
-# Candidate B Extension — Source-ready Execution / Customer Evidence View / Business Evidence Package
+# Candidate B+ — Source-ready Execution / Customer 6W View / Business SoP Evidence Extraction
 
 > 상태: `EXPERIMENT / NOT BASELINE`
-> Parent: `SDLC_DESIGN_SESSION_SECOND/validation/candidate-b-requirements-xlsx-pilot`
-> 원칙: Candidate B 계열만 확장하며 Candidate A와 결합하지 않는다.
+> Parent: Candidate B validation line
+> Candidate A와 결합하지 않는다.
 
 ## Quick Start
 
-Pilot 이후 세 질문을 Candidate B 방식으로 확장한다.
+이 Branch는 4개 질문을 Candidate B 방식으로 검증한다.
 
-1. 어떤 Evidence가 있어야 설계가 실제 Source Write에 충분한가?
-2. 고객에게 내부 Action Permission 복잡성을 노출하지 않으면서 합의/검증 가능한 문서를 어떻게 제공하는가?
-3. 고객의 비정형 문서를 BR/K1 근거로 사용할 때 Scope/Authority/Freshness를 어떻게 보장하는가?
+1. 6W 업무정의에 Truth/Evidence를 유지하면서 Stage 진행과 실행권한을 분리할 수 있는가?
+2. 화면/CRUD/Logic/Integration/Query/Data/Code까지 포함한 상세 Development Evidence Blueprint가 있는가?
+3. 고객 문서에 6W와 합의상태를 보여주되 내부 Work Unit/Target Proof 복잡성은 숨길 수 있는가?
+4. PPT/XLSX/Word/PDF를 Evidence-aware Extraction Skill로 처리하고 BR/K1 승격을 안전하게 분리할 수 있는가?
+
+## Design Flow
 
 ```text
-Engineering Design + Current Source Evidence
-→ Development Evidence Pack
+Customer/Legacy SoP
+→ Format-aware Evidence Extraction Skill
+→ 6W Business Evidence
+→ RQ / FR / BR Candidate
+→ Customer Decision & Acceptance View
+→ Engineering Design
+→ Development Evidence Blueprint
+→ Development Evidence Pack (Manifest)
+→ Current Source Evidence
 → Target Write Proof
 → Work Unit / PGM Lane
 → Draft Source Write
-
-Canonical Meaning + Evidence State
-→ Customer Decision & Acceptance View
-
-Raw Customer Document
-→ Business Evidence Package
-→ BR Candidate
-→ Human Scope/Temporal Confirmation
-→ K1 Promotion
+→ Executed Test / Verify
+→ Knowledge Promotion Eligibility
 ```
 
-## Purpose
+## 1. 6W + Evidence
 
-Candidate B의 `workflow continuation != execution permission` 원칙을 Source-ready, 고객 Communication, Business Knowledge Intake에도 적용한다.
+각 Who/When/Where/What/How/Why에:
 
-## Current Problem
+- value
+- truth
+- evidence locator
+- revision
 
-- 문서가 충분해 보여도 Current Source revision/Target Proof가 없으면 Wrong Target 가능
-- 고객에게 `progress=COMPLETE`, Work Unit, Lane 같은 내부 상태를 그대로 보여주면 의미가 복잡함
-- 고객문서가 많아도 Authority/Scope/Effective/Freshness가 없으면 K1 Knowledge Poisoning 위험
+을 유지한다.
 
-## Design
+상세: `04_sixw_business_definition_and_evidence_blueprint.md`.
 
-세 View를 분리한다.
+## 2. Development Evidence Blueprint
 
-1. `Development Evidence Pack`: 개발 Agent용
-2. `Customer Decision & Acceptance View`: 고객/PM용
-3. `Business Evidence Package`: BR/K1 근거 관리용
+`development-evidence-pack.yaml`은 상세명세가 아닌 Evidence/Artifact Manifest다.
 
-## Workflow Diagram
+실제 Blueprint는:
 
-```mermaid
-graph TD
-    A["Customer / Legacy Evidence"] --> B["Business Evidence Package"]
-    B --> C["BR Candidate"]
-    C --> D["Customer Decision & Acceptance View"]
-    E["Current Source Evidence"] --> F["Development Evidence Pack"]
-    C --> F
-    F --> G["Target Write Proof"]
-    G --> H["PGM Lane + Work Unit"]
-    H --> I["Draft Source Write"]
-    I --> J["Executed Test / Verify"]
-    J --> K["K1/K2 Promotion Eligibility"]
+- 6W
+- UI/Field
+- CRUD
+- Business Logic
+- State/Error
+- Integration
+- Query/Data
+- Common Code
+- Transaction/Auth/Audit
+- Current Source Mapping
+- Test
+- Blind Spot
+- Target Write Proof
+- Action Permission
+
+을 포함한다.
+
+Template: `templates/development-evidence-blueprint.md`
+Sample: `sample/RQ-PILOT-017_development-evidence-blueprint.md`.
+
+## 3. Customer 6W View
+
+고객에게는 내부 `progress`, Work Unit, PGM Lane을 기본 노출하지 않고:
+
+- 6W 업무정의
+- 합의상태
+- AS-IS/TO-BE
+- Rule/Exception
+- 고객 접점
+- 완료조건
+- 검증/배포 상태
+
+를 보여준다.
+
+Sample: `sample/RQ-PILOT-017_customer-decision-acceptance-view.md`.
+
+## 4. Template-driven SoP Evidence Extraction
+
+Business Evidence Card를 Primary Input으로 두지 않는다.
+
+```text
+Original PPT/XLSX/Word/PDF
++ Source Metadata
+→ skills/sop-business-extraction/SKILL.md
+→ templates/sop-evidence-extraction-output.yaml
+→ 6W + Candidate Evidence
+→ Authority/Scope/Effective Review
+→ BR Confirm Candidate
+→ High-blast Human Confirmation
+→ K1 Eligibility
 ```
 
-## Data / Contract
+Card는 Derived Review/Audit View로 유지한다.
 
-- `01_source_ready_execution_and_brownfield_evidence_contract.md`
-- `02_customer_decision_acceptance_view_contract.md`
-- `03_business_evidence_package_and_k1_contract.md`
+상세: `05_template_driven_sop_evidence_extraction_contract.md`.
 
-Templates:
+## User Example
 
-- `templates/development-evidence-pack.yaml`
-- `templates/brownfield-source-profile.yaml`
-- `templates/customer-decision-acceptance-view.md`
-- `templates/business-evidence-card.yaml`
+`sample/ESS-FLEX-001_business-definition-6w-evidence.md`에 탄력근로제 ESS 예시와 Source Write를 막는 Evidence Gap을 함께 기록했다.
 
-## Examples
+## Permission Principle
 
-기존 `RQ-PILOT-017`, `PGM-ATT-CLOSE-001`, `WU-P017-001` Pilot을 기준으로 한다.
+문서가 상세해도 다음이 OPEN이면 실제 고객 Source Write/merge/release를 제한할 수 있다.
 
-## Failure Scenarios
-
-- PGM Spec + 오래된 Source Summary만으로 actual write ALLOW
-- 고객 문서의 `COMPLETE`를 최종 검증 완료로 해석
-- 최신 파일이란 이유로 A4/A5 문서를 K1로 자동 Promotion
-- 중앙 Store 장애 중 Local fallback Source Write 수행
-
-## Validation
-
-- Source Evidence와 Target Proof가 실제 Target 오수정을 줄이는가?
-- 고객 View가 내부 상태를 숨기면서도 결정/미확정/검증상태는 보존하는가?
-- 비정형 고객문서를 K1 후보로 만들 때 Scope/Authority/Freshness 결측을 확실히 표면화하는가?
+- Role/Profile
+- 실제 Entry/Menu
+- Code Master
+- Schema/Key/Index
+- Runtime Lock/Performance
+- Current Source Revision
+- Executed Test
 
 ## DECISION_REQUIRED
 
-- Development Evidence Pack을 actual Source Write 필수 입력으로 할지
-- 고객 View의 검증상태를 몇 단계로 단순화할지
-- Business Evidence Package의 Authority/Scope 확인을 K1 Promotion mandatory guard로 둘지
+1. 6W의 OPEN이 어떤 Action만 제한해야 하는가?
+2. Development Evidence Blueprint를 Source Write 필수입력으로 할지
+3. 고객 6W의 합의상태 단계를 얼마나 단순화할지
+4. 고객별 SoP Extraction Overlay 작성 범위
+5. Low-risk BR 자동 Confirm 후보 기준과 High-blast K1 Human Guard
