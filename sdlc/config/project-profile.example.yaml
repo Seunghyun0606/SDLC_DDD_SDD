@@ -17,6 +17,12 @@ bootstrap:
 preset:
   name: brownfield-auto
 
+requirements_intake:
+  config: sdlc/config/requirement-intake.yaml
+  xlsx_adapter: sdlc/scripts/intake_requirements_xlsx.py
+  source_rows_are_given_not_canonical: true
+  fixed_column_position_required: false
+
 artifacts:
   profile: STANDARD  # LITE | STANDARD | ENTERPRISE
   profile_config: sdlc/config/artifact-profiles.yaml
@@ -51,9 +57,17 @@ source_discovery:
   inventory_script: sdlc/scripts/discover_source_inventory.py
   bounded_trace_script: sdlc/scripts/collect_bounded_source_evidence.py
   target_context_template: sdlc/templates/source-target-context.yaml
+  java_spring_analyzer: sdlc/scripts/analyze_java_spring.py
+  sql_database_analyzer: sdlc/scripts/analyze_sql_database.py
   source_change_template: sdlc/templates/source-change-evidence.yaml
   reverse_sync_config: sdlc/config/reverse-sync-classification.yaml
   reverse_sync_script: sdlc/scripts/build_reverse_sync_from_signals.py
+
+version_control:
+  config: sdlc/config/version-control-runtime.yaml
+  change_execution_template: sdlc/templates/change-execution-context.yaml
+  revision_ownership_guard: sdlc/scripts/guard_revision_ownership.py
+  source_write_requires_guard_allow: true
 
 commands:
   public_commands: [/work, /change, /check]
@@ -62,6 +76,11 @@ commands:
   provider_runtime_skill: sdlc/starter/onboarding-package-v1/skills/provider-runtime/SKILL.md
   router_must_not_invent_provider_result: true
   caller_must_not_invent_required_capabilities: true
+
+check_runtime:
+  config: sdlc/config/e2e-orchestration.yaml
+  ledger_template: sdlc/templates/e2e-execution-ledger.yaml
+  orchestrator: sdlc/scripts/orchestrate_generic_e2e_status.py
 
 customization:
   strategy: LATE_BOUND_OVERLAY
