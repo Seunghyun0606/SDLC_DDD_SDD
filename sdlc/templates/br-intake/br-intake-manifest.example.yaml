@@ -1,0 +1,29 @@
+schema_version: 1
+package:
+  customer: example-customer
+  project: example-project
+  received_at: 2026-09-01
+  note: 원본 문서는 originals/ 아래에 변경 없이 보관
+
+documents:
+  - document_id: CUST-DOC-001
+    path: originals/업무규정_v3.pdf
+    title: 업무규정 v3
+    # 아래 항목은 모르면 UNKNOWN 또는 비워도 된다. Agent가 추정값을 사실로 확정하지 않는다.
+    document_type: POLICY
+    authority: APPROVED
+    lifecycle_status: CURRENT
+    owner: 인사팀
+    effective_from: 2026-01-01
+    scope: 근태관리
+    related_process: 근무계획
+    related_system: 근태시스템
+    locator_hint: page
+
+  - document_id: CUST-DOC-002
+    path: originals/근태운영_회의록_20260820.docx
+    title: 근태 운영 회의록
+    document_type: MEETING_MINUTES
+    authority: UNKNOWN
+    lifecycle_status: UNKNOWN
+    locator_hint: paragraph
