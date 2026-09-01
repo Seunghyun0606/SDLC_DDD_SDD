@@ -1,6 +1,6 @@
 {
-  "schema_version": 13,
-  "candidate_design": "v1.6.0-rc.1-p0-runtime-hardening",
+  "schema_version": 14,
+  "candidate_design": "v1.6-p0-p1-production-readiness-remediation-v0.1",
   "core_required_files": [
     ".cursor/rules/00-core.mdc",
     ".cursor/rules/10-project.mdc",
@@ -9,78 +9,79 @@
     ".cursor/skills/change/SKILL.md",
     ".cursor/skills/check/SKILL.md",
     ".cursor/skills/setup/SKILL.md",
-    ".cursor/skills/sop-extract/SKILL.md",
-    ".cursor/skills/open-resolve/SKILL.md",
-    "sdlc/config/source-profile.example.yaml",
-    "sdlc/config/program-spec-readiness.json",
-    "sdlc/scripts/validate_program_spec.py",
+    "sdlc/scripts/harness.py",
+    "sdlc/scripts/bootstrap_project.py",
+    "sdlc/scripts/runtime_config.py",
+    "sdlc/scripts/run_work.py",
+    "sdlc/scripts/run_change.py",
+    "sdlc/scripts/run_check.py",
     "sdlc/scripts/apply_canonical_delta.py",
     "sdlc/scripts/validate_agent_stage_result.py",
-    "sdlc/scripts/run_work.py",
-    "sdlc/config/terminology-profile.example.json",
-    "sdlc/config/customer-document-profile.example.json",
-    "sdlc/config/br-intake-profile.example.json",
-    "sdlc/config/open-resolution-profile.example.yaml",
-    "sdlc/design/contracts/customer-document-contract.json",
-    "sdlc/scripts/render_customer_document.py",
-    "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md",
-    "sdlc/templates/customer/standard/A02_영향_개발범위_공유서.md",
-    "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md",
-    "sdlc/design/contracts/br-candidate.schema.json",
-    "sdlc/design/contracts/br-document-extraction-contract.json",
-    "sdlc/design/contracts/sop-extraction-contract.json",
+    "sdlc/scripts/validate_program_spec.py",
+    "sdlc/config/program-spec-readiness.json",
+    "sdlc/design/contracts/agent-execution-contract.json",
     "sdlc/design/contracts/business-scenario-sixw-contract.json",
     "sdlc/design/contracts/developer-spec-contract.json",
-    "sdlc/design/contracts/open-resolution-contract.json",
-    "sdlc/templates/core/sop-extraction-result.md",
-    "sdlc/templates/core/open-resolution-workbook.md",
-    "sdlc/design/contracts/starter-kit-contract.json",
-    "sdlc/starter-kits/README.md",
-    "sdlc/starter-kits/greenfield/README.md",
-    "sdlc/starter-kits/greenfield/starter-manifest.example.yaml",
-    "sdlc/starter-kits/brownfield/README.md",
-    "sdlc/starter-kits/brownfield/starter-manifest.example.yaml",
-    "sdlc/design/contracts/agent-execution-contract.json",
-    "sdlc/design/contracts/brownfield-impact-contract.json",
-    "sdlc/config/impact-adapter-profile.example.yaml",
-    "sdlc/custom/project/adapters/impact/README.md",
-    "sdlc/design/contracts/source-drift-contract.json",
-    "sdlc/scripts/detect_source_drift.py",
-    "sdlc/scripts/build_reverse_inputs.py",
-    "sdlc/scripts/run_source_reverse_check.py",
-    "sdlc/scripts/generate_program_spec_reverse_candidate.py"
+    "sdlc/templates/core/requirement.md",
+    "sdlc/templates/core/interview-questions.md",
+    "sdlc/templates/core/process-analysis.md",
+    "sdlc/templates/core/impact-analysis.md",
+    "sdlc/templates/core/functional-design.md",
+    "sdlc/templates/core/program-spec.md",
+    "sdlc/templates/core/implementation-result.md",
+    "sdlc/templates/core/test-scenario.md",
+    "sdlc/templates/core/verification-result.md",
+    "sdlc/templates/core/operations-knowledge.md"
   ],
-  "overlay_precedence": ["core", "preset", "project_profile", "project_overlay", "domain_overlay", "local_override"],
+  "deployment_sets": {
+    "MINIMUM_EXECUTABLE_CORE": {
+      "required": "core_required_files",
+      "notes": "Validation/Pilot/Test/Sample은 Production Project 배포 필수가 아니다."
+    },
+    "BROWNFIELD_EXTENSION": [
+      "sdlc/design/contracts/brownfield-impact-contract.json",
+      "sdlc/design/contracts/source-drift-contract.json",
+      "sdlc/scripts/build_reverse_inputs.py",
+      "sdlc/scripts/detect_source_drift.py",
+      "sdlc/scripts/run_source_reverse_check.py",
+      "sdlc/scripts/generate_program_spec_reverse_candidate.py",
+      "sdlc/custom/project/adapters/impact/README.md"
+    ],
+    "CUSTOMER_EXTENSION": [
+      "sdlc/design/contracts/customer-document-contract.json",
+      "sdlc/scripts/render_customer_document.py",
+      "sdlc/scripts/capture_customer_decision.py",
+      "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md",
+      "sdlc/templates/customer/standard/A02_영향_개발범위_공유서.md",
+      "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md"
+    ],
+    "DOCUMENT_INGEST_EXTENSION": [
+      ".cursor/skills/sop-extract/SKILL.md",
+      "sdlc/design/contracts/br-document-extraction-contract.json",
+      "sdlc/design/contracts/sop-extraction-contract.json",
+      "sdlc/scripts/extract_document_evidence.py"
+    ],
+    "EXTERNAL_TOOL_EXTENSION": [
+      "sdlc/scripts/normalize_external_evidence.py"
+    ]
+  },
+  "overlay_precedence": ["core", "project_overlay", "local_override"],
+  "compatibility_overlay_precedence": ["core", "preset", "project_profile", "project_overlay", "domain_overlay", "local_override"],
   "customization_roots": ["sdlc/custom/project", "sdlc/custom/domain"],
   "work_reference_required_sections": ["## Purpose", "## Required Input", "## Optional Input", "## Retrieval Strategy", "## 실행 계약(Agent Execution Contract)", "## Steps", "## Output", "## Quality Check", "## Alert Conditions", "## Token Strategy", "## Do Not"],
   "template_required_sections": ["## 문서 목적", "## 한눈에 보기", "## 업무 흐름", "## 입력 및 근거", "## 상세 내용", "## 미확정 사항·주의·가정", "## 관련 ID 및 추적성", "## 다음 작업"],
   "source_evidence_markers": ["Locator", "Source Hash", "Confidence", "Status"],
   "process_sixw_required_markers": ["### 업무 정의(6하원칙)", "누가(Who)", "언제(When)", "어디서(Where)", "무엇을(What)", "어떻게(How)", "왜(Why)"],
   "functional_design_required_markers": [
-    "### 업무 정의(6하원칙)",
-    "### 화면·채널 및 사용자 동선",
-    "### 화면·입력·출력 필드 명세",
-    "### CRUD 및 사용자/시스템 행위",
-    "### 핵심 업무 로직과 판단 규칙",
-    "### 데이터 조회·저장 설계",
-    "### 공통코드·기준정보",
-    "### 연계 프로그램·외부 시스템",
-    "### 권한·상태·예외",
-    "### 인수 조건(AC) 연결",
-    "### 개발 상세 명세 준비도"
+    "### 업무 정의(6하원칙)", "### 화면·채널 및 사용자 동선", "### 화면·입력·출력 필드 명세",
+    "### CRUD 및 사용자/시스템 행위", "### 핵심 업무 로직과 판단 규칙", "### 데이터 조회·저장 설계",
+    "### 공통코드·기준정보", "### 연계 프로그램·외부 시스템", "### 권한·상태·예외",
+    "### 인수 조건(AC) 연결", "### 개발 상세 명세 준비도"
   ],
   "program_spec_required_markers": [
-    "### 기능 설계 기준점",
-    "### 실제 구현 Target",
-    "### 구현 매핑과 차이",
-    "### Query·Table·Source 구현 근거",
-    "### 트랜잭션·실행 제어",
-    "### 연계 구현 계약",
-    "### 기술 제어와 운영 조건",
-    "### TASK·AC·TC·Source 연결",
-    "### 구현 준비도",
-    "## 관련 ID 및 추적성",
-    "## 다음 작업"
+    "### 기능 설계 기준점", "### 실제 구현 Target", "### 구현 매핑과 차이", "### Query·Table·Source 구현 근거",
+    "### 트랜잭션·실행 제어", "### 연계 구현 계약", "### 기술 제어와 운영 조건", "### TASK·AC·TC·Source 연결",
+    "### 구현 준비도", "## 관련 ID 및 추적성", "## 다음 작업"
   ],
   "program_readiness_rules": {
     "ready_requires_zero_open": true,
@@ -88,7 +89,9 @@
     "open_real_source_cannot_be_ready": true,
     "ready_requires_functional_design_reference": true,
     "representation": "SINGLE_READINESS_TABLE",
-    "readiness_item_count": 17
+    "readiness_item_count": 17,
+    "fast_required_item_count": 7,
+    "profile_aware_validator": true
   },
   "stage_contracts": {
     "DECOMPOSE": {"reference": "requirement.md", "template": "requirement.md", "single_requirement_artifact": true},
@@ -105,8 +108,11 @@
   "core_invariant_markers": ["OBSERVED", "Execution Guard", "외부 요구사항 ID", "Canonical", "Overlay"],
   "document_experience": {
     "visible_language": "ko-KR",
+    "human_evidence_labels_default": true,
+    "machine_metadata_hidden_in_comments_or_frontmatter": true,
     "customer_document_contract": "sdlc/design/contracts/customer-document-contract.json",
     "customer_projection_script": "sdlc/scripts/render_customer_document.py",
+    "customer_decision_round_trip_script": "sdlc/scripts/capture_customer_decision.py",
     "active_customer_view_count": 3,
     "active_customer_views": ["solution_agreement", "delivery_scope", "acceptance_handover"],
     "legacy_customer_document_ids_are_aliases": true,
@@ -123,6 +129,9 @@
     "store_created_on_first_successful_apply": true,
     "operations": ["UPSERT_ENTITY", "UPSERT_RELATION", "ADD_PROVENANCE"],
     "optimistic_revision": true,
+    "write_lock": true,
+    "reload_revision_under_lock": true,
+    "atomic_file_replace": true,
     "idempotent_delta_id": true,
     "idempotency_requires_same_semantic_payload_hash": true,
     "delta_id_content_conflict_fails_closed": true,
@@ -139,7 +148,11 @@
     "new_contract_added": false
   },
   "work_execution": {
+    "entrypoint": "sdlc/scripts/harness.py",
     "executor": "sdlc/scripts/run_work.py",
+    "setup_executor": "sdlc/scripts/bootstrap_project.py",
+    "change_executor": "sdlc/scripts/run_change.py",
+    "check_executor": "sdlc/scripts/run_check.py",
     "target_types_are_open_ended": true,
     "canonical_target_not_required_when_stage_or_artifact_is_explicit": true,
     "explicit_stage_reentry": true,
@@ -150,7 +163,16 @@
     "confirmed_business_change_requires_explicit_user_authorization": true,
     "provider_required_for_generation": true,
     "provider_disabled_is_not_successful_generation": true,
-    "artifact_only_no_change_supported": true
+    "provider_missing_returns_nonzero": true,
+    "artifact_only_no_change_supported": true,
+    "git_baseline_recorded": true,
+    "protected_branch_write_forbidden_by_default": true,
+    "dirty_workspace_forbidden_by_default": true,
+    "provider_git_head_change_forbidden": true,
+    "provider_write_scope_guard": true,
+    "provider_failure_rolls_back_git_changes": true,
+    "development_build_test_before_canonical_commit": true,
+    "delivery_profiles": ["FAST", "STANDARD", "FULL"]
   },
   "business_scenario": {
     "contract": "sdlc/design/contracts/business-scenario-sixw-contract.json",
@@ -161,7 +183,8 @@
     "contract": "sdlc/design/contracts/developer-spec-contract.json",
     "functional_design_is_semantic_source_of_truth": true,
     "program_spec_is_implementation_delta": true,
-    "legacy_program_dor_17_fields_preserved": true
+    "legacy_program_dor_17_fields_preserved": true,
+    "fast_program_dor_required_fields": 7
   },
   "open_resolution": {
     "contract": "sdlc/design/contracts/open-resolution-contract.json",
@@ -178,14 +201,17 @@
   "sop_extraction": {
     "skill": ".cursor/skills/sop-extract/SKILL.md",
     "result_template": "sdlc/templates/core/sop-extraction-result.md",
-    "format_parser_is_adapter_responsibility": true,
+    "format_parser": "sdlc/scripts/extract_document_evidence.py",
+    "raw_formats_without_third_party": ["TXT", "MD", "CSV", "DOCX", "PPTX", "XLSX"],
+    "pdf_requires_available_parser_or_external_tool": true,
     "structured_evidence_required_when_available": true
   },
   "starter_kits": {
     "contract": "sdlc/design/contracts/starter-kit-contract.json",
     "greenfield": "sdlc/starter-kits/greenfield/starter-manifest.example.yaml",
     "brownfield": "sdlc/starter-kits/brownfield/starter-manifest.example.yaml",
-    "mode_preset_mapping_required": true
+    "mode_preset_mapping_required": true,
+    "executable_bootstrap": "sdlc/scripts/bootstrap_project.py"
   },
   "agent_execution": {
     "contract": "sdlc/design/contracts/agent-execution-contract.json",
@@ -201,13 +227,17 @@
     "repeatability_profile": "sdlc/config/agent-repeatability-profile.example.json",
     "actual_provider_execution_required_for_empirical_pass": true,
     "validation_fixture_provider_cannot_claim_agent_pass": true,
-    "repeatability_runner_is_validation_utility_not_core_stage_runtime": true
+    "repeatability_runner_is_validation_utility_not_core_stage_runtime": true,
+    "external_empirical_validation_status": "PENDING_EXTERNAL_PROVIDER_AND_HUMAN_PILOT"
   },
   "brownfield_impact": {
     "contract": "sdlc/design/contracts/brownfield-impact-contract.json",
     "project_adapter_profile": "sdlc/config/impact-adapter-profile.example.yaml",
     "common_graph_and_coverage_is_core": true,
     "project_specific_relation_resolution_requires_separate_adapter": true,
+    "included_pilot_adapter": "sdlc/custom/project/adapters/impact/java_spring_mybatis.py",
+    "extended_optional_adapter": "sdlc/custom/project/adapters/impact/java_spring_enterprise.py",
+    "extended_static_candidates": ["JPA", "JDBC_SQL_LITERAL", "TRANSACTIONAL", "FEIGN_HTTP", "KAFKA", "SCHEDULED_CONFIG"],
     "public_repository_pilot_validator": "sdlc/scripts/validate_public_brownfield_pilot.py",
     "public_repository_pilot_is_validation_only": true
   },
@@ -225,6 +255,18 @@
     "program_spec_candidate_requires_review": true,
     "auto_rewrite_artifact": false,
     "auto_update_business_truth": false
+  },
+  "knowledge_promotion": {
+    "candidate_runtime": "sdlc/scripts/run_knowledge_promotion.py",
+    "review_required": true,
+    "auto_apply": false,
+    "default_profiles": ["FULL"]
+  },
+  "external_provider_boundary": {
+    "normalizer": "sdlc/scripts/normalize_external_evidence.py",
+    "flow": "External Provider -> Evidence Chunk -> Canonical/Stage Context",
+    "new_stage_per_tool_required": false,
+    "new_canonical_entity_per_tool_required": false
   },
   "validation_pilots": {
     "greenfield_real_requirement_runner": "sdlc/scripts/run_greenfield_e2e_pilot.py",
