@@ -1,0 +1,19 @@
+schema_version: 1
+provider_response:
+  request_id: REQ-PROVIDER-001
+  provider_id: source-primary
+  provider_type: SOURCE
+  operation: source.snapshot.read
+  status: OK
+  provider_revision: REVISION-001
+  outputs: []
+  evidence:
+    - evidence_id: EV-PROVIDER-001
+      truth: OBSERVED
+      locator: provider-native-locator
+      revision: REVISION-001
+      observed_value: null
+  open_items: []
+  warnings: []
+  retryable: false
+  extensions: {}
