@@ -42,6 +42,53 @@
 - 프로젝트 고유 탐색/Framework 해석과 포맷별 Parser 구현은 Core Reference에 발명하지 않고 Project Profile/Adapter에서 제공한다.
 - `detect_source_drift.py`는 Source Drift와 Reverse Review Candidate 기능이며 전체 Reverse Engineering 또는 문서 자동 재작성 기능으로 표현하지 않는다.
 
+## Agent Stage Result 실행 경계
+Stage Artifact를 작성한 것만으로 Stage 실행 완료로 간주하지 않는다. 저수준 Agent는 사용자용 Artifact와 함께 Machine용 Stage Result Envelope를 만든다.
+
+### 최소 Stage Result Envelope
+```json
+{
+  "schema_version": 1,
+  "stage": "DECOMPOSE",
+  "artifact_path": "docs/.../requirement.md",
+  "canonical_delta": {},
+  "quality_gate": {
+    "status": "PASS",
+    "failures": []
+  },
+  "alerts": [],
+  "uncertainty": []
+}
+```
+
+- `artifact_path`는 Repository 상대경로이며 실제 생성된 Artifact를 가리켜야 한다.
+- `canonical_delta.stage`는 Stage Result의 `stage`와 같아야 한다.
+- `canonical_delta.source_artifact`는 `artifact_path`와 같아야 한다.
+- Artifact에 `{{placeholder}}`가 남아 있으면 실행 결과로 인정하지 않는다.
+- `quality_gate.status`는 `PASS / WARNING / FAIL` 중 하나다. `FAIL`은 구조상 결과는 남길 수 있지만 Canonical 적용 가능한 실행 결과로 취급하지 않는다.
+- `alerts`와 `uncertainty`는 숨기지 않고 결과 Envelope에 남긴다.
+
+### Stage Result 검증
+Artifact와 Delta를 만든 뒤 Canonical write 전에 다음 Validator를 실행한다.
+
+`python sdlc/scripts/validate_agent_stage_result.py --result <stage-result.json> --store sdlc/canonical/store.json --out <validation-result.json>`
+
+다음 조건이 모두 만족되어야 다음 단계로 진행한다.
+- `validation.status = PASS`
+- `validation.executable = true`
+- Canonical check가 `APPLIED` 또는 `IDEMPOTENT`
+
+`FAIL`, stale revision, Artifact/Delta 불일치, 미해결 Template placeholder가 있으면 Canonical을 적용했다고 기록하지 않는다.
+
+### 반복 실행 비교
+동일 입력으로 저수준 Agent를 반복 실행해 결과 안정성을 확인할 때 다음처럼 비교한다.
+
+`python sdlc/scripts/validate_agent_stage_result.py --result <run-1.json> --compare <run-2.json>`
+
+Validator는 `generated_at / updated_at / created_at / checked_at / observed_at` 같은 명시적 시간 필드는 semantic fingerprint에서 제외한다. 시간만 다른 두 실행은 `MATCH`가 될 수 있고, Artifact/Delta의 실제 의미가 바뀌면 `MISMATCH`로 보고한다.
+
+이 비교는 **Agent/LLM 자체가 결정론적임을 증명하는 기능이 아니다.** 동일 입력의 실제 실행 결과를 비교 가능하게 만들고 의미 차이를 숨기지 않는 검증 경계다.
+
 ## Canonical 실행 경로
 Canonical은 문서에 “갱신했다”고 서술하는 것으로 끝내지 않는다. 내부 Stage 결과가 RQ/FR/BR/PROC/PGM/TASK/AC/TC 관계 또는 근거를 변경하면 `sdlc/scripts/apply_canonical_delta.py`를 사용한다.
 
@@ -67,16 +114,17 @@ DELETE/자동 의미 병합/자동 Business Truth 역갱신은 이 Runtime의 �
 ### 실행 순서
 1. 현재 `sdlc/canonical/store.json`의 `revision`을 읽어 `base_revision`으로 사용한다. Store가 없으면 revision 0으로 시작한다.
 2. Stage 산출물의 **새 정보만** Delta Operation으로 만든다. 이전 단계 전체 내용을 다시 UPSERT하지 않는다.
-3. Business 정책/목적을 `CONFIRMED_BUSINESS`로 기록하려면 `evidence_class: CONFIRMED`가 필요하다.
-4. Source 분석으로 확인한 기존 동작은 `OBSERVED`이며, 이미 확정된 Business Truth를 덮어쓰지 않는다. 값 변경 없이 근거만 연결하려면 `ADD_PROVENANCE`를 사용한다.
-5. 먼저 dry-run 한다.
+3. Stage Artifact와 Delta를 Stage Result Envelope에 넣고 `validate_agent_stage_result.py`로 먼저 검증한다.
+4. Business 정책/목적을 `CONFIRMED_BUSINESS`로 기록하려면 `evidence_class: CONFIRMED`가 필요하다.
+5. Source 분석으로 확인한 기존 동작은 `OBSERVED`이며, 이미 확정된 Business Truth를 덮어쓰지 않는다. 값 변경 없이 근거만 연결하려면 `ADD_PROVENANCE`를 사용한다.
+6. Stage Result가 executable이면 Canonical Delta를 다시 dry-run 한다.
    - `python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --dry-run`
-6. 결과가 `APPLIED`일 때만 실제 적용한다.
+7. 결과가 `APPLIED`일 때만 실제 적용한다.
    - `python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --result-out <result.json>`
-7. 결과가 `CONFLICT` 또는 `INVALID_DELTA`이면 Canonical을 갱신했다고 기록하지 않는다. 원인을 OPEN/Alert 또는 재실행 대상으로 남긴다.
-8. 같은 `delta_id` 재실행 결과가 `IDEMPOTENT`이면 중복 적용하지 않고 성공적인 재실행으로 취급한다.
-9. Canonical 적용 후 내부 Artifact의 관련 ID/추적성 Section과 결과 revision을 맞춘다.
-10. `both`인 경우 위 과정이 끝난 내부 Artifact/Canonical을 입력으로 고객 View를 Projection한다.
+8. 결과가 `CONFLICT` 또는 `INVALID_DELTA`이면 Canonical을 갱신했다고 기록하지 않는다. 원인을 OPEN/Alert 또는 재실행 대상으로 남긴다.
+9. 같은 `delta_id` 재실행 결과가 `IDEMPOTENT`이면 중복 적용하지 않고 성공적인 재실행으로 취급한다.
+10. Canonical 적용 후 내부 Artifact의 관련 ID/추적성 Section과 결과 revision을 맞춘다.
+11. `both`인 경우 위 과정이 끝난 내부 Artifact/Canonical을 입력으로 고객 View를 Projection한다.
 
 ### 안전 규칙
 - Delta 적용은 all-or-nothing이다. Relation endpoint 누락, Entity type 충돌, stale revision이 있으면 부분 반영하지 않는다.
