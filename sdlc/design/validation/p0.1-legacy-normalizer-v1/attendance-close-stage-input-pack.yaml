@@ -1,0 +1,124 @@
+version: 1.1
+stage_input_pack:
+  metadata:
+    pack_id: SIP-P01-TM-CLOSE-DECOMPOSE-001
+    project_id: PILOT-TM
+    stage: DECOMPOSE
+    generated_at: '2026-09-02T00:17:00+09:00'
+    source_revision: 요구사항목록.xlsx-upload
+    profile: STANDARD
+    granularity: GROUP
+    source_group_id: RQG-CAND-6BB6D66548
+  target:
+    primary_id: RQ-CANDIDATE-TM-CLOSE
+    target_type: RQ_CANDIDATE
+    boundary_status: OPEN
+    source_requirement_ids:
+      - REQ_TM_TE016
+      - REQ_TM_TE017
+      - REQ_TM_TE018
+      - REQ_TM_TE019
+      - REQ_TM_TE020
+      - REQ_TM_TE021
+      - REQ_TM_TE022
+      - REQ_TM_TE023
+      - REQ_TM_TE024
+      - REQ_TM_TE025
+      - REQ_TM_TE026
+      - REQ_TM_TE027
+      - REQ_TM_TE028
+      - REQ_TM_TE029
+      - REQ_TM_TE030
+      - REQ_TM_TE031
+      - REQ_TM_TE032
+      - REQ_TM_TE033
+      - REQ_TM_TE034
+      - REQ_TM_TE035
+      - REQ_TM_TE036
+      - REQ_TM_TE037
+      - REQ_TM_TE038
+      - REQ_TM_TE039
+      - REQ_TM_TE040
+      - REQ_TM_TE041
+      - REQ_TM_TE042
+      - REQ_TM_TE043
+      - REQ_TM_TE044
+      - REQ_TM_TE045
+      - REQ_TM_TE046
+      - REQ_TM_TE047
+      - REQ_TM_TE048
+      - REQ_TM_TE049
+      - REQ_TM_TE050
+      - REQ_TM_TE051
+      - REQ_TM_TE052
+      - REQ_TM_TE053
+      - REQ_TM_TE054
+    related_ids:
+      rq: []
+      fr: []
+      br: []
+      ac: []
+      proc: []
+      pgm: []
+      task: []
+      tc: []
+  required_inputs:
+    - id: SRC-REQ-XLSX-TM-CLOSE
+      type: business_source
+      locator: 요구사항목록.xlsx / Sheet1 / REQ_TM_TE016~REQ_TM_TE054
+      revision: upload-2026-09-01
+      required: true
+      available: true
+  resolved_facts:
+    - fact_id: FACT-TM-CLOSE-001
+      value: 근태마감
+      truth: GIVEN
+      evidence_ids: [EV-TM-CLOSE-001]
+      confidence: HIGH
+    - fact_id: FACT-TM-CLOSE-002
+      value: 39 source rows share exact Level2 + 요구사항명
+      truth: OBSERVED
+      evidence_ids: [EV-TM-CLOSE-001]
+      confidence: HIGH
+  evidence:
+    - evidence_id: EV-TM-CLOSE-001
+      provider: BUSINESS_DOCUMENT
+      locator: 요구사항목록.xlsx / Sheet1 / REQ_TM_TE016~REQ_TM_TE054
+      revision: upload-2026-09-01
+      observed_value: 39 rows under exact same Level2 and 요구사항명
+      confidence: HIGH
+  open_items:
+    - open_id: OPEN-TM-CLOSE-001
+      type: BOUNDARY_AMBIGUOUS
+      question: 39개 Row를 하나의 Canonical RQ로 유지할지 여러 RQ로 분할할지 결정 필요
+      blocks_reasoning: true
+      blocks_action: false
+      required_evidence:
+        - Business Outcome 단위
+        - Owner/Release/AC 경계
+      escalation: L2_OR_HUMAN
+    - open_id: OPEN-TM-CLOSE-002
+      type: MISSING_REQUIRED_SOURCE
+      question: Source Repository가 없어 기술 영향도를 확정할 수 없음
+      blocks_reasoning: false
+      blocks_action: true
+      required_evidence:
+        - Source Repository/Snapshot
+        - Static Analysis result
+      escalation: ENGINEERING_OWNER
+  constraints:
+    do_not_invent_missing_business_fact: true
+    source_behavior_is_not_business_truth: true
+    ambiguous_write_must_not_be_auto_selected: true
+  expected_outputs:
+    - group_boundary_review
+    - prioritized_questions
+  next_actions:
+    - L2/Human Boundary review
+    - Source 연결 후 DISCOVERY
+  validation:
+    required_field_check: PASS
+    id_reference_check: PASS
+    open_preservation_check: PASS
+    boundary_guard_check: PASS
+    granularity_check: PASS
