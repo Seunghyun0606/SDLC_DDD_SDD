@@ -1,0 +1,60 @@
+version: 1
+status: ACTIVE_P0_3_CANDIDATE
+
+primary_classes:
+  - TECHNICAL_ONLY
+  - FUNCTIONAL_BEHAVIOR
+  - BUSINESS_RULE_CANDIDATE
+  - DATA_CONTRACT
+  - INTERFACE_CONTRACT
+  - SECURITY_BEHAVIOR
+  - UNKNOWN
+
+classification_precedence:
+  - SECURITY_BEHAVIOR
+  - BUSINESS_RULE_CANDIDATE
+  - INTERFACE_CONTRACT
+  - DATA_CONTRACT
+  - FUNCTIONAL_BEHAVIOR
+  - TECHNICAL_ONLY
+  - UNKNOWN
+
+candidate_signals:
+  BUSINESS_RULE_CANDIDATE:
+    - added_or_changed_branch_condition
+    - added_business_status_constant
+    - added_domain_exception_guard
+    - policy_named_symbol_added
+  DATA_CONTRACT:
+    - new_table_reference
+    - removed_table_reference
+    - mapper_statement_added_or_removed
+    - query_semantics_changed
+  FUNCTIONAL_BEHAVIOR:
+    - arithmetic_or_rounding_change
+    - return_or_write_value_change
+    - user_observable_exception_change
+  TECHNICAL_ONLY:
+    - formatting_only
+    - comment_only
+    - refactor_without_behavior_signal
+
+rules:
+  - id: RS-CL-001
+    statement: Class는 Source Evidence에 대한 Candidate이며 Business Truth를 자동 변경하지 않는다.
+  - id: RS-CL-002
+    statement: BUSINESS_RULE_CANDIDATE/SECURITY_BEHAVIOR/UNKNOWN은 Human 또는 L2+ Review가 필요하다.
+  - id: RS-CL-003
+    statement: Direct PGM/ART relation이 있는 변경은 Technical Artifact를 STALE_CANDIDATE로 만들 수 있다.
+  - id: RS-CL-004
+    statement: Requirement/BR/AC는 Source 변경만으로 CURRENT Truth를 overwrite하지 않는다.
+  - id: RS-CL-005
+    statement: 여러 signal이 있으면 primary class와 secondary classes를 모두 기록한다.
+
+stale_policy:
+  direct_program_spec: AUTO_STALE_CANDIDATE
+  impact_analysis: AUTO_STALE_CANDIDATE
+  source_analysis_summary: AUTO_STALE_CANDIDATE
+  related_test: AUTO_STALE_CANDIDATE
+  requirement_or_business_rule: REVIEW_CANDIDATE
+  human_confirmed_truth: PROTECTED
