@@ -1,0 +1,99 @@
+version: 1
+legacy_requirement_normalization:
+  metadata:
+    normalizer_id: LRN-PILOT-TM-CLOSE-001
+    source_name: 요구사항목록.xlsx/Sheet1
+    source_revision: upload-2026-09-01
+    strategy: EXACT_LEVEL2_REQUIREMENT_NAME
+    partition_mode: ALL_ROWS_EXACTLY_ONCE
+    group_id_strategy: SHA256_EXACT_KEY_10
+  source_rows:
+    - {source_requirement_id: REQ_TM_TE016, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE017, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE018, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE019, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE020, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE021, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE022, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE023, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE024, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE025, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE026, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE027, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE028, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE029, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE030, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE031, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE032, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE033, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE034, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE035, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE036, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE037, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE038, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE039, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE040, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE041, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE042, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE043, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE044, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE045, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE046, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE047, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE048, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE049, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE050, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE051, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE052, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE053, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+    - {source_requirement_id: REQ_TM_TE054, level1: 근태관리, level2: 근태마감, requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현}
+  candidate_groups:
+    - group_id: RQG-CAND-6BB6D66548
+      grouping_key:
+        level2: 근태마감
+        requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현
+      source_requirement_ids:
+        - REQ_TM_TE016
+        - REQ_TM_TE017
+        - REQ_TM_TE018
+        - REQ_TM_TE019
+        - REQ_TM_TE020
+        - REQ_TM_TE021
+        - REQ_TM_TE022
+        - REQ_TM_TE023
+        - REQ_TM_TE024
+        - REQ_TM_TE025
+        - REQ_TM_TE026
+        - REQ_TM_TE027
+        - REQ_TM_TE028
+        - REQ_TM_TE029
+        - REQ_TM_TE030
+        - REQ_TM_TE031
+        - REQ_TM_TE032
+        - REQ_TM_TE033
+        - REQ_TM_TE034
+        - REQ_TM_TE035
+        - REQ_TM_TE036
+        - REQ_TM_TE037
+        - REQ_TM_TE038
+        - REQ_TM_TE039
+        - REQ_TM_TE040
+        - REQ_TM_TE041
+        - REQ_TM_TE042
+        - REQ_TM_TE043
+        - REQ_TM_TE044
+        - REQ_TM_TE045
+        - REQ_TM_TE046
+        - REQ_TM_TE047
+        - REQ_TM_TE048
+        - REQ_TM_TE049
+        - REQ_TM_TE050
+        - REQ_TM_TE051
+        - REQ_TM_TE052
+        - REQ_TM_TE053
+        - REQ_TM_TE054
+      source_count: 39
+      boundary_status: OPEN
+      canonical_decision: UNRESOLVED
+      publish_canonical: false
+  subgroup_candidates: []
