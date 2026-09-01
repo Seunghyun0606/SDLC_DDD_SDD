@@ -36,7 +36,7 @@ stage_input_pack:
   evidence:
     - evidence_id: EVID-P2-XLSX-001
       evidence_type: WORKBOOK_ROW
-      source_ref: 요구사항목록.xlsx#Sheet1!D142:F142
+      source_ref: 요구사항목록.xlsx#Sheet1!D141:F141
       source_revision: sha256:d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f
   open_items:
     - open_id: OPEN-P2-BOUNDARY
