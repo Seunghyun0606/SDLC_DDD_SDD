@@ -1,5 +1,5 @@
 {
-  "schema_version": 9,
+  "schema_version": 10,
   "candidate_design": "v1.6.0-rc.1",
   "core_required_files": [
     ".cursor/rules/00-core.mdc",
@@ -14,6 +14,7 @@
     "sdlc/config/source-profile.example.yaml",
     "sdlc/config/program-spec-readiness.json",
     "sdlc/scripts/validate_program_spec.py",
+    "sdlc/scripts/apply_canonical_delta.py",
     "sdlc/config/terminology-profile.example.json",
     "sdlc/config/customer-document-profile.example.json",
     "sdlc/config/br-intake-profile.example.json",
@@ -110,6 +111,19 @@
     "br_document_extraction_contract": "sdlc/design/contracts/br-document-extraction-contract.json",
     "sop_extraction_contract": "sdlc/design/contracts/sop-extraction-contract.json",
     "requirement_analysis_legacy_view_is_not_active_output": true
+  },
+  "canonical_runtime": {
+    "script": "sdlc/scripts/apply_canonical_delta.py",
+    "default_store": "sdlc/canonical/store.json",
+    "store_created_on_first_successful_apply": true,
+    "operations": ["UPSERT_ENTITY", "UPSERT_RELATION", "ADD_PROVENANCE"],
+    "optimistic_revision": true,
+    "idempotent_delta_id": true,
+    "all_or_nothing": true,
+    "delete_supported": false,
+    "source_derived_can_overwrite_confirmed_business": false,
+    "source_derived_can_downgrade_confirmed_business_status": false,
+    "new_contract_added": false
   },
   "business_scenario": {
     "contract": "sdlc/design/contracts/business-scenario-sixw-contract.json",
