@@ -1,0 +1,54 @@
+version: 1
+status: ACTIVE_STRUCTURAL_REDESIGN_V1
+
+bootstrap:
+  auto_mode_detection: true
+  scan_policy:
+    max_depth: 2
+    unlimited_recursive_scan: false
+    read_file_contents_during_mode_detection: false
+  brownfield_markers:
+    source_directories: [src, app, server, backend, frontend, packages]
+    build_files: [pom.xml, build.gradle, build.gradle.kts, package.json, pyproject.toml, requirements.txt, go.mod, Cargo.toml]
+    ci_paths: [.github/workflows, .gitlab-ci.yml, Jenkinsfile, azure-pipelines.yml]
+  document_candidates:
+    - README.md
+    - CONTRIBUTING.md
+    - ARCHITECTURE.md
+    - docs
+  data_candidates:
+    - db
+    - database
+    - migrations
+    - schema
+    - sql
+
+greenfield_decisions:
+  - development_language
+  - framework
+  - database
+  - deployment_target
+  - architecture_pattern
+  - coding_standard
+  - naming_rule
+  - logging_rule
+  - error_handling_rule
+  - security_rule
+  - test_policy
+  - ci_cd
+  - document_rule
+
+truth_policy:
+  detected_asset_truth: OBSERVED
+  technology_detection_truth: OBSERVED
+  inferred_business_truth: DENY
+  unknown_decision_state: OPEN
+
+entry_gate:
+  minimum:
+    - project_id
+    - resolved_project_mode
+    - provider_states_known
+  greenfield_source_provider_required: false
+  brownfield_source_provider_required_for_source_claims: true
+  missing_optional_provider_blocks_bootstrap: false
