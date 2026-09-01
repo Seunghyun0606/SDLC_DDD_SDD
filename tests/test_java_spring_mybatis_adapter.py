@@ -7,7 +7,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "sdlc/custom/project/adapters/impact/java_spring_mybatis.py"
 FIXTURE = ROOT / "sdlc/validation/pilot/source-fixture/as-is"
+TO_BE_FIXTURE = ROOT / "sdlc/validation/pilot/source-fixture/to-be"
 CONTRACT = json.loads((ROOT / "sdlc/design/contracts/brownfield-impact-contract.json").read_text(encoding="utf-8"))
+HARNESS = json.loads((ROOT / "sdlc/design/contracts/harness-package-contract.json").read_text(encoding="utf-8"))
 SPEC = importlib.util.spec_from_file_location("java_spring_mybatis", SCRIPT)
 MOD = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
@@ -20,6 +22,9 @@ class JavaSpringMyBatisAdapterPilotTest(unittest.TestCase):
         cls.result = MOD.analyze(FIXTURE)
         cls.nodes = {row["id"]: row for row in cls.result["nodes"]}
         cls.edges = {(row["from"], row["type"], row["to"]): row for row in cls.result["edges"]}
+        cls.to_be = MOD.analyze(TO_BE_FIXTURE)
+        cls.to_be_nodes = {row["id"]: row for row in cls.to_be["nodes"]}
+        cls.to_be_edges = {(row["from"], row["type"], row["to"]): row for row in cls.to_be["edges"]}
 
     def test_output_satisfies_core_adapter_required_shape(self):
         result = self.result
@@ -31,6 +36,19 @@ class JavaSpringMyBatisAdapterPilotTest(unittest.TestCase):
             self.assertTrue(set(CONTRACT["adapter_output_contract"]["edge_required"]).issubset(edge))
         for coverage in result["coverage"]:
             self.assertTrue(set(CONTRACT["adapter_output_contract"]["coverage_required"]).issubset(coverage))
+
+    def test_project_adapter_remains_outside_core_and_disabled_by_default(self):
+        relative = "sdlc/custom/project/adapters/impact/java_spring_mybatis.py"
+        self.assertNotIn(relative, HARNESS["core_required_files"])
+        profile = (ROOT / "sdlc/config/impact-adapter-profile.example.yaml").read_text(encoding="utf-8")
+        self.assertIn("enabled: false", profile)
+        self.assertIn("JAVA_SPRING_MYBATIS_STATIC_PILOT_V0_1", profile)
+        self.assertIn("status: PILOT_PARTIAL_COVERAGE", profile)
+        self.assertIn("auto_enable: false", profile)
+        readme = (ROOT / "sdlc/custom/project/adapters/impact/README.md").read_text(encoding="utf-8")
+        self.assertIn("Project Custom 영역", readme)
+        self.assertIn("PILOT_PARTIAL_COVERAGE", readme)
+        self.assertIn("Production Repository의 정확도/완전성을 의미하지 않는다", readme)
 
     def test_controller_methods_are_entry_candidates_not_confirmed_spring_mappings(self):
         for method in ["getPlan", "savePlan"]:
@@ -139,6 +157,53 @@ class JavaSpringMyBatisAdapterPilotTest(unittest.TestCase):
             self.assertEqual("OBSERVED", entry["status"])
             coverage = {row["dimension"]: row for row in result["coverage"]}
             self.assertEqual("COVERED", coverage["ENTRY_POINT"]["status"])
+
+    def test_to_be_detects_new_controller_and_service_symbols(self):
+        new_controller = "symbol:com.acme.tm.FlexibleWorkPlanController#initializeFirstPlan"
+        new_service = "symbol:com.acme.tm.FlexibleWorkPlanService#initializeFirstPlan"
+        self.assertNotIn(new_controller, self.nodes)
+        self.assertNotIn(new_service, self.nodes)
+        self.assertIn(new_controller, self.to_be_nodes)
+        self.assertIn(new_service, self.to_be_nodes)
+        entry = self.to_be_nodes["entry:com.acme.tm.FlexibleWorkPlanController#initializeFirstPlan"]
+        self.assertEqual("CHECK_REQUIRED", entry["status"])
+        self.assertEqual("MEDIUM", entry["confidence"])
+
+    def test_to_be_new_service_method_traces_existing_mapper_statements(self):
+        service = "symbol:com.acme.tm.FlexibleWorkPlanService#initializeFirstPlan"
+        for mapper_method in ["selectPlan", "selectDefaultSchedule", "upsertPlan"]:
+            target = f"mybatis:com.acme.tm.FlexibleWorkPlanMapper#{mapper_method}"
+            self.assertIn((service, "CALLEE", target), self.to_be_edges)
+            self.assertIn((target, "CALLER", service), self.to_be_edges)
+
+    def test_to_be_mapper_and_data_assets_remain_structurally_unchanged(self):
+        def mapper_nodes(payload):
+            return {row["id"] for row in payload["nodes"] if row["id"].startswith("mybatis:")}
+        def data_nodes(payload):
+            return {row["id"] for row in payload["nodes"] if row["type"] == "DATA_ASSET"}
+        def data_edges(payload):
+            return {
+                (row["from"], row["type"], row["to"])
+                for row in payload["edges"]
+                if row["type"] in {"READS", "WRITES"}
+            }
+        self.assertEqual(mapper_nodes(self.result), mapper_nodes(self.to_be))
+        self.assertEqual(data_nodes(self.result), data_nodes(self.to_be))
+        self.assertEqual(data_edges(self.result), data_edges(self.to_be))
+
+    def test_to_be_change_does_not_remove_existing_call_relations(self):
+        before_calls = {
+            (row["from"], row["type"], row["to"])
+            for row in self.result["edges"]
+            if row["type"] in {"CALLER", "CALLEE"}
+        }
+        after_calls = {
+            (row["from"], row["type"], row["to"])
+            for row in self.to_be["edges"]
+            if row["type"] in {"CALLER", "CALLEE"}
+        }
+        self.assertTrue(before_calls.issubset(after_calls))
+        self.assertGreater(len(after_calls), len(before_calls))
 
     def test_cli_writes_adapter_output(self):
         with tempfile.TemporaryDirectory() as tmp:
