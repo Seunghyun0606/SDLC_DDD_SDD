@@ -1,5 +1,5 @@
-version: 1
-status: ACTIVE_STRUCTURAL_REDESIGN_V1
+version: 2
+status: ACTIVE_P2_CANDIDATE
 
 registry:
   analyzers:
@@ -7,19 +7,21 @@ registry:
       state: AVAILABLE
       responsibility: CORE
       detects: [repository_structure, file_types, build_markers, test_markers, data_candidates]
-      module: null
+      module: sdlc/scripts/discover_source_inventory.py
 
     - analyzer_id: java-spring
-      state: UNCONFIGURED
+      state: AVAILABLE
       responsibility: ADAPTER
       detects: [java_symbol, spring_route, spring_transaction, dependency_injection]
-      module: null
+      module: sdlc/scripts/analyze_java_spring.py
+      invocation: EXPLICIT_FILE_LIST_ONLY
 
     - analyzer_id: sql-database
-      state: UNCONFIGURED
+      state: AVAILABLE
       responsibility: ADAPTER
-      detects: [table, view, procedure, function, trigger, sequence, index]
-      module: null
+      detects: [table, view, procedure, function, trigger, sequence, index, data_reference]
+      module: sdlc/scripts/analyze_sql_database.py
+      invocation: EXPLICIT_FILE_LIST_ONLY
 
     - analyzer_id: batch-scheduler
       state: UNCONFIGURED
@@ -37,4 +39,6 @@ selection_rules:
   - inventory_only_never_confirms_business_relation
   - unavailable_analyzer_creates_open_item
   - adapter_output_truth_is_observed_or_inferred_never_auto_confirmed
+  - analyzer_requires_explicit_or_confirmed_target_files
   - adding_language_or_framework_support_must_not_modify_core_discovery_contract
+  - source_path_name_similarity_must_not_create_confirmed_reference_graph_edge
