@@ -1,72 +1,55 @@
 schema_version: 1
 session_namespace: SDLC_DESIGN_SESSION_FIRST
-session_base_branch: SDLC_DESIGN_SESSION_FIRST/base
-session_base_commit: bd14bf588efb95371e7c8f5f5a1515536b8cadf8
-branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.4-full-requirements-java-pilot-v0.1
-legacy_branch: null
-branch_version: full-requirements-java-pilot-v0.1.0
-parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.3-workflow-pilot-v0.1
-parent_commit: 2e9eeeb36819d16c19c982c4d08128a19ae11472
+branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.5-human-customer-br-intake-v0.1
+branch_version: human-customer-br-intake-v0.1.0
+parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.4-full-requirements-java-pilot-v0.1
+parent_commit: beed26ffce1b58d814596282ed599a45c6809866
 main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
-candidate_design_version: v1.5.4-rc.1
-status: FULL_PILOT_VALIDATED
+candidate_design_version: v1.5.5-rc.1
+status: DOCUMENT_EXPERIENCE_IMPLEMENTED_CI_PENDING
 merge_to_main: false
-purpose: 전체 142 Requirement에 대해 Java Reference Project와 상세 Program DoR를 적용해 실제 개발 명세 깊이와 Workflow 산출물 전수 Coverage를 검증
+purpose: 사람 친화적 한글 산출물, Canonical 기반 고객 커뮤니케이션 View, 비정형 고객문서 BR Intake 계약 검증
+capabilities:
+  korean_visible_core_templates: ENHANCED_IMPLEMENTED
+  customer_document_view: ENHANCED_IMPLEMENTED
+  customer_template_profile: ENHANCED_IMPLEMENTED
+  terminology_profile: ENHANCED_IMPLEMENTED
+  br_intake_manifest: ENHANCED_IMPLEMENTED
+  br_candidate_provenance: ENHANCED_IMPLEMENTED
+  br_conflict_handling: ENHANCED_IMPLEMENTED
+  document_extraction_contract: CONTRACT_IMPLEMENTED
+  format_specific_extraction_adapters: DESIGNED_NOT_IMPLEMENTED
 pilot:
   source_file: 요구사항목록.xlsx
   source_hash: sha256:d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f
-  requirements: 142
-  rq_groups: 22
-  fr_candidates: 142
-  program_candidates: 142
-  rq_workflow_docs_generated: 264
-  detailed_program_specs_generated: 142
-  java_main_source_files: 73
-  tc_candidates: 568
-  production_ready_programs: 0
-  source_evidence: SIMULATED_REFERENCE_ARCHITECTURE
-  verdict: FULL_STRUCTURAL_PILOT_PASS / PRODUCTION_IMPLEMENTATION_NOT_READY
+  requirement_candidate: RQ-CAND-0001
+  external_ids: [REQ_TM_FL001, REQ_TM_FL002, REQ_TM_FL003]
+  customer_document_count: 2
+  br_candidate_source: REQ_TM_FL003
+  br_candidate_status: REVIEW_REQUIRED
+  business_truth_promotion: false
 validation:
-  full_pilot_local_validator: PASS
-  java_compile: PASS
-  java_symbol_coverage: 142/142
-  program_readiness_tests_added: 6
-  program_readiness_tests_result: PASS
-  inherited_combined_unittest_count: 35
-  combined_unittest_count: 41
-  mermaid_markdown_files_checked: 72
-  mermaid_docs_quality: PASS
-  github_actions:
-    worklist_sync_quality_run: 54
-    worklist_sync_quality_result: SUCCESS
-    docs_quality_run: 29
-    docs_quality_result: SUCCESS
-stage_validation:
-  intake: PASS_REAL_XLSX_142
-  decompose: PASS_ALL_RQ
-  clarify: PASS_OPEN_TRACKED
-  process: PASS_CANDIDATE
-  discovery: PASS_REFERENCE_SOURCE_REAL_SOURCE_PENDING
-  impact: PASS_CANDIDATE
-  design: PASS_PARTIAL
-  program: PASS_DETAILED_SPEC_READINESS_PARTIAL
-  development: PASS_REFERENCE_JAVA_COMPILE
-  test: PASS_568_TC_CANDIDATES
-  verify: FULL_STRUCTURAL_PASS_PRODUCTION_PENDING
-  knowledge: PATTERN_ONLY_NOT_BUSINESS_PROMOTED
+  inherited_combined_unittest_count: 41
+  document_experience_tests_added: 11
+  expected_combined_unittest_count: 52
+  local_document_experience_result: PASS
+  local_program_readiness_compatibility_result: PASS
+  github_actions: CI_PENDING
+  mermaid_docs_quality: CI_PENDING
 new_design_gaps:
-  - id: GAP-PS-001
-    type: Contract Gap + Implementation Gap
-    status: IMPLEMENTED_VALIDATED
-    title: Program Specification Implementation Readiness Contract
-  - id: GAP-PS-002
-    type: Traceability Gap
-    status: PILOT_VALIDATED
-    title: Full Requirement to Source Symbol Coverage Contract
-  - id: GAP-PS-003
-    type: Evidence Integrity Gap
-    status: IMPLEMENTED_VALIDATED
-    title: Candidate Architecture must not satisfy Real Source Evidence
-next_step: review full pilot outputs, then connect actual Brownfield Source and replace OPEN_REAL_SOURCE without changing the Program DoR structure
-updated_at: 2026-09-01T19:50:00+09:00
+  - id: GAP-DX-001
+    status: IMPLEMENTED_LOCAL_VALIDATED
+    title: Human-readable Korean Artifact Contract
+  - id: GAP-CD-001
+    status: IMPLEMENTED_LOCAL_VALIDATED
+    title: Canonical-derived Customer Document View
+  - id: GAP-BR-001
+    status: IMPLEMENTED_LOCAL_VALIDATED
+    title: Non-blocking Unstructured Customer Document BR Intake
+  - id: GAP-BR-002
+    status: DESIGNED_NOT_IMPLEMENTED
+    title: Format-specific Document Extraction Adapters
+verdict: STRUCTURAL_IMPLEMENTED / CI_PENDING / FORMAT_ADAPTER_PENDING
+next_step: create draft PR, run full regression and Mermaid CI, then finalize validation metadata
+updated_at: 2026-09-01T21:42:00+09:00
