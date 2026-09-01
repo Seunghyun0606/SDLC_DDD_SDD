@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "language": "ko-KR",
+  "principles": {
+    "first_use_expand_abbreviation": true,
+    "prefer_plain_korean_for_visible_documents": true,
+    "machine_keys_remain_stable": true,
+    "project_can_override_display_terms": true
+  },
+  "terms": {
+    "RQ": "상위 요구사항",
+    "FR": "기능 요구사항",
+    "BR": "업무 규칙",
+    "PGM": "프로그램",
+    "TASK": "개발 작업",
+    "AC": "인수 조건",
+    "TC": "테스트케이스",
+    "Evidence": "근거",
+    "Source": "프로그램 소스",
+    "Locator": "위치",
+    "Source Hash": "원본 해시",
+    "Confidence": "신뢰도",
+    "Status": "상태",
+    "Alert": "주의/확인 필요",
+    "Assumption": "가정",
+    "Traceability": "추적성",
+    "DoR": "구현 준비도",
+    "AS-IS": "현재",
+    "TO-BE": "개선 후"
+  }
+}
