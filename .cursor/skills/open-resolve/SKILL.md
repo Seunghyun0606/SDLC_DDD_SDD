@@ -37,7 +37,7 @@ SOP는 유용한 Evidence이지만 필수 입력이 아니다.
 | 계속/중단 조건 | OPEN이 있어도 설계 가능한 부분은 계속한다. 업무 Truth가 필요한 항목은 제안만 하고 확정하지 않는다. Execution Guard/법적·보안 Hard Guard는 해당 실행만 중단한다. |
 | 출력 필드 매핑 | `open-resolution-workbook.md`의 OPEN 목록, 6W, UI/Field/CRUD, BR/State/Exception, Data/Query/Common Code, Integration/Auth/NFR/AC-TC, Decision Log를 갱신한다. |
 | 품질 게이트 | 모든 해소값은 Resolution Method + Basis + Rationale/Evidence + Decision Owner + Status를 가져야 한다. 제안과 확정이 구분되어야 한다. |
-| 미확정/실패 처리 | Evidence 없음은 PROPOSED/OPEN, 상충은 CONFLICT, 현행만 확인된 것은 OBSERVED_AS_IS, 프로젝트 권한자가 채택한 기술안은 ACCEPTED_DESIGN으로 둔다. |
+| 미확정/실패 처리 | Evidence 없음은 PROPOSED/OPEN, 상충은 CONFLICT, 현행만 확인된 것은 OBSERVED_AS_IS, 프로젝트 권한자가 채택한 기술안은 ACCEPTED_DESIGN, 업무 권한자가 확인한 업무 사실/정책은 CONFIRMED_BUSINESS로 둔다. |
 
 ## 사람 중심 작성 흐름
 ### 1. 인터뷰로 채울 항목
