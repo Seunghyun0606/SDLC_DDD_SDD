@@ -1,79 +1,97 @@
-# Project Impact Adapter 구현 위치
+# Project Impact Adapter
 
-이 디렉터리는 Brownfield 프로젝트의 언어/Framework/DB/메시징 특성에 맞는 영향 관계 탐색기를 구현하는 **Project Custom 영역**이다. 이 디렉터리의 구현은 Core capability가 아니며 프로젝트 특성에 맞게 선택·교체한다.
+Brownfield 프로젝트의 언어/Framework/DB/메시징 관계 탐색은 **Project Custom 영역**이다. Core는 공통 Node/Edge/Coverage 계약과 `찾지 못함 != 영향 없음` 규칙만 제공한다.
 
-## Core와 Project 책임 분리
-Core가 제공하는 것:
-- `sdlc/design/contracts/brownfield-impact-contract.json`
-- 공통 Node/Edge 어휘
-- Coverage dimension
-- Adapter 출력 계약
-- `찾지 못함 != 영향 없음` 규칙
-- Adapter가 없을 때 `PARTIAL_PROJECT_ADAPTER_REQUIRED` 판정
+## 포함 Adapter
 
-Project에서 별도 구현해야 하는 것:
-- Java/Spring, .NET, Node 등 언어/Framework별 Symbol/Call 관계
-- JPA/MyBatis/JDBC/ORM 및 SQL/Table lineage
-- Stored Procedure/Trigger/ETL
-- Kafka/JMS/Event/외부 API 연결
-- Reflection/Dynamic dispatch/Runtime wiring
-- 프로젝트 고유 Config/Feature Flag/Scheduler 해석
-
-## 현재 포함된 Pilot Adapter
-
-### Java/Spring/MyBatis 정적 Pilot
-- Adapter ID: `JAVA_SPRING_MYBATIS_STATIC_PILOT_V0_1`
+### 1. Java/Spring/MyBatis 좁은 Pilot
+- ID: `JAVA_SPRING_MYBATIS_STATIC_PILOT_V0_1`
 - 구현: `java_spring_mybatis.py`
 - 상태: `PILOT_PARTIAL_COVERAGE`
-- 기본 자동 활성화: **아니오**
-- 검증 기준: `sdlc/validation/pilot/source-fixture/`의 simulated source fixture
+- 자동 활성화: **아니오**
 
-실행 예:
 ```bash
 python sdlc/custom/project/adapters/impact/java_spring_mybatis.py \
   --source-root <repository-or-source-root> \
   --out <impact-result.json>
 ```
 
-현재 Pilot이 실제로 수행하는 범위:
-- Java class/method `SOURCE_SYMBOL` 후보 추출
-- 명시적 field receiver의 직접 `receiver.method(...)` 호출에 대한 CALLER/CALLEE 후보 추출
-- Spring `@GetMapping/@PostMapping/.../@RequestMapping` method annotation이 있으면 `ENTRY_POINT`를 `HIGH / OBSERVED`로 생성
-- Spring annotation이 없고 `*Controller` naming만 있으면 `ENTRY_POINT`를 `MEDIUM / CHECK_REQUIRED` 후보로 생성
-- MyBatis mapper namespace와 statement를 `SOURCE_SYMBOL`로 생성
-- SELECT/FROM/JOIN 및 INSERT/UPDATE/DELETE/MERGE의 Table READS/WRITES 정적 후보 추출
-- `CREATE TABLE`이 있는 `.sql` 파일을 `DATA_ASSET` 근거로 연결
-- Core contract의 모든 Coverage dimension을 출력하고, 분석하지 못한 영역을 `coverage_gaps`로 보고
+실제 지원:
+- Java class/method 후보
+- 명시적 field receiver의 direct call 후보
+- Spring method mapping / Controller naming entry 후보
+- MyBatis mapper statement
+- MyBatis SQL Table READ/WRITE
+- SQL `CREATE TABLE` asset
+- Coverage Gap/Unsupported Pattern
 
-현재 Pilot이 **수행하지 않는 범위**:
-- Java compiler/AST/type solver 수준의 완전한 call graph
-- interface/overload/generic/lambda/method reference의 정밀 해석
-- Spring bean container, proxy, AOP, runtime wiring
+미지원:
+- compiler/type-solver 수준 call graph
+- Spring runtime proxy/AOP/wiring
 - Reflection/Dynamic dispatch
-- `@Transactional` propagation/실제 transaction boundary
-- JPA/JDBC/Stored Procedure/Trigger/ETL lineage
-- Feign/WebClient/RestTemplate 등 외부 API 계약
-- Kafka/JMS/Event 관계
-- Config/Profile/Feature Flag/Scheduler
-- Maven/Gradle dependency graph의 의미 분석
-- Test coverage 의미 분석
-- 업무 영향 또는 Business Truth 확정
+- Transaction runtime propagation
+- JPA/JDBC/SP/Trigger/ETL
+- External API/Kafka/JMS runtime contract
+- Config effective value
+- Test semantic coverage
 
-따라서 이 Adapter 결과에 일부 관계가 존재해도 Brownfield 영향분석 전체를 `COMPLETE`로 판정하지 않는다. Coverage Gap이 있으면 `PARTIAL_COVERAGE_GAPS`를 유지한다.
+### 2. Java/Spring Enterprise 정적 확장 Pilot
+- ID: `JAVA_SPRING_ENTERPRISE_STATIC_V0_2`
+- 구현: `java_spring_enterprise.py`
+- 상태: `PILOT_PARTIAL_COVERAGE`
+- `java_spring_mybatis.py` 결과를 기반으로 확장
 
-## 구현 계약
-Adapter는 `brownfield-impact-contract.json`의 `adapter_output_contract`를 만족해야 한다.
+```bash
+python sdlc/custom/project/adapters/impact/java_spring_enterprise.py \
+  --source-root <repository-or-source-root> \
+  --out <impact-result.json>
+```
+
+추가로 정적 후보를 만드는 범위:
+- JPA `@Entity/@Table`, Spring Data Repository
+- Java 안의 JDBC SQL literal Table READ/WRITE
+- `@Transactional`
+- Feign/RestTemplate/WebClient/HttpClient 후보
+- `@KafkaListener`, Kafka publish hint
+- `@Scheduled`
+- `application*.yml/properties` Config asset
+
+이 확장 Adapter도 다음을 **확정하지 않는다**.
+- JPA query method의 실제 SQL/동작
+- 실제 transaction manager/proxy/propagation
+- live DB metadata
+- 실제 broker topology/schema registry
+- dynamic dispatch/reflection
+- stored procedure/trigger/ETL
+- 업무 목적/Business Truth
+
+따라서 annotation이나 relation을 찾았어도 `STRUCTURAL_COVERAGE_COMPLETE` 또는 업무 영향 확정으로 올리지 않는다. 정적 후보는 `OBSERVED/CHECK_REQUIRED`, 미지원 영역은 Coverage Gap으로 남긴다.
+
+## Adapter 선택법
+
+`/setup` 결과의 `adapter_assessment`를 먼저 본다.
+
+- Spring + MyBatis 위주, 단순 정적 관계 → 좁은 Pilot부터 사용
+- Spring + JPA/Kafka/Feign/Transactional 등이 중요 → Enterprise 정적 Pilot 검토
+- .NET/Node/Python/Legacy framework → Project Adapter 필요
+- DB/APM/Broker/API Catalog의 실제 runtime 정보가 중요 → Tool/MCP Evidence 필요
+
+Config에 Adapter ID를 적었다고 기능이 생기는 것은 아니다. `sdlc/config/impact-adapter-profile.example.yaml`의 기본 `enabled: false`는 유지한다.
+
+## 공통 출력 계약
+Adapter는 `brownfield-impact-contract.json`을 만족해야 한다.
+
 최소 출력:
-- adapter_id / project_context
-- nodes / edges
-- coverage / coverage_gaps
-- unsupported_patterns
+- `adapter_id / project_context`
+- `nodes / edges`
+- `coverage / coverage_gaps`
+- `unsupported_patterns`
 
-Adapter를 구현하지 않은 상태에서도 일반 SDLC Workflow는 중단하지 않는다. 다만 Brownfield 영향분석 결과는 COMPLETE로 표시할 수 없다.
+Adapter가 없더라도 일반 분석 Workflow는 진행할 수 있지만 Brownfield 영향분석을 COMPLETE로 표시할 수 없다.
 
 ## Project 적용 원칙
-1. `sdlc/config/impact-adapter-profile.example.yaml`의 기본값은 계속 `enabled: false`다.
-2. 실제 프로젝트에 적용하기 전에 Source 구조와 Framework 사용방식이 Pilot 지원범위에 맞는지 확인한다.
-3. 지원하지 않는 Framework/패턴은 `coverage_gaps`/`unsupported_patterns`로 남기며 “관계 없음”으로 바꾸지 않는다.
-4. Project에 맞는 Adapter를 추가하거나 교체하더라도 Core contract의 Node/Edge/Coverage 출력 경계를 유지한다.
-5. Pilot fixture PASS는 실제 Production Repository의 정확도/완전성을 의미하지 않는다.
+1. 실제 Source 구조에 맞는 Adapter인지 먼저 확인한다.
+2. `coverage_gaps`를 “영향 없음”으로 바꾸지 않는다.
+3. static result를 runtime truth로 승격하지 않는다.
+4. Project Adapter를 바꿔도 Core Node/Edge/Coverage 경계를 유지한다.
+5. Pilot fixture PASS는 실제 Production Repository 정확도/완전성을 의미하지 않는다.
