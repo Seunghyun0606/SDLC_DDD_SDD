@@ -6,8 +6,17 @@ bootstrap:
   reuse_source_conventions: true
   reuse_test_conventions: true
   require_manual_confirmation: false
+starter_kit:
+  mode_specific: true
+  greenfield: sdlc/starter-kits/greenfield/starter-manifest.example.yaml
+  brownfield: sdlc/starter-kits/brownfield/starter-manifest.example.yaml
 preset:
-  name: brownfield-auto
+  name: AUTO  # /setup이 project.mode에 맞는 preset을 선택한다.
+  mode_mapping:
+    GREENFIELD: greenfield-default
+    BROWNFIELD: brownfield-auto
+    HYBRID: brownfield-auto
+    AUTO: AUTO_DISCOVER
 source_profile:
   path: sdlc/config/source-profile.yaml
 documents:
