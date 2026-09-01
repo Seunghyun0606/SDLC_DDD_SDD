@@ -12,11 +12,11 @@
 
 ```mermaid
 flowchart LR
-    A[1. 프로젝트 연결] --> B[2. 요구사항 등록]
-    B --> C[3. /work 또는 자연어로 진행]
-    C --> D[4. /check 로 상태 확인]
-    D --> E{변경 있음?}
-    E -- 예 --> F[5. /change]
+    A["1. 프로젝트 연결"] --> B["2. 요구사항 등록"]
+    B --> C["3. /work 또는 자연어로 진행"]
+    C --> D["4. /check 로 상태 확인"]
+    D --> E{"변경 있음?"}
+    E -- 예 --> F["5. /change"]
     F --> C
     E -- 아니오 --> C
 ```
@@ -97,10 +97,10 @@ Requirement
 
 ```mermaid
 flowchart LR
-    R[Requirement] --> S[관련 영역 탐색]
-    S --> A[필요한 AS-IS만 복원]
-    A --> D[설계/개발]
-    D --> K[검증된 지식 축적]
+    R["Requirement"] --> S["관련 영역 탐색"]
+    S --> A["필요한 AS-IS만 복원"]
+    A --> D["설계/개발"]
+    D --> K["검증된 지식 축적"]
     K --> R
 ```
 
@@ -117,13 +117,13 @@ Project Mode:
 
 ```mermaid
 flowchart TD
-    S[/setup] --> Q{기존 자산 존재?}
-    Q -- 예 --> B[Existing Asset Bootstrap]
-    Q -- 아니오 --> G[Greenfield Preset]
-    B --> P[Project Profile]
+    S["/setup"] --> Q{"기존 자산 존재?"}
+    Q -- 예 --> B["Existing Asset Bootstrap"]
+    Q -- 아니오 --> G["Greenfield Preset"]
+    B --> P["Project Profile"]
     G --> P
-    P --> O[Overlay 차이만 Customizing]
-    O --> W[동일한 /work /change /check]
+    P --> O["Overlay 차이만 Customizing"]
+    O --> W["동일한 /work /change /check"]
 ```
 
 `/setup` 이후 Stage, Skill, Artifact, Canonical Contract는 Project Mode와 무관하게 동일하다.
@@ -140,11 +140,11 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    X[문제/위험 발견] --> Q{부작용 있는 실제 실행?}
-    Q -- 아니오 --> A[Alert/Assumption 기록]
-    A --> N[다음 단계 진행]
-    Q -- 예 --> G[해당 Action만 Guard]
-    G --> D[Deferred Action 생성]
+    X["문제/위험 발견"] --> Q{"부작용 있는 실제 실행?"}
+    Q -- 아니오 --> A["Alert/Assumption 기록"]
+    A --> N["다음 단계 진행"]
+    Q -- 예 --> G["해당 Action만 Guard"]
+    G --> D["Deferred Action 생성"]
     D --> N
 ```
 
@@ -401,8 +401,8 @@ docs/00_관리/전체작업목록.xlsx
 
 ```mermaid
 flowchart LR
-    M[전체작업목록.md] -->|Import| C[Canonical Work Item]
-    X[전체작업목록.xlsx] -->|Import| C
+    M["전체작업목록.md"] -->|Import| C["Canonical Work Item"]
+    X["전체작업목록.xlsx"] -->|Import| C
     C -->|Export| M
     C -->|Export| X
 ```
@@ -451,12 +451,12 @@ PM 관리 계층:
 
 ```mermaid
 flowchart LR
-    P[Project] --> M[Milestone]
-    M --> RQ[Requirement]
-    RQ --> FR[Functional Requirement]
-    FR --> PGM[Program]
-    PGM --> T[Task]
-    T --> AC[AC/TC]
+    P["Project"] --> M["Milestone"]
+    M --> RQ["Requirement"]
+    RQ --> FR["Functional Requirement"]
+    FR --> PGM["Program"]
+    PGM --> T["Task"]
+    T --> AC["AC/TC"]
 ```
 
 PM은 같은 Work List에서 깊이를 바꿔 본다.
@@ -634,11 +634,11 @@ Promotion:
 
 ```mermaid
 flowchart LR
-    V[VERIFY] --> C[Candidate Extract]
-    C --> E[Evidence Check]
-    E --> D[Duplicate/Conflict]
-    D --> P[Promote/Update/Reject]
-    P --> I[Index Update]
+    V["VERIFY"] --> C["Candidate Extract"]
+    C --> E["Evidence Check"]
+    E --> D["Duplicate/Conflict"]
+    D --> P["Promote/Update/Reject"]
+    P --> I["Index Update"]
 ```
 
 동일 의미는 Evidence 추가, 확장은 Version Update, 상반되면 Conflict Entity를 만든다. 조용히 overwrite하지 않는다.
@@ -656,7 +656,7 @@ Core를 직접 수정하기 전에 Overlay를 사용한다.
 
 ```mermaid
 flowchart LR
-    C[Core Default] --> P[Preset] --> R[Project Profile] --> D[Domain Overlay] --> L[Local Override]
+    C["Core Default"] --> P["Preset"] --> R["Project Profile"] --> D["Domain Overlay"] --> L["Local Override"]
 ```
 
 권장 구조:
