@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 mode: BROWNFIELD
 project:
   name: example-brownfield
@@ -34,6 +34,11 @@ profiles:
   customer_document: profiles/customer-document-profile.json
 
 impact_analysis:
+  common_contract: sdlc/design/contracts/brownfield-impact-contract.json
+  adapter_profile: sdlc/config/impact-adapter-profile.yaml
+  project_adapter_root: sdlc/custom/project/adapters/impact
+  project_adapter_required_for_complete_result: true
+  missing_adapter_status: PARTIAL_PROJECT_ADAPTER_REQUIRED
   required_relation_types:
     - ENTRY_POINT
     - CALLER
@@ -53,8 +58,12 @@ impact_analysis:
   coverage_gaps_must_be_reported: true
 
 reverse_engineering:
-  enabled_by_default: false
-  requested_scope: NONE  # NONE | INVENTORY | DRIFT_CHECK | REVERSE_SPEC | SOURCE_DIFF
+  drift_check_core_enabled: true
+  drift_contract: sdlc/design/contracts/source-drift-contract.json
+  drift_script: sdlc/scripts/detect_source_drift.py
+  full_reverse_spec_core_enabled: false
+  requested_scope: NONE  # NONE | DRIFT_CHECK | INVENTORY_ENHANCEMENT | REVERSE_SPEC_ENHANCEMENT | SEMANTIC_SOURCE_DIFF_ENHANCEMENT
+  auto_rewrite_artifact: false
   promote_to_business_truth_automatically: false
 
 readiness:
@@ -65,10 +74,12 @@ readiness:
     - source_candidate_found
     - direct_relation_trace
     - coverage_gap_reported
+    - project_impact_adapter_state_reported
   implementation_ready_rule: "Real target confirmed, build/test path known, Program DoR OPEN = 0"
 
 non_blocking:
   unknown_value: UNKNOWN
   missing_recommended_input: CHECK_REQUIRED
   no_repository_reference: SOURCE_ANALYSIS_NOT_CONFIRMED
+  missing_project_impact_adapter: PARTIAL_PROJECT_ADAPTER_REQUIRED
   dangerous_write_requires_execution_guard: true
