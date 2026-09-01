@@ -125,8 +125,11 @@ def run_experiment(config: dict[str, Any], output_root: Path) -> dict[str, Any]:
     valid_fingerprints = [fp for fp in fingerprints if fp]
     first = valid_fingerprints[0] if valid_fingerprints else None
     match_count = sum(1 for fp in valid_fingerprints if fp == first) if first else 0
-    all_commands_ok = all(row["command_exit_code"] == 0 for row in runs)
-    all_valid = len(runs) == run_count and all(row.get("validation", {}).get("status") == "PASS" for row in runs)
+    all_commands_ok = len(runs) == run_count and all(row["command_exit_code"] == 0 for row in runs)
+    all_valid = len(runs) == run_count and all(
+        isinstance(row.get("validation"), dict) and row["validation"].get("status") == "PASS"
+        for row in runs
+    )
     all_match = bool(first) and len(valid_fingerprints) == run_count and match_count == run_count
 
     if not all_commands_ok:
