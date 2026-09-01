@@ -26,6 +26,8 @@ class StarterKitContractTest(unittest.TestCase):
         for marker in {"CALLER", "CALLEE", "DATA_READ_WRITE", "EXTERNAL_INTERFACE", "CONFIG_FEATURE_FLAG", "TEST"}:
             self.assertIn(marker, relations)
         self.assertTrue(CONTRACT["modes"]["BROWNFIELD"]["coverage_gaps_must_be_reported"])
+        self.assertTrue(CONTRACT["modes"]["BROWNFIELD"]["project_specific_impact_adapter_required"])
+        self.assertEqual("PARTIAL_PROJECT_ADAPTER_REQUIRED", CONTRACT["modes"]["BROWNFIELD"]["missing_project_adapter_status"])
 
     def test_missing_recommended_input_remains_non_blocking(self):
         self.assertTrue(CONTRACT["shared_invariants"]["missing_recommended_input_is_non_blocking"])
@@ -34,8 +36,12 @@ class StarterKitContractTest(unittest.TestCase):
         self.assertTrue(CONTRACT["shared_invariants"]["business_truth_is_not_inferred_from_source_automatically"])
         self.assertFalse(CONTRACT["reverse_engineering"]["automatic_business_truth_promotion"])
 
-    def test_reverse_engineering_is_not_falsely_claimed_as_core_enabled(self):
-        self.assertEqual("DESIGN_REVIEW_ONLY_NOT_CORE_ENABLED", CONTRACT["reverse_engineering"]["status"])
+    def test_reverse_engineering_only_enables_drift_check_in_core(self):
+        reverse = CONTRACT["reverse_engineering"]
+        self.assertEqual("PARTIAL_CORE_ENABLED", reverse["status"])
+        self.assertEqual(["DRIFT_CHECK"], reverse["core_enabled_scopes"])
+        self.assertIn("REVERSE_SPEC", reverse["enhancement_scopes"])
+        self.assertFalse(reverse["automatic_artifact_rewrite"])
 
     def test_starter_documents_exist(self):
         for mode in ("greenfield", "brownfield"):
