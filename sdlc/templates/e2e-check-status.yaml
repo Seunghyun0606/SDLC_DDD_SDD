@@ -1,0 +1,27 @@
+schema_version: 1
+artifact_type: E2E_CHECK_STATUS
+subject:
+  source_group_id: RQG-CAND-XXXXXXXXXX
+  source_requirement_count: 0
+  source_requirement_ids: []
+overall:
+  state: ACTION_REQUIRED
+  release_ready: false
+  production_verified: false
+  summary_ko: 현재 상태 요약
+stage_status:
+  - stage: NORMALIZE
+    display_name_ko: 레거시 요구사항 정규화
+    state: COMPLETE
+    summary_ko: 정규화 상태
+    blocking: false
+blockers:
+  - code: BOUNDARY_REVIEW_OPEN
+    owner: L2_OR_HUMAN
+    action_ko: 요구사항 경계를 검토한다.
+next_actions: []
+truth_guards:
+  candidate_is_not_canonical: true
+  fixture_is_not_production_source: true
+  contract_coverage_is_not_runtime_pass: true
+  source_behavior_is_not_business_truth: true
