@@ -1,0 +1,32 @@
+name: Mermaid auto normalize
+
+on:
+  push:
+    branches:
+      - design/v1.5-usability-generalization
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: design/v1.5-usability-generalization
+      - name: Normalize Mermaid labels
+        run: python sdlc/scripts/normalize_mermaid.py --write .
+      - name: Commit normalized Markdown
+        shell: bash
+        run: |
+          if git diff --quiet -- '*.md'; then
+            echo "No Mermaid normalization required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- '*.md'
+          git commit -m "docs: normalize Mermaid labels for GitHub rendering"
+          git push
