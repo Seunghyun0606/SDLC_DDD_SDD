@@ -7,7 +7,31 @@
 3. 기존 Source Evidence와 충돌하면 기존 설계/Knowledge를 `STALE` 또는 `CHECK_REQUIRED` 후보로 분류한다.
 4. 확정되지 않은 변경은 Alert/Assumption과 함께 진행하며 위험 Source write만 Guard한다.
 5. 변경 원문과 provenance를 보존한다.
-6. Canonical 값/관계/근거가 바뀌는 경우 `sdlc/scripts/apply_canonical_delta.py`로 Delta를 적용한다. 문서에 “Canonical 반영”이라고 적는 것만으로 갱신 완료로 간주하지 않는다.
+6. 변경 분석 Artifact와 Canonical Delta를 하나의 Stage Result Envelope로 묶어 `sdlc/scripts/validate_agent_stage_result.py`로 검증한다.
+7. 검증된 Canonical 값/관계/근거 변경만 `sdlc/scripts/apply_canonical_delta.py`로 적용한다. 문서에 “Canonical 반영”이라고 적는 것만으로 갱신 완료로 간주하지 않는다.
+
+## 변경 Stage Result 검증
+변경 분석도 `/work`와 동일한 Machine 실행 경계를 사용한다.
+
+```json
+{
+  "schema_version": 1,
+  "stage": "CHANGE",
+  "artifact_path": "docs/.../change-analysis.md",
+  "canonical_delta": {},
+  "quality_gate": {"status": "PASS", "failures": []},
+  "alerts": [],
+  "uncertainty": []
+}
+```
+
+검증:
+`python sdlc/scripts/validate_agent_stage_result.py --result <change-result.json> --store sdlc/canonical/store.json --out <validation-result.json>`
+
+- `validation.status = PASS`이면서 `validation.executable = true`인 경우에만 Canonical 적용 단계로 이동한다.
+- Artifact/Delta Stage 불일치, source_artifact 불일치, stale revision, 미해결 Template placeholder가 있으면 변경을 적용하지 않는다.
+- 동일 변경을 반복 실행해 비교할 때는 `--compare`로 semantic fingerprint를 확인할 수 있다.
+- 이 비교는 LLM 자체의 결정론을 보장하지 않으며 실제 생성 결과의 의미 차이를 검출하기 위한 것이다.
 
 ## Canonical 변경 적용
 변경 요청이 Canonical에 영향을 주면 현재 Store revision을 기준으로 최소 Delta를 만든다.
@@ -29,11 +53,12 @@
 - `ADD_PROVENANCE`: 값은 유지하고 변경 원문/Source 관찰 근거만 연결
 
 실행:
-1. `python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --dry-run`
-2. `APPLIED` 후보일 때만 실제 적용한다.
-3. `python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --result-out <result.json>`
-4. `CONFLICT`면 Store를 부분 수정하지 않는다. 최신 revision을 다시 읽고 Before/After를 재평가한다.
-5. `IDEMPOTENT`면 동일 변경이 이미 반영된 것이므로 중복 적용하지 않는다.
+1. Stage Result Validator가 해당 Delta를 현재 Store에서 `APPLIED` 또는 `IDEMPOTENT` 가능하다고 판정했는지 확인한다.
+2. `python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --dry-run`
+3. `APPLIED` 후보일 때만 실제 적용한다.
+4. `python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --result-out <result.json>`
+5. `CONFLICT`면 Store를 부분 수정하지 않는다. 최신 revision을 다시 읽고 Before/After를 재평가한다.
+6. `IDEMPOTENT`면 동일 변경이 이미 반영된 것이므로 중복 적용하지 않는다.
 
 ### Business Truth 안전 규칙
 - 고객/업무 권한자가 확인한 `CONFIRMED_BUSINESS`를 Source 관찰만으로 변경하거나 상태를 낮추지 않는다.
