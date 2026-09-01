@@ -31,6 +31,7 @@ flowchart LR
 ```
 
 ## 입력 및 근거
+<!-- Source Evidence Machine Contract: Locator / Source Hash / Confidence / Status -->
 | 구분 | 내용 | 근거 구분 | 위치(근거 위치) | 원본 해시 | 상태 |
 |---|---|---|---|---|---|
 | 기능 설계 | {{functional_design_ref}} | CONFIRMED/GIVEN/PROPOSED | {{functional_design_locator}} | {{functional_design_hash}} | {{functional_design_status}} |
