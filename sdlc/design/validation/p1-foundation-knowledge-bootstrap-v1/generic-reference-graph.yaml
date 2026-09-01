@@ -1,0 +1,47 @@
+reference_graph:
+  graph_id: GRAPH-DEMO-GENERIC-001
+  project_id: DEMO-GENERIC-001
+  revision: 1
+  source_revision: SRC-REV-001
+  nodes:
+    - node_id: RQ-DEMO-001
+      node_type: RQ
+      title: Generic change request
+      validity: CURRENT
+      truth_state: GIVEN
+      source_ref: REQ-SOURCE-001
+    - node_id: PGM-DEMO-001
+      node_type: PGM
+      title: Generic logical program
+      validity: CURRENT
+      truth_state: OBSERVED
+      source_ref: EVID-PGM-001
+    - node_id: ART-DEMO-001
+      node_type: ART
+      title: Generic source artifact
+      validity: CURRENT
+      truth_state: OBSERVED
+      source_ref: EVID-ART-001
+  edges:
+    - edge_id: EDGE-DEMO-001
+      from_id: RQ-DEMO-001
+      relation_type: IMPACT_CANDIDATE
+      to_id: PGM-DEMO-001
+      truth_state: INFERRED
+      evidence_ids: [EVID-PGM-001]
+      source_refs: []
+      status: OPEN
+    - edge_id: EDGE-DEMO-002
+      from_id: PGM-DEMO-001
+      relation_type: IMPLEMENTED_BY
+      to_id: ART-DEMO-001
+      truth_state: OBSERVED
+      evidence_ids: [EVID-ART-001]
+      source_refs: [src]
+      status: OPEN
+  unresolved_references: []
+  validation:
+    dangling_node_refs: []
+    missing_provenance_edges: []
+    duplicate_edge_ids: []
+    stale_source_revision: false
