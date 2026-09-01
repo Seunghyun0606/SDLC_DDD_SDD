@@ -1,0 +1,112 @@
+version: 1
+status: ACTIVE_P0_RUNTIME_CORE_EXIT_GATE
+
+exit_scope:
+  success_state: P0_RUNTIME_CORE_READY
+  failure_state: P0_RUNTIME_CORE_BLOCKED
+  production_ready_on_success: false
+  p1_entry_allowed_on_success: true
+
+required_authorities:
+  - sdlc/config/baseline-contract-index.yaml
+  - sdlc/config/stage-routing.yaml
+  - sdlc/config/stage-procedures.yaml
+  - sdlc/config/provider-registry.example.yaml
+  - sdlc/config/artifact-profiles.yaml
+  - sdlc/templates/stage-input-pack.yaml
+  - sdlc/design/contracts/p0-runtime-core-redesign.md
+  - sdlc/design/contracts/source-write-capability.md
+
+required_runtime:
+  - sdlc/scripts/execute_command_runtime.py
+  - sdlc/scripts/route_provider_command.py
+  - sdlc/scripts/invoke_provider_runtime.py
+  - sdlc/scripts/build_stage_handoff.py
+  - sdlc/scripts/build_reverse_sync_generic.py
+  - sdlc/scripts/build_status_view.py
+  - sdlc/scripts/validate_p0_runtime_core.py
+  - sdlc/scripts/validate_routed_skills.py
+
+required_routed_skills:
+  - requirement-intake
+  - stage-procedure
+  - source-discovery
+  - source-change
+  - test-verification
+
+required_generic_fixtures:
+  - sdlc/design/validation/p0-runtime-core-redesign-v1/fixtures/generic-greenfield-context.yaml
+  - sdlc/design/validation/p0-runtime-core-redesign-v1/fixtures/generic-brownfield-context.yaml
+  - sdlc/design/validation/p0-runtime-core-redesign-v1/fixtures/generic-brownfield-source-diff.yaml
+  - sdlc/design/validation/p0-runtime-core-redesign-v1/fixtures/generic-brownfield-reference-graph.yaml
+
+required_test_definitions:
+  - sdlc/design/validation/p0-runtime-core-redesign-v1/test_runtime_core.py
+  - sdlc/scripts/test_p01_contracts.py
+  - sdlc/scripts/test_p02_contracts.py
+  - sdlc/scripts/test_p03_contracts.py
+  - sdlc/scripts/test_p04_contracts.py
+  - sdlc/scripts/test_p05_orchestration.py
+  - sdlc/scripts/test_p06_contracts.py
+  - sdlc/scripts/test_p07_conformance.py
+  - sdlc/scripts/test_p08_runtime.py
+  - sdlc/scripts/test_p09_command_runtime.py
+  - sdlc/scripts/test_p0_contracts.py
+  - sdlc/scripts/test_p0_exit.py
+
+required_ci:
+  workflow: .github/workflows/p0-runtime-core.yml
+  redesigned_conformance_step: Run redesigned P0 runtime conformance
+  legacy_regression_step: Run legacy P0 regression suite
+  success_required: true
+
+invariants:
+  - stage_order_has_single_authority
+  - routed_skill_contract_is_deterministically_validated
+  - stage_handoff_preserves_typed_trace
+  - missing_read_provider_preserves_open
+  - write_requires_explicit_stage_allowed_side_effect
+  - write_requires_expected_revision_permission_and_idempotency
+  - unknown_after_write_requires_recovery
+  - source_behavior_is_not_business_truth
+  - candidate_is_not_canonical
+  - runtime_pass_requires_execution_evidence
+  - stack_specific_source_parsing_is_not_core_authority
+  - reverse_sync_protects_human_truth
+  - status_read_model_creates_no_truth
+  - logical_artifact_role_does_not_force_one_physical_document
+
+anti_overfitting:
+  forbidden_core_tokens:
+    - AttendanceClose
+    - TB_ATT_
+    - REQ_TM_TE
+    - RQG-CAND-6BB6D66548
+    - 근태
+    - 10분
+  core_paths:
+    - sdlc/config/stage-routing.yaml
+    - sdlc/config/stage-procedures.yaml
+    - sdlc/scripts/execute_command_runtime.py
+    - sdlc/scripts/route_provider_command.py
+    - sdlc/scripts/build_stage_handoff.py
+    - sdlc/scripts/build_reverse_sync_generic.py
+    - sdlc/scripts/build_status_view.py
+    - sdlc/starter/onboarding-package-v1/skills/requirement-intake/SKILL.md
+    - sdlc/starter/onboarding-package-v1/skills/source-discovery/SKILL.md
+    - sdlc/starter/onboarding-package-v1/skills/source-change/SKILL.md
+    - sdlc/starter/onboarding-package-v1/skills/stage-procedure/SKILL.md
+
+deferred_non_p0_blockers:
+  - id: REAL_CUSTOMER_VERTICAL_SLICE
+    target_phase: P1
+    reason: P0 validates the generic runtime contract; customer repository binding is project/P1 evidence.
+  - id: PRODUCTION_SOURCE_WRITE_ADAPTER
+    target_phase: P1_OR_PROJECT_ADAPTER
+    reason: P0 standardizes the capability and safety contract while the default writer remains disabled/PROPOSAL_ONLY.
+  - id: PRODUCTION_CI_TEST_ADAPTER
+    target_phase: P1_OR_PROJECT_ADAPTER
+    reason: P0 standardizes TEST capabilities; concrete Jenkins/GitHub Actions/Azure DevOps binding is adapter work.
+  - id: PRODUCTION_MONITORING_DEPLOYMENT_PROVIDER
+    target_phase: P2
+    reason: Provider extension is supported but is not required to establish P0 runtime-core safety.
