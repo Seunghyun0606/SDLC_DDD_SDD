@@ -69,6 +69,17 @@ python sdlc/scripts/validate_agent_stage_result.py \
 ## Canonical 변경 적용
 검증된 Delta는 `sdlc/scripts/apply_canonical_delta.py`의 locked atomic write 경계를 사용한다.
 
+일반 `/change` 실행에서는 `run_change.py`가 이 경계를 자동 사용한다. Delta만 독립 검증하거나 기존 자동화와 호환해야 할 때는 아래 low-level dry-run 경로를 유지한다.
+
+```bash
+python sdlc/scripts/apply_canonical_delta.py \
+  --store sdlc/canonical/store.json \
+  --delta <canonical-delta.json> \
+  --dry-run
+```
+
+`--dry-run`은 Canonical 적용 가능성만 확인하며 Store를 쓰지 않는다. Source write 안전성까지 확인하려면 `/change --plan-only` 또는 실제 orchestrated `/change` Guard를 사용한다.
+
 지원 Operation:
 - `UPSERT_ENTITY`
 - `UPSERT_RELATION`
