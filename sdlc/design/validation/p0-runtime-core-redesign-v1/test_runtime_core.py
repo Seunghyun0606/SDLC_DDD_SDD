@@ -8,6 +8,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[4]
 SCRIPTS = ROOT / "sdlc" / "scripts"
 SKILLS = ROOT / "sdlc" / "starter" / "onboarding-package-v1" / "skills"
+FIXTURES = ROOT / "sdlc" / "design" / "validation" / "p0-runtime-core-redesign-v1" / "fixtures"
 sys.path.insert(0, str(SCRIPTS))
 
 
@@ -19,7 +20,9 @@ def load_module(name, path):
 
 
 runtime = load_module("runtime_core", SCRIPTS / "execute_command_runtime.py")
+router = load_module("runtime_router", SCRIPTS / "route_provider_command.py")
 validator = load_module("runtime_validator", SCRIPTS / "validate_p0_runtime_core.py")
+provider_validator = load_module("provider_validator", SCRIPTS / "validate_p06_contracts.py")
 skill_validator = load_module("skill_validator", SCRIPTS / "validate_routed_skills.py")
 handoff_builder = load_module("handoff_builder", SCRIPTS / "build_stage_handoff.py")
 reverse_sync = load_module("reverse_sync", SCRIPTS / "build_reverse_sync_generic.py")
@@ -30,6 +33,10 @@ def load(rel):
     return yaml.safe_load((ROOT / rel).read_text(encoding="utf-8")) or {}
 
 
+def load_fixture(name):
+    return yaml.safe_load((FIXTURES / name).read_text(encoding="utf-8")) or {}
+
+
 def registry_with_states(source_state="UNCONFIGURED", test_state="UNCONFIGURED"):
     registry = load("sdlc/config/provider-registry.example.yaml")
     for provider in registry["registry"]["providers"]:
@@ -37,6 +44,14 @@ def registry_with_states(source_state="UNCONFIGURED", test_state="UNCONFIGURED")
             provider["provider_state"] = source_state
         if provider["provider_id"] == "test-primary":
             provider["provider_state"] = test_state
+    return registry
+
+
+def enable_source_write(registry):
+    for provider in registry["registry"]["providers"]:
+        if provider["provider_id"] == "source-write-primary":
+            provider["enabled"] = True
+            provider["provider_state"] = "AVAILABLE"
     return registry
 
 
@@ -75,6 +90,23 @@ def assert_routing_references_exist(routing, procedures):
             assert (ROOT / deterministic_tool).is_file(), f"missing deterministic tool: {deterministic_tool}"
 
 
+def assert_human_artifact_mapping(profile_doc):
+    groups = profile_doc.get("human_document_groups") or {}
+    satisfied = set()
+    for group_name, group in groups.items():
+        satisfied.update(group.get("satisfies") or [])
+        if group.get("kind") == "TEMPLATE":
+            path = group.get("template")
+            assert path and (ROOT / path).is_file(), f"missing human template: {group_name} -> {path}"
+        elif group.get("kind") == "GENERATED_VIEW":
+            path = group.get("output")
+            assert path, f"generated view path missing: {group_name}"
+    for profile_name, profile in (profile_doc.get("profiles") or {}).items():
+        for logical_role, policy in (profile.get("human_artifacts") or {}).items():
+            if policy != "OFF":
+                assert logical_role in satisfied, f"{profile_name}.{logical_role} has no document group mapping"
+
+
 def make_completed_pack(template, routing, stage):
     pack = yaml.safe_load(yaml.safe_dump(template, allow_unicode=True))
     root = pack["stage_input_pack"]
@@ -92,11 +124,16 @@ def main():
     routing = load("sdlc/config/stage-routing.yaml")
     procedures = load("sdlc/config/stage-procedures.yaml")
     pack = load("sdlc/templates/stage-input-pack.yaml")
+    registry = load("sdlc/config/provider-registry.example.yaml")
+    artifact_profiles = load("sdlc/config/artifact-profiles.yaml")
+
     assert validator.validate_stage_routing(routing) == []
     assert validator.validate_stage_procedures(procedures) == []
     assert validator.validate_routing_procedure_refs(routing, procedures) == []
     assert validator.validate_stage_pack(pack) == []
+    assert provider_validator.validate_registry(registry) == []
     assert_routing_references_exist(routing, procedures)
+    assert_human_artifact_mapping(artifact_profiles)
     for name in skill_validator.routed_skill_names(routing):
         assert skill_validator.validate_skill(SKILLS / name / "SKILL.md") == [], name
 
@@ -116,8 +153,18 @@ def main():
     assert any(item["output_type"] == "IMPACT_ANALYSIS" for item in outputs)
     assert any(item["input_type"] == "STAGE_INPUT_PACK" for item in built["stage_input_pack"]["required_inputs"])
 
-    # Brownfield discovery with no Source/Analyzer Provider must remain PARTIAL/OPEN, not globally blocked.
-    result = runtime.execute(registry_with_states(), context(stage="DISCOVERY", mode="BROWNFIELD"), routing)
+    # Generic Greenfield must start without Source Provider or stack-specific configuration.
+    greenfield = load_fixture("generic-greenfield-context.yaml")
+    result = runtime.execute(registry_with_states(), greenfield, routing)
+    body = result["command_runtime_result"]
+    assert body["state"] == "COMPLETE", body
+    assert body["stage_route"]["stage"] == "INTAKE"
+    assert body["stage_route"]["skill"] == "requirement-intake"
+    assert body["stage_route"]["next_stage"] == "DECOMPOSE"
+
+    # Generic Brownfield discovery with no Source/Analyzer Provider must remain PARTIAL/OPEN, not globally blocked.
+    brownfield = load_fixture("generic-brownfield-context.yaml")
+    result = runtime.execute(registry_with_states(), brownfield, routing)
     body = result["command_runtime_result"]
     assert body["stage_route"]["skill"] == "source-discovery"
     assert body["stage_route"]["next_stage"] == "IMPACT"
@@ -143,41 +190,53 @@ def main():
     assert any(item.get("capability") == "source.diff" and item.get("blocking") is False for item in body["open_items"]), body
 
     # Generic reverse sync traverses only confirmed trace edges and protects business truth.
-    diff_doc = {
-        "source_diff_evidence": {
-            "metadata": {
-                "change_id": "CHANGE-GENERIC-001",
-                "project_id": "DEMO-GENERIC-001",
-                "source_revision_before": "rev-a",
-                "source_revision_after": "rev-b",
-            },
-            "changed_items": [{"path": "src/order/service.py", "changed_symbols": ["cancel_order"]}],
-            "semantic_change_class": "FUNCTIONAL_BEHAVIOR",
-            "secondary_classes": [],
-        }
-    }
-    graph_doc = {
-        "reference_graph": {
-            "nodes": [
-                {"node_id": "ART-ORDER-001", "node_type": "ART", "source_refs": ["src/order/service.py"]},
-                {"node_id": "PGM-ORDER-001", "node_type": "PGM", "source_refs": []},
-                {"node_id": "FR-ORDER-001", "node_type": "FR", "source_refs": []},
-                {"node_id": "RQ-ORDER-001", "node_type": "RQ", "source_refs": []},
-            ],
-            "edges": [
-                {"edge_id": "E1", "from_id": "PGM-ORDER-001", "to_id": "ART-ORDER-001", "status": "CONFIRMED"},
-                {"edge_id": "E2", "from_id": "FR-ORDER-001", "to_id": "PGM-ORDER-001", "status": "CONFIRMED"},
-                {"edge_id": "E3", "from_id": "RQ-ORDER-001", "to_id": "FR-ORDER-001", "status": "CONFIRMED"},
-            ],
-        }
-    }
-    reverse, errors = reverse_sync.build(diff_doc, graph_doc)
+    reverse, errors = reverse_sync.build(
+        load_fixture("generic-brownfield-source-diff.yaml"),
+        load_fixture("generic-brownfield-reference-graph.yaml"),
+    )
     assert errors == [], errors
     reverse_root = reverse["reverse_sync_candidate"]
     assert reverse_root["protected_human_truth"] is True
     assert any(item["node_id"] == "ART-ORDER-001" and item["state"] == "STALE_CANDIDATE" for item in reverse_root["stale_candidates"])
     assert any(item["node_id"] == "FR-ORDER-001" and item["state"] == "REVIEW_CANDIDATE" for item in reverse_root["review_candidates"])
     assert any(item["node_id"] == "RQ-ORDER-001" and item["state"] == "REVIEW_CANDIDATE" for item in reverse_root["review_candidates"])
+
+    # Source write is proposal-only by default and must be explicit, guarded, and preflighted.
+    dev_default = context(stage="DEVELOPMENT", mode="GREENFIELD")
+    result = runtime.execute(registry_with_states(), dev_default, routing)
+    body = result["command_runtime_result"]
+    assert body["state"] == "COMPLETE", body
+    assert "source.patch.apply" not in body["plan"]["runtime_plan"]["requested_capabilities"]
+
+    dev_write = context(stage="DEVELOPMENT", mode="GREENFIELD")
+    dev_write["requested_side_effect_capabilities"] = ["source.patch.apply"]
+    result = runtime.execute(registry_with_states(), dev_write, routing)
+    body = result["command_runtime_result"]
+    assert body["state"] == "INVALID", body
+    assert any(error.startswith("ROUTE-WRITE-001") for error in body["errors"]), body
+
+    dev_write["write_proofs"] = {
+        "source.patch.apply": {
+            "expected_revision": "ABSENT",
+            "idempotency_key": "IDEMP-GF-001",
+            "permission_proof_ref": "PERM-GF-001",
+        }
+    }
+    result = runtime.execute(registry_with_states(), dev_write, routing)
+    body = result["command_runtime_result"]
+    assert body["state"] == "ACTION_REQUIRED", body
+    assert any(item.get("capability") == "source.patch.apply" and item.get("blocking") for item in body["open_items"]), body
+
+    routed, route_errors = runtime.apply_stage_route(dev_write, routing)
+    assert route_errors == [], route_errors
+    write_registry = enable_source_write(registry_with_states())
+    plan, plan_errors = router.build_plan(write_registry, routed)
+    assert plan_errors == [], plan_errors
+    assert plan["runtime_plan"]["status"] == "READY", plan
+    assert any(
+        item.get("capability") == "source.patch.apply" and item.get("provider_id") == "source-write-primary"
+        for item in plan["runtime_plan"]["resolved_providers"]
+    ), plan
 
     # /check must route to the full-stage read model and must not create truth.
     check_context = context(command="/check", stage="IMPACT", mode="GREENFIELD")
@@ -195,9 +254,21 @@ def main():
     assert status_root["truth_guards"]["read_model_creates_truth"] is False
     assert len(status_root["stage_status"]) == 12
 
-    # Test execution is a side effect. If explicitly requested with unavailable TEST Provider, it must block that action.
+    # Test execution is a side effect. Missing proof fails before provider invocation.
     test_context = context(stage="TEST", mode="GREENFIELD")
     test_context["requested_side_effect_capabilities"] = ["test.execute"]
+    result = runtime.execute(registry_with_states(), test_context, routing)
+    body = result["command_runtime_result"]
+    assert body["state"] == "INVALID", body
+    assert any(error.startswith("ROUTE-WRITE-001") for error in body["errors"]), body
+
+    test_context["write_proofs"] = {
+        "test.execute": {
+            "expected_revision": "TEST-PLAN-001",
+            "idempotency_key": "IDEMP-TEST-001",
+            "permission_proof_ref": "PERM-TEST-001",
+        }
+    }
     result = runtime.execute(registry_with_states(), test_context, routing)
     body = result["command_runtime_result"]
     assert body["state"] == "ACTION_REQUIRED", body
