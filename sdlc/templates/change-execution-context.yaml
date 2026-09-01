@@ -1,0 +1,18 @@
+version: 1
+change_execution:
+  change_id: FILL_ME
+  agent_id: FILL_ME
+  expected_revision: FILL_ME
+  current_revision: FILL_ME
+  agent_branch: agent/<rq-or-change>/<task>/<agent>
+  parent_change_branch: change/<rq-or-change>/<slug>
+  ownership:
+    requested_paths: []
+    owned_paths: []
+    shared_paths: []
+    coordination_proof_ref: null
+    active_claims: []
+  constraints:
+    deny_revision_mismatch: true
+    deny_unowned_write: true
+    deny_active_claim_overlap: true
