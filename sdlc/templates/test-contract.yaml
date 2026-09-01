@@ -1,0 +1,27 @@
+schema_version: 1
+artifact_type: TEST_CONTRACT
+subject:
+  rq_group_candidate_id: null
+  canonical_rq_ids: []
+  program_ids: []
+source_binding:
+  fixture_evidence: false
+  production_source: false
+  source_evidence_set_id: null
+  artifact_hashes: []
+acceptance_criteria: []
+test_cases: []
+coverage:
+  required_ac_ids: []
+  covered_ac_ids: []
+  uncovered_ac_ids: []
+  coverage_percent: 0
+execution_requirements:
+  runtime_environment: ACTUAL_REQUIRED_FOR_VERIFIED_PASS
+  test_command: null
+  required_test_case_ids: []
+open_items: []
+review:
+  business_rule_candidate_reviewed: false
+  required_reviewers: []
+status: DRAFT
