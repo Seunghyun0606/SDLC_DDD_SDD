@@ -1,11 +1,46 @@
-version: 1
-status: ACTIVE_P0_CANDIDATE
+version: 2
+status: ACTIVE_P0_REDESIGN
 
 resolver:
   default_profile: STANDARD
   allow_project_override: true
   allow_domain_override: true
   expose_internal_artifacts_to_customer: false
+  logical_artifact_may_share_physical_document: true
+
+human_document_groups:
+  worklist:
+    kind: GENERATED_VIEW
+    output: docs/00_관리/전체작업목록.md
+    satisfies: [worklist]
+
+  customer_functional_spec:
+    kind: TEMPLATE
+    template: sdlc/starter/onboarding-package-v1/templates/customer-functional-spec.md
+    filename_suffix_ko: 기능정의서
+    satisfies: [requirement_customer_view, process_analysis]
+    audience: [CUSTOMER, BA, PM, DESIGNER]
+
+  engineering_blueprint:
+    kind: TEMPLATE
+    template: sdlc/starter/onboarding-package-v1/templates/development-blueprint.md
+    filename_suffix_ko: 엔지니어링설계
+    satisfies: [impact_analysis, engineering_design, program_spec]
+    audience: [DESIGNER, DEVELOPER, TESTER]
+
+  implementation_verification:
+    kind: TEMPLATE
+    template: sdlc/starter/onboarding-package-v1/templates/implementation-verification-result.md
+    filename_suffix_ko: 구현검증결과
+    satisfies: [implementation_result, test_verification]
+    audience: [DEVELOPER, TESTER, PM, CUSTOMER]
+
+  separate_6w:
+    kind: TEMPLATE
+    template: sdlc/starter/onboarding-package-v1/templates/business-definition-6w.md
+    filename_suffix_ko: 6W업무정의
+    satisfies: [separate_6w]
+    audience: [CUSTOMER, BA]
 
 profiles:
   LITE:
@@ -96,3 +131,6 @@ invariants:
   - internal_guard_count_must_not_force_equal_number_of_human_documents
   - profile_change_requires_impact_review_not_core_rewrite
   - customer_input_must_not_require_internal_only_artifact
+  - every_enabled_logical_human_artifact_must_resolve_to_document_group
+  - multiple_logical_artifacts_may_share_one_physical_document
+  - customer_visible_document_must_not_expose_internal_only_state_by_default
