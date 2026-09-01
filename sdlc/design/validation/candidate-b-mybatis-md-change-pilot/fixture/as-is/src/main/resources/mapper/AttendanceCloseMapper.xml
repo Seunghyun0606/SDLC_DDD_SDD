@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.acme.attendance.AttendanceCloseMapper">
+  <select id="selectPlannedMinutes" resultType="int">SELECT NVL(SUM(PLAN_MINUTES),0) FROM TB_WORK_PLAN WHERE EMP_ID=#{employeeId} AND WORK_DATE=#{workDate}</select>
+  <update id="upsertDailyAttendance">MERGE INTO TB_ATT_DAILY T USING (SELECT #{employeeId} EMP_ID, #{workDate} WORK_DATE FROM DUAL) S ON (T.EMP_ID=S.EMP_ID AND T.WORK_DATE=S.WORK_DATE) WHEN MATCHED THEN UPDATE SET T.REFLECTED_MINUTES=#{reflectedMinutes} WHEN NOT MATCHED THEN INSERT (EMP_ID,WORK_DATE,REFLECTED_MINUTES) VALUES (#{employeeId},#{workDate},#{reflectedMinutes})</update>
+  <update id="updateCloseStatus">UPDATE TB_ATT_CLOSE SET CLOSE_TYPE=#{closeType}, STATUS=#{status} WHERE EMP_ID=#{employeeId} AND WORK_DATE=#{workDate}</update>
+</mapper>
