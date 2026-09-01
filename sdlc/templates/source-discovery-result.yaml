@@ -1,0 +1,41 @@
+version: 1
+source_discovery_result:
+  metadata:
+    discovery_id: FILL_ME
+    source_root: FILL_ME
+    source_revision: FILL_ME
+    provider_state: AVAILABLE
+    generated_at: null
+
+  target:
+    source_group_id: FILL_ME
+    canonical_rq_ids: []
+    program_ids: []
+
+  direct_relations: []
+
+  artifacts:
+    - path: FILL_ME
+      artifact_type: FILL_ME
+      file_hash: FILL_ME
+      direct_program_ids: []
+      symbols: []
+      mapper_statement_ids: []
+      table_names: []
+      transaction_markers: []
+
+  blind_spots: []
+
+  evidence:
+    - evidence_id: FILL_ME
+      truth: OBSERVED
+      locator: FILL_ME
+      value: FILL_ME
+
+  open_items: []
+
+  validation:
+    source_revision_present: PENDING
+    file_hash_present: PENDING
+    direct_relation_check: PENDING
+    evidence_truth_check: PENDING
