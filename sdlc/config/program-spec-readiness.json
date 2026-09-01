@@ -1,7 +1,13 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "readiness_states": ["READY","PARTIAL","EXECUTION_GUARDED"],
-  "rules": {"ready_requires_zero_open":true,"simulated_source_cannot_be_ready":true,"open_real_source_cannot_be_ready":true},
+  "rules": {
+    "ready_requires_zero_open":true,
+    "simulated_source_cannot_be_ready":true,
+    "open_real_source_cannot_be_ready":true,
+    "ready_requires_developer_spec_zero_open_when_section_present":true
+  },
+  "developer_spec_contract":"sdlc/design/contracts/developer-spec-contract.json",
   "required_fields": [
     {"id":"entry_point","label":"진입점과 실제 변경 대상","marker":"### 진입점과 실제 변경 대상"},
     {"id":"source_evidence","label":"실제 파일·심볼 근거","marker":"### 실제 파일·심볼 근거"},
