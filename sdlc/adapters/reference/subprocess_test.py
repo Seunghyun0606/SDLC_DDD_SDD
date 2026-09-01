@@ -78,7 +78,9 @@ def invoke(request_doc: dict[str, Any], adapter_config: dict[str, Any] | None = 
     max_output_chars = int(config.get("max_output_chars", 20_000))
 
     if operation == "test.discover":
-        patterns = ext.get("patterns") or config.get("patterns") or ["test*.py", "*_test.py", "*.spec.*", "*.test.*"]
+        patterns = ext.get("patterns") or config.get("patterns")
+        if not isinstance(patterns, list) or not patterns:
+            return _blocked(req, "TEST_DISCOVERY_PATTERN_REQUIRED", "test discovery patterns must be injected by project/adapter configuration")
         found: set[str] = set()
         for pattern in patterns:
             for path in cwd.rglob(str(pattern)):
