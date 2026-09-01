@@ -1,0 +1,35 @@
+version: 1
+status: ACTIVE_P0_CANDIDATE
+runtime_invocation:
+  journal_required: true
+  validate_request_before_invoke: true
+  validate_response_after_invoke: true
+  read_retry:
+    enabled: true
+    max_attempts: 2
+    retry_only_when_provider_retryable: true
+  write_retry:
+    enabled: false
+    unknown_after_dispatch_state: UNKNOWN_AFTER_WRITE
+    recovery_requires:
+      - idempotency_key
+      - provider_recovery_capability
+      - applied_state_evidence
+      - revision_check
+  partial:
+    reasoning_can_continue: true
+    release_ready_allowed: false
+    automatic_write_allowed_when_completeness_required: false
+  terminal_states:
+    - SUCCEEDED
+    - PARTIAL
+    - BLOCKED
+    - FAILED
+    - UNKNOWN_AFTER_WRITE
+  truth_guards:
+    provider_result_is_not_business_truth: true
+    unknown_write_is_not_success: true
+    test_failure_is_not_provider_failure: true
+  anti_overfitting:
+    domain_specific_fields_in_core: DENY
+    stack_specific_fields_in_core: DENY
