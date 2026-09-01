@@ -1,0 +1,71 @@
+schema_version: 1
+artifact_type: TEST_CONTRACT
+contract_id: TCN-RQG-6BB6D66548-P017-v1
+subject:
+  rq_group_candidate_id: RQG-CAND-6BB6D66548
+  canonical_rq_ids: []
+  program_ids:
+    - PGM-ATT-CLOSE-001
+source_binding:
+  fixture_evidence: true
+  production_source: false
+  source_evidence_set_id: 113e74710f9147f1482621b95962585d4c20a700f08cf51f1c3df5d55ddb4497
+  artifact_hashes:
+    - path: AttendanceCloseService.java
+      git_blob_sha: a9ad8f3b2ab11de2569b3566bb80a7354f6c6789
+    - path: AttendanceCloseMapper.java
+      git_blob_sha: 96bca48a686d4635bd760fbe8bbef51d63b56feb
+    - path: AttendanceCloseMapper.xml
+      git_blob_sha: 8ecc8058676dd01b2a871feaf3ecaea3b31c4607
+acceptance_criteria:
+  - id: AC-01
+    text: 계획 485분은 480분으로 반영된다.
+  - id: AC-02
+    text: 월마감 전에는 승인 수정요청 없이 정상 마감 가능하다.
+  - id: AC-03
+    text: 월마감 후 승인 수정요청이 있으면 정상 마감 재집계가 가능하다.
+  - id: AC-04
+    text: 월마감 후 승인 수정요청이 없으면 실패한다.
+  - id: AC-05
+    text: 월마감 후 FORCE_CLOSE는 승인 수정요청이 있어도 실패한다.
+test_cases:
+  - id: TC-P017-01
+    condition: 계획 485분, 월미마감
+    expected: 480분 반영
+    ac_ids: [AC-01, AC-02]
+    required: true
+  - id: TC-P017-02
+    condition: 월마감 + 승인수정요청 + NORMAL
+    expected: 재집계 허용
+    ac_ids: [AC-03]
+    required: true
+  - id: TC-P017-03
+    condition: 월마감 + 미승인/요청없음 + NORMAL
+    expected: 예외, DB Write 없음
+    ac_ids: [AC-04]
+    required: true
+  - id: TC-P017-04
+    condition: 월마감 + 승인수정요청 + FORCE_CLOSE
+    expected: 예외, DB Write 없음
+    ac_ids: [AC-05]
+    required: true
+coverage:
+  required_ac_ids: [AC-01, AC-02, AC-03, AC-04, AC-05]
+  covered_ac_ids: [AC-01, AC-02, AC-03, AC-04, AC-05]
+  uncovered_ac_ids: []
+  coverage_percent: 100
+execution_requirements:
+  runtime_environment: ACTUAL_REQUIRED_FOR_VERIFIED_PASS
+  test_command: null
+  required_test_case_ids: [TC-P017-01, TC-P017-02, TC-P017-03, TC-P017-04]
+open_items:
+  - code: TEST_COMMAND_OPEN
+    severity: BLOCKING_FOR_RUNTIME_VERIFY
+    detail: 실제 Spring/MyBatis/Oracle 실행 명령과 환경이 제공되지 않았다.
+  - code: BUSINESS_RULE_REVIEW_OPEN
+    severity: BLOCKING_FOR_VERIFIED_PASS
+    detail: 10분 단위 반영 BR Candidate와 실제 고객 RQ Boundary가 확정되지 않았다.
+review:
+  business_rule_candidate_reviewed: false
+  required_reviewers: [L2_OR_HUMAN]
+status: CONTRACT_READY_RUNTIME_OPEN
