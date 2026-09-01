@@ -1,0 +1,36 @@
+version: 1
+reference_graph:
+  graph_id: GRAPH-FILL_ME
+  project_id: FILL_ME
+  revision: 1
+  source_revision: OPEN
+
+  nodes:
+    # - node_id: RQ-001
+    #   node_type: RQ  # RQ | FR | BR | PROC | FTR | PGM | ART | SYMBOL | DATA | INT | AC | TC | TASK | CR | KNOWLEDGE | SOURCE
+    #   title: ""
+    #   validity: CURRENT  # CURRENT | STALE_CANDIDATE | STALE | INVALID | OPEN
+    #   truth_state: OPEN  # GIVEN | OBSERVED | INFERRED | CONFIRMED | OPEN
+    #   source_refs: []
+    #   evidence_ids: []
+    []
+
+  edges:
+    # - edge_id: EDGE-001
+    #   from_id: RQ-001
+    #   relation_type: DECOMPOSES_TO
+    #   to_id: FR-001
+    #   truth_state: OPEN
+    #   evidence_ids: []
+    #   source_refs: []
+    #   status: OPEN  # OPEN | CANDIDATE | CONFIRMED
+    []
+
+  unresolved_references: []
+
+  validation:
+    dangling_node_refs: []
+    missing_provenance_edges: []
+    duplicate_node_ids: []
+    duplicate_edge_ids: []
+    stale_source_revision: false
