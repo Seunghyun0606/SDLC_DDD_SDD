@@ -1,4 +1,4 @@
-version: 2
+version: 3
 status: ACTIVE_P0_REDESIGN
 purpose: >-
   /work가 호출자에게 requested_capabilities를 미리 주입받지 않고 현재 Stage와 Project Mode를 기준으로
@@ -23,12 +23,18 @@ commands:
   /change:
     skill: stage-procedure
     procedure_profile: CHANGE_CONTROL
+    deterministic_tool: sdlc/scripts/build_reverse_sync_generic.py
     agent_level: L2_AGENT_REQUIRED
     required_input_types: [STAGE_INPUT_PACK, CHANGE_SOURCE]
+    capability_candidates:
+      - capability: source.diff
+        modes: [BROWNFIELD, HYBRID, AUTO]
+        missing_behavior: OPEN
     expected_outputs: [CHANGE_REQUEST, STALE_OR_REVIEW_CANDIDATES, STAGE_INPUT_PACK]
   /check:
     skill: stage-procedure
     procedure_profile: STATUS_READ_MODEL
+    deterministic_tool: sdlc/scripts/build_status_view.py
     agent_level: L1_WITH_DETERMINISTIC_GUARDS
     required_input_types: [STAGE_INPUT_PACK]
     expected_outputs: [SDLC_STATUS_VIEW]
