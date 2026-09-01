@@ -29,22 +29,53 @@ def select(registry:dict[str,Any], capability:str, write_intent:bool=False):
 def build_plan(registry:dict[str,Any], context:dict[str,Any]):
     errors=[]; command=context.get("command")
     if command not in COMMAND_CAPABILITY: return {},["ROUTE-001: command must be /work, /change, or /check"]
-    requested=list(context.get("requested_capabilities") or []); router_cap=COMMAND_CAPABILITY[command]
-    all_caps=[router_cap]+[c for c in requested if c!=router_cap]; resolved=[]; open_items=[]
+
+    router_cap=COMMAND_CAPABILITY[command]
+    requested=list(context.get("requested_capabilities") or [])
+    required=set(context.get("required_capabilities") or [])
+    required.add(router_cap)
+    all_caps=[router_cap]+[c for c in requested if c!=router_cap]
+    resolved=[]; open_items=[]
     write_caps=set(context.get("write_capabilities") or [])
+
     for cap in all_caps:
         provider,err=select(registry,cap,cap in write_caps)
-        if err: open_items.append({"capability":cap,"reason":err}); continue
+        if err:
+            is_required=cap in required
+            open_items.append({
+                "open_id":f"OPEN-PROVIDER-{cap}",
+                "type":"PROVIDER_CAPABILITY",
+                "capability":cap,
+                "reason":err,
+                "blocks_reasoning":False,
+                "blocks_action":is_required,
+                "action_scopes":[cap] if is_required else [],
+                "severity":"CRITICAL" if is_required else "WARNING",
+                "escalation":"ENGINEERING_OWNER" if is_required else "NONE",
+            })
+            continue
         resolved.append({"capability":cap,"provider_id":provider.get("provider_id"),"provider_type":provider.get("provider_type"),"provider_state":provider.get("provider_state"),"mode":provider.get("mode")})
+
     human_actions=list(context.get("human_actions") or [])
-    status="READY" if not open_items and not human_actions else "ACTION_REQUIRED"
+    blocking_open=[x for x in open_items if x.get("blocks_action") is True]
+    blocking_human=[x for x in human_actions if x.get("blocks_action",True)]
+    if blocking_open or blocking_human:
+        status="ACTION_REQUIRED"
+    elif open_items or human_actions:
+        status="PARTIAL"
+    else:
+        status="READY"
+
     if context.get("write_intent") and not context.get("permission_proof_ref"): errors.append("ROUTE-002: write_intent requires permission_proof_ref")
     if context.get("write_intent") and not context.get("idempotency_key"): errors.append("ROUTE-003: write_intent requires idempotency_key")
+
     plan={"schema_version":1,"artifact_type":"PROVIDER_RUNTIME_PLAN","runtime_plan":{
         "plan_id":context.get("plan_id","PLAN-RUNTIME-001"),"command":command,
         "project_context":context.get("project_context") or {},"target":context.get("target") or {},
-        "requested_capabilities":all_caps,"resolved_providers":resolved,"human_actions":human_actions,
-        "open_items":open_items,"executable":status=="READY" and not errors,
+        "requested_capabilities":all_caps,"required_capabilities":sorted(required),
+        "resolved_providers":resolved,"human_actions":human_actions,
+        "open_items":open_items,"blocking_open_items":[x.get("open_id") for x in blocking_open],
+        "executable":not blocking_open and not blocking_human and not errors,
         "write_intent":bool(context.get("write_intent")),"status":"INVALID" if errors else status}}
     return plan,errors
 
