@@ -1,5 +1,20 @@
 # Design Changelog
 
+## v1.5.1 — 2026-09-01
+
+### HOTFIX / ENHANCED
+
+- GitHub Mermaid 렌더링 오류를 방지하기 위해 flowchart node label을 quoted label 기본 규칙으로 변경
+- `S[/setup]`, `A[AC/TC]`, `B[Source/DB]` 같은 parser 충돌 가능 표현을 `S["/setup"]`, `A["AC/TC"]`, `B["Source/DB"]` 형태로 표준화
+- `sdlc/scripts/normalize_mermaid.py` 추가: `--check` / `--write` 지원
+- 사용자/SDLC/SKILL/TEMPLATE/Customizing/전체작업목록 Mermaid를 GitHub-safe 형태로 수정
+- Current Full Design을 `AI_SDLC_Harness_Full_Design_v1.5.1.md`로 승계
+
+### CONTINUITY
+
+- v1.5의 기능 Capability는 제거하지 않음
+- 변경 성격은 문서 렌더링 호환성 Hotfix와 문서 품질검사 Contract 추가
+
 ## v1.5 — 2026-09-01
 
 ### ENHANCED
