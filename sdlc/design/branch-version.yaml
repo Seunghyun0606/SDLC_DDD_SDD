@@ -5,9 +5,9 @@ branch_version: complexity-reduction-executable-core-v0.1.0
 parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.9-open-resolution-workbook-v0.1
 design_baseline: v1.5.1
 candidate_design_version: v1.6.0-rc.1
-status: IMPLEMENTATION_IN_PROGRESS
+status: P0_IMPLEMENTATION_COMPLETE_EXTERNAL_VALIDATION_PENDING
 merge_to_main: false
-purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고, Customer Projection·Canonical 갱신·저수준 Agent 결과 검증·Project Impact Adapter 경계를 실행 가능한 Runtime으로 연결한다.
+purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고, Customer Projection·Canonical 갱신·저수준 Agent 결과 검증·Project Impact Adapter·Semantic Reverse Candidate를 실행 가능한 Runtime으로 연결한다.
 principles:
   same_business_information_written_once: true
   single_active_requirement_artifact: true
@@ -30,9 +30,12 @@ principles:
   agent_stage_result_is_machine_verifiable: true
   agent_stage_semantic_fingerprint_supported: true
   agent_validator_claims_llm_determinism: false
+  actual_provider_required_for_repeatability_empirical_pass: true
   project_adapter_boundary_preserved: true
   project_adapter_default_enabled: false
   project_adapter_is_core_required: false
+  semantic_reverse_candidate_auto_apply: false
+  semantic_reverse_updates_business_truth: false
   reverse_capability_name: SOURCE_DRIFT_AND_REVERSE_REVIEW_CANDIDATE
 changes_in_scope:
   - requirement and requirement-analysis active artifact consolidation
@@ -45,66 +48,111 @@ changes_in_scope:
   - minimal canonical JSON store and delta apply runtime
   - work/change canonical dry-run and apply execution path
   - low-level Agent Stage Result Envelope and validator
-  - semantic fingerprint comparison for repeated Agent outputs
+  - external Agent repeatability experiment runner and disabled-by-default provider profile
   - Java/Spring/MyBatis static Project Impact Adapter pilot
   - AS-IS to TO-BE adapter change-impact replay
+  - real public Spring/MyBatis Brownfield repository integration pilot
   - IMPACT Stage explicit opt-in adapter execution path
+  - Source/Impact graph to Program Spec semantic reverse candidate/diff
+  - real requirement Greenfield 12-stage E2E replay and six user-facing artifact materialization
   - validator and regression-test alignment
-not_in_scope_yet:
-  - actual LLM or Agent repeated-generation determinism validation
-  - automatic stage artifact to canonical delta generation
-  - production repository Java/Spring/MyBatis adapter validation
+externally_blocked_validation:
+  - actual LLM or Agent provider repeated-generation empirical execution; no provider/API/CLI is connected to this project session
+  - human usability study with analyst/designer/developer/customer participants; no human panel/session data is available
+  - customer proprietary production repository validation; no customer repository was provided, so a pinned real public repository was used instead
+not_claimed:
   - full Java AST/type resolution and Spring runtime/proxy analysis
   - JPA/JDBC/stored-procedure/event/external-interface/config/build semantic adapters
-  - semantic reverse program-spec regeneration
+  - automatic Functional Design or Business Truth reverse rewrite
+  - automatic Program Spec file rewrite from Source
+  - LLM theoretical determinism
+  - measured human usability improvement
 validation:
   source_review: COMPLETED_BY_DIRECT_FILE_INSPECTION
   local_full_unittest_execution: NOT_RUN_ENVIRONMENT_GITHUB_DNS_UNAVAILABLE
   customer_projection_existing_workflow_replay: PASS_GITHUB_CI
   canonical_runtime_behavioral_validation: PASS_GITHUB_CI
   post_agent_stage_result_validation: PASS_GITHUB_CI
-  java_spring_mybatis_adapter_pilot: PASS_SIMULATED_FIXTURE_GITHUB_CI
-  java_spring_mybatis_production_repository_validation: PENDING
-  actual_llm_generation_repeatability: PENDING
+  agent_repeatability_runner_behavioral_validation: PASS_GITHUB_CI
+  actual_llm_generation_repeatability: NOT_EXECUTED_PROVIDER_UNAVAILABLE
+  greenfield_real_requirement_e2e_replay: PASS_GITHUB_CI
+  greenfield_human_usability_measurement: NOT_EXECUTED_HUMAN_STUDY_UNAVAILABLE
+  semantic_reverse_candidate_behavioral_validation: PASS_GITHUB_CI
+  java_spring_mybatis_adapter_simulated_fixture: PASS_GITHUB_CI
+  java_spring_mybatis_real_public_repository: PASS_REAL_REPOSITORY_PARTIAL_COVERAGE
+  customer_production_repository_validation: NOT_EXECUTED_REPOSITORY_NOT_PROVIDED
   adapter_pilot:
     adapter_id: JAVA_SPRING_MYBATIS_STATIC_PILOT_V0_1
     implementation: sdlc/custom/project/adapters/impact/java_spring_mybatis.py
     core_required: false
     default_enabled: false
-    fixture_kind: SIMULATED_SOURCE_FIXTURE
-    as_is_result:
-      nodes: 12
-      edges: 15
-      coverage_gaps: 9
+    simulated_fixture:
+      as_is_nodes: 12
+      as_is_edges: 15
       completion_status: PARTIAL_COVERAGE_GAPS
       business_impact_confirmed: false
-    as_is_to_be_checks:
-      new_controller_symbol_detected: true
-      new_service_symbol_detected: true
-      new_service_mapper_calls_detected: true
-      existing_call_relations_preserved: true
-      mapper_statement_set_unchanged: true
-      data_asset_set_unchanged: true
-      data_read_write_edges_unchanged: true
+      as_is_to_be_change_detection: PASS
+    real_public_repository:
+      repository: macrozheng/mall
+      commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
+      source_root: mall-admin
+      nodes: 570
+      edges: 271
+      required_checks_passed: 6
+      required_checks_total: 6
+      coverage_gaps: 7
+      completion_status: PARTIAL_COVERAGE_GAPS
+      business_impact_confirmed: false
+      known_real_world_gap: JAVA_INTERFACE_IMPLEMENTATION_RESOLUTION_REQUIRED
     explicit_opt_in_required: true
     unsupported_runtime_patterns_reported: true
+  greenfield_pilot:
+    source_document: 요구사항목록.xlsx
+    external_id: REQ_TM_FL001
+    requirement_text: 탄력근로제 근무계획 저장
+    workflow_stage_count: 12
+    materialized_user_artifact_count: 6
+    open_item_count: 6
+    business_fact_invention_count: 0
+    source_write_count: 0
+    verdict: PASS_AGENT_E2E_REPLAY_HUMAN_USABILITY_NOT_MEASURED
+  semantic_reverse:
+    script: sdlc/scripts/generate_program_spec_reverse_candidate.py
+    candidate_only: true
+    unrelated_program_overpropagation_blocked: true
+    functional_design_auto_update: false
+    business_truth_auto_update: false
+    program_spec_file_auto_rewrite: false
+  repeatability_experiment:
+    runner: sdlc/scripts/run_agent_repeatability_experiment.py
+    profile: sdlc/config/agent-repeatability-profile.example.json
+    disabled_without_provider: true
+    fake_provider_used_only_for_runner_behavior_test: true
+    actual_provider_empirical_result: NOT_EXECUTED_PROVIDER_UNAVAILABLE
+    llm_determinism_proven: false
   draft_pull_request: 51
   pull_request_base: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.9-open-resolution-workbook-v0.1
   github_ci:
-    latest_behavioral_head: 03432b6a79151bd2ba54d5f619ed4dce07e38680
+    latest_behavioral_head: 17a2ca13c82cdbff02179020a06108fc189404b3
     worklist_sync_quality: PASS
-    unittest_count: 170
+    unittest_count: 201
     unittest_result: PASS
     canonical_behavioral_test_count: 15
     agent_stage_result_behavioral_test_count: 11
     agent_runtime_wiring_test_count: 4
+    agent_repeatability_runner_test_count: 6
     java_spring_mybatis_adapter_test_count: 15
     impact_adapter_wiring_test_count: 2
+    semantic_reverse_candidate_test_count: 9
+    greenfield_e2e_test_count: 11
+    p0_completion_wiring_test_count: 5
     customer_projection_replay_test_count: 5
     mermaid_markdown_files_checked: 112
     mermaid_result: PASS
     docs_quality: PASS
+    public_brownfield_pilot: PASS_REAL_REPOSITORY_PARTIAL_COVERAGE
+    greenfield_e2e_pilot: PASS_AGENT_E2E_REPLAY_HUMAN_USABILITY_NOT_MEASURED
   self_assessment_is_not_validation: true
-verdict: RC_IMPLEMENTATION_NOT_YET_VALIDATED
-next_step: Simulated fixture 기반 Java/Spring/MyBatis Project Adapter 수직 슬라이스는 CI에서 검증했다. 다음 P0는 Source 변경에서 Program Spec 갱신 후보를 안전하게 만드는 semantic reverse candidate/diff이며, 실제 Production Repository와 실제 LLM 반복 생성 검증은 별도 입력이 확보될 때 수행한다.
-updated_at: 2026-09-02T02:30:00+09:00
+verdict: RC_P0_IMPLEMENTED_EXTERNAL_EMPIRICAL_VALIDATION_PENDING
+next_step: P0 코드/Workflow 구현과 CI 가능한 실증은 완료했다. 전체 VALIDATED 승격 전에 실제 LLM/Agent Provider 반복실행, 사람 대상 사용성 평가, 필요 시 고객 Production Repository 검증을 수행해야 한다.
+updated_at: 2026-09-02T02:55:00+09:00
