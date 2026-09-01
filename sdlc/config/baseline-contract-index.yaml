@@ -1,5 +1,5 @@
 version: 4
-status: P0_RUNTIME_CORE_REDESIGN_EXIT_CANDIDATE
+status: P0_RUNTIME_CORE_READY
 purpose: >-
   Phase 0의 분산형 authoritative artifact를 연결하되, P0 Runtime Core 재설계에서
   Stage Routing/Procedure/Handoff/Provider/Skill/Exit Gate 실행 Authority를 명확히 지정하는 index다.
