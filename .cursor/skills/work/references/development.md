@@ -16,6 +16,17 @@
 3. Applicable Standards
 4. Nearby tests
 
+## 실행 계약(Agent Execution Contract)
+| 항목 | 실행 규칙 |
+|---|---|
+| 입력 필드 | TASK, PGM Spec, 실제 Target Symbol, 적용 Standard, 관련 Test/Build 명령을 확인한다. |
+| 근거 분류 | 실제 Source/Build/Test 결과는 OBSERVED, 승인된 설계는 CONFIRMED/GIVEN, 구현 선택은 INFERRED로 구분한다. |
+| 실행 순서 | Target/Scope 확인 → Guard/Confidence 확인 → 최소 Source 변경 → Build/Static Check → 관련 Test → 변경 Evidence/설계 차이 기록 순서로 수행한다. |
+| 계속/중단 조건 | 문서 미확정은 PARTIAL로 계속할 수 있으나 Target ambiguity, 위험 Action, DoR Guard 조건은 해당 Source write를 중단한다. |
+| 출력 필드 매핑 | changed file/symbol, before/after hash, TASK/PGM, build/test evidence, design deviation, alert를 Implementation Result에 기록한다. |
+| 품질 게이트 | 변경 파일이 TASK/PGM Scope에 포함되고, 실제 변경 hash가 기록되며, 실행하지 않은 검증을 PASS로 쓰지 않아야 한다. |
+| 미확정/실패 처리 | Build/Test 실패는 FAILURE Evidence, 예상 밖 변경은 SCOPE_ALERT, 설계와 Source가 달라진 경우 reverse drift 대상으로 표시한다. |
+
 ## Steps
 1. Target confidence와 Guard를 확인한다.
 2. 필요한 Source만 수정한다.
