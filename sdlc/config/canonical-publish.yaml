@@ -1,0 +1,58 @@
+version: 1
+status: ACTIVE_P0_2_CANDIDATE
+
+publish_preconditions:
+  boundary_status: CONFIRMED
+  decision_must_not_be: UNRESOLVED
+  decided_by_required: true
+  decided_at_required: true
+  decision_basis_required: true
+  evidence_ids_required: true
+  decision_revision_required: true
+  source_revision_match_required: true
+
+id_policy:
+  candidate_id_must_not_become_canonical_id: true
+  canonical_ids_must_be_preallocated: true
+  allocator_is_out_of_scope_for_p0_2: true
+  duplicate_canonical_id_forbidden: true
+
+allowed_publish_shapes:
+  KEEP_AS_RQ:
+    rq_count: 1
+    fr_count_min: 0
+  MAP_TO_EXISTING_RQ_AS_FR:
+    rq_count: 1
+    fr_count_min: 1
+  MERGE_INTO_NEW_RQ:
+    rq_count: 1
+    fr_count_min: 0
+  SPLIT_TO_MULTIPLE_RQ:
+    rq_count_min: 2
+    fr_count_min: 0
+  REJECT_AS_REQUIREMENT:
+    rq_count: 0
+    fr_count: 0
+
+invariants:
+  - source_requirement_ids_preserved
+  - source_group_id_preserved_as_provenance
+  - publish_is_idempotent_by_review_id_and_decision_revision
+  - same_review_revision_must_not_publish_different_ids
+  - confirmed_decision_must_not_silently_change_source_coverage
+  - unresolved_or_provisional_boundary_must_not_publish
+  - publish_output_must_include_trace_to_review_and_evidence
+
+publish_result_states:
+  - PUBLISHED
+  - REJECTED
+  - BLOCKED_PRECONDITION
+  - BLOCKED_REVISION_CONFLICT
+  - BLOCKED_ID_CONFLICT
+
+fail_safe:
+  on_missing_id_allocator: REQUIRE_PREALLOCATED_IDS
+  on_revision_mismatch: BLOCK
+  on_evidence_missing: BLOCK
+  on_source_coverage_change: BLOCK
+  on_duplicate_canonical_id: BLOCK
