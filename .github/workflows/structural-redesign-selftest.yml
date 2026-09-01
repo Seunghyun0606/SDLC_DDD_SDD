@@ -1,0 +1,35 @@
+name: structural-redesign-selftest
+
+on:
+  push:
+    branches:
+      - 'SDLC_DESIGN_SESSION_SECOND/p0-p1/structural-redesign-v1'
+  pull_request:
+    paths:
+      - 'sdlc/**'
+      - '.github/workflows/structural-redesign-selftest.yml'
+
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install pyyaml
+      - name: Compile redesigned runtime
+        run: |
+          python -m py_compile \
+            sdlc/scripts/bootstrap_project.py \
+            sdlc/scripts/create_initial_stage_pack.py \
+            sdlc/scripts/resolve_artifact_profile.py \
+            sdlc/scripts/resolve_stage_execution.py \
+            sdlc/scripts/build_command_context.py \
+            sdlc/scripts/route_provider_command.py \
+            sdlc/scripts/execute_command_runtime.py \
+            sdlc/scripts/discover_source_inventory.py \
+            sdlc/scripts/build_reverse_sync_from_signals.py \
+            sdlc/scripts/test_structural_redesign.py
+      - name: Run structural redesign tests
+        run: python sdlc/scripts/test_structural_redesign.py
