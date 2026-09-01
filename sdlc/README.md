@@ -82,4 +82,4 @@ flowchart TD
 - `guides/02_SKILL_사용가이드.md`
 - `guides/03_TEMPLATE_산출물가이드.md`
 - `guides/04_HARNESS_커스터마이징가이드.md`
-- Current Full Design: `design/baselines/AI_SDLC_Harness_Full_Design_v1.5.md`
+- Current Full Design: `design/baselines/AI_SDLC_Harness_Full_Design_v1.5.1.md`
