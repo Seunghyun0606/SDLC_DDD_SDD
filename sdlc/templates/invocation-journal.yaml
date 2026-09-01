@@ -1,0 +1,17 @@
+schema_version: 1
+artifact_type: INVOCATION_JOURNAL
+invocation_journal:
+  journal_id: JOURNAL-001
+  request_id: REQ-001
+  provider_id: FILL_ME
+  operation: FILL_ME
+  write_intent: false
+  state: PLANNED
+  attempts: []
+  recovery:
+    required: false
+    reason: null
+    idempotency_key: null
+    evidence: []
+  final_response_status: null
+  open_items: []
