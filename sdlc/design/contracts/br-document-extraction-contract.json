@@ -1,11 +1,19 @@
 {
-  "schema_version": 1,
-  "purpose": "비정형 고객문서에서 텍스트/표/구간을 추출하는 Adapter가 지켜야 할 공통 출력 계약. 이 파일 자체는 PDF/DOCX/PPTX/XLSX parser 구현이 아니다.",
+  "schema_version": 2,
+  "purpose": "비정형 고객문서에서 텍스트/표/셀/슬라이드/구간을 구조를 최대한 보존해 추출하는 Adapter 공통 출력 계약. 이 파일 자체는 PDF/DOCX/PPTX/XLSX parser 구현이 아니다.",
   "supported_registration_formats": ["PDF","DOCX","XLSX","PPTX","MD","TXT","CSV","EMAIL","IMAGE_SCAN","OTHER"],
   "extraction_status": ["EXTRACTED","PARTIAL","EXTRACTION_REQUIRED","UNSUPPORTED","FAILED"],
-  "required_output_fields": ["document_id","locator","raw_text","source_hash","extraction_status","extraction_method"],
+  "content_kinds": ["PARAGRAPH","HEADING","TABLE","TABLE_ROW","CELL_RANGE","SLIDE","SHAPE","FORM","IMAGE_TEXT","EMAIL_BODY","OTHER"],
+  "required_output_fields": ["document_id","locator","raw_text","source_hash","extraction_status","extraction_method","content_kind"],
+  "optional_structure_fields": ["structured_content","format_context","parent_locator","sequence","confidence"],
+  "structured_content_examples": {
+    "XLSX": {"sheet":"근무계획","range":"A1:F12","headers":["항목","값"],"rows":[["근무유형","탄력"]]},
+    "PPTX": {"slide":7,"shape_id":"3","shape_type":"TABLE","reading_order":2},
+    "DOCX": {"heading_path":["3. 근무계획","3.2 등록"],"table_index":1},
+    "PDF": {"page":12,"block_type":"table","reading_order":4}
+  },
   "locator_examples": {
-    "PDF": "page 12 / heading 3.2",
+    "PDF": "page 12 / heading 3.2 / block 4",
     "DOCX": "heading '근무계획' / paragraph 18",
     "XLSX": "요구사항!C15 or External ID REQ_TM_FL003",
     "PPTX": "slide 7 / shape 3",
@@ -14,8 +22,11 @@
   "rules": [
     "원본 파일은 수정하지 않는다.",
     "추출 결과는 반드시 원본 document_id와 locator로 되돌아갈 수 있어야 한다.",
+    "표/셀/슬라이드/도형의 관계를 추출할 수 있으면 structured_content와 format_context로 보존한다.",
+    "raw_text만으로 구조가 손실되는 표/양식은 구조 정보 없이 EXTRACTED로 과장하지 않는다.",
     "신뢰할 수 없는 OCR/추출 결과는 PARTIAL 또는 EXTRACTION_REQUIRED로 표시한다.",
     "추출 실패를 업무 규칙 부재로 해석하지 않는다.",
-    "Adapter별 구현은 프로젝트/도구 Overlay에서 교체 가능해야 한다."
+    "Adapter별 구현은 프로젝트/도구 Overlay에서 교체 가능해야 한다.",
+    "SOP 의미 추출은 .cursor/skills/sop-extract/SKILL.md가 담당하고 포맷 Adapter는 의미를 임의 확정하지 않는다."
   ]
 }
