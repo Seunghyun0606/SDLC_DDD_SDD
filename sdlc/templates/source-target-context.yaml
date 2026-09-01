@@ -1,0 +1,14 @@
+schema_version: 1
+artifact_type: SOURCE_TARGET_CONTEXT
+source_target:
+  target_id: FILL_ME
+  target_type: FILL_ME
+  source_revision: FILL_ME
+  direct_paths: []
+  explicit_relations: []
+  search_budget:
+    max_files: 200
+    max_depth: 4
+  constraints:
+    name_similarity_does_not_confirm_relation: true
+    source_behavior_is_not_business_truth: true
