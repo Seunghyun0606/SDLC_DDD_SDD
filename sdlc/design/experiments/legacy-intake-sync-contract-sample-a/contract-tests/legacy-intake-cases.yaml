@@ -1,0 +1,111 @@
+version: 1
+experiment: legacy-intake-sync-contract-sample-a
+baseline: v1.5.1
+source_sample:
+  name: 요구사항목록.xlsx
+  total_raw_rows: 142
+  expected_rq_candidates: 22
+  expected_fr_candidates: 142
+  expected_published_rq_after_import: 0
+  expected_confirmed_br_after_import: 0
+  null_counts:
+    planned_start: 142
+    planned_end: 142
+    assignee: 142
+
+invariants:
+  preserve_raw_rows: true
+  preserve_source_item_id: true
+  source_item_id_as_canonical_display_id: false
+  semantic_auto_merge: false
+  automatic_rq_split: false
+  allow_null_pm_fields: true
+  allow_source_write_without_target_proof: false
+
+cases:
+  - id: INTAKE-001
+    source_ids: [REQ_TM_FL001, REQ_TM_FL002, REQ_TM_FL003]
+    expected:
+      rq_candidate_count: 1
+      fr_candidate_count: 3
+      quality: WARNING
+      alerts:
+        - INTAKE_MISSING_PROBLEM
+        - INTAKE_MISSING_DESIRED_OUTCOME
+        - CLARIFICATION_REQUIRED
+      published: false
+
+  - id: INTAKE-002
+    source_range: REQ_TM_FL014~REQ_TM_FL021
+    expected:
+      rq_candidate_count: 1
+      fr_candidate_count: 8
+      process_status: DRAFT
+      confirmed_process: false
+      required_questions:
+        - actor
+        - approval_state
+        - rejection
+        - cancellation
+        - eapproval_failure
+        - retry_idempotency
+
+  - id: INTAKE-003
+    source_range: REQ_TM_TE016~REQ_TM_TE054
+    expected:
+      rq_candidate_count: 1
+      fr_candidate_count: 39
+      split_review_required: true
+      automatic_split: false
+
+  - id: INTAKE-004
+    source_range: REQ_TM_TE055~REQ_TM_TE076
+    expected:
+      rq_candidate_count: 1
+      fr_candidate_count: 22
+      split_review_required: true
+      automatic_split: false
+
+  - id: INTAKE-005
+    source_range: REQ_TM_TE077~REQ_TM_TE099
+    expected:
+      rq_candidate_count: 1
+      fr_candidate_count: 23
+      split_review_required: true
+      discovery_required: true
+      impact_status: CANDIDATE
+      program_status: NOT_STARTED
+      development_status: DEFERRED
+      required_discovery_topics:
+        - scheduler
+        - procedure
+        - dynamic_sql
+        - trigger
+        - file_io
+        - db_polling
+        - downstream_consumer
+        - reprocessing
+
+  - id: INTAKE-006
+    source_ids: [REQ_TM_FL036, REQ_TM_TE100]
+    expected:
+      interface_questions:
+        - destination
+        - transport
+        - trigger_or_schedule
+        - payload_schema
+        - authentication
+        - privacy
+        - retry
+        - timeout
+        - duplicate_delivery
+        - operations_monitoring
+      confirmed_interface_without_evidence: false
+
+stage_guards:
+  discovery_complete_without_source: false
+  impact_confirmed_without_trace: false
+  program_complete_without_program_evidence: false
+  development_source_write_without_target_proof: false
+  verify_pass_without_test_result: false
+  k1_k2_promotion_from_legacy_excel_only: false
