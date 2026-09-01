@@ -1,13 +1,13 @@
 schema_version: 1
 session_namespace: SDLC_DESIGN_SESSION_FIRST
 branch: SDLC_DESIGN_SESSION_FIRST/refactor/v1.6-complexity-reduction-executable-core-v0.1
-branch_version: complexity-reduction-executable-core-v0.1.0
+branch_version: complexity-reduction-executable-core-v0.1.1
 parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.9-open-resolution-workbook-v0.1
 design_baseline: v1.5.1
-candidate_design_version: v1.6.0-rc.1
+candidate_design_version: v1.6.0-rc.1-p0-runtime-hardening
 status: P0_IMPLEMENTATION_COMPLETE_EXTERNAL_VALIDATION_PENDING
 merge_to_main: false
-purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고, Customer Projection·Canonical 갱신·저수준 Agent 결과 검증·Project Impact Adapter·Semantic Reverse Candidate를 실행 가능한 Runtime으로 연결한다.
+purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고, Target/Stage/Artifact 재진입이 가능한 /work 실행기·Canonical 무결성·자동 Source Drift 입력 생성·Provider 기반 Greenfield E2E·실제 /work 반복실행 검증 경계를 구현한다.
 principles:
   same_business_information_written_once: true
   single_active_requirement_artifact: true
@@ -24,13 +24,26 @@ principles:
   canonical_delta_all_or_nothing: true
   canonical_delta_optimistic_revision: true
   canonical_delta_idempotent: true
+  canonical_delta_idempotency_requires_same_payload_hash: true
+  canonical_delta_id_content_conflict_fails_closed: true
+  canonical_no_change_supported: true
   canonical_delete_supported: false
+  non_confirmed_evidence_can_overwrite_confirmed_business: false
   source_derived_can_overwrite_confirmed_business: false
   source_derived_can_downgrade_confirmed_business_status: false
+  work_executor_is_executable: true
+  work_target_stage_are_independent: true
+  work_target_artifact_are_independent: true
+  work_arbitrary_target_with_explicit_stage_supported: true
+  work_target_graph_scope_guard: true
+  work_stage_override_does_not_authorize_business_truth_change: true
   agent_stage_result_is_machine_verifiable: true
   agent_stage_semantic_fingerprint_supported: true
   agent_validator_claims_llm_determinism: false
   actual_provider_required_for_repeatability_empirical_pass: true
+  validation_fixture_provider_is_agent_empirical_evidence: false
+  reverse_inputs_auto_generated: true
+  reverse_auto_generated_upstream_edges_are_check_required_only: true
   project_adapter_boundary_preserved: true
   project_adapter_default_enabled: false
   project_adapter_is_core_required: false
@@ -44,23 +57,30 @@ changes_in_scope:
   - simplified open-resolution human view
   - setup five-question fast path with legacy preset-id compatibility
   - customer document 8-to-3 active-view consolidation and projection runtime
-  - existing RQ-CAND-0001 workflow customer projection replay
   - minimal canonical JSON store and delta apply runtime
-  - work/change canonical dry-run and apply execution path
+  - canonical confirmed-business mutation hardening including GIVEN evidence
+  - semantic delta-id payload hash and same-id/different-content conflict detection
+  - explicit NO_CHANGE canonical result for document-only stage work
+  - executable /work coordinator with arbitrary target IDs
+  - explicit Stage re-entry and Artifact override independent from Target ID
+  - target-graph mutation guard and explicit confirmed-business-change authorization guard
   - low-level Agent Stage Result Envelope and validator
+  - provider-driven Greenfield /work E2E runner with no hardcoded time-domain stage outputs
+  - deterministic validation fixture provider that cannot claim Agent E2E
+  - actual /work repeatability runner against the same Canonical snapshot
+  - automatic source manifest and artifact evidence index generation
+  - end-to-end source reverse check orchestrator
   - external Agent repeatability experiment runner and disabled-by-default provider profile
   - Java/Spring/MyBatis static Project Impact Adapter pilot
-  - AS-IS to TO-BE adapter change-impact replay
   - real public Spring/MyBatis Brownfield repository integration pilot
-  - IMPACT Stage explicit opt-in adapter execution path
   - Source/Impact graph to Program Spec semantic reverse candidate/diff
-  - real requirement Greenfield 12-stage E2E replay and six user-facing artifact materialization
-  - validator and regression-test alignment
 externally_blocked_validation:
   - actual LLM or Agent provider repeated-generation empirical execution; no provider/API/CLI is connected to this project session
+  - actual provider-driven Greenfield semantic E2E; validation fixture only proves executor wiring
   - human usability study with analyst/designer/developer/customer participants; no human panel/session data is available
   - customer proprietary production repository validation; no customer repository was provided, so a pinned real public repository was used instead
 not_claimed:
+  - validation fixture provider proves Agent or LLM semantic quality
   - full Java AST/type resolution and Spring runtime/proxy analysis
   - JPA/JDBC/stored-procedure/event/external-interface/config/build semantic adapters
   - automatic Functional Design or Business Truth reverse rewrite
@@ -69,53 +89,59 @@ not_claimed:
   - measured human usability improvement
 validation:
   source_review: COMPLETED_BY_DIRECT_FILE_INSPECTION
+  local_targeted_p0_unit_execution: PASS_IN_ISOLATED_SCRATCH_FOR_CANONICAL_WORK_REVERSE_GREENFIELD_REPEATABILITY
   local_full_unittest_execution: NOT_RUN_ENVIRONMENT_GITHUB_DNS_UNAVAILABLE
-  customer_projection_existing_workflow_replay: PASS_GITHUB_CI
-  canonical_runtime_behavioral_validation: PASS_GITHUB_CI
-  post_agent_stage_result_validation: PASS_GITHUB_CI
-  agent_repeatability_runner_behavioral_validation: PASS_GITHUB_CI
+  github_ci_current_head: PENDING
+  customer_projection_existing_workflow_replay: PREVIOUSLY_PASS_GITHUB_CI_NOT_REEXECUTED_CURRENT_HEAD
+  canonical_runtime_behavioral_validation: CURRENT_HEAD_CI_PENDING
+  post_agent_stage_result_validation: CURRENT_HEAD_CI_PENDING
+  agent_repeatability_runner_behavioral_validation: PREVIOUSLY_PASS_GITHUB_CI_CURRENT_HEAD_PENDING
+  work_executor_behavioral_validation: CURRENT_HEAD_CI_PENDING
+  work_repeatability_runner_behavioral_validation: CURRENT_HEAD_CI_PENDING
+  reverse_input_automation_behavioral_validation: CURRENT_HEAD_CI_PENDING
   actual_llm_generation_repeatability: NOT_EXECUTED_PROVIDER_UNAVAILABLE
-  greenfield_real_requirement_e2e_replay: PASS_GITHUB_CI
+  greenfield_executor_fixture_e2e: CURRENT_HEAD_CI_PENDING
+  greenfield_actual_agent_e2e: NOT_EXECUTED_PROVIDER_UNAVAILABLE
   greenfield_human_usability_measurement: NOT_EXECUTED_HUMAN_STUDY_UNAVAILABLE
-  semantic_reverse_candidate_behavioral_validation: PASS_GITHUB_CI
-  java_spring_mybatis_adapter_simulated_fixture: PASS_GITHUB_CI
-  java_spring_mybatis_real_public_repository: PASS_REAL_REPOSITORY_PARTIAL_COVERAGE
+  semantic_reverse_candidate_behavioral_validation: PREVIOUSLY_PASS_GITHUB_CI_CURRENT_HEAD_PENDING
+  java_spring_mybatis_adapter_simulated_fixture: PREVIOUSLY_PASS_GITHUB_CI_CURRENT_HEAD_PENDING
+  java_spring_mybatis_real_public_repository: PREVIOUSLY_PASS_REAL_REPOSITORY_PARTIAL_COVERAGE_CURRENT_HEAD_PENDING
   customer_production_repository_validation: NOT_EXECUTED_REPOSITORY_NOT_PROVIDED
-  adapter_pilot:
-    adapter_id: JAVA_SPRING_MYBATIS_STATIC_PILOT_V0_1
-    implementation: sdlc/custom/project/adapters/impact/java_spring_mybatis.py
-    core_required: false
-    default_enabled: false
-    simulated_fixture:
-      as_is_nodes: 12
-      as_is_edges: 15
-      completion_status: PARTIAL_COVERAGE_GAPS
-      business_impact_confirmed: false
-      as_is_to_be_change_detection: PASS
-    real_public_repository:
-      repository: macrozheng/mall
-      commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
-      source_root: mall-admin
-      nodes: 570
-      edges: 271
-      required_checks_passed: 6
-      required_checks_total: 6
-      coverage_gaps: 7
-      completion_status: PARTIAL_COVERAGE_GAPS
-      business_impact_confirmed: false
-      known_real_world_gap: JAVA_INTERFACE_IMPLEMENTATION_RESOLUTION_REQUIRED
-    explicit_opt_in_required: true
-    unsupported_runtime_patterns_reported: true
+  work_executor:
+    script: sdlc/scripts/run_work.py
+    supports_target_examples:
+      - RQ-001
+      - PGM-001
+      - ANA001_WITH_EXPLICIT_STAGE
+    explicit_stage_reentry: true
+    explicit_artifact_override: true
+    target_graph_scope_guard: true
+    confirmed_business_change_requires_explicit_authorization: true
+    provider_required_for_generation: true
+  canonical_runtime:
+    script: sdlc/scripts/apply_canonical_delta.py
+    same_delta_id_same_payload: IDEMPOTENT
+    same_delta_id_different_payload: CONFLICT
+    non_confirmed_overwrite_confirmed_business: BLOCKED
+    artifact_only_no_change: SUPPORTED_WITH_REASON
   greenfield_pilot:
+    runner: sdlc/scripts/run_greenfield_e2e_pilot.py
     source_document: 요구사항목록.xlsx
     external_id: REQ_TM_FL001
     requirement_text: 탄력근로제 근무계획 저장
-    workflow_stage_count: 12
-    materialized_user_artifact_count: 6
-    open_item_count: 6
-    business_fact_invention_count: 0
-    source_write_count: 0
-    verdict: PASS_AGENT_E2E_REPLAY_HUMAN_USABILITY_NOT_MEASURED
+    hardcoded_time_domain_stage_answers_removed: true
+    default_work_stage_count: 5
+    validation_fixture_provider: sdlc/validation/pilot/greenfield/fixture-provider.json
+    fixture_verdict_when_successful: PASS_EXECUTOR_E2E_FIXTURE_PROVIDER
+    fixture_claims_actual_agent_execution: false
+    actual_agent_result: NOT_EXECUTED_PROVIDER_UNAVAILABLE
+  source_reverse:
+    input_builder: sdlc/scripts/build_reverse_inputs.py
+    orchestrator: sdlc/scripts/run_source_reverse_check.py
+    observed_manifest_manual_authoring_required: false
+    artifact_index_manual_authoring_required: false
+    auto_generated_upstream_policy: CHECK_REQUIRED
+    business_truth_auto_update: false
   semantic_reverse:
     script: sdlc/scripts/generate_program_spec_reverse_candidate.py
     candidate_only: true
@@ -124,35 +150,24 @@ validation:
     business_truth_auto_update: false
     program_spec_file_auto_rewrite: false
   repeatability_experiment:
-    runner: sdlc/scripts/run_agent_repeatability_experiment.py
+    legacy_runner: sdlc/scripts/run_agent_repeatability_experiment.py
+    work_runner: sdlc/scripts/run_work_repeatability_experiment.py
     profile: sdlc/config/agent-repeatability-profile.example.json
     disabled_without_provider: true
-    fake_provider_used_only_for_runner_behavior_test: true
+    validation_fixture_can_test_wiring: true
+    validation_fixture_can_claim_agent_empirical_pass: false
     actual_provider_empirical_result: NOT_EXECUTED_PROVIDER_UNAVAILABLE
     llm_determinism_proven: false
+  adapter_pilot:
+    adapter_id: JAVA_SPRING_MYBATIS_STATIC_PILOT_V0_1
+    implementation: sdlc/custom/project/adapters/impact/java_spring_mybatis.py
+    core_required: false
+    default_enabled: false
+    completion_status: PARTIAL_COVERAGE_GAPS
+    business_impact_confirmed: false
   draft_pull_request: 51
   pull_request_base: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.9-open-resolution-workbook-v0.1
-  github_ci:
-    latest_behavioral_head: 17a2ca13c82cdbff02179020a06108fc189404b3
-    worklist_sync_quality: PASS
-    unittest_count: 201
-    unittest_result: PASS
-    canonical_behavioral_test_count: 15
-    agent_stage_result_behavioral_test_count: 11
-    agent_runtime_wiring_test_count: 4
-    agent_repeatability_runner_test_count: 6
-    java_spring_mybatis_adapter_test_count: 15
-    impact_adapter_wiring_test_count: 2
-    semantic_reverse_candidate_test_count: 9
-    greenfield_e2e_test_count: 11
-    p0_completion_wiring_test_count: 5
-    customer_projection_replay_test_count: 5
-    mermaid_markdown_files_checked: 112
-    mermaid_result: PASS
-    docs_quality: PASS
-    public_brownfield_pilot: PASS_REAL_REPOSITORY_PARTIAL_COVERAGE
-    greenfield_e2e_pilot: PASS_AGENT_E2E_REPLAY_HUMAN_USABILITY_NOT_MEASURED
   self_assessment_is_not_validation: true
 verdict: RC_P0_IMPLEMENTED_EXTERNAL_EMPIRICAL_VALIDATION_PENDING
-next_step: P0 코드/Workflow 구현과 CI 가능한 실증은 완료했다. 전체 VALIDATED 승격 전에 실제 LLM/Agent Provider 반복실행, 사람 대상 사용성 평가, 필요 시 고객 Production Repository 검증을 수행해야 한다.
-updated_at: 2026-09-02T02:55:00+09:00
+next_step: 현재 Head의 GitHub CI 회귀를 확인하고, 실제 EXTERNAL_AGENT Provider가 제공되면 provider-driven Greenfield E2E와 run_work_repeatability_experiment를 반복 실행한다. 사람 사용성 및 고객 Production Repository 검증은 별도 외부 실증으로 유지한다.
+updated_at: 2026-09-02T12:00:00+09:00
