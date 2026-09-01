@@ -15,6 +15,10 @@
 - 사용자에게 보이는 본문은 한국어 자연어를 기본으로 한다.
 - RQ/FR/BR/PGM/AC/TC 등은 첫 등장 시 한국어 명칭을 함께 적는다.
 - 단계 전체를 승인 대기로 막지 않는다. 미확정 사항은 주의/가정/OPEN으로 이월한다.
+- **OPEN은 대기표시가 아니라 해소할 설계 Backlog다.** CLARIFY/DESIGN/PROGRAM에서 OPEN이 발견되면 `.cursor/skills/open-resolve/SKILL.md`와 `open-resolution-contract.json`을 사용해 인터뷰/현행분석/Source·Data 분석/Project Standard/설계·개발 제안 중 해소 경로를 지정한다.
+- SOP는 선택 Evidence다. SOP가 없어도 설계자/개발자가 정형화된 OPEN Resolution Workbook을 사용해 설계를 구체화한다.
+- 설계자/개발자 경험으로 채운 값은 `DESIGN_PROPOSAL`/`TECHNICAL_PROPOSAL`로 기록하며 Business Truth로 자동 확정하지 않는다.
+- Project Authority Profile이 허용하는 기술/Data/Integration 결정은 고객 승인 없이 `ACCEPTED_DESIGN`으로 해소할 수 있다. Business 정책/목적은 업무 권한자가 확인해야 `CONFIRMED_BUSINESS`가 된다.
 - Source가 연결된 경우 DISCOVERY 이후에는 가능한 위치(파일/심볼/라인/Locator)와 Source Hash를 남긴다.
 - Source write 전 Target confidence와 Execution Guard를 확인한다.
 - Output은 Canonical relation을 갱신하고 해당 Template 기반 Artifact를 생성/갱신한다.
