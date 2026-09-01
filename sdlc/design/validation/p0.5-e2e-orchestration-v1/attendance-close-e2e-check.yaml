@@ -1,0 +1,103 @@
+schema_version: 1
+artifact_type: E2E_CHECK_STATUS
+subject:
+  source_group_id: RQG-CAND-6BB6D66548
+  source_requirement_count: 39
+  source_requirement_ids:
+  - REQ_TM_TE016
+  - REQ_TM_TE017
+  - REQ_TM_TE018
+  - REQ_TM_TE019
+  - REQ_TM_TE020
+  - REQ_TM_TE021
+  - REQ_TM_TE022
+  - REQ_TM_TE023
+  - REQ_TM_TE024
+  - REQ_TM_TE025
+  - REQ_TM_TE026
+  - REQ_TM_TE027
+  - REQ_TM_TE028
+  - REQ_TM_TE029
+  - REQ_TM_TE030
+  - REQ_TM_TE031
+  - REQ_TM_TE032
+  - REQ_TM_TE033
+  - REQ_TM_TE034
+  - REQ_TM_TE035
+  - REQ_TM_TE036
+  - REQ_TM_TE037
+  - REQ_TM_TE038
+  - REQ_TM_TE039
+  - REQ_TM_TE040
+  - REQ_TM_TE041
+  - REQ_TM_TE042
+  - REQ_TM_TE043
+  - REQ_TM_TE044
+  - REQ_TM_TE045
+  - REQ_TM_TE046
+  - REQ_TM_TE047
+  - REQ_TM_TE048
+  - REQ_TM_TE049
+  - REQ_TM_TE050
+  - REQ_TM_TE051
+  - REQ_TM_TE052
+  - REQ_TM_TE053
+  - REQ_TM_TE054
+overall:
+  state: ACTION_REQUIRED
+  release_ready: false
+  production_verified: false
+  summary_ko: 진행 가능하지만 Human/실제 Source/Runtime Blocker가 남아 있음
+stage_status:
+- stage: NORMALIZE
+  display_name_ko: 레거시 요구사항 정규화
+  state: COMPLETE
+  summary_ko: 39개 Source Row가 Stable Candidate Group 1개로 보존됨
+  blocking: false
+- stage: BOUNDARY_REVIEW
+  display_name_ko: 요구사항 경계 검토
+  state: ACTION_REQUIRED
+  summary_ko: Canonical RQ/FR 경계가 아직 OPEN이며 L2/Human 검토 필요
+  blocking: true
+- stage: CANONICAL_PUBLISH
+  display_name_ko: Canonical 발행
+  state: BLOCKED
+  summary_ko: 경계 미확정으로 Canonical 발행 금지
+  blocking: true
+- stage: SOURCE_DISCOVERY_REVERSE_SYNC
+  display_name_ko: 소스 탐색·영향·역동기화
+  state: REVIEW_REQUIRED
+  summary_ko: Synthetic Source에서 Direct PGM/ART 영향은 확인했으나 Business Rule 후보는 검토 필요
+  blocking: true
+- stage: TEST_VERIFY
+  display_name_ko: 테스트·검증
+  state: BLOCKED_RUNTIME
+  summary_ko: AC/TC 계약은 통과했지만 Runtime 테스트가 실행되지 않음
+  blocking: true
+blockers:
+- code: BOUNDARY_REVIEW_OPEN
+  owner: L2_OR_HUMAN
+  action_ko: 근태마감 그룹의 독립 Business Outcome/Owner/Release/AC 경계를 검토한다.
+- code: ACTUAL_SOURCE_REQUIRED
+  owner: ENGINEERING_OWNER
+  action_ko: 실제 고객 Repository/Snapshot으로 Source Discovery를 재실행한다.
+- code: BUSINESS_RULE_REVIEW_REQUIRED
+  owner: L2_OR_HUMAN
+  action_ko: Source Diff의 BUSINESS_RULE_CANDIDATE를 실제 업무규칙과 대조한다.
+- code: TEST_COMMAND_OPEN
+  owner: ENGINEERING_OR_TEST_OWNER
+  action_ko: 실행 가능한 Test Command를 제공한다.
+- code: RUNTIME_ENVIRONMENT_UNAVAILABLE
+  owner: ENGINEERING_OR_TEST_OWNER
+  action_ko: 실제 Runtime/Test 환경을 연결한다.
+next_actions:
+- 근태마감 그룹의 독립 Business Outcome/Owner/Release/AC 경계를 검토한다.
+- 실제 고객 Repository/Snapshot으로 Source Discovery를 재실행한다.
+- Source Diff의 BUSINESS_RULE_CANDIDATE를 실제 업무규칙과 대조한다.
+- 실행 가능한 Test Command를 제공한다.
+- 실제 Runtime/Test 환경을 연결한다.
+truth_guards:
+  candidate_is_not_canonical: true
+  fixture_is_not_production_source: true
+  contract_coverage_is_not_runtime_pass: true
+  source_behavior_is_not_business_truth: true
