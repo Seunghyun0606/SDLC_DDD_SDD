@@ -6,10 +6,10 @@
 
 ```mermaid
 flowchart LR
-    A[요구사항 등록] --> B[/work 또는 계속 진행해줘]
-    B --> C[/check 상태 확인]
-    C --> D{변경 있음?}
-    D -- 예 --> E[/change]
+    A["요구사항 등록"] --> B["/work 또는 계속 진행해줘"]
+    B --> C["/check 상태 확인"]
+    C --> D{"변경 있음?"}
+    D -- 예 --> E["/change"]
     E --> B
     D -- 아니오 --> B
 ```
@@ -36,14 +36,14 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    R[요구사항] --> A[분석]
-    A --> I[영향분석]
-    I --> D[기능설계]
-    D --> P[프로그램설계]
-    P --> DEV[개발]
-    DEV --> T[테스트]
-    T --> V[검증]
-    V --> K[지식승격]
+    R["요구사항"] --> A["분석"]
+    A --> I["영향분석"]
+    I --> D["기능설계"]
+    D --> P["프로그램설계"]
+    P --> DEV["개발"]
+    DEV --> T["테스트"]
+    T --> V["검증"]
+    V --> K["지식승격"]
     K --> R
 ```
 
@@ -62,17 +62,19 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    S[/setup] --> Q{기존 자산?}
-    Q -- 있음 --> B[Brownfield Bootstrap]
-    Q -- 없음 --> G[Greenfield Preset]
-    B --> P[Project Profile]
+    S["/setup"] --> Q{"기존 자산?"}
+    Q -- 있음 --> B["Brownfield Bootstrap"]
+    Q -- 없음 --> G["Greenfield Preset"]
+    B --> P["Project Profile"]
     G --> P
-    P --> W[동일한 /work /change /check]
+    P --> W["동일한 /work /change /check"]
 ```
 
 - Brownfield: 기존 README/가이드/Source/Build/Test/DB 정의를 먼저 재사용
 - Greenfield: 기본 Preset/Template 사용
 - Hybrid: Module/Domain별 Overlay
+
+> Mermaid 라벨에 `/`, `?`, 괄호 등 특수문자가 포함되면 GitHub 렌더러 호환성을 위해 `A["라벨"]`, `Q{"질문?"}`처럼 따옴표로 감싼다.
 
 ## 상세 문서
 
