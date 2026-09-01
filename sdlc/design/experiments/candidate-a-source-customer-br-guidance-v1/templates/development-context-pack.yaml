@@ -1,0 +1,65 @@
+context_pack:
+  metadata:
+    context_pack_id: DCP-<TASK-ID>-<REV>
+    generated_for: DEVELOPMENT
+    generated_at: null
+    project_id: null
+    branch: null
+  intent:
+    rq_id: null
+    fr_ids: []
+    br_ids: []
+    ac_ids: []
+    change_request_ids: []
+  target:
+    task_id: null
+    program_id: null
+    files: []
+    symbols: []
+    source_revision:
+      base_commit: null
+      hashes: {}
+  behavior:
+    as_is: null
+    to_be: null
+    invariants: []
+    exceptions: []
+    out_of_scope: []
+  data_contract:
+    reads: []
+    writes: []
+    codes: []
+    mapper_statements: []
+  runtime_boundary:
+    transaction_owner: null
+    authorization: []
+    interfaces: []
+    batch_trigger: null
+    logging_audit: []
+  brownfield_conventions:
+    architecture_pattern: null
+    similar_reference_symbols: []
+    applicable_standards: []
+    legacy_deviations: []
+    protected_paths: []
+    unrelated_refactoring: DENY
+  verification:
+    required_test_cases: []
+    required_acceptance_criteria: []
+    build_command: null
+    test_command: null
+  evidence:
+    source_refs: []
+    trace_refs: []
+    data_refs: []
+    knowledge_refs: []
+  open_items:
+    alerts: []
+    assumptions: []
+  readiness:
+    target_known: false
+    source_current: false
+    behavior_complete: false
+    data_boundary_known: false
+    test_contract_present: false
+    source_write_ready: false
