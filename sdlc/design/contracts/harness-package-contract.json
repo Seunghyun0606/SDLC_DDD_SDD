@@ -1,6 +1,6 @@
 {
-  "schema_version": 7,
-  "candidate_design": "v1.5.9-rc.1",
+  "schema_version": 8,
+  "candidate_design": "v1.6.0-rc.1",
   "core_required_files": [
     ".cursor/rules/00-core.mdc",
     ".cursor/rules/10-project.mdc",
@@ -40,85 +40,115 @@
     "sdlc/design/contracts/source-drift-contract.json",
     "sdlc/scripts/detect_source_drift.py"
   ],
-  "overlay_precedence": ["core","preset","project_profile","project_overlay","domain_overlay","local_override"],
-  "customization_roots": ["sdlc/custom/project","sdlc/custom/domain"],
-  "work_reference_required_sections": ["## Purpose","## Required Input","## Optional Input","## Retrieval Strategy","## 실행 계약(Agent Execution Contract)","## Steps","## Output","## Quality Check","## Alert Conditions","## Token Strategy","## Do Not"],
-  "template_required_sections": ["## 문서 목적","## 한눈에 보기","## 업무 흐름","## 입력 및 근거","## 상세 내용","## 미확정 사항·주의·가정","## 관련 ID 및 추적성","## 다음 작업"],
-  "source_evidence_markers": ["Locator","Source Hash","Confidence","Status"],
-  "process_sixw_required_markers": ["### 업무 정의(6하원칙)","누가(Who)","언제(When)","어디서(Where)","무엇을(What)","어떻게(How)","왜(Why)"],
+  "overlay_precedence": ["core", "preset", "project_profile", "project_overlay", "domain_overlay", "local_override"],
+  "customization_roots": ["sdlc/custom/project", "sdlc/custom/domain"],
+  "work_reference_required_sections": ["## Purpose", "## Required Input", "## Optional Input", "## Retrieval Strategy", "## 실행 계약(Agent Execution Contract)", "## Steps", "## Output", "## Quality Check", "## Alert Conditions", "## Token Strategy", "## Do Not"],
+  "template_required_sections": ["## 문서 목적", "## 한눈에 보기", "## 업무 흐름", "## 입력 및 근거", "## 상세 내용", "## 미확정 사항·주의·가정", "## 관련 ID 및 추적성", "## 다음 작업"],
+  "source_evidence_markers": ["Locator", "Source Hash", "Confidence", "Status"],
+  "process_sixw_required_markers": ["### 업무 정의(6하원칙)", "누가(Who)", "언제(When)", "어디서(Where)", "무엇을(What)", "어떻게(How)", "왜(Why)"],
   "functional_design_required_markers": [
-    "### 업무 정의(6하원칙)","### 화면·채널 및 사용자 동선","### 화면·입력·출력 필드 명세","### CRUD 및 사용자/시스템 행위","### 핵심 업무 로직과 판단 규칙","### 데이터 조회·저장 설계","### 공통코드·기준정보","### 연계 프로그램·외부 시스템","### 권한·상태·예외","### 인수 조건(AC) 연결","### 개발 상세 명세 준비도"
+    "### 업무 정의(6하원칙)",
+    "### 화면·채널 및 사용자 동선",
+    "### 화면·입력·출력 필드 명세",
+    "### CRUD 및 사용자/시스템 행위",
+    "### 핵심 업무 로직과 판단 규칙",
+    "### 데이터 조회·저장 설계",
+    "### 공통코드·기준정보",
+    "### 연계 프로그램·외부 시스템",
+    "### 권한·상태·예외",
+    "### 인수 조건(AC) 연결",
+    "### 개발 상세 명세 준비도"
   ],
   "program_spec_required_markers": [
-    "### 업무 시나리오(6하원칙) 연결","### 진입점과 실제 변경 대상","### 실제 파일·심볼 근거","### 화면·메뉴·컴포넌트 상세","### 화면·입력·출력 필드 상세","### CRUD 동작 매트릭스","### 입력 데이터 계약(DTO)","### 출력 데이터 계약(DTO)","### 핵심 비즈니스 로직 실행 순서","### 업무 검증·판단·상태 규칙","### 조회 쿼리·데이터 접근 상세","### 데이터 저장 및 조회","### 공통코드·기준정보 사용","### 트랜잭션·동시성·중복 처리","### 연계 프로그램·외부 시스템 상세","### 외부 시스템 연계 및 알림","### 오류 및 예외 처리","### 권한·보안·감사·관측성","### 성능 및 운영 조건","### 적용 표준과 예외","### 인수 조건(AC)과 테스트케이스(TC) 연결","### 개발 작업(TASK)과 변경 범위","### 개발 상세 명세 완성도","### 구현 준비도(DoR) 점검","## 관련 ID 및 추적성","## 다음 작업"
+    "### 기능 설계 기준점",
+    "### 실제 구현 Target",
+    "### 구현 매핑과 차이",
+    "### Query·Table·Source 구현 근거",
+    "### 트랜잭션·실행 제어",
+    "### 연계 구현 계약",
+    "### 기술 제어와 운영 조건",
+    "### TASK·AC·TC·Source 연결",
+    "### 구현 준비도",
+    "## 관련 ID 및 추적성",
+    "## 다음 작업"
   ],
-  "program_readiness_rules": {"ready_requires_zero_open":true,"simulated_source_cannot_be_ready":true,"open_real_source_cannot_be_ready":true,"ready_requires_developer_spec_zero_open_when_section_present":true},
-  "stage_contracts": {
-    "DECOMPOSE": {"reference":"requirement.md","template":"requirement-analysis.md"},
-    "CLARIFY": {"reference":"clarify.md","template":"interview-questions.md","open_resolution_contract":true},
-    "PROCESS": {"reference":"process.md","template":"process-analysis.md","business_scenario_contract":true},
-    "DISCOVERY": {"reference":"discovery.md","template":"impact-analysis.md","source_evidence":true},
-    "IMPACT": {"reference":"impact.md","template":"impact-analysis.md","source_evidence":true},
-    "DESIGN": {"reference":"design.md","template":"functional-design.md","source_evidence":true,"business_scenario_contract":true,"developer_spec_contract":true,"open_resolution_contract":true},
-    "PROGRAM": {"reference":"program.md","template":"program-spec.md","source_evidence":true,"readiness_contract":true,"business_scenario_contract":true,"developer_spec_contract":true,"open_resolution_contract":true},
-    "DEVELOPMENT": {"reference":"development.md","template":"implementation-result.md","source_evidence":true},
-    "TEST": {"reference":"test.md","template":"test-scenario.md","source_evidence":true},
-    "VERIFY": {"reference":"verify.md","template":"verification-result.md","source_evidence":true}
+  "program_readiness_rules": {
+    "ready_requires_zero_open": true,
+    "simulated_source_cannot_be_ready": true,
+    "open_real_source_cannot_be_ready": true,
+    "ready_requires_developer_spec_zero_open_when_section_present": true
   },
-  "core_invariant_markers": ["OBSERVED","Execution Guard","외부 요구사항 ID","Canonical","Overlay"],
+  "stage_contracts": {
+    "DECOMPOSE": {"reference": "requirement.md", "template": "requirement-analysis.md"},
+    "CLARIFY": {"reference": "clarify.md", "template": "interview-questions.md", "open_resolution_contract": true},
+    "PROCESS": {"reference": "process.md", "template": "process-analysis.md", "business_scenario_contract": true},
+    "DISCOVERY": {"reference": "discovery.md", "template": "impact-analysis.md", "source_evidence": true},
+    "IMPACT": {"reference": "impact.md", "template": "impact-analysis.md", "source_evidence": true},
+    "DESIGN": {"reference": "design.md", "template": "functional-design.md", "source_evidence": true, "business_scenario_contract": true, "developer_spec_contract": true, "open_resolution_contract": true},
+    "PROGRAM": {"reference": "program.md", "template": "program-spec.md", "source_evidence": true, "readiness_contract": true, "business_scenario_trace": true, "developer_spec_contract": true, "open_resolution_contract": true},
+    "DEVELOPMENT": {"reference": "development.md", "template": "implementation-result.md", "source_evidence": true},
+    "TEST": {"reference": "test.md", "template": "test-scenario.md", "source_evidence": true},
+    "VERIFY": {"reference": "verify.md", "template": "verification-result.md", "source_evidence": true}
+  },
+  "core_invariant_markers": ["OBSERVED", "Execution Guard", "외부 요구사항 ID", "Canonical", "Overlay"],
   "document_experience": {
-    "visible_language":"ko-KR",
-    "customer_document_contract":"sdlc/design/contracts/customer-document-contract.json",
-    "br_candidate_schema":"sdlc/design/contracts/br-candidate.schema.json",
-    "br_document_extraction_contract":"sdlc/design/contracts/br-document-extraction-contract.json",
-    "sop_extraction_contract":"sdlc/design/contracts/sop-extraction-contract.json"
+    "visible_language": "ko-KR",
+    "customer_document_contract": "sdlc/design/contracts/customer-document-contract.json",
+    "br_candidate_schema": "sdlc/design/contracts/br-candidate.schema.json",
+    "br_document_extraction_contract": "sdlc/design/contracts/br-document-extraction-contract.json",
+    "sop_extraction_contract": "sdlc/design/contracts/sop-extraction-contract.json"
   },
   "business_scenario": {
-    "contract":"sdlc/design/contracts/business-scenario-sixw-contract.json",
-    "required_in_process_design_program":true
+    "contract": "sdlc/design/contracts/business-scenario-sixw-contract.json",
+    "required_in_process_and_design": true,
+    "program_requires_reference_not_duplication": true
   },
   "developer_specification": {
-    "contract":"sdlc/design/contracts/developer-spec-contract.json",
-    "required_in_design_program":true,
-    "legacy_program_dor_17_fields_preserved":true
+    "contract": "sdlc/design/contracts/developer-spec-contract.json",
+    "functional_design_is_semantic_source_of_truth": true,
+    "program_spec_is_implementation_delta": true,
+    "legacy_program_dor_17_fields_preserved": true
   },
   "open_resolution": {
-    "contract":"sdlc/design/contracts/open-resolution-contract.json",
-    "profile":"sdlc/config/open-resolution-profile.example.yaml",
-    "skill":".cursor/skills/open-resolve/SKILL.md",
-    "workbook_template":"sdlc/templates/core/open-resolution-workbook.md",
-    "sop_is_optional":true,
-    "designer_and_developer_proposals_allowed":true,
-    "proposal_is_not_automatic_business_truth":true,
-    "project_authority_matrix_is_customizable":true
+    "contract": "sdlc/design/contracts/open-resolution-contract.json",
+    "profile": "sdlc/config/open-resolution-profile.example.yaml",
+    "skill": ".cursor/skills/open-resolve/SKILL.md",
+    "workbook_template": "sdlc/templates/core/open-resolution-workbook.md",
+    "sop_is_optional": true,
+    "designer_and_developer_proposals_allowed": true,
+    "proposal_is_not_automatic_business_truth": true,
+    "project_authority_matrix_is_customizable": true,
+    "human_view_uses_five_status_values": true,
+    "machine_taxonomy_hidden_by_default": true
   },
   "sop_extraction": {
-    "skill":".cursor/skills/sop-extract/SKILL.md",
-    "result_template":"sdlc/templates/core/sop-extraction-result.md",
-    "format_parser_is_adapter_responsibility":true,
-    "structured_evidence_required_when_available":true
+    "skill": ".cursor/skills/sop-extract/SKILL.md",
+    "result_template": "sdlc/templates/core/sop-extraction-result.md",
+    "format_parser_is_adapter_responsibility": true,
+    "structured_evidence_required_when_available": true
   },
   "starter_kits": {
-    "contract":"sdlc/design/contracts/starter-kit-contract.json",
-    "greenfield":"sdlc/starter-kits/greenfield/starter-manifest.example.yaml",
-    "brownfield":"sdlc/starter-kits/brownfield/starter-manifest.example.yaml",
-    "mode_preset_mapping_required":true
+    "contract": "sdlc/design/contracts/starter-kit-contract.json",
+    "greenfield": "sdlc/starter-kits/greenfield/starter-manifest.example.yaml",
+    "brownfield": "sdlc/starter-kits/brownfield/starter-manifest.example.yaml",
+    "mode_preset_mapping_required": true
   },
   "agent_execution": {
-    "contract":"sdlc/design/contracts/agent-execution-contract.json",
-    "required_in_all_stage_references":true,
-    "format_strengthening_is_core_common":true
+    "contract": "sdlc/design/contracts/agent-execution-contract.json",
+    "required_in_all_stage_references": true,
+    "format_strengthening_is_core_common": true
   },
   "brownfield_impact": {
-    "contract":"sdlc/design/contracts/brownfield-impact-contract.json",
-    "project_adapter_profile":"sdlc/config/impact-adapter-profile.example.yaml",
-    "common_graph_and_coverage_is_core":true,
-    "project_specific_relation_resolution_requires_separate_adapter":true
+    "contract": "sdlc/design/contracts/brownfield-impact-contract.json",
+    "project_adapter_profile": "sdlc/config/impact-adapter-profile.example.yaml",
+    "common_graph_and_coverage_is_core": true,
+    "project_specific_relation_resolution_requires_separate_adapter": true
   },
   "source_drift_reverse": {
-    "contract":"sdlc/design/contracts/source-drift-contract.json",
-    "script":"sdlc/scripts/detect_source_drift.py",
-    "auto_rewrite_artifact":false,
-    "auto_update_business_truth":false
+    "contract": "sdlc/design/contracts/source-drift-contract.json",
+    "script": "sdlc/scripts/detect_source_drift.py",
+    "capability_name": "SOURCE_DRIFT_AND_REVERSE_REVIEW_CANDIDATE",
+    "auto_rewrite_artifact": false,
+    "auto_update_business_truth": false
   }
 }
