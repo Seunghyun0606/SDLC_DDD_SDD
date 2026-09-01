@@ -13,47 +13,48 @@ sources: []
 knowledge_used: []
 generated_at: "{{generated_at}}"
 ---
-# {{representative_id}} {{short_name}} 영향분석
+<!-- 작성 안내: 본문은 Agent 용어를 전제로 하지 않고 한국어 자연어로 작성한다. RQ/FR/BR/PGM/AC/TC 같은 코드는 첫 등장 시 한국어 명칭을 함께 적고 이후 추적용 식별자로 사용한다. -->
+# {{representative_id}} {{short_name}} 영향 범위 분석
 
 ## 문서 목적
 {{purpose}}
 
-## 30초 요약
+## 한눈에 보기
 {{summary}}
 
-## Workflow
+## 업무 흐름
 ```mermaid
 flowchart LR
-    I["입력/Evidence"] --> A["분석"] --> O["현재 산출물"]
+    I["입력 자료와 근거"] --> A["분석 및 확인"] --> O["현재 단계 산출물"]
 ```
 
-## 입력/Evidence
-| 구분 | 값 | Truth/Evidence | Locator | Source Hash | Confidence | Status |
+## 입력 및 근거
+| 구분 | 내용 | 사실/근거 구분 | 위치(Locator) | 원본 해시(Source Hash) | 신뢰도(Confidence) | 상태(Status) |
 |---|---|---|---|---|---|---|
 | 요구사항 | {{requirement_source}} | GIVEN | {{requirement_locator}} | - | HIGH | CURRENT |
-| Source | {{source_summary}} | OBSERVED | {{source_locator}} | {{source_hash}} | {{source_confidence}} | {{source_status}} |
+| 프로그램 소스/시스템 근거 | {{source_summary}} | OBSERVED | {{source_locator}} | {{source_hash}} | {{source_confidence}} | {{source_status}} |
 
-## 본문
-### Source Evidence
-| Artifact | Symbol/Locator | Relation | Source Hash | Confidence | Status |
+## 상세 내용
+### 프로그램 소스 및 시스템 근거
+| 파일/자산 | 위치 또는 심볼(Symbol/Locator) | 관련 이유 | 원본 해시(Source Hash) | 신뢰도(Confidence) | 상태(Status) |
 |---|---|---|---|---|---|
 {{source_evidence_rows}}
 
-### Technical Impact
+### 기술 영향
 {{technical_impact}}
 
-### Functional Impact
+### 기능 영향
 {{functional_impact}}
 
-### Business Impact
+### 업무 영향
 {{business_impact}}
 
-> Source relation만으로 Business Impact를 CONFIRMED 처리하지 않는다.
+> 프로그램 소스에서 관련성이 확인되었다는 이유만으로 업무 영향이나 업무 규칙을 확정하지 않는다.
 
-## 미확정/Alert/Assumption
+## 미확정 사항·주의·가정
 {{alerts_and_assumptions}}
 
-## 관련 ID/Traceability
+## 관련 ID 및 추적성
 {{traceability}}
 
 ## 다음 작업
