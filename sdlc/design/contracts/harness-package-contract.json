@@ -1,6 +1,6 @@
 {
-  "schema_version": 4,
-  "candidate_design": "v1.5.6-rc.1",
+  "schema_version": 5,
+  "candidate_design": "v1.5.7-rc.1",
   "core_required_files": [
     ".cursor/rules/00-core.mdc",
     ".cursor/rules/10-project.mdc",
@@ -23,11 +23,17 @@
     "sdlc/starter-kits/greenfield/README.md",
     "sdlc/starter-kits/greenfield/starter-manifest.example.yaml",
     "sdlc/starter-kits/brownfield/README.md",
-    "sdlc/starter-kits/brownfield/starter-manifest.example.yaml"
+    "sdlc/starter-kits/brownfield/starter-manifest.example.yaml",
+    "sdlc/design/contracts/agent-execution-contract.json",
+    "sdlc/design/contracts/brownfield-impact-contract.json",
+    "sdlc/config/impact-adapter-profile.example.yaml",
+    "sdlc/custom/project/adapters/impact/README.md",
+    "sdlc/design/contracts/source-drift-contract.json",
+    "sdlc/scripts/detect_source_drift.py"
   ],
   "overlay_precedence": ["core","preset","project_profile","project_overlay","domain_overlay","local_override"],
   "customization_roots": ["sdlc/custom/project","sdlc/custom/domain"],
-  "work_reference_required_sections": ["## Purpose","## Required Input","## Optional Input","## Retrieval Strategy","## Steps","## Output","## Quality Check","## Alert Conditions","## Token Strategy","## Do Not"],
+  "work_reference_required_sections": ["## Purpose","## Required Input","## Optional Input","## Retrieval Strategy","## 실행 계약(Agent Execution Contract)","## Steps","## Output","## Quality Check","## Alert Conditions","## Token Strategy","## Do Not"],
   "template_required_sections": ["## 문서 목적","## 한눈에 보기","## 업무 흐름","## 입력 및 근거","## 상세 내용","## 미확정 사항·주의·가정","## 관련 ID 및 추적성","## 다음 작업"],
   "source_evidence_markers": ["Locator","Source Hash","Confidence","Status"],
   "program_spec_required_markers": [
@@ -58,5 +64,22 @@
     "greenfield":"sdlc/starter-kits/greenfield/starter-manifest.example.yaml",
     "brownfield":"sdlc/starter-kits/brownfield/starter-manifest.example.yaml",
     "mode_preset_mapping_required":true
+  },
+  "agent_execution": {
+    "contract":"sdlc/design/contracts/agent-execution-contract.json",
+    "required_in_all_stage_references":true,
+    "format_strengthening_is_core_common":true
+  },
+  "brownfield_impact": {
+    "contract":"sdlc/design/contracts/brownfield-impact-contract.json",
+    "project_adapter_profile":"sdlc/config/impact-adapter-profile.example.yaml",
+    "common_graph_and_coverage_is_core":true,
+    "project_specific_relation_resolution_requires_separate_adapter":true
+  },
+  "source_drift_reverse": {
+    "contract":"sdlc/design/contracts/source-drift-contract.json",
+    "script":"sdlc/scripts/detect_source_drift.py",
+    "auto_rewrite_artifact":false,
+    "auto_update_business_truth":false
   }
 }
