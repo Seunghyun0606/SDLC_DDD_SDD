@@ -1,19 +1,39 @@
 project:
   name: example-project
   mode: AUTO  # AUTO | BROWNFIELD | GREENFIELD | HYBRID
+
 bootstrap:
   reuse_existing_guides: true
   reuse_source_conventions: true
   reuse_test_conventions: true
   require_manual_confirmation: false
+
 preset:
   name: brownfield-auto
+
+artifacts:
+  profile: STANDARD  # LITE | STANDARD | ENTERPRISE
+  profile_config: sdlc/config/artifact-profiles.yaml
+  legacy_selection_matrix: sdlc/starter/onboarding-package-v1/04_artifact-selection-matrix.csv
+  precedence: PROFILE_OVER_LEGACY_DEFAULT_REQUIRED
+
+requirement_boundary:
+  config: sdlc/config/rq-boundary.yaml
+  preserve_source_requirement_id: true
+  publish_unresolved_candidate: false
+
+handoff:
+  stage_input_pack_template: sdlc/templates/stage-input-pack.yaml
+  validate_before_next_stage: true
+
 customization:
   project_overlay: sdlc/custom/project
   domain_overlays: []
+
 workflow:
   process_blocking: false
   execution_guard_enabled: true
+
 pm_tracking:
   assignee_required: false
   schedule_required: false
