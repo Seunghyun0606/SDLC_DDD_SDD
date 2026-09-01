@@ -2,6 +2,9 @@
 
 Brownfield 프로젝트의 언어/Framework/DB/메시징 관계 탐색은 **Project Custom 영역**이다. Core는 공통 Node/Edge/Coverage 계약과 `찾지 못함 != 영향 없음` 규칙만 제공한다.
 
+## Core와 Project 책임
+Core는 공통 Graph/Coverage/Evidence 경계까지만 제공한다. Framework별 정밀 관계, 동적 wiring, DB/runtime metadata 해석은 **Project에서 별도 구현**하거나 Tool/MCP Evidence를 연결한다. Config에 Adapter ID만 등록하는 것은 구현 완료가 아니다.
+
 ## 포함 Adapter
 
 ### 1. Java/Spring/MyBatis 좁은 Pilot
@@ -94,4 +97,4 @@ Adapter가 없더라도 일반 분석 Workflow는 진행할 수 있지만 Brownf
 2. `coverage_gaps`를 “영향 없음”으로 바꾸지 않는다.
 3. static result를 runtime truth로 승격하지 않는다.
 4. Project Adapter를 바꿔도 Core Node/Edge/Coverage 경계를 유지한다.
-5. Pilot fixture PASS는 실제 Production Repository 정확도/완전성을 의미하지 않는다.
+5. **Pilot fixture PASS는 실제 Production Repository의 정확도/완전성을 의미하지 않는다.**
