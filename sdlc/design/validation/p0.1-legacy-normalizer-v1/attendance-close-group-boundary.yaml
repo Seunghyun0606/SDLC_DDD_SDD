@@ -1,0 +1,57 @@
+version: 1.1
+boundary_records:
+  - scope_type: GROUP
+    source_group_id: RQG-CAND-6BB6D66548
+    source_requirement_ids:
+      - REQ_TM_TE016
+      - REQ_TM_TE017
+      - REQ_TM_TE018
+      - REQ_TM_TE019
+      - REQ_TM_TE020
+      - REQ_TM_TE021
+      - REQ_TM_TE022
+      - REQ_TM_TE023
+      - REQ_TM_TE024
+      - REQ_TM_TE025
+      - REQ_TM_TE026
+      - REQ_TM_TE027
+      - REQ_TM_TE028
+      - REQ_TM_TE029
+      - REQ_TM_TE030
+      - REQ_TM_TE031
+      - REQ_TM_TE032
+      - REQ_TM_TE033
+      - REQ_TM_TE034
+      - REQ_TM_TE035
+      - REQ_TM_TE036
+      - REQ_TM_TE037
+      - REQ_TM_TE038
+      - REQ_TM_TE039
+      - REQ_TM_TE040
+      - REQ_TM_TE041
+      - REQ_TM_TE042
+      - REQ_TM_TE043
+      - REQ_TM_TE044
+      - REQ_TM_TE045
+      - REQ_TM_TE046
+      - REQ_TM_TE047
+      - REQ_TM_TE048
+      - REQ_TM_TE049
+      - REQ_TM_TE050
+      - REQ_TM_TE051
+      - REQ_TM_TE052
+      - REQ_TM_TE053
+      - REQ_TM_TE054
+    source_count: 39
+    source_locator: 요구사항목록.xlsx / Sheet1 / REQ_TM_TE016~REQ_TM_TE054
+    decision: UNRESOLVED
+    status: OPEN
+    canonical_rq_ids: []
+    canonical_fr_ids: []
+    independent_business_outcome: OPEN
+    decision_basis: 동일 Level2+요구사항명은 확인되지만 하나의 Business Outcome인지 여러 Outcome인지 입력만으로 확정할 수 없음
+    evidence_ids:
+      - EV-TM-CLOSE-001
+    decided_by: null
+    escalation: L2_OR_HUMAN
+    notes: Group Candidate는 Canonical RQ가 아니며 기존 8개 Subgroup도 INFERRED 후보임
