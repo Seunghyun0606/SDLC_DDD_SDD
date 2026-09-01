@@ -1,46 +1,115 @@
 # /work
 
-현재 대상(RQ/PGM/TASK)의 다음 실행 가능한 단계를 선택하고 해당 Reference Contract를 수행한다.
+현재 대상의 다음 실행 가능한 단계를 수행하거나, 사용자가 명시적으로 지정한 Stage/문서를 다시 수행한다. `/work`의 실행 Runtime은 `sdlc/scripts/run_work.py`다.
+
+## 대상 선택 원칙
+- Target은 `RQ/FR/BR/SCN/PROC/PGM/TASK/AC/TC`에 한정하지 않는다. Canonical에 등록된 프로젝트 고유 ID 또는 사용자가 명시한 `ANA001` 같은 ID도 받을 수 있다.
+- **Target ID와 실행 Stage는 독립적이다.** `RQ-001`을 입력해도 `DESIGN` 문서를 다시 고칠 수 있고, `PGM-001`을 입력해 `PROGRAM` 또는 `DEVELOPMENT` Stage로 재진입할 수 있다.
+- **Target ID와 수정 문서도 독립적이다.** 사용자가 `--artifact`를 지정하면 그 문서를 우선 수정 대상으로 사용한다.
+- Canonical에 없는 임의 ID는 `--stage` 또는 Stage가 식별 가능한 기존 `--artifact`가 있을 때 실행할 수 있다.
+
+### 실행 예시
+```bash
+# Target의 현재 provenance를 기준으로 다음 Stage 계획
+python sdlc/scripts/run_work.py --target RQ-001 --plan-only
+
+# PGM을 Program 단계에서 명시적으로 다시 작업
+python sdlc/scripts/run_work.py --target PGM-001 --stage PROGRAM --plan-only
+
+# RQ를 기준으로 기능설계 문서만 명시적으로 다시 작업
+python sdlc/scripts/run_work.py \
+  --target RQ-001 \
+  --stage DESIGN \
+  --artifact docs/design/RQ-001-functional-design.md \
+  --plan-only
+
+# Project 고유 분석 ID도 Stage를 지정하면 사용 가능
+python sdlc/scripts/run_work.py \
+  --target ANA001 \
+  --stage DESIGN \
+  --artifact docs/analysis/ANA001.md \
+  --plan-only
+```
+
+`--stage` 또는 `--artifact`를 지정했다는 이유만으로 상위 Requirement/Business Truth 변경 권한이 생기지 않는다. 확정된 업무 사실을 실제로 변경하려면 `/change`를 우선 사용한다. 정말 `/work`에서 반영해야 하고 권한 있는 사용자가 변경을 명시적으로 확인한 경우에만 `--allow-business-truth-change`를 사용한다.
+
+## Stage 선택 우선순위
+`run_work.py`는 다음 순서로 Stage를 결정한다.
+
+1. 사용자가 `--stage`로 명시한 Stage
+2. 사용자가 지정한 기존 `--artifact`의 Stage metadata
+3. Target Canonical provenance의 마지막 Stage 다음 단계
+4. Target type의 기본 Stage
+5. 어느 것도 판별할 수 없으면 임의 추정하지 않고 명시적 `--stage`를 요구
+
+문서 선택 우선순위는 다음과 같다.
+
+1. 사용자가 지정한 `--artifact`
+2. Target/연결 Graph에서 같은 Stage의 기존 provenance Artifact
+3. 새 `sdlc/runtime/work/<target>/<stage>_<template>` 경로
 
 ## 단계 흐름
 `INTAKE → DECOMPOSE → CLARIFY → PROCESS → DISCOVERY → IMPACT → DESIGN → PROGRAM → DEVELOPMENT → TEST → VERIFY → KNOWLEDGE PROMOTION`
+
+Stage를 명시적으로 다시 수행하더라도 위 순서를 “현재 위치”로 강제하지 않는다. 재진입은 허용하지만, 결과 Delta는 현재 Target Graph와 Business Truth Guard를 통과해야 한다.
+
+## 실제 /work 실행 순서
+1. Canonical Store와 Target을 읽는다.
+2. Target 중심 relation graph를 제한된 hop으로 구성한다.
+3. Stage와 Artifact를 위 우선순위로 선택한다.
+4. Stage Reference와 Template 경로를 Work Context에 넣는다.
+5. Project가 설정한 Agent/LLM Provider command를 실행한다.
+6. Provider가 선택된 Artifact와 Stage Result Envelope를 생성한다.
+7. Stage/Artifact가 사용자가 선택한 대상과 정확히 같은지 확인한다.
+8. Delta가 Target Graph 밖의 기존 Canonical Entity를 수정하지 않는지 확인한다.
+9. 확정된 Business Truth 변경이 명시적으로 허용됐는지 확인한다.
+10. `validate_agent_stage_result.py`로 결과를 검증한다.
+11. Canonical dry-run이 가능한 경우에만 실제 Delta를 적용한다.
+12. 다음 Stage Candidate를 결과에 남긴다.
+
+Provider가 비활성화되어 있으면 Runtime은 계획을 만들 수 있지만 실행을 성공했다고 주장하지 않고 `NOT_EXECUTED_PROVIDER_UNAVAILABLE_OR_DISABLED`를 반환한다.
+
+## Provider 연결
+기본 예시는 `sdlc/config/agent-repeatability-profile.example.json`과 같은 Provider command 형식을 사용할 수 있다. 실행 Command에는 다음 placeholder를 사용할 수 있다.
+
+- `{context_path}`: Target/Stage/Artifact/Canonical Graph가 들어 있는 Work Context JSON
+- `{result_path}`: Provider가 생성해야 하는 Stage Result JSON
+- `{artifact_path}`: 실제 Artifact 절대경로
+- `{artifact_rel}`: Repository 상대 Artifact 경로
+- `{target_id}`
+- `{stage}`
+- `{root}`
+- `{run_dir}`
+
+Core는 특정 LLM SDK를 강제하지 않는다. Project가 실제 CLI/Agent wrapper를 연결한다.
 
 ## 문서 대상(Audience)
 - `internal`: 설계/개발용 내부 산출물만 생성한다.
 - `customer`: 기존 내부 산출물/Canonical을 근거로 고객 커뮤니케이션 View를 생성한다.
 - `both`: 내부 산출물을 먼저 갱신한 뒤 고객 View를 파생한다.
-- 고객 View에서 새 업무 사실을 만들지 않는다. 고객 협의 결과가 바뀌면 `/change` 또는 현재 `/work` Stage로 Canonical에 반영한다.
-- 신규 고객 View는 3개만 사용한다.
-  - `solution_agreement`: 요구·업무·기능 합의서 — INTAKE/DECOMPOSE/CLARIFY/PROCESS/DESIGN
-  - `delivery_scope`: 영향·개발범위 공유서 — DISCOVERY/IMPACT/PROGRAM/DEVELOPMENT
-  - `acceptance_handover`: 테스트·인수·운영 결과서 — TEST/VERIFY/KNOWLEDGE_PROMOTION
-- 기존 8개 고객문서 type 요청은 `customer-document-contract.json`의 Legacy Alias로 위 3개 View에 연결한다. 신규 작업에서 8종을 별도 산출물로 중복 생성하지 않는다.
-- 고객 View 생성 시 `sdlc/scripts/render_customer_document.py`에 내부 Markdown/Canonical JSON을 입력해 Contract의 Section Mapping을 실행한다. 빈 Template만 생성하고 사람이 다시 옮겨 적게 하지 않는다.
+- 고객 View에서 새 업무 사실을 만들지 않는다.
+- 신규 고객 View는 `solution_agreement / delivery_scope / acceptance_handover` 3개만 사용한다.
+- 고객 View 생성은 `sdlc/scripts/render_customer_document.py`를 사용한다.
 
 ## 작성 원칙
 - 사용자에게 보이는 본문은 한국어 자연어를 기본으로 한다.
-- RQ/FR/BR/PGM/AC/TC 등은 첫 등장 시 한국어 명칭을 함께 적는다.
-- 같은 업무정보를 여러 단계 문서에 복사하지 않는다. 이전 단계에서 확정된 내용은 ID/Section/Version으로 참조하고 현재 단계에서 새로 결정되는 Delta만 작성한다.
-- 단계 전체를 승인 대기로 막지 않는다. 미확정 사항은 주의/가정/OPEN으로 이월한다.
-- **OPEN은 대기표시가 아니라 해소할 설계 Backlog다.** CLARIFY/DESIGN/PROGRAM에서 OPEN이 발견되면 `.cursor/skills/open-resolve/SKILL.md`와 `open-resolution-contract.json`을 사용한다.
-- 사람에게 보이는 OPEN 상태는 `미확정 / 확인중 / 제안 / 확정 / 보류`를 기본으로 한다. `Decision Domain`, `Basis Class`, 내부 상태 코드는 Machine metadata로 유지하고 사용자의 필수 입력으로 만들지 않는다.
-- SOP는 선택 Evidence다. SOP가 없어도 인터뷰/현행분석/Source·Data 분석/Project Standard/설계·개발 제안으로 진행한다.
-- 설계자/개발자 경험으로 채운 값은 Proposal로 기록하며 Business Truth로 자동 확정하지 않는다.
-- Project Authority Profile이 허용하는 기술/Data/Integration 결정은 고객 승인 없이 내부적으로 `ACCEPTED_DESIGN`으로 해소할 수 있다. Business 정책/목적은 업무 권한자가 확인해야 `CONFIRMED_BUSINESS`가 된다.
-- Source가 연결된 경우 DISCOVERY 이후에는 가능한 위치(파일/심볼/라인/Locator)와 Source Hash를 Machine provenance로 남긴다.
+- 같은 업무정보를 여러 단계 문서에 복사하지 않는다. 이전 단계의 확정 내용은 참조하고 현재 Stage에서 새로 생기는 Delta만 추가한다.
+- OPEN은 대기표시가 아니라 해소할 설계 Backlog다.
+- 설계자/개발자 경험은 Proposal이며 Business Truth로 자동 확정하지 않는다.
+- Source 관찰은 `OBSERVED`이며 고객/업무 확정과 다르다.
+- Source가 연결된 경우 Locator/Source Hash는 Machine provenance로 남긴다.
 - Source write 전 Target confidence와 Execution Guard를 확인한다.
-- 모든 Stage Reference의 `## 실행 계약(Agent Execution Contract)`을 실행 지침으로 사용한다. 저수준 Agent가 임의 순서를 만들지 않고 `입력 필드 → 근거 분류 → 실행 순서 → 계속/중단 → 출력 매핑 → 품질 게이트 → 미확정/실패 처리`를 따른다.
-- 공통 실행계약은 `sdlc/design/contracts/agent-execution-contract.json`을 따른다.
-- PROCESS/DESIGN에서는 `business-scenario-sixw-contract.json`의 누가/언제/어디서/무엇을/어떻게/왜를 업무 기준으로 유지한다. 누락은 OPEN으로 두고 발명하지 않는다.
-- PROGRAM에서는 6W를 다시 작성하지 않고 Functional Design의 SCN/Section을 참조한다.
-- DESIGN은 `developer-spec-contract.json`에 따라 화면/필드/CRUD/핵심 업무규칙/논리 Data/Integration/권한/예외/AC의 **의미상 Source of Truth**를 만든다.
-- PROGRAM은 Functional Design을 반복하지 않고 실제 PGM/Entry Point/Source Symbol, Field→DTO/API/DB Mapping, Query/Table/Column, Transaction, Integration 기술계약, Error/Security/Observability, TASK/AC/TC/Source 및 구현 준비도만 추가한다.
-- 17개 Program DoR는 17개 별도 Section이 아니라 `program-spec.md`의 단일 구현 준비도 표에서 관리한다.
-- 고객 View Projection은 내부 문서 내용을 고객 문맥으로 옮기는 표시 계층이다. `합의된 내용` Source가 없으면 합의된 것으로 추정하지 않고 명시적으로 미확인 처리한다.
-- 고객 본문에서는 내부 ID, Source Hash, Locator, Confidence, 내부 상태 코드를 기본 숨김 처리한다. 필요하면 Profile로 부록에만 표시한다.
-- SOP/업무규정/운영매뉴얼/PPTX/XLSX 등 고객 문서가 있으면 포맷 Adapter의 구조 보존 Evidence Chunk를 우선 만들고 `.cursor/skills/sop-extract/SKILL.md`를 사용해 SCN/PROC/BR/FR/Data/Screen/Integration Candidate를 추출한 뒤 PROCESS/DESIGN 입력으로 사용한다.
-- 프로젝트 고유 탐색/Framework 해석과 포맷별 Parser 구현은 Core Reference에 발명하지 않고 Project Profile/Adapter에서 제공한다.
-- `detect_source_drift.py`는 Source Drift와 Reverse Review Candidate 기능이며 전체 Reverse Engineering 또는 문서 자동 재작성 기능으로 표현하지 않는다.
+- PROCESS/DESIGN의 Business Scenario는 확인되지 않은 6W를 발명하지 않는다.
+- PROGRAM은 Functional Design의 업무 의미를 다시 쓰지 않고 구현 Target/Mapping/Query/Transaction/기술 제어/Source Delta만 추가한다.
+- Project별 Framework 탐색과 Raw 문서 Parser 구현은 Project Adapter/Tool 책임이다.
+
+## Target Graph Guard
+`/work` Provider가 Repository 전체를 볼 수 있더라도 아무 Canonical Entity나 수정할 수 있는 것은 아니다.
+
+- 기존 Entity 수정은 Target 중심 Canonical relation graph 또는 사용자가 지정한 Artifact에서 실제 참조되는 Entity 범위로 제한한다.
+- Graph 밖 기존 Entity 수정은 `OUTSIDE_TARGET_GRAPH_MUTATION`으로 차단한다.
+- 새 Entity 생성은 허용하지만 relation endpoint와 Evidence는 기존 Canonical 규칙을 따라야 한다.
+- `RQ-001 --stage DESIGN` 실행이 `RQ-OTHER`를 수정하는 권한이 되지 않는다.
 
 ## Agent Stage Result 실행 경계
 Stage Artifact를 작성한 것만으로 Stage 실행 완료로 간주하지 않는다. 저수준 Agent는 사용자용 Artifact와 함께 Machine용 Stage Result Envelope를 만든다.
@@ -49,9 +118,16 @@ Stage Artifact를 작성한 것만으로 Stage 실행 완료로 간주하지 않
 ```json
 {
   "schema_version": 1,
-  "stage": "DECOMPOSE",
-  "artifact_path": "docs/.../requirement.md",
-  "canonical_delta": {},
+  "stage": "DESIGN",
+  "artifact_path": "docs/design/RQ-001-functional-design.md",
+  "canonical_delta": {
+    "schema_version": 1,
+    "delta_id": "WORK-RQ-001-DESIGN-001",
+    "base_revision": 10,
+    "stage": "DESIGN",
+    "source_artifact": "docs/design/RQ-001-functional-design.md",
+    "operations": []
+  },
   "quality_gate": {
     "status": "PASS",
     "failures": []
@@ -65,8 +141,20 @@ Stage Artifact를 작성한 것만으로 Stage 실행 완료로 간주하지 않
 - `canonical_delta.stage`는 Stage Result의 `stage`와 같아야 한다.
 - `canonical_delta.source_artifact`는 `artifact_path`와 같아야 한다.
 - Artifact에 `{{placeholder}}`가 남아 있으면 실행 결과로 인정하지 않는다.
-- `quality_gate.status`는 `PASS / WARNING / FAIL` 중 하나다. `FAIL`은 구조상 결과는 남길 수 있지만 Canonical 적용 가능한 실행 결과로 취급하지 않는다.
-- `alerts`와 `uncertainty`는 숨기지 않고 결과 Envelope에 남긴다.
+- `quality_gate.status`는 `PASS / WARNING / FAIL` 중 하나다.
+- `alerts`와 `uncertainty`는 숨기지 않는다.
+
+### 문서만 변경하고 Canonical 의미가 바뀌지 않는 경우
+사용자가 특정 문서의 표현/구성만 수정했거나 실제 Semantic Delta가 없는 경우 빈 `operations`를 억지 Entity update로 만들지 않는다. 대신 다음처럼 명시한다.
+
+```json
+{
+  "operations": [],
+  "no_change_reason": "문서 표현만 수정하고 Canonical 의미는 변경하지 않음"
+}
+```
+
+Validator/Canonical Runtime은 이를 `NO_CHANGE`로 검증하며 Store revision을 올리지 않는다.
 
 ### Stage Result 검증
 Artifact와 Delta를 만든 뒤 Canonical write 전에 다음 Validator를 실행한다.
@@ -76,61 +164,88 @@ Artifact와 Delta를 만든 뒤 Canonical write 전에 다음 Validator를 실�
 다음 조건이 모두 만족되어야 다음 단계로 진행한다.
 - `validation.status = PASS`
 - `validation.executable = true`
-- Canonical check가 `APPLIED` 또는 `IDEMPOTENT`
+- Canonical check가 `APPLIED`, `IDEMPOTENT` 또는 명시적 문서-only `NO_CHANGE`
 
 `FAIL`, stale revision, Artifact/Delta 불일치, 미해결 Template placeholder가 있으면 Canonical을 적용했다고 기록하지 않는다.
 
 ### 반복 실행 비교
-동일 입력으로 저수준 Agent를 반복 실행해 결과 안정성을 확인할 때 다음처럼 비교한다.
+단일 Stage Result 비교는 다음처럼 수행할 수 있다.
 
 `python sdlc/scripts/validate_agent_stage_result.py --result <run-1.json> --compare <run-2.json>`
 
-Validator는 `generated_at / updated_at / created_at / checked_at / observed_at` 같은 명시적 시간 필드는 semantic fingerprint에서 제외한다. 시간만 다른 두 실행은 `MATCH`가 될 수 있고, Artifact/Delta의 실제 의미가 바뀌면 `MISMATCH`로 보고한다.
+실제 `/work` 전체 Provider 실행 경계를 반복 검증하려면 다음 Runtime을 사용한다.
 
-이 비교는 **Agent/LLM 자체가 결정론적임을 증명하는 기능이 아니다.** 동일 입력의 실제 실행 결과를 비교 가능하게 만들고 의미 차이를 숨기지 않는 검증 경계다.
-
-## Canonical 실행 경로
-Canonical은 문서에 “갱신했다”고 서술하는 것으로 끝내지 않는다. 내부 Stage 결과가 RQ/FR/BR/PROC/PGM/TASK/AC/TC 관계 또는 근거를 변경하면 `sdlc/scripts/apply_canonical_delta.py`를 사용한다.
-
-### 최소 Delta 형식
-```json
-{
-  "schema_version": 1,
-  "delta_id": "고유하고 재사용 가능한 ID",
-  "base_revision": 0,
-  "stage": "DECOMPOSE",
-  "source_artifact": "현재 Stage 산출물 경로",
-  "operations": []
-}
+```bash
+python sdlc/scripts/run_work_repeatability_experiment.py \
+  --provider-config <actual-provider.json> \
+  --target RQ-001 \
+  --stage DESIGN \
+  --artifact sdlc/runtime/repeatability/design.md \
+  --baseline-store <snapshot.json> \
+  --run-root sdlc/runtime/repeatability/run \
+  --output sdlc/runtime/repeatability/result.json
 ```
 
-지원 Operation은 다음 3개뿐이다.
-- `UPSERT_ENTITY`: Canonical Entity의 새 값 또는 현재 Stage Delta를 반영한다.
-- `UPSERT_RELATION`: 이미 존재하거나 같은 Delta에서 생성되는 Entity 간 관계를 연결한다.
-- `ADD_PROVENANCE`: Entity 값을 바꾸지 않고 Source/문서 근거만 추가한다.
+Validation fixture Provider 성공은 실제 Agent 성공으로 간주하지 않는다. `provider_class=EXTERNAL_AGENT`인 실제 Provider가 실행된 경우에만 empirical Agent result로 분류한다.
 
-DELETE/자동 의미 병합/자동 Business Truth 역갱신은 이 Runtime의 기능이 아니다.
+Validator는 `generated_at / updated_at / created_at / checked_at / observed_at` 같은 시간 필드를 semantic fingerprint에서 제외한다. **Agent/LLM 자체가 결정론적임을 증명하는 기능이 아니다.** 동일 입력의 실제 실행 결과를 비교 가능하게 만드는 검증 경계다.
 
-### 실행 순서
-1. 현재 `sdlc/canonical/store.json`의 `revision`을 읽어 `base_revision`으로 사용한다. Store가 없으면 revision 0으로 시작한다.
-2. Stage 산출물의 **새 정보만** Delta Operation으로 만든다. 이전 단계 전체 내용을 다시 UPSERT하지 않는다.
-3. Stage Artifact와 Delta를 Stage Result Envelope에 넣고 `validate_agent_stage_result.py`로 먼저 검증한다.
-4. Business 정책/목적을 `CONFIRMED_BUSINESS`로 기록하려면 `evidence_class: CONFIRMED`가 필요하다.
-5. Source 분석으로 확인한 기존 동작은 `OBSERVED`이며, 이미 확정된 Business Truth를 덮어쓰지 않는다. 값 변경 없이 근거만 연결하려면 `ADD_PROVENANCE`를 사용한다.
-6. Stage Result가 executable이면 Canonical Delta를 다시 dry-run 한다.
-   - `python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --dry-run`
-7. 결과가 `APPLIED`일 때만 실제 적용한다.
-   - `python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --result-out <result.json>`
-8. 결과가 `CONFLICT` 또는 `INVALID_DELTA`이면 Canonical을 갱신했다고 기록하지 않는다. 원인을 OPEN/Alert 또는 재실행 대상으로 남긴다.
-9. 같은 `delta_id` 재실행 결과가 `IDEMPOTENT`이면 중복 적용하지 않고 성공적인 재실행으로 취급한다.
-10. Canonical 적용 후 내부 Artifact의 관련 ID/추적성 Section과 결과 revision을 맞춘다.
-11. `both`인 경우 위 과정이 끝난 내부 Artifact/Canonical을 입력으로 고객 View를 Projection한다.
+## Canonical 실행 경로
+Canonical은 문서에 “갱신했다”고 서술하는 것으로 끝내지 않는다. `sdlc/scripts/apply_canonical_delta.py`가 실제 저장 경계다.
 
-### 안전 규칙
-- Delta 적용은 all-or-nothing이다. Relation endpoint 누락, Entity type 충돌, stale revision이 있으면 부분 반영하지 않는다.
-- `OBSERVED / INFERRED / ASSUMED` Source-derived Evidence는 `CONFIRMED_BUSINESS` 필드나 상태를 낮출 수 없다.
-- Source Drift/Reverse 결과는 바로 `UPSERT_ENTITY`로 Business Truth를 바꾸지 않는다. 현행 근거 연결은 우선 `ADD_PROVENANCE` 또는 별도 Candidate를 사용한다.
-- Source Code write와 Canonical write는 별개 Guard다. Canonical 적용 성공만으로 Source 수정 권한이 생기지 않는다.
+지원 Operation:
+- `UPSERT_ENTITY`
+- `UPSERT_RELATION`
+- `ADD_PROVENANCE`
+
+`DELETE`와 자동 Business Truth 역갱신은 지원하지 않는다.
+
+### Idempotency 안전 규칙
+- 적용된 Delta에는 semantic `payload_hash`를 저장한다.
+- 같은 `delta_id + 같은 semantic payload`만 `IDEMPOTENT`다.
+- 같은 `delta_id + 다른 payload`는 `DELTA_ID_CONTENT_CONFLICT`로 차단한다.
+- 과거 Runtime이 payload hash 없이 저장한 동일 ID 재사용은 semantic identity를 증명할 수 없으므로 fail-closed 한다.
+
+### Business Truth 안전 규칙
+- 기존 `CONFIRMED_BUSINESS`의 field/status를 바꾸려면 `evidence_class: CONFIRMED`가 필요하다.
+- `GIVEN / OBSERVED / INFERRED / ASSUMED`는 기존 확정 업무 사실을 덮어쓰거나 낮출 수 없다.
+- `/work`는 위 Canonical 규칙에 더해 기존 확정 Business Truth의 실제 변경에 명시적 사용자 authorization을 요구한다.
+- Source 관찰을 값 변경 없이 연결할 때는 `ADD_PROVENANCE`를 우선한다.
+- Canonical 적용 성공과 Source Code write 승인은 별개다.
+
+실제 Delta 적용 전에는 기존 방식과 동일하게 `--dry-run`을 사용할 수 있다.
+
+```bash
+python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --dry-run
+```
+
+## Source Drift / Reverse Review
+매번 `baseline / observed manifest / artifact-index`를 사람이 작성하지 않는다.
+
+첫 기준점 생성:
+```bash
+python sdlc/scripts/run_source_reverse_check.py \
+  --source-root <source-root> \
+  --artifact-root <artifact-root> \
+  --source-ref <commit-or-ref> \
+  --baseline sdlc/runtime/reverse/baseline.json \
+  --output sdlc/runtime/reverse/result.json \
+  --create-baseline
+```
+
+이후 비교:
+```bash
+python sdlc/scripts/run_source_reverse_check.py \
+  --source-root <source-root> \
+  --artifact-root <artifact-root> \
+  --source-ref <current-ref> \
+  --baseline sdlc/runtime/reverse/baseline.json \
+  --output sdlc/runtime/reverse/result.json
+```
+
+`build_reverse_inputs.py`가 Source file hash, Artifact의 Source Evidence, Canonical provenance/공유 Entity를 이용해 입력을 만든다. 자동 생성 upstream edge는 보수적으로 `CHECK_REQUIRED`이며 Business Truth를 자동 변경하지 않는다.
+
+`detect_source_drift.py`와 `generate_program_spec_reverse_candidate.py`는 계속 Candidate-only 기능이다. Full Reverse Engineering 또는 문서 자동 재작성으로 표현하지 않는다.
 
 ## References
 - `references/requirement.md`
