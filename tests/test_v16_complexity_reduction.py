@@ -62,6 +62,20 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
         self.assertIn('### 내부 자동 관리 정보',workbook)
         self.assertIn('어떻게 확인할 것인가',workbook)
 
+    def test_customer_documents_have_three_active_views_and_projection_runtime(self):
+        harness=json.loads((ROOT/'sdlc/design/contracts/harness-package-contract.json').read_text(encoding='utf-8'))
+        customer=json.loads((ROOT/'sdlc/design/contracts/customer-document-contract.json').read_text(encoding='utf-8'))
+        expected=['solution_agreement','delivery_scope','acceptance_handover']
+        self.assertEqual(expected,customer['active_document_types'])
+        self.assertEqual(expected,harness['document_experience']['active_customer_views'])
+        self.assertEqual(3,harness['document_experience']['active_customer_view_count'])
+        self.assertEqual(8,len(customer['legacy_document_aliases']))
+        self.assertTrue(harness['document_experience']['legacy_customer_document_ids_are_aliases'])
+        self.assertTrue((ROOT/harness['document_experience']['customer_projection_script']).is_file())
+        for dtype in expected:
+            template=customer['document_types'][dtype]['template']
+            self.assertTrue((ROOT/'sdlc/templates/customer/standard'/template).is_file())
+
     def test_reverse_capability_is_not_overclaimed(self):
         harness=json.loads((ROOT/'sdlc/design/contracts/harness-package-contract.json').read_text(encoding='utf-8'))
         self.assertEqual('SOURCE_DRIFT_AND_REVERSE_REVIEW_CANDIDATE',harness['source_drift_reverse']['capability_name'])
