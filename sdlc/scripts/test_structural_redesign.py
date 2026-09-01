@@ -27,20 +27,24 @@ def routing():
     }}
 
 
-def pack(stage, open_items=None, requested_actions=None):
+def pack(stage, open_items=None, requested_actions=None, requested_outputs=None):
     return {"stage_input_pack":{
         "metadata":{"pack_id":"PACK-1","project_id":"GENERIC-1","project_mode":"BROWNFIELD","stage":stage,"source_revision":"rev-1","profile":"STANDARD"},
         "target":{"primary_id":"RQ-1","target_type":"RQ","related_ids":{}},
         "open_items":open_items or [],
-        "execution":{"requested_actions":requested_actions or []},
+        "execution":{"requested_actions":requested_actions or [],"requested_outputs":requested_outputs or []},
     }}
 
 
 def test_profile():
-    cfg={"resolver":{"default_profile":"STANDARD"},"profiles":{"LITE":{"human_artifacts":{"requirement_customer_view":"MUST","separate_6w":"OFF"},"internal_capabilities":{"canonical_trace":"MUST"}}},"invariants":["trace"]}
+    cfg={"resolver":{"default_profile":"STANDARD"},"profiles":{"LITE":{"human_artifacts":{"requirement_customer_view":"MUST","impact_analysis":"CONDITIONAL","separate_6w":"OFF"},"internal_capabilities":{"canonical_trace":"MUST"}}},"invariants":["trace"]}
     result=resolve_profile(cfg,{"artifacts":{"profile":"LITE"}})
     assert result["profile"]=="LITE"
     assert "separate_6w" in result["disabled"]
+    stage=resolve_stage(routing(),pack("DISCOVERY"),result)["stage_execution"]
+    assert "impact_analysis" not in stage["expected_outputs"]
+    stage=resolve_stage(routing(),pack("DISCOVERY",requested_outputs=["impact_analysis"]),result)["stage_execution"]
+    assert "impact_analysis" in stage["expected_outputs"]
 
 
 def test_stage_nonblocking_open():
