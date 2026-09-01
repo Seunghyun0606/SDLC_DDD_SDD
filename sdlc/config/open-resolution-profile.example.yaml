@@ -1,0 +1,45 @@
+schema_version: 1
+profile_id: default-open-resolution
+
+# Core는 OPEN 해소 형식과 상태를 정의하고, 실제 승인권자는 프로젝트에 맞게 바꾼다.
+authority_matrix:
+  BUSINESS:
+    can_confirm: [business_owner, product_owner, customer_authorized_reviewer]
+    can_propose: [designer, developer, analyst]
+  FUNCTIONAL:
+    can_confirm: [product_owner, business_owner, delegated_design_owner]
+    can_propose: [designer, analyst, developer]
+  UX:
+    can_confirm: [ux_owner, product_owner, delegated_design_owner]
+    can_propose: [designer, developer]
+  TECHNICAL:
+    can_confirm: [architect, tech_lead, delegated_technical_owner]
+    can_propose: [developer, architect]
+  DATA:
+    can_confirm: [data_owner, architect, tech_lead]
+    can_propose: [developer, analyst]
+  INTEGRATION:
+    can_confirm: [integration_owner, architect, tech_lead]
+    can_propose: [developer, analyst]
+  QUALITY:
+    can_confirm: [qa_owner, product_owner, delegated_quality_owner]
+    can_propose: [qa, developer, designer]
+
+resolution_policy:
+  sop_required: false
+  allow_existing_system_analysis: true
+  allow_source_analysis: true
+  allow_data_analysis: true
+  allow_designer_proposal: true
+  allow_developer_proposal: true
+  allow_reference_pattern: true
+  experience_based_value_requires_rationale: true
+  business_proposal_requires_business_confirmation: true
+  observed_as_is_may_not_become_to_be_automatically: true
+  technical_decision_can_resolve_without_customer_when_authority_allows: true
+  unresolved_items_are_non_blocking_until_quality_or_execution_gate: true
+
+priority:
+  P0: implementation_or_business_result_changes
+  P1: design_quality_or_test_scope_changes
+  P2: documentation_precision_only
