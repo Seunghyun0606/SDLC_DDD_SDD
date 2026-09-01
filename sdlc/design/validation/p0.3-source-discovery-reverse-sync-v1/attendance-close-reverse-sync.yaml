@@ -1,0 +1,89 @@
+version: 1
+source_diff_evidence:
+  metadata:
+    change_id: SRC-DIFF-ATT-CLOSE-FIXTURE-001
+    source_revision_before: fixture-as-is
+    source_revision_after: fixture-after-cr
+    fixture_evidence: true
+  changed_files:
+    - path: src/main/java/com/acme/attendance/AttendanceCloseService.java
+      before_hash: 76b6b52fd825111a42b78b7f20eaff6df8654a6840639605471d710351f22877
+      after_hash: 8471af4bae94a219b30db3bd98f74ebd0bfa950134844bb96b81541df8f60787
+      direct_program_ids: [PGM-ATT-CLOSE-001]
+    - path: src/main/java/com/acme/attendance/AttendanceCloseMapper.java
+      before_hash: ab8d0c378ae7ebaffde71d410a0a3d60b251de109f7b07a72efd5cea633a2608
+      after_hash: acd3d728f25c4f9a21ffd52dd8d646e8b06d34a6f4cdced9d57abeb9c71fc27e
+      direct_program_ids: [PGM-ATT-CLOSE-001]
+    - path: src/main/resources/mapper/AttendanceCloseMapper.xml
+      before_hash: 48bd496402f8d191de67415d7e80e53b3b3ce8a890c88bfd130e7678fc0cac08
+      after_hash: 5125d327af2aa7f692fe27cb695674e94c5297b7a0fcec3c4a160e8c84460d20
+      direct_program_ids: [PGM-ATT-CLOSE-001]
+  changed_symbols:
+    - AttendanceCloseService.closeDaily
+    - hasApprovedCorrection
+    - isMonthClosed
+  added_mapper_statement_ids: [hasApprovedCorrection, isMonthClosed]
+  removed_mapper_statement_ids: []
+  added_table_names: [TB_ATT_CORRECTION_REQ]
+  removed_table_names: []
+  signals:
+    - signal: arithmetic_or_rounding_change
+      evidence: 30-minute reflection changed to 10-minute reflection
+    - signal: added_or_changed_branch_condition
+      evidence: monthClosed/approvedCorrection branch added
+    - signal: added_domain_exception_guard
+      evidence: write-before IllegalStateException guard added
+    - signal: added_business_status_constant
+      evidence: FORCE_CLOSE exclusion introduced
+    - signal: mapper_statement_added_or_removed
+      evidence: [hasApprovedCorrection, isMonthClosed]
+    - signal: new_table_reference
+      evidence: [TB_ATT_CORRECTION_REQ]
+  direct_program_ids: [PGM-ATT-CLOSE-001]
+
+reverse_sync_candidate:
+  change_id: RS-ATT-CLOSE-FIXTURE-001
+  source_revision_before: fixture-as-is
+  source_revision_after: fixture-after-cr
+  changed_files:
+    - src/main/java/com/acme/attendance/AttendanceCloseService.java
+    - src/main/java/com/acme/attendance/AttendanceCloseMapper.java
+    - src/main/resources/mapper/AttendanceCloseMapper.xml
+  changed_symbols:
+    - AttendanceCloseService.closeDaily
+    - hasApprovedCorrection
+    - isMonthClosed
+  direct_program_ids: [PGM-ATT-CLOSE-001]
+  semantic_change_class: BUSINESS_RULE_CANDIDATE
+  secondary_classes: [DATA_CONTRACT, FUNCTIONAL_BEHAVIOR]
+  evidence:
+    - added_or_changed_branch_condition
+    - added_domain_exception_guard
+    - added_business_status_constant
+    - arithmetic_or_rounding_change
+    - new_table_reference
+  source_group_id: RQG-CAND-6BB6D66548
+  related_rq_fr_br_ac_tc_candidates: []
+  stale_candidates:
+    - artifact: sdlc/design/validation/candidate-a-mybatis-md-change-pilot/docs/03_impact/RQ-PILOT-017/impact-analysis.md
+      relation: impact_analysis
+      program_id: PGM-ATT-CLOSE-001
+      state: STALE_CANDIDATE
+    - artifact: sdlc/design/validation/candidate-a-mybatis-md-change-pilot/docs/05_program/RQ-PILOT-017/specs/PGM-ATT-CLOSE-001.md
+      relation: program_spec
+      program_id: PGM-ATT-CLOSE-001
+      state: STALE_CANDIDATE
+    - artifact: sdlc/design/validation/candidate-a-mybatis-md-change-pilot/docs/07_test/RQ-PILOT-017/test-scenarios.md
+      relation: test_scenarios
+      program_id: PGM-ATT-CLOSE-001
+      state: STALE_CANDIDATE
+  review_candidates:
+    - artifact: sdlc/design/validation/candidate-a-mybatis-md-change-pilot/docs/01_requirements/RQ-PILOT-017/requirement.md
+      relation: requirement
+      state: REVIEW_CANDIDATE
+  protected_human_truth: true
+  required_review: L2_OR_HUMAN
+  status: REVIEW_REQUIRED
+  notes:
+    - fixture-only evidence; do not treat as production-source proof
+    - source change does not overwrite OPEN/CONFIRMED business truth automatically
