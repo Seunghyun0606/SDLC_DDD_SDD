@@ -1,0 +1,3 @@
+term_id,term,canonical_term,category,definition,synonyms,abbreviations,code_group,code_value,scope,source_ref,authority,status,owner
+TERM-0001,예시용어,예시용어,BUSINESS,업무에서 사용하는 정확한 의미,"동의어1|동의어2",EX,,,ALL,BSRC-0001,A2_OWNER_CONFIRMED,CONFIRMED,업무담당
+TERM-0002,예시상태,예시상태,STATUS,업무상태의 의미,,,STATUS_GROUP,OPEN,ALL,BSRC-0002,A3_PROJECT_AGREED,CANDIDATE,업무담당

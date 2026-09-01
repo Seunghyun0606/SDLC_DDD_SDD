@@ -1,0 +1,55 @@
+source_analysis:
+  metadata:
+    project_id: FILL_ME
+    rq_id: FILL_ME
+    source_revision: FILL_ME
+    analyzed_at: null
+
+  entry_points:
+    - type: JSP
+      path: OPEN
+      symbol_or_url: OPEN
+      evidence: OPEN
+
+  call_chain: []
+
+  programs:
+    - program_id: CANDIDATE
+      responsibility: OPEN
+      files: []
+      symbols: []
+      transaction_owner: OPEN
+
+  mybatis:
+    namespaces: []
+    statements: []
+    dynamic_sql: []
+    procedures: []
+
+  data:
+    reads: []
+    writes: []
+    code_master: []
+    key_constraints: []
+    lock_concurrency: []
+
+  security:
+    authentication: OPEN
+    authorization: OPEN
+    profile_role_mapping: OPEN
+
+  integration:
+    inbound: []
+    outbound: []
+    batch_scheduler: []
+
+  current_behavior:
+    observations: []
+
+  similar_implementations: []
+  change_candidates: []
+  blind_spots: []
+
+  truth_policy:
+    source_observation_status: OBSERVED
+    source_does_not_confirm_business_rule: true

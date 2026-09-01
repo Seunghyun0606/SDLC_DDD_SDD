@@ -1,0 +1,27 @@
+skill_candidate:
+  skill_id: SKC-FILL_ME
+  name: FILL_ME
+  status: CANDIDATE
+  category: SOURCE_ANALYSIS
+
+  purpose: FILL_ME
+  when_to_use: []
+  required_input: []
+  retrieval_strategy: []
+  steps: []
+  output_contract: []
+  quality_checks: []
+  alerts: []
+  do_not: []
+  examples: []
+
+  evidence:
+    project_standard_refs: []
+    observed_programs: []
+    verified_source_revision: null
+    reviewer: null
+
+  activation:
+    repeatability_confirmed: false
+    owner_reviewed: false
+    ready: false
