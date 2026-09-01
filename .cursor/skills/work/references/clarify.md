@@ -17,6 +17,17 @@
 4. Relevant symbol/source snippet
 5. 필요한 경우에만 full file
 
+## 실행 계약(Agent Execution Contract)
+| 항목 | 실행 규칙 |
+|---|---|
+| 입력 필드 | RQ/FR, OPEN 항목, 현재 가정, 관련 Evidence를 입력으로 사용한다. |
+| 근거 분류 | 사용자/정책 답변은 CONFIRMED 또는 GIVEN, Source 관찰은 OBSERVED, 질문 필요성 판단은 INFERRED로 둔다. |
+| 실행 순서 | OPEN 목록화 → 결과를 바꾸는지 평가 → 중복 질문 제거 → 우선순위 지정 → 답변이 없을 때 사용할 ALT/ASM 정의 순서로 수행한다. |
+| 계속/중단 조건 | 질문 답변이 없어도 일반 Workflow는 계속한다. 실행 안전성·법적/보안 위험 등 Hard Guard 조건만 해당 실행을 중단한다. |
+| 출력 필드 매핑 | INT/질문, 우선순위, 영향 대상, 답변 상태, ALT/ASM, 관련 RQ/FR/BR을 기록한다. |
+| 품질 게이트 | 모든 질문은 답변에 따라 설계/범위/검증 결과가 달라지는 이유를 설명할 수 있어야 한다. |
+| 미확정/실패 처리 | 답변 없음은 OPEN, 상충 답변은 CONFLICT, Source와 정책이 다르면 Business Truth를 자동 선택하지 않고 CHECK_REQUIRED로 남긴다. |
+
 ## Steps
 1. 입력과 Evidence provenance를 분리한다.
 2. 중요 질문을 우선순위화한다.
