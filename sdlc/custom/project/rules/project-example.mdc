@@ -1,0 +1,8 @@
+---
+description: Example project overlay rule fragment
+alwaysApply: false
+---
+# Project Overlay Example
+
+- 실제 프로젝트의 Architecture/Build/Test/DB Convention은 이 위치에서 추가한다.
+- Core의 Truth/Evidence, Execution Guard, Traceability invariant를 약화하지 않는다.

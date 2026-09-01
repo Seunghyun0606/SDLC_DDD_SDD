@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "project_overlay": "sdlc/custom/project/overlay.example.json",
+  "domain_overlays": [
+    "sdlc/custom/domain/example/overlay.example.json"
+  ]
+}

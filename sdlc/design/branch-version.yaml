@@ -2,70 +2,35 @@ schema_version: 1
 session_namespace: SDLC_DESIGN_SESSION_FIRST
 session_base_branch: SDLC_DESIGN_SESSION_FIRST/base
 session_base_commit: bd14bf588efb95371e7c8f5f5a1515536b8cadf8
-branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.3-source-enabled-harness-structure-v0.1
+branch: SDLC_DESIGN_SESSION_FIRST/poc/v1.5.3-overlay-resolution-v0.1
 legacy_branch: null
-branch_version: source-enabled-harness-structure-v0.1.0
-parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.2-requirement-intake-poc-v0.3
-parent_commit: cdd9878bd4f291b77a01e5627a1e47bef2cd9e22
+branch_version: overlay-resolution-v0.1.0
+parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.3-source-enabled-harness-structure-v0.1
+parent_commit: 81f3e4488b4da6c9181a801b40ae5463c436edb5
 main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
-candidate_design_version: v1.5.3-rc.1
-status: STRUCTURAL_IMPLEMENTED_VALIDATED
+candidate_design_version: v1.5.3-rc.2
+status: IMPLEMENTED_LOCAL_VALIDATED_CI_PENDING
 merge_to_main: false
-purpose: Source가 연결된 프로젝트에서 필요한 Rule/Skill/Template 구조와 다른 프로젝트 이식/Custom 경계를 실제 파일과 Contract로 검증
+purpose: Core/Project/Domain Overlay를 Runtime Effective Rule/Skill/Template로 실제 합성하는 Resolver PoC
 scope:
-  - materialize portable core Cursor rules and skills
-  - materialize core artifact templates
-  - define source profile input contract
-  - define project/domain overlay skeleton and precedence
-  - validate Rule to Skill to Template stage continuity
-  - validate source evidence fields for DISCOVERY through VERIFY
+  - materialize effective rule skill template standard files
+  - preserve core immutable source
+  - apply ordered project and domain overlays
+  - record provenance and hashes
+  - fail closed on invalid overlay targets
 validation:
-  structural_contract_tests: 8
-  structural_contract_tests_result: PASS
+  overlay_resolution_tests: 6
+  overlay_resolution_tests_result: PASS_LOCAL
+  inherited_structural_tests: 8
   inherited_requirement_intake_tests: 8
   inherited_worklist_tests: 6
-  combined_unittest_count: 22
-  inherited_regression_result: PASS
-  mermaid_docs_quality: PASS
-  mermaid_markdown_files_checked: 51
-  github_actions:
-    worklist_sync_quality_run: 41
-    worklist_sync_quality_result: SUCCESS
-    docs_quality_run: 20
-    docs_quality_result: SUCCESS
-stage_validation:
-  intake: PASS_INHERITED
-  decompose: STRUCTURE_PASS
-  clarify: STRUCTURE_PASS
-  process: STRUCTURE_PASS
-  discovery: STRUCTURE_PASS_SOURCE_SEMANTICS_PENDING
-  impact: STRUCTURE_PASS_SOURCE_SEMANTICS_PENDING
-  design: STRUCTURE_PASS_SOURCE_SEMANTICS_PENDING
-  program: STRUCTURE_PASS_SOURCE_SEMANTICS_PENDING
-  development: STRUCTURE_PASS_SOURCE_SEMANTICS_PENDING
-  test: STRUCTURE_PASS_SOURCE_SEMANTICS_PENDING
-  verify: STRUCTURE_PASS_SOURCE_SEMANTICS_PENDING
+  combined_unittest_count_expected: 28
+  github_actions: PENDING
 new_design_gaps:
-  - id: GAP-HS-001
-    type: Implementation Gap + Contract Gap
-    status: ENHANCED_POC_IMPLEMENTED
-    title: Portable Harness Package Materialization
-  - id: GAP-HS-002
-    type: Contract Gap
-    status: ENHANCED_POC_IMPLEMENTED
-    title: Rule-Skill-Template Stage Contract
-  - id: GAP-HS-003
-    type: Configuration Gap
-    status: ENHANCED_POC_IMPLEMENTED
-    title: Source Input Contract
-  - id: GAP-HS-004
-    type: Design Gap + Configuration Gap
-    status: ENHANCED_POC_IMPLEMENTED
-    title: Core and Overlay Isolation
   - id: GAP-HS-005
     type: Implementation Gap
-    status: DESIGNED_NOT_IMPLEMENTED
+    status: ENHANCED_POC_IMPLEMENTED
     title: Runtime Overlay Resolution
-next_step: apply the portable structure to an actual Brownfield application repository and validate semantic DISCOVERY/IMPACT/PROGRAM accuracy
-updated_at: 2026-09-01T18:48:00+09:00
+next_step: run workflow pilot from actual requirements XLSX using a clearly marked simulated Brownfield source fixture
+updated_at: 2026-09-01T19:05:00+09:00

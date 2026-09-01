@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "name": "example-project",
+  "rule_fragments": ["rules/project-example.mdc"],
+  "templates": {
+    "program-spec.md": {
+      "append_sections": {
+        "## 본문": "### Project Extension\n- 프로젝트별 Architecture/검토 항목은 Overlay로 추가한다."
+      }
+    }
+  },
+  "skills": {
+    "work/references/program.md": {
+      "append_sections": {
+        "## Quality Check": "- Project Overlay로 추가된 Architecture/Standard 항목을 확인했는가"
+      }
+    }
+  }
+}
