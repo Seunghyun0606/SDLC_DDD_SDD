@@ -1,0 +1,20 @@
+project:
+  name: example-project
+  mode: AUTO  # AUTO | BROWNFIELD | GREENFIELD | HYBRID
+bootstrap:
+  reuse_existing_guides: true
+  reuse_source_conventions: true
+  reuse_test_conventions: true
+  require_manual_confirmation: false
+preset:
+  name: brownfield-auto
+customization:
+  project_overlay: sdlc/custom/project
+  domain_overlays: []
+workflow:
+  process_blocking: false
+  execution_guard_enabled: true
+pm_tracking:
+  assignee_required: false
+  schedule_required: false
+  effort_required: false
