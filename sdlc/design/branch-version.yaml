@@ -7,7 +7,7 @@ design_baseline: v1.5.1
 candidate_design_version: v1.6.0-rc.1
 status: IMPLEMENTATION_IN_PROGRESS
 merge_to_main: false
-purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고 Requirement/Analysis, Functional Design/Program Spec, 고객 커뮤니케이션 View의 책임을 단순화하며 /setup 진입 복잡도를 낮추고 Canonical 갱신을 실행 가능한 Runtime으로 연결한다.
+purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고, Customer Projection·Canonical 갱신·저수준 Agent 결과 검증을 실행 가능한 Runtime으로 연결한다.
 principles:
   same_business_information_written_once: true
   single_active_requirement_artifact: true
@@ -27,6 +27,9 @@ principles:
   canonical_delete_supported: false
   source_derived_can_overwrite_confirmed_business: false
   source_derived_can_downgrade_confirmed_business_status: false
+  agent_stage_result_is_machine_verifiable: true
+  agent_stage_semantic_fingerprint_supported: true
+  agent_validator_claims_llm_determinism: false
   project_adapter_boundary_preserved: true
   reverse_capability_name: SOURCE_DRIFT_AND_REVERSE_REVIEW_CANDIDATE
 changes_in_scope:
@@ -38,27 +41,37 @@ changes_in_scope:
   - simplified open-resolution human view
   - setup five-question fast path with legacy preset-id compatibility
   - customer document 8-to-3 active-view consolidation
-  - legacy eight customer document type aliases
   - internal Markdown and Canonical JSON customer projection runtime
-  - customer projection machine-metadata hiding and status translation
   - existing RQ-CAND-0001 workflow customer projection replay
   - minimal canonical JSON store and delta apply runtime
   - work/change canonical dry-run and apply execution path
   - canonical revision conflict, idempotency, relation integrity and business-truth guard tests
-  - work/requirement/program/clarify/customer guide alignment
+  - low-level Agent Stage Result Envelope in existing agent-execution contract
+  - agent stage result validator and semantic fingerprint comparison
+  - work/change stage-result validation before canonical apply
   - validator and regression-test alignment
 not_in_scope_yet:
-  - low-level-agent repeated-run behavioral validation across full stages
+  - actual LLM or Agent repeated-generation determinism validation
   - automatic stage artifact to canonical delta generation
   - Java/Spring/MyBatis project impact adapter implementation
   - semantic reverse program-spec regeneration
 validation:
   source_review: COMPLETED_BY_DIRECT_FILE_INSPECTION
   local_full_unittest_execution: NOT_RUN_ENVIRONMENT_GITHUB_DNS_UNAVAILABLE
-  local_projection_runtime_syntax: PASS_REPRODUCED
-  local_projection_sample_behavior: PASS_REPRODUCED
   customer_projection_existing_workflow_replay: PASS_GITHUB_CI
   canonical_runtime_behavioral_validation: PASS_GITHUB_CI
+  post_agent_stage_result_validation: PASS_GITHUB_CI
+  actual_llm_generation_repeatability: PENDING
+  agent_stage_result_checks:
+    artifact_exists_and_is_repo_relative: true
+    unresolved_template_placeholder_rejected: true
+    stage_matches_delta_stage: true
+    artifact_matches_delta_source_artifact: true
+    quality_fail_is_not_executable: true
+    stale_canonical_revision_is_not_executable: true
+    idempotent_canonical_replay_is_executable: true
+    volatile_timestamps_ignored_in_semantic_fingerprint: true
+    semantic_content_change_detected: true
   canonical_runtime_checks:
     create_store_on_apply: true
     revision_advances: true
@@ -80,15 +93,17 @@ validation:
       cause: setup_starter_preset_ids_removed_by_fast_path_refactor
       failing_tests: 1
       total_tests: 117
-    latest_behavioral_head: 2ff8b2f0dae82f3e6ac99dbedd8a0bb6bf8271c1
+    latest_behavioral_head: d70a91fc126752459faf910233a9d41d317173ef
     worklist_sync_quality: PASS
-    unittest_count: 138
+    unittest_count: 153
     unittest_result: PASS
     canonical_behavioral_test_count: 15
+    agent_stage_result_behavioral_test_count: 11
+    agent_runtime_wiring_test_count: 4
     mermaid_markdown_files_checked: 112
     mermaid_result: PASS
     docs_quality: PASS
   self_assessment_is_not_validation: true
 verdict: RC_IMPLEMENTATION_NOT_YET_VALIDATED
-next_step: Canonical Delta Runtime의 기본 실행/안전 동작은 CI에서 검증했다. 다음은 저수준 Agent가 동일 입력에서 Stage 산출물과 Delta를 반복 생성했을 때 결과가 안정적인지 behavioral validation을 추가하고, 실제 Brownfield Java/Spring/MyBatis Adapter를 별도 Project 구현으로 검증한다.
-updated_at: 2026-09-02T02:10:59+09:00
+next_step: Post-Agent Stage Result 검증과 semantic comparison 경계는 CI에서 검증했다. 다음 P0는 실제 Java/Spring/MyBatis Brownfield Project Adapter Pilot이며, 실제 LLM 반복 생성 안정성은 별도 실험이 가능할 때 검증한다.
+updated_at: 2026-09-02T02:19:00+09:00
