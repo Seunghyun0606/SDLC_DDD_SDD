@@ -1,5 +1,5 @@
-version: 1
-status: ACTIVE_P0_3_CANDIDATE
+version: 2
+status: ACTIVE_STRUCTURAL_REDESIGN_V1
 
 primary_classes:
   - TECHNICAL_ONLY
@@ -30,6 +30,14 @@ candidate_signals:
     - removed_table_reference
     - mapper_statement_added_or_removed
     - query_semantics_changed
+  INTERFACE_CONTRACT:
+    - endpoint_contract_changed
+    - message_schema_changed
+    - external_interface_changed
+  SECURITY_BEHAVIOR:
+    - authorization_rule_changed
+    - authentication_flow_changed
+    - sensitive_data_handling_changed
   FUNCTIONAL_BEHAVIOR:
     - arithmetic_or_rounding_change
     - return_or_write_value_change
@@ -45,16 +53,22 @@ rules:
   - id: RS-CL-002
     statement: BUSINESS_RULE_CANDIDATE/SECURITY_BEHAVIOR/UNKNOWN은 Human 또는 L2+ Review가 필요하다.
   - id: RS-CL-003
-    statement: Direct PGM/ART relation이 있는 변경은 Technical Artifact를 STALE_CANDIDATE로 만들 수 있다.
+    statement: STALE 전파는 Confirmed Reference Graph의 직접 관계만 자동 사용한다.
   - id: RS-CL-004
-    statement: Requirement/BR/AC는 Source 변경만으로 CURRENT Truth를 overwrite하지 않는다.
+    statement: Requirement/FR/BR/PROC/FTR/AC는 Source 변경만으로 CURRENT Truth를 overwrite하지 않는다.
   - id: RS-CL-005
     statement: 여러 signal이 있으면 primary class와 secondary classes를 모두 기록한다.
+  - id: RS-CL-006
+    statement: Language/Framework-specific signal extraction은 Analyzer Adapter 책임이며 Core Reverse Sync에 업무/Framework 패턴을 hard-code하지 않는다.
 
 stale_policy:
-  direct_program_spec: AUTO_STALE_CANDIDATE
-  impact_analysis: AUTO_STALE_CANDIDATE
-  source_analysis_summary: AUTO_STALE_CANDIDATE
-  related_test: AUTO_STALE_CANDIDATE
-  requirement_or_business_rule: REVIEW_CANDIDATE
+  technical_types: [PGM, ART, SYMBOL, DATA, INT, TC]
+  human_review_types: [RQ, FR, BR, PROC, FTR, AC]
   human_confirmed_truth: PROTECTED
+  unconfirmed_graph_edge: DO_NOT_AUTO_PROPAGATE
+
+runtime:
+  input_template: sdlc/templates/source-change-evidence.yaml
+  generic_engine: sdlc/scripts/build_reverse_sync_from_signals.py
+  legacy_fixture_reference: sdlc/scripts/build_reverse_sync_candidate.py
+  legacy_fixture_core_status: DEPRECATED_REFERENCE_ONLY
