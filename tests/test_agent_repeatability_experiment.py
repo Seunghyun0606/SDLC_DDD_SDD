@@ -41,7 +41,16 @@ class AgentRepeatabilityExperimentTest(unittest.TestCase):
                     "base_revision": 0,
                     "stage": "DECOMPOSE",
                     "source_artifact": "artifact.md",
-                    "operations": []
+                    "operations": [
+                        {{
+                            "op": "UPSERT_ENTITY",
+                            "id": "RQ-REPEATABILITY",
+                            "entity_type": "RQ",
+                            "fields": {{"text": "동일 입력 반복성 테스트"}},
+                            "truth_status": "CANDIDATE",
+                            "evidence_class": "GIVEN"
+                        }}
+                    ]
                 }},
                 "quality_gate": {{"status": "PASS", "failures": []}},
                 "alerts": [],
