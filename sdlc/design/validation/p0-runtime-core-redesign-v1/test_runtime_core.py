@@ -21,6 +21,7 @@ def load_module(name, path):
 runtime = load_module("runtime_core", SCRIPTS / "execute_command_runtime.py")
 validator = load_module("runtime_validator", SCRIPTS / "validate_p0_runtime_core.py")
 skill_validator = load_module("skill_validator", SCRIPTS / "validate_routed_skills.py")
+handoff_builder = load_module("handoff_builder", SCRIPTS / "build_stage_handoff.py")
 
 
 def load(rel):
@@ -80,6 +81,22 @@ def main():
     assert_routing_references_exist(routing, procedures)
     for name in skill_validator.routed_skill_names(routing):
         assert skill_validator.validate_skill(SKILLS / name / "SKILL.md") == [], name
+
+    # Handoff fields and expected outputs must be derived from routing, not invented by the next agent.
+    impact_pack = yaml.safe_load(yaml.safe_dump(pack, allow_unicode=True))
+    impact_pack["stage_input_pack"]["metadata"]["stage"] = "IMPACT"
+    built, errors = handoff_builder.build_handoff(routing, impact_pack)
+    assert errors == [], errors
+    assert validator.validate_stage_pack(built) == []
+    handoff = built["stage_input_pack"]["handoff"]
+    outputs = built["stage_input_pack"]["expected_outputs"]
+    assert handoff["current_skill"] == "stage-procedure"
+    assert handoff["current_procedure_profile"] == "IMPACT"
+    assert handoff["next_stage"] == "DESIGN"
+    assert handoff["next_skill"] == "stage-procedure"
+    assert handoff["next_procedure_profile"] == "DESIGN"
+    assert any(item["output_type"] == "IMPACT_ANALYSIS" for item in outputs)
+    assert any(item["input_type"] == "STAGE_INPUT_PACK" for item in built["stage_input_pack"]["required_inputs"])
 
     # Brownfield discovery with no Source/Analyzer Provider must remain PARTIAL/OPEN, not globally blocked.
     result = runtime.execute(registry_with_states(), context(stage="DISCOVERY", mode="BROWNFIELD"), routing)
