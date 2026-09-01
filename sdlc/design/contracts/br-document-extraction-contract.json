@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "purpose": "비정형 고객문서에서 텍스트/표/구간을 추출하는 Adapter가 지켜야 할 공통 출력 계약. 이 파일 자체는 PDF/DOCX/PPTX/XLSX parser 구현이 아니다.",
+  "supported_registration_formats": ["PDF","DOCX","XLSX","PPTX","MD","TXT","CSV","EMAIL","IMAGE_SCAN","OTHER"],
+  "extraction_status": ["EXTRACTED","PARTIAL","EXTRACTION_REQUIRED","UNSUPPORTED","FAILED"],
+  "required_output_fields": ["document_id","locator","raw_text","source_hash","extraction_status","extraction_method"],
+  "locator_examples": {
+    "PDF": "page 12 / heading 3.2",
+    "DOCX": "heading '근무계획' / paragraph 18",
+    "XLSX": "요구사항!C15 or External ID REQ_TM_FL003",
+    "PPTX": "slide 7 / shape 3",
+    "EMAIL": "message-id / body paragraph 4"
+  },
+  "rules": [
+    "원본 파일은 수정하지 않는다.",
+    "추출 결과는 반드시 원본 document_id와 locator로 되돌아갈 수 있어야 한다.",
+    "신뢰할 수 없는 OCR/추출 결과는 PARTIAL 또는 EXTRACTION_REQUIRED로 표시한다.",
+    "추출 실패를 업무 규칙 부재로 해석하지 않는다.",
+    "Adapter별 구현은 프로젝트/도구 Overlay에서 교체 가능해야 한다."
+  ]
+}
