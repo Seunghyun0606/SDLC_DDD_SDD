@@ -1,17 +1,29 @@
 {
   "schema_version": 1,
   "provider_id": "EXTERNAL_AGENT_PROVIDER_REQUIRED",
+  "provider_class": "EXTERNAL_AGENT",
   "enabled": false,
   "run_count": 3,
   "timeout_seconds": 120,
   "result_filename": "stage-result.json",
   "command": [],
+  "supported_work_placeholders": [
+    "{context_path}",
+    "{result_path}",
+    "{artifact_path}",
+    "{artifact_rel}",
+    "{target_id}",
+    "{stage}",
+    "{root}",
+    "{run_dir}"
+  ],
   "rules": {
     "same_input_required": true,
     "actual_provider_execution_required_for_pass": true,
     "semantic_fingerprint_compared": true,
     "volatile_timestamp_difference_ignored": true,
-    "llm_determinism_claimed": false
+    "llm_determinism_claimed": false,
+    "validation_fixture_provider_is_not_agent_empirical_pass": true
   },
-  "note": "Project가 실제 Agent/LLM CLI 또는 wrapper를 연결한 뒤 enabled=true와 command를 설정한다. Provider가 없는 상태는 PASS가 아니라 NOT_EXECUTED로 기록한다."
+  "note": "Project가 실제 Agent/LLM CLI 또는 wrapper를 연결한 뒤 enabled=true와 command를 설정한다. /work는 동일 command 형식에 Work Context를 전달한다. Provider가 없는 상태는 PASS가 아니라 NOT_EXECUTED로 기록한다."
 }
