@@ -54,6 +54,7 @@ def test_real_workbook_intake_evidence():
     assert root["selected_count"] == 1
     assert root["duplicate_source_requirement_ids"] == []
     rec = root["records"][0]
+    assert rec["source_row"] == 141
     assert rec["source_requirement_id"] == "REQ_TM_TE100"
     assert rec["level2"] == "Interface"
     assert rec["truth_state"] == "GIVEN"
@@ -67,6 +68,7 @@ def test_xlsx_adapter_header_detection():
         result = intake(xlsx, load("sdlc/config/requirement-intake.yaml"))["requirement_intake"]
         assert result["source"]["header_row"] == 2
         assert result["source_row_count"] == 1
+        assert result["records"][0]["source_row"] == 3
         assert result["records"][0]["source_requirement_id"] == "REQ-GEN-001"
         assert result["records"][0]["requirement_text"] == "Send profile data"
 
