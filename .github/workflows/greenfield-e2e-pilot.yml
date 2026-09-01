@@ -1,0 +1,28 @@
+name: Greenfield E2E Pilot
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  requirement-seed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run real requirement Greenfield replay
+        run: |
+          python sdlc/scripts/run_greenfield_e2e_pilot.py \
+            --seed sdlc/validation/pilot/greenfield/REQ_TM_FL001-seed.json \
+            --output /tmp/greenfield-pilot.json \
+            --artifact-root /tmp/greenfield-artifacts
+      - name: Verify six compact user artifacts
+        run: |
+          test "$(find /tmp/greenfield-artifacts -maxdepth 1 -name '*.md' | wc -l)" -eq 6
+          grep -q 'REQ_TM_FL001' /tmp/greenfield-artifacts/requirement.md
+          grep -q '미확정' /tmp/greenfield-artifacts/open-resolution-workbook.md
+          grep -q 'NOT READY' /tmp/greenfield-artifacts/program-spec.md
+          cat /tmp/greenfield-pilot.json
