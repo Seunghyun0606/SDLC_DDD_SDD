@@ -86,8 +86,10 @@ stage_input_pack:
 
   handoff:
     current_skill: FILL_ME
+    current_procedure_profile: null
     next_stage: FILL_ME
     next_skill: FILL_ME
+    next_procedure_profile: null
     agent_level: FILL_ME
     stop_reason: null
     escalation_target: null
