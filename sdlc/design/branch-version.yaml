@@ -1,82 +1,43 @@
 schema_version: 1
 session_namespace: SDLC_DESIGN_SESSION_FIRST
-branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.9-open-resolution-workbook-v0.1
-branch_version: open-resolution-workbook-v0.1.0
-parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.8-requirements-sixw-devspec-pilot-v0.1
-parent_commit: 3f1297b1dc9389124274524ee1f2daf14b884a12
-main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
+branch: SDLC_DESIGN_SESSION_FIRST/refactor/v1.6-complexity-reduction-executable-core-v0.1
+branch_version: complexity-reduction-executable-core-v0.1.0
+parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.9-open-resolution-workbook-v0.1
 design_baseline: v1.5.1
-candidate_design_version: v1.5.9-rc.1
-status: OPEN_RESOLUTION_CORE_VALIDATED
+candidate_design_version: v1.6.0-rc.1
+status: IMPLEMENTATION_IN_PROGRESS
 merge_to_main: false
-purpose: SOP나 완전한 선행문서가 없어도 설계자/개발자가 인터뷰, 현행 시스템/Source/Data 분석, 프로젝트 표준, 전문경험 기반 제안으로 OPEN을 구조적으로 해소하도록 Core Template/Skill/Authority Contract를 제공
-open_resolution:
-  responsibility: CORE_COMMON_WITH_PROJECT_AUTHORITY_PROFILE
-  status: IMPLEMENTED_VALIDATED
-  contract: sdlc/design/contracts/open-resolution-contract.json
-  profile: sdlc/config/open-resolution-profile.example.yaml
-  skill: .cursor/skills/open-resolve/SKILL.md
-  workbook_template: sdlc/templates/core/open-resolution-workbook.md
-  sop_required: false
-  open_is_actionable_design_backlog: true
-  resolution_methods:
-    - CUSTOMER_INTERVIEW
-    - BUSINESS_OWNER_INTERVIEW
-    - WORKSHOP
-    - EXISTING_SYSTEM_ANALYSIS
-    - SOURCE_ANALYSIS
-    - DATA_ANALYSIS
-    - PROJECT_STANDARD
-    - DESIGNER_PROPOSAL
-    - DEVELOPER_PROPOSAL
-    - ARCHITECT_DECISION
-  proposal_is_business_truth: false
-  observed_as_is_is_target_policy: false
-  technical_decision_can_be_accepted_by_project_authority: true
-resolution_status:
-  - OPEN
-  - ANALYZING
-  - CANDIDATE
-  - PROPOSED
-  - OBSERVED_AS_IS
-  - ACCEPTED_DESIGN
-  - CONFIRMED_BUSINESS
-  - CONFLICT
-  - DEFERRED
-  - N_A
-project_specific_boundary:
-  authority_matrix: PROJECT_CUSTOMIZABLE
-  business_owner_roles: PROJECT_CUSTOMIZABLE
-  ux_owner_roles: PROJECT_CUSTOMIZABLE
-  technical_owner_roles: PROJECT_CUSTOMIZABLE
-  data_owner_roles: PROJECT_CUSTOMIZABLE
-  integration_owner_roles: PROJECT_CUSTOMIZABLE
-pilot_reinterpretation:
-  previous_requirement_rows: 142
-  previous_developer_ready: 0
-  previous_project_evidence_required: REFINED
-  refined_meaning: RESOLUTION_INPUT_OR_DECISION_REQUIRED
-  sop_mandatory: false
-  representative_open_resolution_example: docs/99_파일럿/v1.5.9/RQ-CAND-0001_OPEN_해소_워크북_예시.md
+purpose: 실제 프로젝트 사용성을 기준으로 중복 문서와 사용자 노출 Machine taxonomy를 줄이고 Functional Design과 Program Spec의 책임을 분리하며 /setup 진입 복잡도를 낮춘다.
+principles:
+  same_business_information_written_once: true
+  functional_design_is_semantic_source_of_truth: true
+  program_spec_is_implementation_delta: true
+  human_open_status_count: 5
+  machine_metadata_hidden_by_default: true
+  setup_fast_path_questions: 5
+  project_adapter_boundary_preserved: true
+  reverse_capability_name: SOURCE_DRIFT_AND_REVERSE_REVIEW_CANDIDATE
+changes_in_scope:
+  - developer-spec-contract ownership split
+  - program-spec implementation-delta template
+  - single-table 17-item program readiness
+  - simplified open-resolution human view
+  - setup five-question fast path
+  - work/program/clarify reference alignment
+  - validator and regression-test alignment
+not_in_scope_yet:
+  - requirement and requirement-analysis merge
+  - customer document 8-to-3 consolidation
+  - real customer projection engine
+  - canonical delta executor
+  - low-level-agent repeated-run behavioral validation
+  - Java/Spring/MyBatis project impact adapter implementation
+  - semantic reverse program-spec regeneration
 validation:
-  inherited_unittest_count: 92
-  open_resolution_tests_added: 12
-  combined_unittest_count: 104
-  combined_unittest_result: PASS
-  mermaid_markdown_files_checked: 105
-  initial_pr_ci:
-    worklist_sync_quality_run: 231
-    result: FAILURE_CONFIRMED_BUSINESS_MARKER_MISSING
-    docs_quality_run: 92
-    result_docs: SUCCESS
-  implementation_validation_head: 56008df31a7c8e411bc5ad0cc65e484f7ee45746
-  implementation_validation_ci:
-    worklist_push_run: 232
-    worklist_push_result: SUCCESS
-    worklist_pr_run: 233
-    worklist_pr_result: SUCCESS
-    docs_quality_run: 93
-    docs_quality_result: SUCCESS
-verdict: OPEN_RESOLUTION_CORE_PASS / SOP_OPTIONAL_CONFIRMED / HUMAN_DESIGN_WORKFLOW_PASS / PROJECT_AUTHORITY_CUSTOMIZATION_REQUIRED
-next_step: Greenfield와 Brownfield 실제 Pilot에서 동일 OPEN 목록을 각각 Interview/Proposal 및 Existing System/Source Analysis 경로로 해소하여 OPEN 감소율과 Developer READY 전환을 비교 검증한다
-updated_at: 2026-09-02T00:30:00+09:00
+  source_review: COMPLETED_BY_DIRECT_FILE_INSPECTION
+  local_unittest_execution: NOT_RUN_ENVIRONMENT_GITHUB_DNS_UNAVAILABLE
+  github_ci_result: NOT_YET_CONFIRMED
+  self_assessment_is_not_validation: true
+verdict: RC_IMPLEMENTATION_NOT_YET_VALIDATED
+next_step: 회귀 테스트와 branch diff를 검토하고, CI 결과가 확보되기 전에는 PASS/VALIDATED로 승격하지 않는다.
+updated_at: 2026-09-02T00:00:00+09:00
