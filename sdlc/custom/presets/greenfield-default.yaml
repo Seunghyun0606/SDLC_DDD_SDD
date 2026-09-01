@@ -1,0 +1,12 @@
+profile: greenfield-default
+project_mode: GREENFIELD
+workflow:
+  process_blocking: false
+  dangerous_action_policy: EXECUTION_GUARD
+artifacts:
+  intuitive_filename: true
+  filename_pattern: "<대표ID>_<짧은업무명>_<산출물종류>"
+pm_tracking:
+  assignee_required: false
+  schedule_required: false
+  effort_required: false
