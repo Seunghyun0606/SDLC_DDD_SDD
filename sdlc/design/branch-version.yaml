@@ -1,61 +1,82 @@
 schema_version: 1
 session_namespace: SDLC_DESIGN_SESSION_FIRST
-branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.8-requirements-sixw-devspec-pilot-v0.1
-branch_version: requirements-sixw-devspec-pilot-v0.1.0
-parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.8-sixw-devspec-sop-extraction-v0.1
-parent_commit: 213c4fdb1e06b206cbc65959531da62e0cf3e9d1
+branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.9-open-resolution-workbook-v0.1
+branch_version: open-resolution-workbook-v0.1.0
+parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.8-requirements-sixw-devspec-pilot-v0.1
+parent_commit: 3f1297b1dc9389124274524ee1f2daf14b884a12
 main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
-candidate_design_version: v1.5.8-rc.1
-status: REQUIREMENTS_SIX_W_DEVSPEC_PILOT_VALIDATED
+candidate_design_version: v1.5.9-rc.1
+status: OPEN_RESOLUTION_CORE_VALIDATED
 merge_to_main: false
-purpose: 첨부 요구사항목록.xlsx 142건을 v1.5.8 6W 업무 시나리오 및 Developer-ready 상세설계 계약으로 실제 평가하여 요구사항만으로 확정 가능한 정보와 추가 Project/SOP/Source Evidence가 필요한 영역을 검증
-pilot:
-  source_requirements: 142
-  external_ids:
-    - REQ_TM_FL001..039
-    - REQ_TM_TE001..103
-  actual_application_source: NOT_PROVIDED
-  ui_spec: NOT_PROVIDED
-  db_schema: NOT_PROVIDED
-  common_code_dictionary: NOT_PROVIDED
-  interface_contract: NOT_PROVIDED
-  six_w:
-    who: {explicit: 4, partial: 29, open: 109}
-    when: {explicit: 1, partial: 43, open: 98}
-    where: {explicit: 0, partial: 142, open: 0}
-    what: {explicit: 133, partial: 9, open: 0}
-    how: {explicit: 0, partial: 142, open: 0}
-    why: {explicit: 1, partial: 84, open: 57}
-    no_open_count: 1
-  developer_detail:
-    field_catalog_open: 142
-    data_query_open: 142
-    common_code_open: 142
-    exception_error_open: 142
-    authorization_open: 109
-    authorization_partial: 33
-    integration_partial: 25
-    developer_ready: 0
-  representative_cases:
-    - REQ_TM_FL001
-    - REQ_TM_FL003
-    - REQ_TM_FL018
-    - REQ_TM_FL030
-    - REQ_TM_TE018
-    - REQ_TM_TE080
-    - REQ_TM_TE100
-  assessment:
-    six_w_gap_detection: PASS
-    developer_detail_gap_detection: PASS
-    requirement_only_developer_ready: FAIL_EXPECTED
-    project_evidence_required: true
+purpose: SOP나 완전한 선행문서가 없어도 설계자/개발자가 인터뷰, 현행 시스템/Source/Data 분석, 프로젝트 표준, 전문경험 기반 제안으로 OPEN을 구조적으로 해소하도록 Core Template/Skill/Authority Contract를 제공
+open_resolution:
+  responsibility: CORE_COMMON_WITH_PROJECT_AUTHORITY_PROFILE
+  status: IMPLEMENTED_VALIDATED
+  contract: sdlc/design/contracts/open-resolution-contract.json
+  profile: sdlc/config/open-resolution-profile.example.yaml
+  skill: .cursor/skills/open-resolve/SKILL.md
+  workbook_template: sdlc/templates/core/open-resolution-workbook.md
+  sop_required: false
+  open_is_actionable_design_backlog: true
+  resolution_methods:
+    - CUSTOMER_INTERVIEW
+    - BUSINESS_OWNER_INTERVIEW
+    - WORKSHOP
+    - EXISTING_SYSTEM_ANALYSIS
+    - SOURCE_ANALYSIS
+    - DATA_ANALYSIS
+    - PROJECT_STANDARD
+    - DESIGNER_PROPOSAL
+    - DEVELOPER_PROPOSAL
+    - ARCHITECT_DECISION
+  proposal_is_business_truth: false
+  observed_as_is_is_target_policy: false
+  technical_decision_can_be_accepted_by_project_authority: true
+resolution_status:
+  - OPEN
+  - ANALYZING
+  - CANDIDATE
+  - PROPOSED
+  - OBSERVED_AS_IS
+  - ACCEPTED_DESIGN
+  - CONFIRMED_BUSINESS
+  - CONFLICT
+  - DEFERRED
+  - N_A
+project_specific_boundary:
+  authority_matrix: PROJECT_CUSTOMIZABLE
+  business_owner_roles: PROJECT_CUSTOMIZABLE
+  ux_owner_roles: PROJECT_CUSTOMIZABLE
+  technical_owner_roles: PROJECT_CUSTOMIZABLE
+  data_owner_roles: PROJECT_CUSTOMIZABLE
+  integration_owner_roles: PROJECT_CUSTOMIZABLE
+pilot_reinterpretation:
+  previous_requirement_rows: 142
+  previous_developer_ready: 0
+  previous_project_evidence_required: REFINED
+  refined_meaning: RESOLUTION_INPUT_OR_DECISION_REQUIRED
+  sop_mandatory: false
+  representative_open_resolution_example: docs/99_파일럿/v1.5.9/RQ-CAND-0001_OPEN_해소_워크북_예시.md
 validation:
   inherited_unittest_count: 92
-  inherited_unittest_result: PASS
-  pilot_changes_core_code: false
-  pilot_evidence: sdlc/validation/requirements-sixw-devspec-pilot-v0.1.json
-  pilot_report: sdlc/design/validations/2026-09-01_v1.5.8_Requirements_6W_DevSpec_Pilot.md
-verdict: STRUCTURAL_IMPROVEMENT_PASS / REQUIREMENT_ONLY_DEVELOPER_READY_FAIL / PROJECT_EVIDENCE_REQUIRED
-next_step: 동일 요구사항에 SOP/정책 문서와 실제 Brownfield Source 또는 승인된 Greenfield UI/Data/Interface 설계를 추가한 후 OPEN 감소율과 Developer READY 전환 가능성을 비교 검증한다
-updated_at: 2026-09-02T00:05:00+09:00
+  open_resolution_tests_added: 12
+  combined_unittest_count: 104
+  combined_unittest_result: PASS
+  mermaid_markdown_files_checked: 105
+  initial_pr_ci:
+    worklist_sync_quality_run: 231
+    result: FAILURE_CONFIRMED_BUSINESS_MARKER_MISSING
+    docs_quality_run: 92
+    result_docs: SUCCESS
+  implementation_validation_head: 56008df31a7c8e411bc5ad0cc65e484f7ee45746
+  implementation_validation_ci:
+    worklist_push_run: 232
+    worklist_push_result: SUCCESS
+    worklist_pr_run: 233
+    worklist_pr_result: SUCCESS
+    docs_quality_run: 93
+    docs_quality_result: SUCCESS
+verdict: OPEN_RESOLUTION_CORE_PASS / SOP_OPTIONAL_CONFIRMED / HUMAN_DESIGN_WORKFLOW_PASS / PROJECT_AUTHORITY_CUSTOMIZATION_REQUIRED
+next_step: Greenfield와 Brownfield 실제 Pilot에서 동일 OPEN 목록을 각각 Interview/Proposal 및 Existing System/Source Analysis 경로로 해소하여 OPEN 감소율과 Developer READY 전환을 비교 검증한다
+updated_at: 2026-09-02T00:30:00+09:00
