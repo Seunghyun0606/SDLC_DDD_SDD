@@ -76,6 +76,24 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
             template=customer['document_types'][dtype]['template']
             self.assertTrue((ROOT/'sdlc/templates/customer/standard'/template).is_file())
 
+    def test_canonical_runtime_is_executable_and_wired_to_work_and_change(self):
+        harness=json.loads((ROOT/'sdlc/design/contracts/harness-package-contract.json').read_text(encoding='utf-8'))
+        runtime=harness['canonical_runtime']
+        self.assertEqual('sdlc/scripts/apply_canonical_delta.py',runtime['script'])
+        self.assertEqual('sdlc/canonical/store.json',runtime['default_store'])
+        self.assertEqual(['UPSERT_ENTITY','UPSERT_RELATION','ADD_PROVENANCE'],runtime['operations'])
+        self.assertTrue(runtime['all_or_nothing'])
+        self.assertTrue(runtime['optimistic_revision'])
+        self.assertFalse(runtime['delete_supported'])
+        self.assertFalse(runtime['source_derived_can_overwrite_confirmed_business'])
+        self.assertTrue((ROOT/runtime['script']).is_file())
+        self.assertIn(runtime['script'],harness['core_required_files'])
+        for skill_path in ['.cursor/skills/work/SKILL.md','.cursor/skills/change/SKILL.md']:
+            text=(ROOT/skill_path).read_text(encoding='utf-8')
+            self.assertIn('apply_canonical_delta.py',text)
+            self.assertIn('--dry-run',text)
+            self.assertIn('ADD_PROVENANCE',text)
+
     def test_reverse_capability_is_not_overclaimed(self):
         harness=json.loads((ROOT/'sdlc/design/contracts/harness-package-contract.json').read_text(encoding='utf-8'))
         self.assertEqual('SOURCE_DRIFT_AND_REVERSE_REVIEW_CANDIDATE',harness['source_drift_reverse']['capability_name'])
