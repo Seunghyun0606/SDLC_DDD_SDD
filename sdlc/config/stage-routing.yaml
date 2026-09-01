@@ -1,4 +1,4 @@
-version: 3
+version: 4
 status: ACTIVE_P0_REDESIGN
 purpose: >-
   /work가 호출자에게 requested_capabilities를 미리 주입받지 않고 현재 Stage와 Project Mode를 기준으로
@@ -171,7 +171,7 @@ stages:
       - capability: source.diff
         modes: [BROWNFIELD, HYBRID, AUTO]
         missing_behavior: OPEN
-    side_effect_capabilities: []
+    side_effect_capabilities: [source.patch.apply]
     expected_outputs: [SOURCE_CHANGE_PROPOSAL_OR_RESULT, IMPLEMENTATION_RESULT, STAGE_INPUT_PACK]
     next_stage: TEST
 
@@ -217,6 +217,7 @@ side_effect_policy:
   require_explicit_requested_action: true
   require_permission_proof: true
   require_idempotency_key: true
+  require_expected_revision: true
   unknown_after_write_requires_recovery: true
 
 analyzer_boundary:
