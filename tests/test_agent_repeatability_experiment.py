@@ -60,10 +60,11 @@ class AgentRepeatabilityExperimentTest(unittest.TestCase):
         '''), encoding="utf-8")
         return path
 
-    def config(self, provider: Path, *, enabled=True, run_count=3):
+    def config(self, provider: Path, *, enabled=True, run_count=3, provider_class="VALIDATION_FIXTURE"):
         return {
             "schema_version": 1,
             "provider_id": "TEST_PROVIDER",
+            "provider_class": provider_class,
             "enabled": enabled,
             "run_count": run_count,
             "timeout_seconds": 30,
@@ -75,6 +76,7 @@ class AgentRepeatabilityExperimentTest(unittest.TestCase):
         config = {
             "schema_version": 1,
             "provider_id": "NO_PROVIDER",
+            "provider_class": "EXTERNAL_AGENT",
             "enabled": False,
             "run_count": 3,
             "result_filename": "stage-result.json",
@@ -84,18 +86,30 @@ class AgentRepeatabilityExperimentTest(unittest.TestCase):
             result = MOD.run_experiment(config, Path(tmp) / "runs")
         self.assertEqual("NOT_EXECUTED_PROVIDER_UNAVAILABLE_OR_DISABLED", result["verdict"])
         self.assertFalse(result["actual_provider_executed"])
+        self.assertFalse(result["actual_agent_provider_executed"])
         self.assertEqual(0, result["run_count_executed"])
         self.assertIsNone(result["semantic_match_rate"])
 
-    def test_same_semantics_with_volatile_timestamps_match(self):
+    def test_fixture_same_semantics_match_but_never_claim_agent_pass(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             provider = self.write_provider(root)
             result = MOD.run_experiment(self.config(provider), root / "runs")
-        self.assertEqual("PASS_REPEATED_PROVIDER_OUTPUT_SEMANTIC_MATCH", result["verdict"])
+        self.assertEqual("PASS_REPEATABILITY_FIXTURE_PROVIDER", result["verdict"])
         self.assertEqual(3, result["run_count_executed"])
         self.assertEqual(1.0, result["semantic_match_rate"])
+        self.assertTrue(result["provider_command_executed"])
         self.assertTrue(result["actual_provider_executed"])
+        self.assertFalse(result["actual_agent_provider_executed"])
+        self.assertFalse(result["llm_determinism_proven"])
+
+    def test_external_agent_class_can_claim_observed_agent_repeatability(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            provider = self.write_provider(root)
+            result = MOD.run_experiment(self.config(provider, provider_class="EXTERNAL_AGENT"), root / "runs")
+        self.assertEqual("PASS_REPEATED_AGENT_OUTPUT_SEMANTIC_MATCH", result["verdict"])
+        self.assertTrue(result["actual_agent_provider_executed"])
         self.assertFalse(result["llm_determinism_proven"])
 
     def test_semantic_variation_is_detected(self):
@@ -105,20 +119,23 @@ class AgentRepeatabilityExperimentTest(unittest.TestCase):
             result = MOD.run_experiment(self.config(provider), root / "runs")
         self.assertEqual("FAIL_SEMANTIC_REPEATABILITY_MISMATCH", result["verdict"])
         self.assertLess(result["semantic_match_rate"], 1.0)
+        self.assertFalse(result["actual_agent_provider_executed"])
 
-    def test_provider_command_failure_is_reported(self):
+    def test_provider_command_failure_is_reported_without_agent_pass(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             provider = self.write_provider(root, exit_code=7)
-            result = MOD.run_experiment(self.config(provider, run_count=2), root / "runs")
+            result = MOD.run_experiment(self.config(provider, run_count=2, provider_class="EXTERNAL_AGENT"), root / "runs")
         self.assertEqual("FAIL_PROVIDER_COMMAND", result["verdict"])
         self.assertTrue(result["actual_provider_executed"])
+        self.assertFalse(result["actual_agent_provider_executed"])
 
     def test_invalid_run_count_fails_closed(self):
         with self.assertRaises(ValueError):
             MOD.run_experiment({
                 "schema_version": 1,
                 "provider_id": "X",
+                "provider_class": "VALIDATION_FIXTURE",
                 "enabled": False,
                 "run_count": 1,
                 "command": [],
@@ -128,7 +145,9 @@ class AgentRepeatabilityExperimentTest(unittest.TestCase):
         profile = json.loads((ROOT / "sdlc/config/agent-repeatability-profile.example.json").read_text(encoding="utf-8"))
         self.assertFalse(profile["enabled"])
         self.assertEqual("EXTERNAL_AGENT_PROVIDER_REQUIRED", profile["provider_id"])
+        self.assertEqual("EXTERNAL_AGENT", profile["provider_class"])
         self.assertTrue(profile["rules"]["actual_provider_execution_required_for_pass"])
+        self.assertTrue(profile["rules"]["validation_fixture_provider_is_not_agent_empirical_pass"])
         self.assertFalse(profile["rules"]["llm_determinism_claimed"])
 
 
