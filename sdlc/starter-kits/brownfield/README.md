@@ -11,6 +11,8 @@ Brownfield의 핵심은 문서가 많은 것이 아니라 **분석 Seed와 Repos
 
 Source root/build/test를 모르면 Harness가 탐색할 수 있으나, Repository 기준점 자체가 없으면 DISCOVERY 이후 결과를 실제 Brownfield Source 분석으로 확정해서는 안 된다.
 
+SOP/업무매뉴얼은 **선택 Evidence**다. SOP가 없으면 기존 시스템/Source/Data 분석으로 AS-IS를 확인하고, 업무정책이 필요한 OPEN은 인터뷰/Workshop으로, 기술 설계 OPEN은 Developer/Architect 제안과 Project Standard로 해소한다.
+
 ## 권장 패키지
 ```text
 brownfield-starter/
@@ -31,24 +33,27 @@ brownfield-starter/
 │  ├─ runtime-config-inventory.md          # Secret 제외
 │  └─ build-test-baseline.md               # 권장
 ├─ business-docs/
-│  └─ originals/                          # SOP, 정책, 매뉴얼, 요구서, 회의자료(PPTX/XLSX 포함) 원본
+│  └─ originals/                          # 있으면 사용: SOP, 정책, 매뉴얼, 요구서, PPTX/XLSX
 └─ profiles/
    ├─ terminology-profile.json            # 선택
-   └─ customer-document-profile.json      # 선택
+   ├─ customer-document-profile.json      # 선택
+   └─ open-resolution-profile.yaml        # 결정권한 Customizing 시 권장
 ```
 
 ## Brownfield 기본 탐색 순서
 1. 변경/분석 Seed를 RQ/FR/PGM/키워드 후보로 정규화한다.
 2. SOP/업무문서가 있으면 포맷 Adapter로 구조 보존 Evidence Chunk를 만들고 `sop-extract` Skill로 6W/PROC/BR/Data/Screen/Integration Candidate를 추출한다.
-3. Repository 기준 Commit/Tag/Branch를 고정하고 Source Hash 기준을 만든다.
-4. Build file, module, source/test/resource root, UI/menu, DB/mapper/common-code/interface 자산을 먼저 인덱싱한다.
-5. 기존 Trace/Index/Program Summary가 있으면 우선 재사용한다.
-6. Seed와 직접 관련된 Symbol/Endpoint/Job/Event/Table/Screen 후보를 찾는다.
-7. Caller/Consumer와 Callee/Dependency를 양방향으로 확장한다.
-8. Data read/write, Transaction, Interface, Event, Config/Feature Flag, Test 관계를 확장한다.
-9. 발견되지 않은 동적 호출/Reflection/Stored Procedure/외부 Consumer 가능성은 Coverage Gap으로 남긴다.
-10. Business Impact는 Source 관계만으로 자동 확정하지 않는다.
-11. 영향 결과에는 `직접 영향 / 간접 영향 / 확인 필요 / 분석 제외`를 구분한다.
+3. SOP 유무와 관계없이 현재 OPEN을 `open-resolve` Skill의 해소 Backlog로 만든다.
+4. Repository 기준 Commit/Tag/Branch를 고정하고 Source Hash 기준을 만든다.
+5. Build file, module, source/test/resource root, UI/menu, DB/mapper/common-code/interface 자산을 먼저 인덱싱한다.
+6. 기존 Trace/Index/Program Summary가 있으면 우선 재사용한다.
+7. Seed와 직접 관련된 Symbol/Endpoint/Job/Event/Table/Screen 후보를 찾는다.
+8. Caller/Consumer와 Callee/Dependency를 양방향으로 확장한다.
+9. Data read/write, Transaction, Interface, Event, Config/Feature Flag, Test 관계를 확장한다.
+10. 분석으로 해소된 항목은 `OBSERVED_AS_IS`로 기록하고, TO-BE에 그대로 쓸지는 별도 결정한다.
+11. Business 정책/목적/권한이 필요한 OPEN은 Business Owner 인터뷰/Workshop으로 확인한다.
+12. Query/Transaction/Error/Integration 등 기술 OPEN은 Project Standard와 Developer/Architect 제안으로 구체화할 수 있다.
+13. 영향 결과에는 `직접 영향 / 간접 영향 / 확인 필요 / 분석 제외`를 구분한다.
 
 ## Project Impact Adapter 경계
 Core는 `sdlc/design/contracts/brownfield-impact-contract.json`에서 공통 Node/Edge/Coverage/출력 형식만 제공한다.
@@ -63,25 +68,38 @@ Core는 `sdlc/design/contracts/brownfield-impact-contract.json`에서 공통 Nod
 
 Adapter가 없더라도 분석 가능한 범위는 진행하지만 결과는 `PARTIAL_PROJECT_ADAPTER_REQUIRED`이며 완전한 영향분석으로 표시하지 않는다.
 
+## OPEN 해소 기본 경로
+| OPEN 유형 | 우선 해소 방법 | 결과 상태 |
+|---|---|---|
+| 현재 화면/Menu/Field | 기존 시스템/UI Source 분석 | OBSERVED_AS_IS |
+| CRUD/API/Service/Transaction | Source 분석 | OBSERVED_AS_IS |
+| Table/Query/Common Code | Schema/Mapper/Data 분석 | OBSERVED_AS_IS |
+| 업무 목적/Why/정책 | Business Owner 인터뷰/정책 근거 | CONFIRMED_BUSINESS 후보 |
+| TO-BE 화면/UX | Designer Proposal + 권한자 검토 | PROPOSED/ACCEPTED_DESIGN |
+| TO-BE Query/Transaction/Error | Developer Proposal + Project Standard | ACCEPTED_DESIGN 가능 |
+| 연계 계약 | Source/기존 시스템 분석 + Integration Owner 결정 | OBSERVED_AS_IS/ACCEPTED_DESIGN |
+
+현행 관찰 결과를 TO-BE 정책으로 자동 승격하지 않는다.
+
 ## 개발 상세 명세의 프로젝트 근거
-Core Template은 화면/필드/CRUD/Logic/Query/Table/Common Code/Integration 항목을 강제하지만 실제 값은 프로젝트별 Evidence가 필요하다.
+Core Template은 화면/필드/CRUD/Logic/Query/Table/Common Code/Integration 항목을 강제하지만 실제 값은 프로젝트별 Evidence 또는 명시적 Design Decision으로 채운다.
 
-- 화면/메뉴: 화면 소스, Route/Menu config, 기존 UI 표준 또는 고객 승인 설계
-- Field: 화면/DTO/Validation/DB/API 실제 근거
-- CRUD: 실제 Entry Point/Service/Repository 행위
-- Query/Table: Mapper/Repository/SQL/Schema/Migration
-- Common Code: 코드 테이블/Enum/Dictionary/기준정보 API
-- Integration: API Client/Message Producer·Consumer/File/Batch 설정
+- 화면/메뉴: 화면 소스, Route/Menu config, 기존 UI 표준 또는 승인된 신규 설계
+- Field: 화면/DTO/Validation/DB/API 실제 근거 또는 승인된 Target Field 설계
+- CRUD: 실제 Entry Point/Service/Repository 행위 또는 Target Program 설계
+- Query/Table: Mapper/Repository/SQL/Schema/Migration 또는 승인된 Data 설계
+- Common Code: 코드 테이블/Enum/Dictionary/기준정보 API 또는 신규 코드 Decision
+- Integration: API Client/Message Producer·Consumer/File/Batch 설정 또는 승인된 Target Contract
 
-찾지 못한 항목은 `OPEN` 또는 `CHECK_REQUIRED`이며, 존재하지 않는 것으로 확정하지 않는다.
+찾지 못한 항목은 `OPEN` 또는 `CHECK_REQUIRED`이며, Open Resolution Workbook에서 다음 해소 Task를 지정한다.
 
 ## 입력 수준별 기대 결과
 | 입력 수준 | 기대 결과 | 제한 |
 |---|---|---|
-| Seed + Repository만 있음 | Source/Profile 자동 탐색, 관련 Symbol 후보 | UI/DB/Code/외부 Consumer 누락 가능 |
+| Seed + Repository만 있음 | Source/Profile 자동 탐색, 관련 Symbol 후보, OPEN Resolution Backlog | 동적 관계/업무 정책 누락 가능 |
 | Source Profile + Build/Test 있음 | Compile/Test baseline과 정적 Trace 신뢰도 상승 | Runtime dynamic relation은 별도 |
-| UI/DB/Common Code/Interface 자료 있음 | 화면·필드·CRUD·Query·Code·Integration 상세화 | 문서와 Source 충돌 시 자동 확정 금지 |
-| 업무 원본문서까지 있음 | 6W/기술 영향과 Business Rule Candidate 비교 | Source/SOP를 Business Truth로 자동 승격 금지 |
+| UI/DB/Common Code/Interface 자료 있음 | 화면·필드·CRUD·Query·Code·Integration 상세화 | 현행 관찰을 TO-BE 정책으로 자동 확정 금지 |
+| 인터뷰/설계 Decision까지 있음 | Functional/Program Spec의 OPEN을 실질적으로 감소 | 권한 없는 개인 제안을 Business Truth로 승격 금지 |
 
 ## Brownfield 영향분석 최소 Coverage 항목
 - Entry Point / UI / API / Batch / Event
@@ -127,6 +145,9 @@ Core Template은 화면/필드/CRUD/Logic/Query/Table/Common Code/Integration �
 
 ### IMPACT_ANALYSIS_READY
 Seed 관련 Source 후보와 직접 관계가 탐색되었고, 분석 Coverage와 사각지대가 함께 기록되어 있다. 프로젝트별 Impact Adapter가 필요한 영역은 구현/설정 상태가 함께 표시되어야 한다.
+
+### DESIGN_READY
+업무/기능/기술 OPEN이 인터뷰·OBSERVED_AS_IS·PROPOSED·ACCEPTED_DESIGN 등으로 구조화되고 결정권자와 후속 Task가 지정되어 있다.
 
 ### IMPLEMENTATION_READY
 실제 변경 Target이 확정되고 `developer-spec-contract.json`의 적용 가능한 상세 항목과 Program DoR가 충족되며 Build/Test 실행 경로가 확인되어야 한다.
