@@ -1,0 +1,49 @@
+schema_version: 1
+artifact_type: REQUIREMENT_INTAKE
+requirement_intake:
+  source:
+    file_name: 요구사항목록.xlsx
+    source_revision: sha256:d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f
+    worksheet: Sheet1
+    header_row: 2
+    adapter: XLSX_OOXML_DIRECT
+  header_mapping:
+    level1: 2
+    level2: 3
+    source_requirement_id: 4
+    requirement_name: 5
+    requirement_text: 6
+    start_date: 7
+    end_date: 8
+    assignee: 9
+  source_row_count: 142
+  selected_count: 1
+  duplicate_source_requirement_ids: []
+  skipped_rows: []
+  summary:
+    level2_counts:
+      Batch: 23
+      Interface: 2
+      근무계획 수립(탄력근로제): 26
+      근태/휴가 (ESS): 12
+      근태 Report: 8
+      근태기록: 7
+      근태마감: 39
+      근태현황/통계: 22
+      메인화면: 1
+      선택적근무제: 2
+  records:
+  - source_row: 142
+    truth_state: GIVEN
+    level1: 근태관리
+    level2: Interface
+    source_requirement_id: REQ_TM_TE100
+    requirement_name: 10분단위 근무계획 개선 Yellow Page 송신 반영을 구현
+    requirement_text: 구성원 근무계획 Yellow Page 송신
+    start_date: null
+    end_date: null
+    assignee: null
+  truth_guards:
+    source_rows_are_given_not_canonical: true
+    canonical_rq_must_not_be_created_by_intake: true
+    missing_cells_must_not_be_invented: true
