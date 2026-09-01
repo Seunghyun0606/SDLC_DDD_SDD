@@ -23,7 +23,7 @@ flowchart LR
 - `/work RQR-6BB6D66548`
 - `아까 하던 요구사항 계속 진행해줘`
 
-P0~P0.3 규칙:
+P0~P0.4 규칙:
 
 1. 원본 Requirement ID를 먼저 보존한다.
 2. Legacy Inventory는 `SOURCE_ROW → deterministic Candidate Group`으로 정규화한다.
@@ -34,7 +34,9 @@ P0~P0.3 규칙:
 7. Source가 연결되면 Direct Trace 또는 bounded retrieval로 PGM/ART/Symbol/Data Evidence를 `OBSERVED`로 수집한다.
 8. RQ Boundary가 OPEN이어도 Technical Discovery/Impact Candidate는 진행할 수 있다.
 9. Source Diff는 Semantic Change Candidate와 STALE/Review Candidate를 만들지만 Human Truth를 자동 수정하지 않는다.
-10. Validator가 실패하면 잘못된 상태를 다음 Stage의 확정 사실로 전달하지 않는다.
+10. Test Stage에서는 AC Coverage와 Runtime Execution을 분리하고, 실행하지 않은 TC를 PASS로 표시하지 않는다.
+11. VERIFY는 모든 필수 TC의 실제 실행 Evidence와 환경 조건이 충족될 때만 `VERIFIED_PASS`가 될 수 있다.
+12. Validator가 실패하면 잘못된 상태를 다음 Stage의 확정 사실로 전달하지 않는다.
 
 ### Legacy Requirement Review 흐름
 
@@ -67,6 +69,27 @@ Candidate/RQ Context
 
 Source 조건식은 `OBSERVED Behavior`이며 자동 `CONFIRMED Business Rule`이 아니다.
 
+### TEST / VERIFY 흐름
+
+```text
+Acceptance Criteria
+→ Test Contract
+→ AC↔TC Coverage
+→ Source Evidence Set Binding
+→ Test Execution Result
+→ Runtime Evidence / Explicit NOT_EXECUTED
+→ Verification Gate
+→ VERIFIED_PASS | VERIFIED_FAIL | PARTIAL_EVIDENCE | CONTRACT_PASS_RUNTIME_NOT_EXECUTED
+```
+
+중요:
+
+- `AC Coverage 100%`는 Test 설계 Coverage다. 실행 성공이 아니다.
+- `PASSED / FAILED`는 actual result + 실행 Evidence가 있어야 한다.
+- 실제 Runtime이 없으면 `CONTRACT_PASS_RUNTIME_NOT_EXECUTED`까지만 가능하다.
+- Synthetic Fixture는 Production `VERIFIED_PASS`로 승격하지 않는다.
+- 미검토 `BUSINESS_RULE_CANDIDATE`가 있으면 `VERIFIED_PASS`를 차단한다.
+
 ## `/change`
 
 자연어 변경 또는 Source Diff를 구조화한다.
@@ -88,6 +111,9 @@ Source 변경을 Business Truth로 자동 승격하지 않는다. `BUSINESS_RULE
 - Source Provider/Revision
 - Direct PGM/ART Evidence
 - Reverse Sync / STALE Candidate
+- AC↔TC Coverage
+- Test 실행 상태와 Evidence
+- Verification 상태
 - Blind Spot
 - Open Alert/Execution Guard
 - 담당자/일정(있는 경우)
@@ -170,6 +196,18 @@ python sdlc/scripts/test_p03_contracts.py
 ```
 
 Direct Trace가 없으면 파일명/이름 similarity만으로 PGM을 Confirmed하지 않는다. Runtime/Procedure/Trigger/외부 Consumer는 별도 Evidence가 없으면 Blind Spot으로 남긴다.
+
+### P0.4
+
+```text
+python sdlc/scripts/validate_p04_contracts.py test-contract <test-contract.yaml>
+python sdlc/scripts/validate_p04_contracts.py test-execution <test-contract.yaml> <test-execution-result.yaml>
+python sdlc/scripts/build_verification_result.py <test-contract.yaml> <test-execution-result.yaml> -o <verification-result.yaml>
+python sdlc/scripts/validate_p04_contracts.py verification <test-contract.yaml> <test-execution-result.yaml> <verification-result.yaml>
+python sdlc/scripts/test_p04_contracts.py
+```
+
+`VERIFIED_PASS`는 문서/코드 inspection으로 만들지 않는다. 실제 Runtime Test Evidence, Source Evidence Set 일치, blocker 해소, Business Rule 검토, Production Source 조건이 모두 필요하다.
 
 ## Mermaid 작성 주의
 
