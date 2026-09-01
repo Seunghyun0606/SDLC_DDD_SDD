@@ -1,0 +1,34 @@
+version: 1
+canonical_publish_request:
+  review_snapshot:
+    review_id: FILL_ME
+    source_group_id: FILL_ME
+    source_requirement_ids: []
+    source_count: 0
+    decision: FILL_ME
+    boundary_status: CONFIRMED
+    decision_basis: FILL_ME
+    evidence_ids: []
+    decided_by: FILL_ME
+    decided_at: FILL_ME
+    decision_revision: 1
+    source_revision: FILL_ME
+
+  id_allocation:
+    status: PREALLOCATED
+    canonical_rq_ids: []
+    canonical_fr_ids: []
+
+  publish:
+    canonical_rq_ids: []
+    canonical_fr_ids: []
+
+  trace:
+    review_id: FILL_ME
+    decision_revision: 1
+    evidence_ids: []
+
+  expected_result:
+    state: PUBLISHED_OR_REJECTED
+    preserve_source_group_provenance: true
+    preserve_source_requirement_ids: true
