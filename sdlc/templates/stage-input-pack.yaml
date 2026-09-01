@@ -1,4 +1,4 @@
-version: 1.1
+version: 2
 stage_input_pack:
   metadata:
     pack_id: FILL_ME
@@ -9,6 +9,7 @@ stage_input_pack:
     profile: STANDARD
     granularity: GROUP
     source_group_id: FILL_ME
+    route_revision: 1
 
   target:
     primary_id: FILL_ME
@@ -19,28 +20,86 @@ stage_input_pack:
       rq: []
       fr: []
       br: []
-      ac: []
       proc: []
+      ftr: []
       pgm: []
-      task: []
+      art: []
+      symbol: []
+      data: []
+      int: []
+      ac: []
       tc: []
+      task: []
+      cr: []
+      knowledge: []
+      source: []
 
-  required_inputs: []
+  required_inputs:
+    # - input_type: REQUIREMENT_SOURCE
+    #   ref: SRC-RQ-001
+    #   required: true
+    #   state: AVAILABLE  # AVAILABLE | OPEN | NOT_APPLICABLE
+    []
 
-  resolved_facts: []
+  resolved_facts:
+    # - fact_id: FACT-001
+    #   fact_type: BUSINESS | SOURCE | DATA | INTERFACE | TEST | PROJECT
+    #   truth: GIVEN | OBSERVED | INFERRED | CONFIRMED | OPEN
+    #   value: ""
+    #   evidence_ids: []
+    []
 
-  evidence: []
+  evidence:
+    # - evidence_id: EV-001
+    #   evidence_type: DOCUMENT | SOURCE | DATA | TEST | RUNTIME | DECISION
+    #   truth: GIVEN | OBSERVED
+    #   locator: ""
+    #   revision: ""
+    #   observed_value: {}
+    []
 
-  open_items: []
+  open_items:
+    # - open_id: OPEN-001
+    #   type: MISSING_EVIDENCE
+    #   question: ""
+    #   required_evidence: ""
+    #   blocks_reasoning: false
+    #   blocks_action: false
+    #   guarded_actions: []
+    #   escalation: L2_OR_HUMAN
+    []
 
   constraints:
     do_not_invent_missing_business_fact: true
     source_behavior_is_not_business_truth: true
     ambiguous_write_must_not_be_auto_selected: true
+    candidate_is_not_canonical: true
+    runtime_pass_requires_execution_evidence: true
+    provider_partial_must_remain_partial: true
 
-  expected_outputs: []
+  expected_outputs:
+    # - output_type: IMPACT_ANALYSIS
+    #   artifact_id: OPEN
+    #   required: true
+    #   state: PLANNED  # PLANNED | PARTIAL | COMPLETE | OPEN
+    []
 
-  next_actions: []
+  handoff:
+    current_skill: FILL_ME
+    next_stage: FILL_ME
+    next_skill: FILL_ME
+    agent_level: FILL_ME
+    stop_reason: null
+    escalation_target: null
+
+  next_actions:
+    # - action_id: ACTION-001
+    #   action_type: ANALYZE | REVIEW | RETRIEVE | WRITE | TEST | VERIFY | ESCALATE
+    #   description_ko: ""
+    #   capability: null
+    #   side_effect: false
+    #   blocked_by_open_ids: []
+    []
 
   validation:
     required_field_check: PENDING
@@ -48,3 +107,6 @@ stage_input_pack:
     open_preservation_check: PENDING
     boundary_guard_check: PENDING
     granularity_check: PENDING
+    typed_reference_check: PENDING
+    output_contract_check: PENDING
+    route_contract_check: PENDING
