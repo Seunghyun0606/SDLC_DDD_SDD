@@ -10,6 +10,12 @@
 - `customer`: 기존 내부 산출물/Canonical을 근거로 고객 커뮤니케이션 View를 생성한다.
 - `both`: 내부 산출물을 먼저 갱신한 뒤 고객 View를 파생한다.
 - 고객 View에서 새 업무 사실을 만들지 않는다. 고객 협의 결과가 바뀌면 `/change` 또는 현재 `/work` Stage로 Canonical에 반영한다.
+- 신규 고객 View는 3개만 사용한다.
+  - `solution_agreement`: 요구·업무·기능 합의서 — INTAKE/DECOMPOSE/CLARIFY/PROCESS/DESIGN
+  - `delivery_scope`: 영향·개발범위 공유서 — DISCOVERY/IMPACT/PROGRAM/DEVELOPMENT
+  - `acceptance_handover`: 테스트·인수·운영 결과서 — TEST/VERIFY/KNOWLEDGE_PROMOTION
+- 기존 8개 고객문서 type 요청은 `customer-document-contract.json`의 Legacy Alias로 위 3개 View에 연결한다. 신규 작업에서 8종을 별도 산출물로 중복 생성하지 않는다.
+- 고객 View 생성 시 `sdlc/scripts/render_customer_document.py`에 내부 Markdown/Canonical JSON을 입력해 Contract의 Section Mapping을 실행한다. 빈 Template만 생성하고 사람이 다시 옮겨 적게 하지 않는다.
 
 ## 작성 원칙
 - 사용자에게 보이는 본문은 한국어 자연어를 기본으로 한다.
@@ -31,6 +37,8 @@
 - DESIGN은 `developer-spec-contract.json`에 따라 화면/필드/CRUD/핵심 업무규칙/논리 Data/Integration/권한/예외/AC의 **의미상 Source of Truth**를 만든다.
 - PROGRAM은 Functional Design을 반복하지 않고 실제 PGM/Entry Point/Source Symbol, Field→DTO/API/DB Mapping, Query/Table/Column, Transaction, Integration 기술계약, Error/Security/Observability, TASK/AC/TC/Source 및 구현 준비도만 추가한다.
 - 17개 Program DoR는 17개 별도 Section이 아니라 `program-spec.md`의 단일 구현 준비도 표에서 관리한다.
+- 고객 View Projection은 내부 문서 내용을 고객 문맥으로 옮기는 표시 계층이다. `합의된 내용` Source가 없으면 합의된 것으로 추정하지 않고 명시적으로 미확인 처리한다.
+- 고객 본문에서는 내부 ID, Source Hash, Locator, Confidence, 내부 상태 코드를 기본 숨김 처리한다. 필요하면 Profile로 부록에만 표시한다.
 - SOP/업무규정/운영매뉴얼/PPTX/XLSX 등 고객 문서가 있으면 포맷 Adapter의 구조 보존 Evidence Chunk를 우선 만들고 `.cursor/skills/sop-extract/SKILL.md`를 사용해 SCN/PROC/BR/FR/Data/Screen/Integration Candidate를 추출한 뒤 PROCESS/DESIGN 입력으로 사용한다.
 - 프로젝트 고유 탐색/Framework 해석과 포맷별 Parser 구현은 Core Reference에 발명하지 않고 Project Profile/Adapter에서 제공한다.
 - `detect_source_drift.py`는 Source Drift와 Reverse Review Candidate 기능이며 전체 Reverse Engineering 또는 문서 자동 재작성 기능으로 표현하지 않는다.
