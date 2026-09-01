@@ -1,8 +1,9 @@
-version: 1
-status: P0_BASELINE_CANDIDATE
+version: 2
+status: P1_FOUNDATION_ACTIVE
 purpose: >-
-  Phase 0의 논리적 manifest/capabilities/decisions/contracts 역할을 현재 분산형
-  authoritative artifact에 연결하는 index다. 이 파일은 원본 truth를 복제하지 않는다.
+  Phase 0의 논리적 manifest/capabilities/decisions/contracts 역할과 P1 Foundation의
+  bootstrap/customization/knowledge/reference authority를 현재 분산형 authoritative artifact에
+  연결하는 index다. 이 파일은 원본 truth를 복제하지 않는다.
 
 baseline_roles:
   design_baseline:
@@ -14,6 +15,32 @@ baseline_roles:
     authority: sdlc/config/artifact-profiles.yaml
   project_profile:
     authority: sdlc/config/project-profile.example.yaml
+  p1_foundation:
+    authority: sdlc/config/p1-foundation.yaml
+    contract: sdlc/design/contracts/p1-foundation-late-customization.md
+  project_bootstrap:
+    template: sdlc/templates/project-bootstrap-manifest.yaml
+  project_customization:
+    strategy: LATE_BOUND_OVERLAY
+    template: sdlc/templates/project-overlay.yaml
+    resolver: sdlc/scripts/resolve_project_overlay.py
+  project_knowledge:
+    template: sdlc/templates/knowledge-candidate.yaml
+    lint: sdlc/scripts/lint_p1_knowledge.py
+  project_glossary:
+    template: sdlc/templates/glossary-entry.yaml
+    lint: sdlc/scripts/lint_p1_knowledge.py
+  reference_graph:
+    template: sdlc/templates/reference-graph.yaml
+    validator: sdlc/scripts/validate_p1_foundation.py
+  open_item_runtime:
+    template: sdlc/templates/open-item.yaml
+    evaluator: sdlc/scripts/evaluate_open_items.py
+  baseline_cache:
+    builder: sdlc/scripts/build_baseline_cache.py
+    derived_only: true
+  p1_scale_out:
+    assessor: sdlc/scripts/assess_p1_scale_out.py
   requirement_boundary:
     authority: sdlc/config/rq-boundary.yaml
     decision_artifacts:
@@ -72,3 +99,4 @@ truth_ownership:
   index_is_authoritative_for_content: false
   referenced_artifact_is_authoritative: true
   duplicate_truth_in_index: DENY
+  derived_cache_is_authoritative: false
