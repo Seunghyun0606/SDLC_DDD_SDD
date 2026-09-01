@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "pilot": "v1.5.8-requirements-sixw-devspec-pilot-v0.1",
+  "source": {
+    "file": "요구사항목록.xlsx",
+    "sheet": "Sheet1",
+    "rows": 142,
+    "external_id_ranges": ["REQ_TM_FL001..039", "REQ_TM_TE001..103"],
+    "application_source_provided": false,
+    "db_schema_provided": false,
+    "ui_spec_provided": false,
+    "common_code_dictionary_provided": false,
+    "interface_contract_provided": false
+  },
+  "six_w": {
+    "Who": {"EXPLICIT": 4, "PARTIAL": 29, "OPEN": 109},
+    "When": {"EXPLICIT": 1, "PARTIAL": 43, "OPEN": 98},
+    "Where": {"EXPLICIT": 0, "PARTIAL": 142, "OPEN": 0},
+    "What": {"EXPLICIT": 133, "PARTIAL": 9, "OPEN": 0},
+    "How": {"EXPLICIT": 0, "PARTIAL": 142, "OPEN": 0},
+    "Why": {"EXPLICIT": 1, "PARTIAL": 84, "OPEN": 57},
+    "no_open_count": 1,
+    "note": "no_open does not mean fully explicit; PARTIAL remains unresolved"
+  },
+  "developer_detail": {
+    "field_catalog_open": 142,
+    "data_query_open": 142,
+    "common_code_open": 142,
+    "exception_error_open": 142,
+    "authorization_open": 109,
+    "authorization_partial": 33,
+    "integration_partial": 25,
+    "developer_ready": 0
+  },
+  "representative_cases": [
+    "REQ_TM_FL001",
+    "REQ_TM_FL003",
+    "REQ_TM_FL018",
+    "REQ_TM_FL030",
+    "REQ_TM_TE018",
+    "REQ_TM_TE080",
+    "REQ_TM_TE100"
+  ],
+  "assessment": {
+    "six_w_contract_effective_for_gap_detection": true,
+    "developer_spec_contract_effective_for_open_evidence_detection": true,
+    "requirements_only_sufficient_for_development": false,
+    "source_or_project_evidence_required": true
+  },
+  "verdict": "STRUCTURAL_IMPROVEMENT_PASS / REQUIREMENT_ONLY_DEVELOPER_READY_FAIL / PROJECT_EVIDENCE_REQUIRED"
+}
