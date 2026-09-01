@@ -24,6 +24,20 @@ def _unique(values):
     return out
 
 
+def _apply_capability_candidates(required, optional, candidates, mode):
+    for candidate in candidates or []:
+        modes = [str(x).upper() for x in (candidate.get("modes") or [])]
+        if modes and mode not in modes:
+            continue
+        capability = candidate.get("capability")
+        if not capability:
+            continue
+        if candidate.get("missing_behavior") == "BLOCKED":
+            required.append(capability)
+        else:
+            optional.append(capability)
+
+
 def apply_stage_route(context: dict[str, Any], routing: dict[str, Any]):
     routed = copy.deepcopy(context)
     command = routed.get("command")
@@ -34,31 +48,21 @@ def apply_stage_route(context: dict[str, Any], routing: dict[str, Any]):
 
     required = list(routed.get("requested_capabilities") or [])
     optional = list(routed.get("optional_capabilities") or [])
+    project = routed.setdefault("project_context", {})
+    mode = str(project.get("mode") or "AUTO").upper()
     route_summary: dict[str, Any] = {
         "command": command,
         "procedure_config": routing.get("procedure_config"),
     }
 
     if command == "/work":
-        project = routed.setdefault("project_context", {})
         stage = project.get("stage") or command_rule.get("default_stage")
         stages = routing.get("stages") or {}
         stage_rule = stages.get(stage)
         if not stage_rule:
             return routed, [f"STAGE-ROUTE-002: unknown project_context.stage: {stage}"]
         project["stage"] = stage
-        mode = str(project.get("mode") or "AUTO").upper()
-        for candidate in stage_rule.get("capability_candidates") or []:
-            modes = [str(x).upper() for x in (candidate.get("modes") or [])]
-            if modes and mode not in modes:
-                continue
-            capability = candidate.get("capability")
-            if not capability:
-                continue
-            if candidate.get("missing_behavior") == "BLOCKED":
-                required.append(capability)
-            else:
-                optional.append(capability)
+        _apply_capability_candidates(required, optional, stage_rule.get("capability_candidates"), mode)
 
         allowed_side_effects = set(stage_rule.get("side_effect_capabilities") or [])
         requested_side_effects = set(routed.get("requested_side_effect_capabilities") or [])
@@ -73,15 +77,18 @@ def apply_stage_route(context: dict[str, Any], routing: dict[str, Any]):
             "display_name_ko": stage_rule.get("display_name_ko"),
             "skill": stage_rule.get("skill"),
             "procedure_profile": stage_rule.get("procedure_profile"),
+            "deterministic_tool": stage_rule.get("deterministic_tool"),
             "agent_level": stage_rule.get("agent_level"),
             "required_input_types": stage_rule.get("required_input_types") or [],
             "expected_outputs": stage_rule.get("expected_outputs") or [],
             "next_stage": stage_rule.get("next_stage"),
         })
     else:
+        _apply_capability_candidates(required, optional, command_rule.get("capability_candidates"), mode)
         route_summary.update({
             "skill": command_rule.get("skill"),
             "procedure_profile": command_rule.get("procedure_profile"),
+            "deterministic_tool": command_rule.get("deterministic_tool"),
             "agent_level": command_rule.get("agent_level"),
             "required_input_types": command_rule.get("required_input_types") or [],
             "expected_outputs": command_rule.get("expected_outputs") or [],
