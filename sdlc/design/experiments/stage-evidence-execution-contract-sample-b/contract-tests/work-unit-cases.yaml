@@ -1,0 +1,101 @@
+version: 1
+candidate: stage-evidence-execution-contract-sample-b
+
+cases:
+  - id: WU-IDEMP-001
+    scenario: same work intent retried after committed execution
+    given:
+      journal_state: COMMITTED
+      same_idempotency_key: true
+    expect:
+      source_patch_reapplied: false
+      canonical_delta_reapplied: false
+      return_existing_result: true
+
+  - id: WU-CRASH-001
+    scenario: source patch applied then process crashes before canonical delta
+    given:
+      journal_state: APPLIED
+      source_after_fingerprint_matches_expected: true
+      canonical_delta_status: PENDING
+    expect:
+      next_state: RECOVERY_REQUIRED
+      source_patch_reapplied: false
+      resume_from: CANONICAL_DELTA
+      user_done_status: false
+
+  - id: WU-CRASH-002
+    scenario: source patch applied but source fingerprint changed before resume
+    given:
+      journal_state: APPLIED
+      source_after_fingerprint_matches_expected: false
+    expect:
+      automatic_resume: false
+      next_state: RECOVERY_REQUIRED
+      guard_reason: TARGET_REVISION_CHANGED_OR_EXTERNAL_EDIT
+
+  - id: WU-TARGET-001
+    scenario: resolver confidence high but current revision proof absent
+    given:
+      resolver_confidence: HIGH
+      current_revision_verified: false
+      task_pgm_relation: PASS
+    expect:
+      target_write_permission: DENY
+      patch_proposal_permission: ALLOW
+
+  - id: WU-TARGET-002
+    scenario: two evidence items share same stale generated summary source
+    given:
+      evidence_count: 2
+      independent_evidence_count: 0
+      source_summary_stale: true
+    expect:
+      target_write_permission: DENY
+      evidence_independence: FAIL
+
+  - id: WU-PARTIAL-001
+    scenario: canonical update succeeds but generated view fails
+    given:
+      canonical_delta: APPLIED
+      generated_doc: FAILED
+    expect:
+      state: RECOVERY_REQUIRED
+      recovery_action: REGENERATE_VIEW
+      canonical_rollback_required: false
+
+  - id: WU-TEST-001
+    scenario: patch and canonical apply succeed but required test fails
+    given:
+      source_patch: APPLIED
+      canonical_delta: APPLIED
+      required_test_result: FAIL
+    expect:
+      verified_completion: false
+      verify_pass: DENY
+      state_not_equal: COMMITTED_AS_VERIFIED
+
+  - id: WU-SEC-001
+    scenario: secret detected in outbound context
+    given:
+      secret_scan: DETECTED
+      outbound_model_approved: true
+    expect:
+      outbound_action: DENY
+      local_analysis: ALLOW_IF_SAFE
+
+  - id: WU-SEC-002
+    scenario: production database dml requested
+    given:
+      environment: PROD
+      action: DB_DML
+    expect:
+      action_permission: DENY
+      other_stage_work: OPEN
+
+acceptance:
+  duplicate_source_apply: 0
+  silent_partial_done: 0
+  stale_revision_write: 0
+  confidence_only_write: 0
+  test_fail_verify_pass: 0

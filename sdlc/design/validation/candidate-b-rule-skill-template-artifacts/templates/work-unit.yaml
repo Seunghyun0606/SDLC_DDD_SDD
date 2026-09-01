@@ -1,0 +1,40 @@
+schema_version: 1
+work_unit:
+  work_unit_id: WU-{{id}}
+  project_id: {{project_id}}
+  environment: {{environment}}
+  branch: {{branch}}
+  rq_id: {{rq_id}}
+  task_id: {{task_id}}
+  program_id: {{program_id}}
+  intent_id: {{intent_id}}
+  idempotency_key: {{hash}}
+  state: {{PREPARED|APPLIED|VERIFIED|COMMITTED|RECOVERY_REQUIRED|ABORTED}}
+  base_commit: {{commit}}
+  canonical_base_revision: {{revision}}
+  target_write_proof_id: {{proof_id}}
+  assumption_lineage: {{asm_ids}}
+  owner:
+    user_id: {{user_id}}
+    runner_id: {{runner_id}}
+    lease_until: {{timestamp}}
+  program_lane:
+    lock_key: "{{project_id}}:{{program_id}}"
+    revision: {{revision}}
+  side_effects:
+    - target: {{artifact_or_entity}}
+      type: {{SOURCE_EDIT|CANONICAL_UPDATE|DOC_REGENERATE|OTHER}}
+      before_fingerprint: {{hash_or_null}}
+      after_fingerprint: {{hash_or_null}}
+  verification:
+    test_refs: {{refs}}
+    result: {{PASS|FAIL|NOT_RUN}}
+  compensation:
+    strategy: {{ROLLBACK|REGENERATE|MANUAL_RECOVERY|NONE}}
+    reference: {{ref_or_null}}
+  permissions:
+    merge: {{ALLOW|DENY}}
+    release: {{ALLOW|DENY}}
+  audit:
+    created_at: {{timestamp}}
+    updated_at: {{timestamp}}

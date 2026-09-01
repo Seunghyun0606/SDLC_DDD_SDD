@@ -1,0 +1,103 @@
+version: 1
+candidate: stage-evidence-execution-contract-sample-b
+baseline: v1.5.1
+
+cases:
+  - id: STAGE-INTAKE-001
+    scenario: legacy inventory missing problem outcome schedule assignee
+    input:
+      raw_rows: 142
+      unique_titles: 22
+      planned_start_non_null: 0
+      planned_end_non_null: 0
+      assignee_non_null: 0
+    expect:
+      workflow_exit: OPEN
+      quality: WARNING
+      published_rq_auto: 0
+      workflow_blocked_by_pm_null: false
+
+  - id: STAGE-DISCOVERY-001
+    scenario: no source repository or analyzer evidence
+    input:
+      source_repository: null
+      analyzer_result: null
+    expect:
+      allowed_outputs:
+        - discovery_query
+        - blind_spot_checklist
+        - evidence_request
+      discovery_complete: false
+      program_confirmed: false
+
+  - id: STAGE-IMPACT-001
+    scenario: batch requirement with no technical evidence
+    sample_ids:
+      from: REQ_TM_TE077
+      to: REQ_TM_TE099
+    expect:
+      workflow_exit: OPEN
+      impact_status: CANDIDATE
+      required_blind_spots:
+        - scheduler
+        - shared_procedure
+        - dynamic_sql
+        - trigger
+        - file_io
+        - db_polling
+        - downstream_consumer
+      modify_confirmed: false
+      verify_only_confirmed: false
+
+  - id: STAGE-DEVELOPMENT-001
+    scenario: resolver confidence high but target write proof missing
+    input:
+      resolver_confidence: HIGH
+      target_write_proof: FAIL
+    expect:
+      patch_proposal: ALLOW
+      actual_source_write: DENY
+
+  - id: STAGE-VERIFY-001
+    scenario: test cases drafted but not executed
+    input:
+      test_case_document: present
+      executed_test_result: absent
+    expect:
+      verify_pass: DENY
+      verification_result: NOT_READY
+
+  - id: STAGE-KNOWLEDGE-001
+    scenario: business rule text has no scope or effective period
+    input:
+      evidence_type: CONFIRMED
+      scope: null
+      effective_from: null
+      effective_to: null
+    expect:
+      global_k1_promotion: DENY
+
+  - id: STAGE-NONBLOCK-001
+    scenario: critical business uncertainty without unsafe side effect
+    input:
+      alert_severity: CRITICAL
+      requested_action: DESIGN_DRAFT
+    expect:
+      workflow_exit: OPEN
+      design_draft: ALLOW
+
+  - id: STAGE-GUARD-001
+    scenario: production db write requested
+    input:
+      environment: PROD
+      requested_action: DB_DML
+    expect:
+      requested_action_permission: DENY
+      unrelated_analysis_workflow: OPEN
+
+acceptance:
+  source_without_program_complete: 0
+  target_proof_without_source_write: 0
+  test_result_without_verify_pass: 0
+  scope_less_global_k1: 0
+  pm_null_workflow_block: 0
