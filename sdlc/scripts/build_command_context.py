@@ -46,8 +46,20 @@ def build(stage_pack_doc: dict[str, Any], execution_plan_doc: dict[str, Any], co
             "blocks_action": True,
         })
 
+    revision_guard = execution.get("revision_guard") or {}
+    if "source.write" in writes:
+        guard_ok = revision_guard.get("decision") == "ALLOW" and bool(revision_guard.get("guard_proof_ref"))
+        if not guard_ok:
+            human_actions.append({
+                "action_id": "SOURCE-WRITE-REVISION-OWNERSHIP-GUARD",
+                "type": "REVISION_OWNERSHIP_GUARD_REQUIRED",
+                "capability": "source.write",
+                "blocks_action": True,
+                "required_evidence": ["revision_ownership_guard.decision=ALLOW", "guard_proof_ref"],
+            })
+
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "command_id": f"CMD-{meta.get('pack_id') or 'UNASSIGNED'}",
         "command": command,
         "project_context": {
@@ -72,6 +84,10 @@ def build(stage_pack_doc: dict[str, Any], execution_plan_doc: dict[str, Any], co
         "write_proofs": write_proofs,
         "human_actions": human_actions,
         "adapter_configs": execution.get("adapter_configs") or {},
+        "revision_guard": {
+            "decision": revision_guard.get("decision") or "NOT_EVALUATED",
+            "guard_proof_ref": revision_guard.get("guard_proof_ref"),
+        },
         "stage_execution": {
             "skill": plan.get("skill"),
             "expected_outputs": plan.get("expected_outputs") or [],
