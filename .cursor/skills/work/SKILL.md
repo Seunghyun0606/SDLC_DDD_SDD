@@ -29,7 +29,6 @@
 - Project Authority Profile이 허용하는 기술/Data/Integration 결정은 고객 승인 없이 내부적으로 `ACCEPTED_DESIGN`으로 해소할 수 있다. Business 정책/목적은 업무 권한자가 확인해야 `CONFIRMED_BUSINESS`가 된다.
 - Source가 연결된 경우 DISCOVERY 이후에는 가능한 위치(파일/심볼/라인/Locator)와 Source Hash를 Machine provenance로 남긴다.
 - Source write 전 Target confidence와 Execution Guard를 확인한다.
-- Output은 Canonical relation을 갱신하고 해당 Template 기반 Artifact를 생성/갱신한다.
 - 모든 Stage Reference의 `## 실행 계약(Agent Execution Contract)`을 실행 지침으로 사용한다. 저수준 Agent가 임의 순서를 만들지 않고 `입력 필드 → 근거 분류 → 실행 순서 → 계속/중단 → 출력 매핑 → 품질 게이트 → 미확정/실패 처리`를 따른다.
 - 공통 실행계약은 `sdlc/design/contracts/agent-execution-contract.json`을 따른다.
 - PROCESS/DESIGN에서는 `business-scenario-sixw-contract.json`의 누가/언제/어디서/무엇을/어떻게/왜를 업무 기준으로 유지한다. 누락은 OPEN으로 두고 발명하지 않는다.
@@ -42,6 +41,48 @@
 - SOP/업무규정/운영매뉴얼/PPTX/XLSX 등 고객 문서가 있으면 포맷 Adapter의 구조 보존 Evidence Chunk를 우선 만들고 `.cursor/skills/sop-extract/SKILL.md`를 사용해 SCN/PROC/BR/FR/Data/Screen/Integration Candidate를 추출한 뒤 PROCESS/DESIGN 입력으로 사용한다.
 - 프로젝트 고유 탐색/Framework 해석과 포맷별 Parser 구현은 Core Reference에 발명하지 않고 Project Profile/Adapter에서 제공한다.
 - `detect_source_drift.py`는 Source Drift와 Reverse Review Candidate 기능이며 전체 Reverse Engineering 또는 문서 자동 재작성 기능으로 표현하지 않는다.
+
+## Canonical 실행 경로
+Canonical은 문서에 “갱신했다”고 서술하는 것으로 끝내지 않는다. 내부 Stage 결과가 RQ/FR/BR/PROC/PGM/TASK/AC/TC 관계 또는 근거를 변경하면 `sdlc/scripts/apply_canonical_delta.py`를 사용한다.
+
+### 최소 Delta 형식
+```json
+{
+  "schema_version": 1,
+  "delta_id": "고유하고 재사용 가능한 ID",
+  "base_revision": 0,
+  "stage": "DECOMPOSE",
+  "source_artifact": "현재 Stage 산출물 경로",
+  "operations": []
+}
+```
+
+지원 Operation은 다음 3개뿐이다.
+- `UPSERT_ENTITY`: Canonical Entity의 새 값 또는 현재 Stage Delta를 반영한다.
+- `UPSERT_RELATION`: 이미 존재하거나 같은 Delta에서 생성되는 Entity 간 관계를 연결한다.
+- `ADD_PROVENANCE`: Entity 값을 바꾸지 않고 Source/문서 근거만 추가한다.
+
+DELETE/자동 의미 병합/자동 Business Truth 역갱신은 이 Runtime의 기능이 아니다.
+
+### 실행 순서
+1. 현재 `sdlc/canonical/store.json`의 `revision`을 읽어 `base_revision`으로 사용한다. Store가 없으면 revision 0으로 시작한다.
+2. Stage 산출물의 **새 정보만** Delta Operation으로 만든다. 이전 단계 전체 내용을 다시 UPSERT하지 않는다.
+3. Business 정책/목적을 `CONFIRMED_BUSINESS`로 기록하려면 `evidence_class: CONFIRMED`가 필요하다.
+4. Source 분석으로 확인한 기존 동작은 `OBSERVED`이며, 이미 확정된 Business Truth를 덮어쓰지 않는다. 값 변경 없이 근거만 연결하려면 `ADD_PROVENANCE`를 사용한다.
+5. 먼저 dry-run 한다.
+   - `python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --dry-run`
+6. 결과가 `APPLIED`일 때만 실제 적용한다.
+   - `python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --result-out <result.json>`
+7. 결과가 `CONFLICT` 또는 `INVALID_DELTA`이면 Canonical을 갱신했다고 기록하지 않는다. 원인을 OPEN/Alert 또는 재실행 대상으로 남긴다.
+8. 같은 `delta_id` 재실행 결과가 `IDEMPOTENT`이면 중복 적용하지 않고 성공적인 재실행으로 취급한다.
+9. Canonical 적용 후 내부 Artifact의 관련 ID/추적성 Section과 결과 revision을 맞춘다.
+10. `both`인 경우 위 과정이 끝난 내부 Artifact/Canonical을 입력으로 고객 View를 Projection한다.
+
+### 안전 규칙
+- Delta 적용은 all-or-nothing이다. Relation endpoint 누락, Entity type 충돌, stale revision이 있으면 부분 반영하지 않는다.
+- `OBSERVED / INFERRED / ASSUMED` Source-derived Evidence는 `CONFIRMED_BUSINESS` 필드나 상태를 낮출 수 없다.
+- Source Drift/Reverse 결과는 바로 `UPSERT_ENTITY`로 Business Truth를 바꾸지 않는다. 현행 근거 연결은 우선 `ADD_PROVENANCE` 또는 별도 Candidate를 사용한다.
+- Source Code write와 Canonical write는 별개 Guard다. Canonical 적용 성공만으로 Source 수정 권한이 생기지 않는다.
 
 ## References
 - `references/requirement.md`
