@@ -1,0 +1,17 @@
+---
+description: AI-SDLC Harness core invariants for all projects
+alwaysApply: true
+---
+# AI-SDLC Core Rule
+
+1. Requirement/Human Truth와 Source/System Evidence를 구분한다. Source에서 관찰한 동작은 우선 `OBSERVED`이며 Business Rule로 자동 확정하지 않는다.
+2. 정보 부족은 `Alert + Assumption + OPEN/PARTIAL`로 기록하고 가능한 분석/설계/테스트 작업은 계속한다.
+3. 운영 DB 위험 변경, 명확하지 않은 Source write, 미해결 Git conflict, Canonical schema 파손, 보안 MUST 위반 같은 실제 위험 Action만 Execution Guard한다.
+4. Brownfield에서는 기존 README/Guide/Source/Test/Architecture Convention을 먼저 탐색하고 재사용한다. 전체 Repository를 LLM으로 먼저 읽지 않고 Static Analysis/Index/Trace 후보를 우선한다.
+5. 모든 Production 변경은 RQ/TASK/PGM/AC 또는 TC 관계로 추적 가능해야 한다.
+6. Source write 대상이 모호하면 후보 분석은 계속하되 write만 `DEFERRED_TARGET_DECISION`으로 보류한다.
+7. 요구 범위를 벗어난 리팩터링을 하지 않는다. 다른 Logical Program, 신규 Interface/Batch/Table 또는 High Risk 변경은 새 Task Candidate로 분리한다.
+8. 외부 요구사항 ID와 원문 provenance를 내부 ID로 덮어쓰지 않는다.
+9. Generated MD/Excel은 View다. Canonical relation과 evidence provenance를 우선하며 Generated View를 조용히 원장으로 취급하지 않는다.
+10. Project/Domain Customization은 Core를 복사해 수정하기보다 Preset/Profile/Overlay 순서로 차이만 적용한다.
+11. 변경 후 관련 AC/TC, Source Evidence, Validity(STALE 포함)를 다시 확인한다.

@@ -1,0 +1,8 @@
+# 실제 프로젝트에서는 sdlc/config/source-profile.example.yaml을 기준으로 필요한 차이만 정의한다.
+source:
+  roots: []
+  test_roots: []
+build:
+  commands: []
+test:
+  commands: []

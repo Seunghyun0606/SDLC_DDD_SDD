@@ -8,8 +8,18 @@ bootstrap:
   require_manual_confirmation: false
 preset:
   name: brownfield-auto
+source_profile:
+  path: sdlc/config/source-profile.yaml
 customization:
+  overlay_order:
+    - core
+    - preset
+    - project_profile
+    - project_overlay
+    - domain_overlay
+    - local_override
   project_overlay: sdlc/custom/project
+  domain_overlay_root: sdlc/custom/domain
   domain_overlays: []
 workflow:
   process_blocking: false

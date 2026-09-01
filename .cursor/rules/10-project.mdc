@@ -1,0 +1,16 @@
+---
+description: Project profile and overlay resolver bridge
+alwaysApply: true
+---
+# Project Overlay Rule
+
+작업 시작 시 `sdlc/config/project-profile.example.yaml`의 계약을 기준으로 실제 Project Profile을 찾는다.
+
+적용 우선순위:
+
+`Core Default → Preset → Project Profile → Project Overlay → Domain Overlay → Local Override`
+
+- `sdlc/custom/project/`가 있으면 Project 차이만 읽는다.
+- 현재 RQ/PGM이 특정 Domain에 속하면 `sdlc/custom/domain/<domain>/`을 추가로 읽는다.
+- Overlay가 Core의 안전/추적성 invariant를 제거하려 하면 `CONFIGURATION_GAP` 또는 `DESIGN_CONTINUITY_WARNING`으로 남긴다.
+- Source root, build/test 명령, 기술 Stack은 Project Profile/Source Profile에서 가져오며 Core Skill/Template에 프로젝트 경로를 하드코딩하지 않는다.

@@ -1,0 +1,29 @@
+schema_version: 1
+source:
+  roots:
+    - src
+  test_roots:
+    - tests
+  resource_roots: []
+  excludes:
+    - .git/**
+    - build/**
+    - target/**
+    - node_modules/**
+  existing_assets_first: true
+  static_analysis_first: true
+  full_repository_llm_scan: false
+build:
+  commands: []
+test:
+  commands: []
+evidence:
+  hash_algorithm: sha256
+  preserve_file_path: true
+  preserve_symbol_locator: true
+  preserve_source_hash: true
+  observed_not_confirmed_business_truth: true
+write_policy:
+  min_target_confidence: MEDIUM
+  ambiguous_write: DEFERRED_TARGET_DECISION
+  dangerous_action_policy: EXECUTION_GUARD

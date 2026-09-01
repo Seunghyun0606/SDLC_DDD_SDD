@@ -21,6 +21,10 @@ flowchart LR
 
 미확정 사항이 있어도 업무 프로세스는 계속 진행할 수 있다. 위험한 운영 DB 변경, 충돌난 Source write 같은 **특정 실행행위만** Execution Guard 대상으로 둔다.
 
+## 다른 프로젝트 적용
+
+Core `.cursor/rules`, `.cursor/skills`, `sdlc/templates/core`는 그대로 이식하고 `Project Profile + Source Profile + Project/Domain Overlay`만 프로젝트별로 Custom한다. 구조 검증은 `python sdlc/scripts/validate_harness_structure.py .`로 수행한다.
+
 ## 역할별 시작점
 
 | 역할 | 먼저 볼 것 | 주 동작 |
@@ -82,4 +86,7 @@ flowchart TD
 - `guides/02_SKILL_사용가이드.md`
 - `guides/03_TEMPLATE_산출물가이드.md`
 - `guides/04_HARNESS_커스터마이징가이드.md`
+- `guides/05_전체작업목록_동기화가이드.md`
+- `guides/06_요구사항_Bulk_Intake_가이드.md`
+- `guides/07_Source_연결형_Harness_구조가이드.md`
 - Current Full Design: `design/baselines/AI_SDLC_Harness_Full_Design_v1.5.1.md`

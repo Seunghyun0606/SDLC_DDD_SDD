@@ -2,76 +2,59 @@ schema_version: 1
 session_namespace: SDLC_DESIGN_SESSION_FIRST
 session_base_branch: SDLC_DESIGN_SESSION_FIRST/base
 session_base_commit: bd14bf588efb95371e7c8f5f5a1515536b8cadf8
-branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.2-requirement-intake-poc-v0.3
+branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.3-source-enabled-harness-structure-v0.1
 legacy_branch: null
-branch_version: requirement-intake-poc-v0.3.0
-parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.2-requirement-intake-poc-v0.2
-parent_commit: 8a88015e71e4bf19498cb18292444a7b0383675e
+branch_version: source-enabled-harness-structure-v0.1.0
+parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.2-requirement-intake-poc-v0.3
+parent_commit: cdd9878bd4f291b77a01e5627a1e47bef2cd9e22
 main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
-candidate_design_version: v1.5.2-rc.2
-status: IMPLEMENTED_VALIDATED
+candidate_design_version: v1.5.3-rc.1
+status: IMPLEMENTED_LOCAL_VALIDATED_CI_PENDING
 merge_to_main: false
-branch_policy:
-  create_new_branches_under_session_namespace: true
-  direct_commit_to_main: false
-  preserve_parent_branch_as_validation_baseline: true
-purpose: 실제 142건 Requirement XLSX End-to-End Intake 검증과 재-import identity/header provenance 보강
+purpose: Source가 연결된 프로젝트에서 필요한 Rule/Skill/Template 구조와 다른 프로젝트 이식/Custom 경계를 실제 파일과 Contract로 검증
 scope:
-  - execute importer against actual uploaded 142-row XLSX
-  - verify external requirement id continuity and uniqueness
-  - verify exact RQ grouping and FR coverage
-  - verify raw versus normalized preservation
-  - add stable candidate key for re-import comparison
-  - preserve group header provenance from profile config
-  - validate one RQ vertical slice without inventing Brownfield source evidence
+  - materialize portable core Cursor rules and skills
+  - materialize core artifact templates
+  - define source profile input contract
+  - define project/domain overlay skeleton and precedence
+  - validate Rule to Skill to Template stage continuity
+  - validate source evidence fields for DISCOVERY through VERIFY
 validation:
-  actual_source_rows: 142
-  actual_imported_rows: 142
-  rq_candidates: 22
-  fr_candidates: 142
-  grouping_reviews: 5
-  duplicate_external_ids: 0
-  invalid_rows: 0
-  requirement_intake_tests: 8
-  requirement_intake_tests_result: PASS
+  structural_contract_tests: 8
+  structural_contract_tests_result: PASS_LOCAL
+  inherited_requirement_intake_tests: 8
   inherited_worklist_tests: 6
-  inherited_worklist_tests_result: PASS
-  combined_unittest_count: 14
-  mermaid_docs_quality: PASS
-  github_actions:
-    worklist_sync_quality_run: 36
-    worklist_sync_quality_result: SUCCESS
-    docs_quality_run: 18
-    docs_quality_result: SUCCESS
-actual_uploaded_requirements:
-  file: 요구사항목록.xlsx
-  source_hash: sha256:d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f
-  fl_records: 39
-  te_records: 103
-  optional_assignee_empty: 142
-  optional_schedule_empty: 142
+  inherited_regression_result: CI_PENDING
+  mermaid_docs_quality: PASS_LOCAL_NEW_DOCS
 stage_validation:
-  intake: PASS
-  decompose: CONDITIONAL_PASS
-  clarify: PASS_WARNING
-  process: CONDITIONAL_PASS
-  discovery: INPUT_REQUIRED
-  impact: CANDIDATE
-  design: PARTIAL
-  program: DEFERRED
-  development: DEFERRED
-  test: PARTIAL
-  verify: DEFERRED
-  knowledge: GIVEN_ONLY
+  intake: PASS_INHERITED
+  decompose: STRUCTURE_PASS
+  clarify: STRUCTURE_PASS
+  process: STRUCTURE_PASS
+  discovery: STRUCTURE_PASS_SOURCE_SEMANTICS_PENDING
+  impact: STRUCTURE_PASS_SOURCE_SEMANTICS_PENDING
+  design: STRUCTURE_PASS_SOURCE_SEMANTICS_PENDING
+  program: STRUCTURE_PASS_SOURCE_SEMANTICS_PENDING
+  development: STRUCTURE_PASS_SOURCE_SEMANTICS_PENDING
+  test: STRUCTURE_PASS_SOURCE_SEMANTICS_PENDING
+  verify: STRUCTURE_PASS_SOURCE_SEMANTICS_PENDING
 new_design_gaps:
-  - id: GAP-RI-004
+  - id: GAP-HS-001
+    type: Implementation Gap + Contract Gap
+    status: ENHANCED_POC_IMPLEMENTED
+    title: Portable Harness Package Materialization
+  - id: GAP-HS-002
     type: Contract Gap
     status: ENHANCED_POC_IMPLEMENTED
-    title: Stable Re-import Candidate Identity
-  - id: GAP-RI-005
-    type: Configuration Gap + Implementation Gap
+    title: Rule-Skill-Template Stage Contract
+  - id: GAP-HS-003
+    type: Configuration Gap
     status: ENHANCED_POC_IMPLEMENTED
-    title: Group Header Provenance Execution
-next_step: connect an actual Brownfield application source repository and validate DISCOVERY to PROGRAM on the selected RQ vertical slice
-updated_at: 2026-09-01T18:22:00+09:00
+    title: Source Input Contract
+  - id: GAP-HS-004
+    type: Design Gap + Configuration Gap
+    status: ENHANCED_POC_IMPLEMENTED
+    title: Core and Overlay Isolation
+next_step: apply the portable structure to an actual Brownfield application repository and validate semantic DISCOVERY/IMPACT/PROGRAM accuracy
+updated_at: 2026-09-01T18:40:00+09:00

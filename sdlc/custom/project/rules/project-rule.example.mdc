@@ -1,0 +1,9 @@
+---
+description: Example project-only rule overlay
+alwaysApply: false
+---
+# Project Rule Example
+
+- 실제 프로젝트 Architecture Convention을 여기에 기록한다.
+- Source 경로/패키지/프레임워크 규칙처럼 다른 프로젝트에 일반화할 수 없는 내용만 둔다.
+- Core의 Truth/Evidence 분리, Non-blocking Workflow, Execution Guard, Traceability 규칙을 제거하지 않는다.
