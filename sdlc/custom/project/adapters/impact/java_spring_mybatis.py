@@ -35,10 +35,14 @@ FIELD_RE = re.compile(
     r"\b(?:private|protected|public)\s+(?:static\s+)?(?:final\s+)?"
     r"([A-Za-z_$][\w$]*(?:<[^;=]+>)?(?:\[\])?)\s+([A-Za-z_$][\w$]*)\s*(?:=[^;]*)?;"
 )
-METHOD_RE = re.compile(
-    r"\b(?:public|protected|private)\s+(?:static\s+)?(?:final\s+)?"
-    r"(?:<[^>{}]+>\s+)?([A-Za-z_$][\w$<>, ?\[\].]*)\s+"
-    r"([A-Za-z_$][\w$]*)\s*\(([^)]*)\)\s*(?:throws\s+[^\{]+)?\{"
+# Match only through the opening parameter parenthesis; a balanced scanner handles
+# annotations such as @RequestParam(...) inside the parameter list.
+METHOD_HEAD_RE = re.compile(
+    r"\b(?:public|protected|private)\s+"
+    r"(?:static\s+)?(?:final\s+)?(?:synchronized\s+)?"
+    r"(?:<[^>{}]+>\s+)?"
+    r"([A-Za-z_$][\w$<>, ?\[\].]*)\s+"
+    r"([A-Za-z_$][\w$]*)\s*\("
 )
 MEMBER_CALL_RE = re.compile(r"\b([A-Za-z_$][\w$]*)\.([A-Za-z_$][\w$]*)\s*\(")
 MAPPING_RE = re.compile(
@@ -61,12 +65,12 @@ def _table_name(raw: str) -> str:
     return raw.strip().strip('"').upper()
 
 
-def _balanced_body(text: str, open_brace_index: int) -> tuple[str, int]:
+def _balanced_region(text: str, open_index: int, open_char: str, close_char: str) -> tuple[str, int]:
     depth = 0
     in_string = False
     quote = ""
     escaped = False
-    for index in range(open_brace_index, len(text)):
+    for index in range(open_index, len(text)):
         ch = text[index]
         if in_string:
             if escaped:
@@ -79,23 +83,82 @@ def _balanced_body(text: str, open_brace_index: int) -> tuple[str, int]:
         if ch in {'"', "'"}:
             in_string = True
             quote = ch
-        elif ch == "{":
+            continue
+        if ch == open_char:
             depth += 1
-        elif ch == "}":
+        elif ch == close_char:
             depth -= 1
             if depth == 0:
-                return text[open_brace_index + 1:index], index
-    return text[open_brace_index + 1:], len(text) - 1
+                return text[open_index + 1:index], index
+    return text[open_index + 1:], len(text) - 1
+
+
+def _balanced_body(text: str, open_brace_index: int) -> tuple[str, int]:
+    return _balanced_region(text, open_brace_index, "{", "}")
 
 
 def _annotations_before(text: str, method_start: int) -> list[dict]:
-    prefix = text[max(0, method_start - 700):method_start]
-    # Keep only the suffix after the previous method/class closing brace to reduce false association.
+    prefix = text[max(0, method_start - 1200):method_start]
     suffix = prefix[prefix.rfind("}") + 1:]
     rows = []
     for match in MAPPING_RE.finditer(suffix):
         rows.append({"annotation": match.group(1), "arguments": (match.group(2) or "").strip()})
     return rows
+
+
+def _method_records(text: str) -> list[dict]:
+    methods = []
+    for match in METHOD_HEAD_RE.finditer(text):
+        return_type, method_name = match.groups()
+        open_paren = match.end() - 1
+        params, close_paren = _balanced_region(text, open_paren, "(", ")")
+        cursor = close_paren + 1
+        # Skip whitespace and an optional throws clause. Stop at the first body opener
+        # or abstract/interface semicolon.
+        while cursor < len(text) and text[cursor].isspace():
+            cursor += 1
+        if text.startswith("throws", cursor):
+            brace = text.find("{", cursor)
+            semi = text.find(";", cursor)
+            if brace == -1 and semi == -1:
+                continue
+            cursor = min(x for x in (brace, semi) if x != -1)
+        else:
+            while cursor < len(text) and text[cursor].isspace():
+                cursor += 1
+        if cursor >= len(text):
+            continue
+        if text[cursor] == "{":
+            body, end = _balanced_body(text, cursor)
+            calls = [{"receiver": receiver, "method": method} for receiver, method in MEMBER_CALL_RE.findall(body)]
+        elif text[cursor] == ";":
+            body, end, calls = "", cursor, []
+        else:
+            # Generic parser fallback: find the next body/semicolon only if it occurs
+            # before another statement boundary.
+            brace = text.find("{", cursor, min(len(text), cursor + 500))
+            semi = text.find(";", cursor, min(len(text), cursor + 500))
+            choices = [x for x in (brace, semi) if x != -1]
+            if not choices:
+                continue
+            cursor = min(choices)
+            if text[cursor] == "{":
+                body, end = _balanced_body(text, cursor)
+                calls = [{"receiver": receiver, "method": method} for receiver, method in MEMBER_CALL_RE.findall(body)]
+            else:
+                body, end, calls = "", cursor, []
+        methods.append({
+            "name": method_name,
+            "return_type": return_type.strip(),
+            "params": params.strip(),
+            "body": body,
+            "calls": calls,
+            "annotations": _annotations_before(text, match.start()),
+            "start": match.start(),
+            "end": end,
+            "has_body": bool(body),
+        })
+    return methods
 
 
 def _symbol_id(fqcn: str, method: str) -> str:
@@ -117,7 +180,10 @@ def _data_id(table: str) -> str:
 def parse_java(root: Path) -> dict:
     classes = {}
     for path in sorted(root.rglob("*.java")):
-        text = path.read_text(encoding="utf-8")
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
         package_match = PACKAGE_RE.search(text)
         class_match = JAVA_CLASS_RE.search(text)
         if not class_match:
@@ -126,21 +192,6 @@ def parse_java(root: Path) -> dict:
         class_name = class_match.group(1)
         fqcn = f"{package}.{class_name}" if package else class_name
         fields = {name: typ.split("<", 1)[0].replace("[]", "") for typ, name in FIELD_RE.findall(text)}
-        methods = []
-        for match in METHOD_RE.finditer(text):
-            return_type, method_name, params = match.groups()
-            body, end = _balanced_body(text, match.end() - 1)
-            calls = [{"receiver": receiver, "method": method} for receiver, method in MEMBER_CALL_RE.findall(body)]
-            methods.append({
-                "name": method_name,
-                "return_type": return_type.strip(),
-                "params": params.strip(),
-                "body": body,
-                "calls": calls,
-                "annotations": _annotations_before(text, match.start()),
-                "start": match.start(),
-                "end": end,
-            })
         classes[fqcn] = {
             "fqcn": fqcn,
             "class_name": class_name,
@@ -148,7 +199,7 @@ def parse_java(root: Path) -> dict:
             "path": path,
             "relpath": _rel(root, path),
             "fields": fields,
-            "methods": methods,
+            "methods": _method_records(text),
             "text": text,
         }
     return classes
@@ -184,7 +235,10 @@ def parse_mybatis(root: Path) -> dict:
 def parse_schema(root: Path) -> dict[str, dict]:
     tables = {}
     for path in sorted(root.rglob("*.sql")):
-        text = path.read_text(encoding="utf-8")
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
         for match in CREATE_TABLE_RE.finditer(text):
             table = _table_name(match.group(1))
             tables.setdefault(table, {"table": table, "path": path, "relpath": _rel(root, path)})
@@ -199,7 +253,6 @@ def sql_lineage(sql: str, statement_tag: str) -> tuple[set[str], set[str]]:
     writes.update(_table_name(x) for x in DELETE_TABLE_RE.findall(sql))
     merge_targets = {_table_name(x) for x in MERGE_TABLE_RE.findall(sql)}
     writes.update(merge_targets)
-    # MERGE must inspect target rows to decide MATCHED/NOT MATCHED.
     reads.update(merge_targets)
     reads.discard("DUAL")
     writes.discard("DUAL")
@@ -217,16 +270,13 @@ def analyze(source_root: Path) -> dict:
     nodes: dict[str, dict] = {}
     edges: dict[tuple[str, str, str], dict] = {}
     coverage_gaps = []
-    unsupported_patterns = []
 
     def add_node(node: dict) -> None:
         nodes.setdefault(node["id"], node)
 
     def add_edge(edge: dict) -> None:
-        key = (edge["from"], edge["type"], edge["to"])
-        edges.setdefault(key, edge)
+        edges.setdefault((edge["from"], edge["type"], edge["to"]), edge)
 
-    # Schema assets first so SQL lineage can reuse stable DATA_ASSET nodes.
     for table, info in sorted(schema_tables.items()):
         add_node({
             "id": _data_id(table),
@@ -236,7 +286,6 @@ def analyze(source_root: Path) -> dict:
             "status": "OBSERVED",
         })
 
-    # MyBatis statement symbols and SQL lineage.
     for namespace, mapper in sorted(mappers.items()):
         for statement_id, statement in sorted(mapper["statements"].items()):
             statement_node = _mybatis_id(namespace, statement_id)
@@ -280,7 +329,6 @@ def analyze(source_root: Path) -> dict:
     simple_class = {item["class_name"]: fqcn for fqcn, item in classes.items()}
     mapper_simple = {namespace.rsplit(".", 1)[-1]: namespace for namespace in mappers}
 
-    # Java symbols and entry points.
     for fqcn, cls in sorted(classes.items()):
         is_controller_name = cls["class_name"].endswith("Controller")
         for method in cls["methods"]:
@@ -328,9 +376,10 @@ def analyze(source_root: Path) -> dict:
                     "status": "CHECK_REQUIRED",
                 })
 
-    # Direct member calls: caller -> callee and reverse CALLER edge.
     for fqcn, cls in sorted(classes.items()):
         for method in cls["methods"]:
+            if not method["has_body"]:
+                continue
             caller = _symbol_id(fqcn, method["name"])
             for call in method["calls"]:
                 receiver_type = cls["fields"].get(call["receiver"])
@@ -338,13 +387,14 @@ def analyze(source_root: Path) -> dict:
                     continue
                 target = None
                 evidence = f"{call['receiver']}.{call['method']}(...) in {cls['relpath']}#{fqcn}.{method['name']}"
-                confidence = "HIGH"
-                status = "OBSERVED"
                 if receiver_type in simple_class:
-                    target = _symbol_id(simple_class[receiver_type], call["method"])
-                    if target not in nodes:
-                        target = None
-                elif receiver_type in mapper_simple:
+                    candidate = _symbol_id(simple_class[receiver_type], call["method"])
+                    if candidate in nodes:
+                        target = candidate
+                # A Java interface and a MyBatis namespace often share the same name.
+                # If the source-symbol candidate is absent, fall through to the MyBatis
+                # statement instead of silently dropping the relation.
+                if target is None and receiver_type in mapper_simple:
                     namespace = mapper_simple[receiver_type]
                     candidate = _mybatis_id(namespace, call["method"])
                     if candidate in nodes:
@@ -355,34 +405,65 @@ def analyze(source_root: Path) -> dict:
                         "to": target,
                         "type": "CALLEE",
                         "evidence": evidence,
-                        "confidence": confidence,
-                        "status": status,
+                        "confidence": "HIGH",
+                        "status": "OBSERVED",
                     })
                     add_edge({
                         "from": target,
                         "to": caller,
                         "type": "CALLER",
                         "evidence": evidence,
-                        "confidence": confidence,
-                        "status": status,
+                        "confidence": "HIGH",
+                        "status": "OBSERVED",
                     })
 
     entry_nodes = [n for n in nodes.values() if n["type"] == "ENTRY_POINT"]
     call_edges = [e for e in edges.values() if e["type"] in {"CALLER", "CALLEE"}]
     data_edges = [e for e in edges.values() if e["type"] in {"READS", "WRITES"}]
-    test_files = sorted(_rel(source_root, p) for p in source_root.rglob("*") if p.is_file() and ("test" in p.name.lower() or "/test/" in "/" + _rel(source_root, p).lower()))
-    build_files = sorted(_rel(source_root, p) for p in source_root.rglob("*") if p.is_file() and p.name in {"pom.xml", "build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"})
+    test_like = sorted(
+        _rel(source_root, p)
+        for p in source_root.rglob("*")
+        if p.is_file() and ("test" in p.name.lower() or "/test/" in p.as_posix().lower() or "/tests/" in p.as_posix().lower())
+    )
 
-    explicit_entry = any(n["type"] == "ENTRY_POINT" and n["status"] == "OBSERVED" for n in nodes.values())
-    inferred_entry = any(n["type"] == "ENTRY_POINT" and n["status"] == "CHECK_REQUIRED" for n in nodes.values())
-    if inferred_entry and not explicit_entry:
+    medium_entries = [n for n in entry_nodes if n["status"] == "CHECK_REQUIRED"]
+    if not entry_nodes:
+        entry_status = "GAP"
+        entry_evidence = "No Spring mapping or Controller naming candidate observed"
+    elif medium_entries:
+        entry_status = "PARTIAL"
+        entry_evidence = f"{len(medium_entries)} naming-convention candidate(s); annotation confirmation required"
         coverage_gaps.append({
             "code": "SPRING_MAPPING_ANNOTATION_NOT_FOUND",
             "dimension": "ENTRY_POINT",
-            "detail": "Controller naming convention produced entry-point candidates, but no Spring mapping annotation was observed.",
+            "detail": f"{len(medium_entries)} Controller method(s) rely on naming convention only.",
         })
+    else:
+        entry_status = "COVERED"
+        entry_evidence = f"{len(entry_nodes)} Spring mapping entry point(s) observed"
 
-    static_gaps = [
+    call_status = "COVERED" if call_edges else "GAP"
+    call_evidence = f"{len(call_edges)} direct caller/callee edge(s); dynamic dispatch excluded" if call_edges else "No direct field-member call relation observed"
+    data_status = "COVERED" if data_edges else "GAP"
+    data_evidence = f"{len(data_edges)} SQL READS/WRITES edge(s) observed" if data_edges else "No SQL table read/write lineage observed"
+    test_status = "PARTIAL" if test_like else "GAP"
+    test_evidence = f"Observed test-like files: {test_like[:8]}" if test_like else "No test files observed; test semantics not resolved"
+
+    coverage = [
+        {"dimension": "ENTRY_POINT", "status": entry_status, "evidence_or_gap": entry_evidence},
+        {"dimension": "CALLER", "status": call_status, "evidence_or_gap": call_evidence},
+        {"dimension": "CALLEE", "status": call_status, "evidence_or_gap": call_evidence},
+        {"dimension": "DATA_READ_WRITE", "status": data_status, "evidence_or_gap": data_evidence},
+        {"dimension": "TRANSACTION", "status": "GAP", "evidence_or_gap": "Transaction semantics are not resolved"},
+        {"dimension": "EXTERNAL_INTERFACE", "status": "GAP", "evidence_or_gap": "HTTP/client contracts are not resolved"},
+        {"dimension": "EVENT", "status": "GAP", "evidence_or_gap": "Event publication/subscription is not resolved"},
+        {"dimension": "CONFIG_FEATURE_FLAG", "status": "GAP", "evidence_or_gap": "Config/profile/feature-flag wiring is not resolved"},
+        {"dimension": "TEST", "status": test_status, "evidence_or_gap": test_evidence},
+        {"dimension": "MODULE_BUILD_DEPENDENCY", "status": "GAP", "evidence_or_gap": "Module/build dependency graph is not resolved"},
+        {"dimension": "DYNAMIC_RUNTIME_GAP", "status": "GAP", "evidence_or_gap": "Reflection/proxy/runtime wiring is unsupported"},
+    ]
+
+    fixed_gaps = [
         ("TRANSACTION_BOUNDARY_NOT_CONFIRMED", "TRANSACTION", "@Transactional/transaction manager semantics are not resolved by this pilot."),
         ("EXTERNAL_INTERFACE_NOT_RESOLVED", "EXTERNAL_INTERFACE", "HTTP clients, Feign/WebClient/RestTemplate contracts are not resolved."),
         ("EVENT_WIRING_NOT_RESOLVED", "EVENT", "Kafka/JMS/event publication/subscription is not resolved."),
@@ -390,82 +471,48 @@ def analyze(source_root: Path) -> dict:
         ("MODULE_BUILD_DEPENDENCY_NOT_RESOLVED", "MODULE_BUILD_DEPENDENCY", "Build/module dependency graph is not resolved."),
         ("DYNAMIC_DISPATCH_UNSUPPORTED", "DYNAMIC_RUNTIME_GAP", "Reflection, proxies, runtime bean selection and dynamic dispatch are outside static pilot coverage."),
     ]
-    for code, dimension, detail in static_gaps:
+    for code, dimension, detail in fixed_gaps:
         coverage_gaps.append({"code": code, "dimension": dimension, "detail": detail})
-
-    if not test_files:
-        coverage_gaps.append({"code": "TEST_COVERAGE_NOT_OBSERVED", "dimension": "TEST", "detail": "No test file was observed under the analyzed root."})
-    if not build_files:
-        coverage_gaps.append({"code": "BUILD_FILE_NOT_OBSERVED", "dimension": "MODULE_BUILD_DEPENDENCY", "detail": "No Maven/Gradle build file was observed under the analyzed root."})
-
-    unsupported_patterns.extend([
-        {"pattern": "reflection_dynamic_dispatch", "status": "UNSUPPORTED", "evidence": "Static regex/symbol candidate parser only"},
-        {"pattern": "spring_proxy_runtime_wiring", "status": "UNSUPPORTED", "evidence": "No Spring container/runtime model"},
-        {"pattern": "transaction_propagation", "status": "UNSUPPORTED", "evidence": "No transaction semantic engine"},
-        {"pattern": "external_interface_contract_resolution", "status": "UNSUPPORTED", "evidence": "Not implemented in pilot"},
-        {"pattern": "event_bus_resolution", "status": "UNSUPPORTED", "evidence": "Not implemented in pilot"},
-    ])
-
-    coverage = []
-    for dimension in COVERAGE_DIMENSIONS:
-        if dimension == "ENTRY_POINT":
-            if explicit_entry:
-                status, evidence = "COVERED", f"{len(entry_nodes)} entry point node(s); at least one mapping annotation observed"
-            elif entry_nodes:
-                status, evidence = "PARTIAL", f"{len(entry_nodes)} naming-convention candidate(s); annotation confirmation required"
-            else:
-                status, evidence = "GAP", "No entry point evidence observed"
-        elif dimension in {"CALLER", "CALLEE"}:
-            status = "COVERED" if call_edges else "GAP"
-            evidence = f"{len(call_edges)} direct caller/callee edge(s); dynamic dispatch excluded" if call_edges else "No resolvable direct field-member calls"
-        elif dimension == "DATA_READ_WRITE":
-            status = "COVERED" if data_edges else "GAP"
-            evidence = f"{len(data_edges)} MyBatis SQL data edge(s)" if data_edges else "No MyBatis table lineage observed"
-        elif dimension == "TEST":
-            status = "PARTIAL" if test_files else "GAP"
-            evidence = f"Observed test-like files: {test_files}" if test_files else "No test files observed; test semantics not resolved"
-        elif dimension == "MODULE_BUILD_DEPENDENCY":
-            status = "PARTIAL" if build_files else "GAP"
-            evidence = f"Observed build files: {build_files}; dependency graph not parsed" if build_files else "No build file observed; dependency graph not resolved"
-        else:
-            gap = next((g for g in coverage_gaps if g["dimension"] == dimension), None)
-            status = "GAP" if gap else "PARTIAL"
-            evidence = gap["detail"] if gap else "Checked only by narrow static pilot"
-        coverage.append({"dimension": dimension, "status": status, "evidence_or_gap": evidence})
-
-    project_context = {
-        "language": "JAVA",
-        "framework": "SPRING_STATIC_CANDIDATE",
-        "persistence": ["MYBATIS"] if mappers else [],
-        "source_root": str(source_root),
-        "java_class_count": len(classes),
-        "mybatis_mapper_count": len(mappers),
-        "schema_table_count": len(schema_tables),
-    }
+    if not test_like:
+        coverage_gaps.append({
+            "code": "TEST_COVERAGE_NOT_OBSERVED",
+            "dimension": "TEST",
+            "detail": "No test file was observed under the analyzed root.",
+        })
 
     return {
         "adapter_id": ADAPTER_ID,
-        "project_context": project_context,
+        "project_context": {
+            "language": "Java",
+            "framework": "Spring static candidates",
+            "persistence": ["MyBatis XML"],
+            "source_root": str(source_root),
+        },
         "nodes": [nodes[key] for key in sorted(nodes)],
         "edges": [edges[key] for key in sorted(edges)],
         "coverage": coverage,
-        "coverage_gaps": coverage_gaps,
-        "unsupported_patterns": unsupported_patterns,
+        "coverage_gaps": sorted(coverage_gaps, key=lambda x: (x.get("dimension", ""), x.get("code", ""))),
+        "unsupported_patterns": [
+            {"pattern": "reflection_dynamic_dispatch", "status": "UNSUPPORTED"},
+            {"pattern": "spring_proxy_runtime_wiring", "status": "UNSUPPORTED"},
+            {"pattern": "transaction_propagation", "status": "UNSUPPORTED"},
+            {"pattern": "external_api_event_config_semantics", "status": "UNSUPPORTED"},
+        ],
         "completion_status": "PARTIAL_COVERAGE_GAPS",
         "business_impact_confirmed": False,
     }
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Java/Spring/MyBatis project impact adapter pilot")
+    parser = argparse.ArgumentParser(description="Java/Spring/MyBatis static Project Impact Adapter pilot")
     parser.add_argument("--source-root", required=True)
     parser.add_argument("--out", required=True)
     args = parser.parse_args(argv)
-
-    root = Path(args.source_root)
-    if not root.is_dir():
-        parser.error(f"source root is not a directory: {root}")
-    result = analyze(root)
+    source_root = Path(args.source_root)
+    if not source_root.is_dir():
+        print(f"ERROR: source root not found: {source_root}")
+        return 2
+    result = analyze(source_root)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
