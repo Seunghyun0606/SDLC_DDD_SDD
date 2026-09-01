@@ -23,6 +23,17 @@
 4. Architecture/DB/Test/Security Standard
 5. 유사 Program은 구조 참고만 하고 업무 Rule 근거로 사용하지 않는다.
 
+## 실행 계약(Agent Execution Contract)
+| 항목 | 실행 규칙 |
+|---|---|
+| 입력 필드 | FR/Functional Design/Impact, Source Evidence, Architecture/DB/Test Standard, AC/TC를 확인한다. 실제 Source가 없으면 `OPEN_REAL_SOURCE`를 명시한다. |
+| 근거 분류 | 실제 Symbol/Table/Annotation은 OBSERVED, 승인된 업무/기능 규칙은 CONFIRMED/GIVEN, 구조 제안은 INFERRED/ASSUMED로 구분한다. |
+| 실행 순서 | 기존 PGM 재사용 확인 → Entry Point/Target → Symbol Evidence → Input/Output → Business Rule → Data/Transaction/Concurrency → Integration/Error/Security/NFR → TASK/AC/TC → DoR 판정 순서로 수행한다. |
+| 계속/중단 조건 | OPEN 항목이 있어도 Program Spec은 PARTIAL로 작성한다. Source write는 실제 Target confidence와 Execution Guard가 충족될 때만 허용한다. |
+| 출력 필드 매핑 | PGM ID, change type, artifact/symbol locator, DTO, rule, data, transaction, integration, error, security, NFR, TASK/AC/TC, 17-field DoR를 기록한다. |
+| 품질 게이트 | 모든 OBSERVED 항목에 Evidence가 있고, 17개 DoR 상태가 명시되며, OPEN 또는 simulated source가 있으면 READY가 아니어야 한다. |
+| 미확정/실패 처리 | Source 미확정은 OPEN_REAL_SOURCE, DTO/Rule/Table/Contract 미확정은 OPEN, Target ambiguity는 EXECUTION_GUARDED 또는 PARTIAL로 유지한다. |
+
 ## Steps
 1. 기존 Program 재사용 가능성과 실제 Source target을 확인한다.
 2. PGM Change Type/Spec Level/Entry Point를 정한다.
