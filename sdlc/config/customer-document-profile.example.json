@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "customer": "example-customer",
   "project": "example-project",
   "language": "ko-KR",
@@ -10,13 +10,21 @@
     "technical_detail_location": "APPENDIX",
     "first_use_expand_abbreviation": true
   },
+  "active_document_types": ["solution_agreement","delivery_scope","acceptance_handover"],
   "default_optional_sections": ["범위와_제외범위","결정_필요사항"],
   "document_overrides": {
-    "design_review": {"enable_optional":["테스트와_인수기준"],"disable_optional":["기술_상세_부록"]},
-    "verification_approval": {"enable_optional":["근거_상세_부록"]}
+    "solution_agreement": {"enable_optional":["테스트와_인수기준"],"disable_optional":["기술_상세_부록"]},
+    "delivery_scope": {"enable_optional":["위험과_대응"],"disable_optional":[]},
+    "acceptance_handover": {"enable_optional":["근거_상세_부록"],"disable_optional":[]}
   },
   "terminology_overrides": {
     "상위 요구사항":"업무 요청",
     "프로그램":"개발 기능"
+  },
+  "projection": {
+    "prefer_latest_stage_content": true,
+    "deduplicate_repeated_content": true,
+    "include_source_artifact_list_in_appendix": false,
+    "legacy_type_requests_are_mapped_to_active_view": true
   }
 }
