@@ -1,0 +1,19 @@
+open_item:
+  open_item_id: OPEN-<sequence>
+  project_id: ""
+  scope_id: ""
+  title: ""
+  description: ""
+  state: OPEN  # OPEN | ASSUMED | RESOLVED | DEFERRED | GUARDED
+  severity: WARNING  # INFO | WARNING | CRITICAL
+  truth_state: OPEN
+  created_at_stage: ""
+  evidence_ids: []
+  assumption: ""
+  blocks_analysis: false
+  blocks_design: false
+  blocks_side_effecting_action: false
+  deferred_action: ""
+  resolution_criteria: ""
+  resolved_by: ""
+  resolved_at: ""
