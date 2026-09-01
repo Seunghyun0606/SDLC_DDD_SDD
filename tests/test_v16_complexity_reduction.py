@@ -19,6 +19,18 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
         self.assertIn('이 5개가 있으면 `/work`를 시작할 수 있다',text)
         self.assertIn('Profile을 채우는 것만으로 Adapter 기능이 구현되는 것은 아니다',text)
 
+    def test_requirement_intake_and_analysis_use_one_active_artifact(self):
+        harness=json.loads((ROOT/'sdlc/design/contracts/harness-package-contract.json').read_text(encoding='utf-8'))
+        decompose=harness['stage_contracts']['DECOMPOSE']
+        self.assertEqual('requirement.md',decompose['template'])
+        self.assertTrue(decompose['single_requirement_artifact'])
+        req=(ROOT/'sdlc/templates/core/requirement.md').read_text(encoding='utf-8')
+        for marker in ['### 원문과 식별정보','### 기능 요구사항(FR)','### 업무 규칙(BR) 후보','### 인수 조건(AC)']:
+            self.assertIn(marker,req)
+        legacy=(ROOT/'sdlc/templates/core/requirement-analysis.md').read_text(encoding='utf-8')
+        self.assertIn('DEPRECATED_COMPATIBILITY_VIEW',legacy)
+        self.assertIn('이 View에서 FR/BR/AC를 다시 작성하지 않는다',legacy)
+
     def test_program_spec_does_not_duplicate_functional_design_semantics(self):
         text=(ROOT/'sdlc/templates/core/program-spec.md').read_text(encoding='utf-8')
         for old in [
