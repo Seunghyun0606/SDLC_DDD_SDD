@@ -1,4 +1,4 @@
-version: 3
+version: 4
 status: P1_FOUNDATION_STRUCTURAL_REDESIGN_V1_ACTIVE
 purpose: >-
   Phase 0의 논리적 manifest/capabilities/decisions/contracts 역할과 P1 Foundation의
@@ -61,6 +61,8 @@ baseline_roles:
     authority: sdlc/templates/stage-input-pack.yaml
     routing: sdlc/config/stage-routing.yaml
     resolver: sdlc/scripts/resolve_stage_execution.py
+    command_context_template: sdlc/templates/command-runtime-context.yaml
+    command_context_builder: sdlc/scripts/build_command_context.py
     granularity: sdlc/config/stage-pack-granularity.yaml
   canonical_publish:
     authority: sdlc/config/canonical-publish.yaml
@@ -68,10 +70,13 @@ baseline_roles:
   source_discovery:
     authority: sdlc/config/source-discovery.yaml
     inventory: sdlc/scripts/discover_source_inventory.py
+    bounded_trace: sdlc/scripts/collect_bounded_source_evidence.py
+    target_context: sdlc/templates/source-target-context.yaml
     analyzer_registry: sdlc/config/source-analyzers.yaml
   reverse_sync:
     authority: sdlc/design/contracts/source-reverse-sync-contract.md
     classification: sdlc/config/reverse-sync-classification.yaml
+    source_change_template: sdlc/templates/source-change-evidence.yaml
     runtime: sdlc/scripts/build_reverse_sync_from_signals.py
   test_verification:
     authority: sdlc/config/test-verification.yaml
@@ -90,6 +95,7 @@ baseline_roles:
     executor: sdlc/scripts/execute_command_runtime.py
   e2e_status:
     authority: sdlc/config/e2e-orchestration.yaml
+    structural_redesign_status: LEGACY_ORCHESTRATION_NOT_YET_GENERIC
   low_agent_execution:
     authority: sdlc/design/contracts/low-agent-execution-contract.md
 
