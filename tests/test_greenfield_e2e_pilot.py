@@ -1,12 +1,13 @@
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "sdlc/scripts/run_greenfield_e2e_pilot.py"
-SEED = ROOT / "sdlc/validation/pilot/greenfield/REQ_TM_FL001-seed.json"
+FIXTURE_PROVIDER = ROOT / "sdlc/validation/providers/deterministic_stage_provider.py"
 
 spec = importlib.util.spec_from_file_location("greenfield_e2e_pilot", SCRIPT)
 MOD = importlib.util.module_from_spec(spec)
@@ -14,85 +15,95 @@ assert spec and spec.loader
 spec.loader.exec_module(MOD)
 
 
-class GreenfieldE2EPilotTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.seed = json.loads(SEED.read_text(encoding="utf-8"))
-        cls.result = MOD.run(cls.seed)
-        cls.stages = {row["stage"]: row for row in cls.result["stages"]}
+def copy_harness(root: Path):
+    target = root / "sdlc/design/contracts/harness-package-contract.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text((ROOT / "sdlc/design/contracts/harness-package-contract.json").read_text(encoding="utf-8"), encoding="utf-8")
 
-    def test_real_requirement_id_and_text_are_preserved(self):
-        self.assertEqual("REQ_TM_FL001", self.result["input"]["external_id"])
-        self.assertEqual("탄력근로제 근무계획 저장", self.result["input"]["requirement_text"])
-        self.assertEqual("요구사항목록.xlsx", self.result["input"]["source_document"])
 
-    def test_greenfield_can_start_without_repository(self):
-        self.assertIsNone(self.result["input"]["existing_source_repository"])
-        self.assertFalse(self.result["metrics"]["source_repository_required_to_start"])
-        self.assertEqual("NOT_APPLICABLE_NO_EXISTING_SOURCE", self.stages["DISCOVERY"]["status"])
-        self.assertFalse(self.stages["DISCOVERY"]["brownfield_adapter_invoked"])
+def provider(enabled=True):
+    return {
+        "schema_version": 1,
+        "provider_id": "GREENFIELD_TEST_FIXTURE",
+        "provider_class": "VALIDATION_FIXTURE",
+        "enabled": enabled,
+        "timeout_seconds": 30,
+        "result_filename": "stage-result.json",
+        "command": [
+            sys.executable,
+            str(FIXTURE_PROVIDER),
+            "--context",
+            "{context_path}",
+            "--result",
+            "{result_path}",
+        ],
+    }
 
-    def test_missing_business_context_becomes_open_not_invented(self):
-        six_w = self.stages["PROCESS"]["six_w"]
-        for key in ["Who", "When", "Where", "Why"]:
-            self.assertEqual("OPEN", six_w[key])
-        self.assertEqual(0, self.result["metrics"]["business_fact_invention_count"])
-        self.assertGreaterEqual(self.result["metrics"]["open_item_count"], 5)
 
-    def test_human_open_view_uses_simple_status_only(self):
-        statuses = {row["human_status"] for row in self.result["open_items"]}
-        self.assertEqual({"미확정"}, statuses)
-        serialized = json.dumps(self.result["open_items"], ensure_ascii=False)
-        for machine_term in ["decision_domain", "basis_class", "downstream_impact", "resolution_method"]:
-            self.assertNotIn(machine_term, serialized)
+class GreenfieldProviderDrivenE2ETest(unittest.TestCase):
+    def test_runner_source_has_no_time_domain_stage_answers(self):
+        text = SCRIPT.read_text(encoding="utf-8")
+        for hardcoded in ["근무계획", "탄력근로", "누가 이 기능을 사용하거나 실행하는가?", "PASS_AGENT_E2E_REPLAY"]:
+            self.assertNotIn(hardcoded, text)
+        self.assertIn("run_work.py", text)
+        self.assertIn("PASS_EXECUTOR_E2E_FIXTURE_PROVIDER", text)
 
-    def test_program_and_development_do_not_fake_readiness(self):
-        self.assertEqual("OPEN_REAL_SOURCE", self.stages["PROGRAM"]["source_state"])
-        self.assertEqual("NOT_READY", self.stages["PROGRAM"]["readiness"])
-        self.assertFalse(self.stages["DEVELOPMENT"]["source_write_performed"])
-        self.assertEqual(0, self.result["metrics"]["source_write_count"])
-
-    def test_verify_and_knowledge_do_not_claim_success(self):
-        self.assertFalse(self.stages["VERIFY"]["success_claimed"])
-        self.assertEqual("NOT_PROMOTED", self.stages["KNOWLEDGE"]["status"])
-
-    def test_active_user_artifacts_are_compact(self):
-        self.assertEqual(6, self.result["metrics"]["active_user_artifact_count"])
-        self.assertFalse(self.result["metrics"]["machine_result_envelope_is_user_artifact"])
-        self.assertEqual(0, self.result["metrics"]["required_machine_taxonomy_input_count"])
-
-    def test_materialized_artifacts_are_six_human_readable_documents(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            artifact_root = Path(tmp) / "artifacts"
-            names = MOD.materialize(self.result, artifact_root)
-            self.assertEqual(sorted(MOD.USER_ARTIFACTS), names)
-            self.assertEqual(6, len(list(artifact_root.glob("*.md"))))
-            combined = "\n".join(path.read_text(encoding="utf-8") for path in sorted(artifact_root.glob("*.md")))
-            self.assertIn("REQ_TM_FL001", combined)
-            self.assertIn("탄력근로제 근무계획 저장", combined)
-            self.assertIn("미확정", combined)
-            for machine_term in ["decision_domain", "basis_class", "downstream_impact", "resolution_method", "Source Hash"]:
-                self.assertNotIn(machine_term, combined)
-
-    def test_all_workflow_stages_are_accounted_for(self):
-        self.assertEqual(MOD.WORKFLOW, self.result["workflow"])
-        self.assertEqual(len(MOD.WORKFLOW), self.result["metrics"]["workflow_stage_count"])
-
-    def test_verdict_does_not_claim_human_usability(self):
-        self.assertEqual("PASS_AGENT_E2E_REPLAY_HUMAN_USABILITY_NOT_MEASURED", self.result["verdict"])
-        self.assertTrue(any("사용시간" in item for item in self.result["limitations"]))
-
-    def test_cli_writes_result_and_materializes_documents(self):
+    def test_non_time_domain_requirement_runs_real_work_executor_with_fixture(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            output = root / "greenfield.json"
-            artifacts = root / "artifacts"
-            rc = MOD.main(["--seed", str(SEED), "--output", str(output), "--artifact-root", str(artifacts)])
-            self.assertEqual(0, rc)
-            payload = json.loads(output.read_text(encoding="utf-8"))
-            self.assertEqual("REQ_TM_FL001", payload["input"]["external_id"])
-            self.assertEqual(sorted(MOD.USER_ARTIFACTS), payload["materialized_artifacts"])
-            self.assertEqual(6, len(list(artifacts.glob("*.md"))))
+            copy_harness(root)
+            seed = {
+                "schema_version": 1,
+                "pilot_id": "CLAIM-001",
+                "mode": "GREENFIELD",
+                "external_id": "CLM-001",
+                "requirement_text": "보험금 청구 심사 기능이 필요하다.",
+            }
+            result = MOD.run(
+                root,
+                seed,
+                provider(),
+                runtime_root=root / "runtime/greenfield",
+                stages=["DECOMPOSE", "PROCESS", "DESIGN", "PROGRAM"],
+            )
+            self.assertEqual("PASS_EXECUTOR_E2E_FIXTURE_PROVIDER", result["verdict"])
+            self.assertFalse(result["actual_agent_provider_executed"])
+            self.assertEqual(4, len(result["stage_results"]))
+            self.assertEqual(4, len(result["materialized_artifacts"]))
+            self.assertTrue(all(row["execution"]["validation"]["status"] == "PASS" for row in result["stage_results"]))
+
+    def test_disabled_provider_is_not_reported_as_pass(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copy_harness(root)
+            seed = {
+                "schema_version": 1,
+                "pilot_id": "BANK-001",
+                "mode": "GREENFIELD",
+                "external_id": "LOAN-001",
+                "requirement_text": "은행 대출 승인 기능이 필요하다.",
+            }
+            result = MOD.run(root, seed, provider(False), runtime_root=root / "runtime/greenfield")
+            self.assertEqual("NOT_EXECUTED_PROVIDER_UNAVAILABLE_OR_DISABLED", result["verdict"])
+            self.assertFalse(result["actual_agent_provider_executed"])
+            self.assertEqual([], result["stage_results"])
+
+    def test_only_external_agent_class_can_claim_agent_execution(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            copy_harness(root)
+            seed = {
+                "schema_version": 1,
+                "pilot_id": "SAAS-001",
+                "mode": "GREENFIELD",
+                "external_id": "AUTH-001",
+                "requirement_text": "SaaS 사용자 권한 변경 기능이 필요하다.",
+            }
+            fixture = provider()
+            result = MOD.run(root, seed, fixture, runtime_root=root / "runtime/greenfield", stages=["DESIGN"])
+            self.assertEqual("VALIDATION_FIXTURE", result["provider_class"])
+            self.assertFalse(result["actual_agent_provider_executed"])
+            self.assertNotEqual("PASS_AGENT_E2E_PROVIDER_EXECUTION", result["verdict"])
 
 
 if __name__ == "__main__":
