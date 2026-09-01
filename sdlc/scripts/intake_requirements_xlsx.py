@@ -160,13 +160,13 @@ def intake(path: Path, config: dict[str, Any], sheet_name: str | None = None, on
     records = []
     all_ids = []
     skipped = []
-    for ridx, row in enumerate(rows[header_idx + 1 :], start=header_idx + 2):
+    for source_row, row in enumerate(rows[header_idx + 1 :], start=header_idx + 2):
         record = {field: row_get(row, mapping, field) for field in (config.get("field_order") or mapping.keys())}
         if all(record.get(field) in {None, ""} for field in required):
             continue
         missing = [field for field in required if record.get(field) in {None, ""}]
         if missing:
-            skipped.append({"source_row": ridx + 1, "reason": "MISSING_REQUIRED_FIELD", "fields": missing})
+            skipped.append({"source_row": source_row, "reason": "MISSING_REQUIRED_FIELD", "fields": missing})
             continue
         source_id = str(record["source_requirement_id"]).strip()
         all_ids.append(source_id)
@@ -174,7 +174,7 @@ def intake(path: Path, config: dict[str, Any], sheet_name: str | None = None, on
             continue
         record["source_requirement_id"] = source_id
         records.append({
-            "source_row": ridx + 1,
+            "source_row": source_row,
             "truth_state": "GIVEN",
             **record,
         })
