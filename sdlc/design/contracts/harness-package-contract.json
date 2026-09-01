@@ -1,5 +1,5 @@
 {
-  "schema_version": 10,
+  "schema_version": 11,
   "candidate_design": "v1.6.0-rc.1",
   "core_required_files": [
     ".cursor/rules/00-core.mdc",
@@ -15,6 +15,7 @@
     "sdlc/config/program-spec-readiness.json",
     "sdlc/scripts/validate_program_spec.py",
     "sdlc/scripts/apply_canonical_delta.py",
+    "sdlc/scripts/validate_agent_stage_result.py",
     "sdlc/config/terminology-profile.example.json",
     "sdlc/config/customer-document-profile.example.json",
     "sdlc/config/br-intake-profile.example.json",
@@ -163,7 +164,11 @@
   "agent_execution": {
     "contract": "sdlc/design/contracts/agent-execution-contract.json",
     "required_in_all_stage_references": true,
-    "format_strengthening_is_core_common": true
+    "format_strengthening_is_core_common": true,
+    "stage_result_validator": "sdlc/scripts/validate_agent_stage_result.py",
+    "machine_verifiable_output": true,
+    "semantic_repeatability_check": true,
+    "validator_does_not_claim_llm_determinism": true
   },
   "brownfield_impact": {
     "contract": "sdlc/design/contracts/brownfield-impact-contract.json",
