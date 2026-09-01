@@ -38,6 +38,57 @@ def _apply_capability_candidates(required, optional, candidates, mode):
             optional.append(capability)
 
 
+def _known_side_effect_capabilities(routing: dict[str, Any]) -> set[str]:
+    capabilities: set[str] = set()
+    for rule in (routing.get("stages") or {}).values():
+        capabilities.update(rule.get("side_effect_capabilities") or [])
+    for rule in (routing.get("commands") or {}).values():
+        capabilities.update(rule.get("side_effect_capabilities") or [])
+    return capabilities
+
+
+def _validate_and_apply_side_effects(
+    routed: dict[str, Any],
+    routing: dict[str, Any],
+    allowed_side_effects: set[str],
+    required: list[str],
+    optional: list[str],
+    route_summary: dict[str, Any],
+):
+    requested_side_effects = set(routed.get("requested_side_effect_capabilities") or [])
+    legacy_write_caps = set(routed.get("write_capabilities") or [])
+    known_side_effects = _known_side_effect_capabilities(routing)
+
+    unknown_side_effects = sorted(requested_side_effects - allowed_side_effects)
+    if unknown_side_effects:
+        routed["stage_route"] = route_summary
+        return [f"STAGE-ROUTE-003: side-effect capabilities not allowed here: {unknown_side_effects}"]
+
+    # A write cannot be smuggled through the legacy write_capabilities field. Every write must
+    # also be an explicit requested side effect and must therefore pass the stage allow-list.
+    undeclared_legacy_writes = sorted(legacy_write_caps - requested_side_effects)
+    if undeclared_legacy_writes:
+        routed["stage_route"] = route_summary
+        return [
+            "STAGE-ROUTE-004: write_capabilities must also be explicitly listed in "
+            f"requested_side_effect_capabilities: {undeclared_legacy_writes}"
+        ]
+
+    # Known side-effect operations must never arrive as ordinary required/optional reads.
+    ordinary_requested = set(required) | set(optional)
+    unmarked_side_effects = sorted((ordinary_requested & known_side_effects) - requested_side_effects)
+    if unmarked_side_effects:
+        routed["stage_route"] = route_summary
+        return [
+            "STAGE-ROUTE-005: known side-effect capability must be requested through "
+            f"requested_side_effect_capabilities: {unmarked_side_effects}"
+        ]
+
+    required.extend(sorted(requested_side_effects))
+    routed["write_capabilities"] = sorted(requested_side_effects)
+    return []
+
+
 def apply_stage_route(context: dict[str, Any], routing: dict[str, Any]):
     routed = copy.deepcopy(context)
     command = routed.get("command")
@@ -54,6 +105,7 @@ def apply_stage_route(context: dict[str, Any], routing: dict[str, Any]):
         "command": command,
         "procedure_config": routing.get("procedure_config"),
     }
+    allowed_side_effects: set[str] = set(command_rule.get("side_effect_capabilities") or [])
 
     if command == "/work":
         stage = project.get("stage") or command_rule.get("default_stage")
@@ -63,14 +115,7 @@ def apply_stage_route(context: dict[str, Any], routing: dict[str, Any]):
             return routed, [f"STAGE-ROUTE-002: unknown project_context.stage: {stage}"]
         project["stage"] = stage
         _apply_capability_candidates(required, optional, stage_rule.get("capability_candidates"), mode)
-
         allowed_side_effects = set(stage_rule.get("side_effect_capabilities") or [])
-        requested_side_effects = set(routed.get("requested_side_effect_capabilities") or [])
-        unknown_side_effects = sorted(requested_side_effects - allowed_side_effects)
-        if unknown_side_effects:
-            return routed, [f"STAGE-ROUTE-003: side-effect capabilities not allowed in {stage}: {unknown_side_effects}"]
-        required.extend(sorted(requested_side_effects))
-        routed["write_capabilities"] = _unique(list(routed.get("write_capabilities") or []) + sorted(requested_side_effects))
 
         route_summary.update({
             "stage": stage,
@@ -93,6 +138,17 @@ def apply_stage_route(context: dict[str, Any], routing: dict[str, Any]):
             "required_input_types": command_rule.get("required_input_types") or [],
             "expected_outputs": command_rule.get("expected_outputs") or [],
         })
+
+    side_effect_errors = _validate_and_apply_side_effects(
+        routed,
+        routing,
+        allowed_side_effects,
+        required,
+        optional,
+        route_summary,
+    )
+    if side_effect_errors:
+        return routed, side_effect_errors
 
     routed["requested_capabilities"] = _unique(required)
     routed["optional_capabilities"] = [x for x in _unique(optional) if x not in routed["requested_capabilities"]]
