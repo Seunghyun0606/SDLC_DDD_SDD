@@ -81,7 +81,7 @@
     "readiness_item_count": 17
   },
   "stage_contracts": {
-    "DECOMPOSE": {"reference": "requirement.md", "template": "requirement-analysis.md"},
+    "DECOMPOSE": {"reference": "requirement.md", "template": "requirement.md", "single_requirement_artifact": true},
     "CLARIFY": {"reference": "clarify.md", "template": "interview-questions.md", "open_resolution_contract": true},
     "PROCESS": {"reference": "process.md", "template": "process-analysis.md", "business_scenario_contract": true},
     "DISCOVERY": {"reference": "discovery.md", "template": "impact-analysis.md", "source_evidence": true},
@@ -98,7 +98,8 @@
     "customer_document_contract": "sdlc/design/contracts/customer-document-contract.json",
     "br_candidate_schema": "sdlc/design/contracts/br-candidate.schema.json",
     "br_document_extraction_contract": "sdlc/design/contracts/br-document-extraction-contract.json",
-    "sop_extraction_contract": "sdlc/design/contracts/sop-extraction-contract.json"
+    "sop_extraction_contract": "sdlc/design/contracts/sop-extraction-contract.json",
+    "requirement_analysis_legacy_view_is_not_active_output": true
   },
   "business_scenario": {
     "contract": "sdlc/design/contracts/business-scenario-sixw-contract.json",
