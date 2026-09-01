@@ -1,0 +1,28 @@
+version: 1
+legacy_requirement_normalization:
+  metadata:
+    normalizer_id: FILL_ME
+    source_name: FILL_ME
+    source_revision: FILL_ME
+    strategy: EXACT_LEVEL2_REQUIREMENT_NAME
+    partition_mode: ALL_ROWS_EXACTLY_ONCE
+
+  source_rows:
+    - source_requirement_id: FILL_ME
+      level1: FILL_ME
+      level2: FILL_ME
+      requirement_name: FILL_ME
+      functional_item: null
+
+  candidate_groups:
+    - group_id: FILL_ME
+      grouping_key:
+        level2: FILL_ME
+        requirement_name: FILL_ME
+      source_requirement_ids: []
+      source_count: 0
+      boundary_status: OPEN
+      canonical_decision: UNRESOLVED
+      publish_canonical: false
+
+  subgroup_candidates: []
