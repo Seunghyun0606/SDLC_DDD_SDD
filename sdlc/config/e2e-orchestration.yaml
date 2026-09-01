@@ -1,56 +1,47 @@
-version: 1
-status: ACTIVE_P0_5_CANDIDATE
+version: 2
+status: ACTIVE_P2_CANDIDATE
 
 purpose: >-
-  P0.1~P0.4 산출물을 다시 해석하지 않고 동일 Work Unit의 현재 상태,
-  Blocker, 다음 Action을 하나의 /check View로 조합한다.
+  특정 Pilot Requirement Group이나 도메인 명칭을 재해석하지 않고 동일 Work Unit의
+  Stage 상태, Blocker, Release Gate를 하나의 /check Read Model로 조합한다.
+
+runtime:
+  orchestrator: sdlc/scripts/orchestrate_generic_e2e_status.py
+  ledger_template: sdlc/templates/e2e-execution-ledger.yaml
+  legacy_orchestrator: sdlc/scripts/orchestrate_e2e_status.py
+  legacy_orchestrator_status: COMPATIBILITY_ONLY
 
 principles:
-  - orchestrator_is_read_model_only: true
-  - never_create_business_truth: true
-  - never_promote_candidate_to_canonical: true
-  - never_promote_fixture_to_production: true
-  - never_treat_contract_coverage_as_runtime_pass: true
-  - preserve_open_and_blocked_state: true
-
-identity_guards:
-  source_group_id_must_match_across_stages: true
-  source_requirement_ids_must_match_normalization_and_review: true
-  source_count_must_match_ids: true
-
-stage_order:
-  - NORMALIZE
-  - BOUNDARY_REVIEW
-  - CANONICAL_PUBLISH
-  - SOURCE_DISCOVERY_REVERSE_SYNC
-  - TEST_VERIFY
+  orchestrator_is_read_model_only: true
+  never_create_business_truth: true
+  never_promote_candidate_to_canonical: true
+  never_promote_fixture_to_production: true
+  never_treat_contract_coverage_as_runtime_pass: true
+  preserve_open_partial_blocked_failed_state: true
+  stage_names_are_not_domain_specific: true
 
 stage_state_priority:
   - FAILED
   - BLOCKED
-  - BLOCKED_RUNTIME
   - ACTION_REQUIRED
-  - REVIEW_REQUIRED
+  - PARTIAL
   - READY
   - COMPLETE
+  - NOT_STARTED
 
 release_gate:
-  require_no_blockers: true
+  require_all_required_for_release_stages_complete: true
+  require_no_release_blockers: true
   require_production_verified: true
-  require_actual_customer_source: true
-  require_runtime_execution: true
-  require_business_boundary_review: true
+  require_verification_state: VERIFIED_PASS
 
-next_action_priority:
-  - BOUNDARY_REVIEW_OPEN
-  - ACTUAL_SOURCE_REQUIRED
-  - BUSINESS_RULE_REVIEW_REQUIRED
-  - TEST_COMMAND_OPEN
-  - RUNTIME_ENVIRONMENT_UNAVAILABLE
+blocker_contract:
+  required_fields: [code, blocks_release]
+  optional_fields: [action, owner, action_scope, evidence_refs]
+  action_scoped_blocker_may_allow_other_work: true
 
 user_view:
   max_primary_next_actions: 5
-  show_internal_p0_version_names: false
   show_candidate_vs_canonical: true
   show_fixture_vs_production: true
   show_contract_vs_runtime: true
