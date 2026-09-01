@@ -1,0 +1,72 @@
+version: 1
+requirement_review_decision:
+  review_id: RQR-6BB6D66548
+  source_group_id: RQG-CAND-6BB6D66548
+  source_revision: upload-2026-09-01
+  source_requirement_ids:
+    - REQ_TM_TE016
+    - REQ_TM_TE017
+    - REQ_TM_TE018
+    - REQ_TM_TE019
+    - REQ_TM_TE020
+    - REQ_TM_TE021
+    - REQ_TM_TE022
+    - REQ_TM_TE023
+    - REQ_TM_TE024
+    - REQ_TM_TE025
+    - REQ_TM_TE026
+    - REQ_TM_TE027
+    - REQ_TM_TE028
+    - REQ_TM_TE029
+    - REQ_TM_TE030
+    - REQ_TM_TE031
+    - REQ_TM_TE032
+    - REQ_TM_TE033
+    - REQ_TM_TE034
+    - REQ_TM_TE035
+    - REQ_TM_TE036
+    - REQ_TM_TE037
+    - REQ_TM_TE038
+    - REQ_TM_TE039
+    - REQ_TM_TE040
+    - REQ_TM_TE041
+    - REQ_TM_TE042
+    - REQ_TM_TE043
+    - REQ_TM_TE044
+    - REQ_TM_TE045
+    - REQ_TM_TE046
+    - REQ_TM_TE047
+    - REQ_TM_TE048
+    - REQ_TM_TE049
+    - REQ_TM_TE050
+    - REQ_TM_TE051
+    - REQ_TM_TE052
+    - REQ_TM_TE053
+    - REQ_TM_TE054
+  source_count: 39
+
+  decision: UNRESOLVED
+  boundary_status: OPEN
+  decision_basis: Excel만으로 하나의 Business Outcome인지 여러 Outcome인지 확정할 근거가 부족함
+  evidence_ids: []
+  decided_by: null
+  decided_at: null
+  decision_revision: 0
+
+  canonical_rq_ids: []
+  canonical_fr_ids: []
+  publish_allowed: false
+
+  required_evidence:
+    - business_outcome_boundary
+    - owner_release_acceptance_boundary
+    - 일마감/월마감/전자결재/선택적근로마감의 독립 배포 여부
+
+  reviewer_checklist:
+    independent_business_outcome_checked: false
+    owner_boundary_checked: false
+    release_boundary_checked: false
+    acceptance_boundary_checked: false
+    source_coverage_checked: true
+
+  next_action: L2_OR_HUMAN_REVIEW
