@@ -1,0 +1,53 @@
+version: 1
+impact_candidate:
+  impact_id: IMP-ACT-CLOSE-FIXTURE-001
+  source_group_id: RQG-CAND-6BB6D66548
+  boundary_status: OPEN
+  fixture_evidence: true
+  direct_programs:
+    - program_id: PGM-ATT-CLOSE-001
+      confidence: DIRECT_MANIFEST
+      change_type: MODIFY
+      artifacts:
+        - AttendanceCloseService.java
+        - AttendanceCloseMapper.java
+        - AttendanceCloseMapper.xml
+  observed_as_is:
+    transaction:
+      - AttendanceCloseService.closeDaily is @Transactional
+    behavior:
+      - planned minutes are truncated to 30-minute units
+      - daily attendance is upserted before close status is updated
+    data_read:
+      - TB_WORK_PLAN
+    data_write:
+      - TB_ATT_DAILY
+      - TB_ATT_CLOSE
+  observed_after_change:
+    behavior_candidates:
+      - 10-minute reflection replaces 30-minute reflection
+      - month-closed condition added
+      - approved-correction condition added
+      - FORCE_CLOSE exclusion and exception guard added
+    new_data_read:
+      - TB_ATT_CORRECTION_REQ
+    new_mapper_statements:
+      - isMonthClosed
+      - hasApprovedCorrection
+  semantic_change:
+    primary: BUSINESS_RULE_CANDIDATE
+    secondary:
+      - DATA_CONTRACT
+      - FUNCTIONAL_BEHAVIOR
+    business_truth_confirmed: false
+  stale_candidates:
+    - impact-analysis.md
+    - PGM-ATT-CLOSE-001.md
+    - test-scenarios.md
+  requirement_review_candidate: true
+  blind_spots:
+    - Batch/runtime callers outside fixture
+    - DB Trigger/Procedure
+    - external consumer
+    - actual customer source relation
+  next_action: L2_OR_HUMAN_REVIEW_AND_REAL_SOURCE_CONFIRMATION
