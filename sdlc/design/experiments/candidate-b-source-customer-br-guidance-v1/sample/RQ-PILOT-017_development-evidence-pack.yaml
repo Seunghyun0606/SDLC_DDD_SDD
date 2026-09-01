@@ -1,24 +1,55 @@
 development_evidence_pack:
   metadata:
-    pack_id: DEP-TASK-P017-DEV-01-R2
+    pack_id: DEP-TASK-P017-DEV-01-R3
     project_id: PILOT-MYBATIS
     branch: pilot/rq-p017-close-10min
+    role: MANIFEST_PLUS_EXECUTION_EVIDENCE
+
+  artifact_manifest:
+    customer_6w_view: sample/RQ-PILOT-017_customer-decision-acceptance-view.md#6W
+    development_evidence_blueprint: sample/RQ-PILOT-017_development-evidence-blueprint.md
+    program_spec: ../candidate-b-mybatis-md-change-pilot/docs/05_program/RQ-PILOT-017/specs/PGM-ATT-CLOSE-001.md
+    test_spec: ../candidate-b-mybatis-md-change-pilot/docs/07_test/RQ-PILOT-017/test-scenarios.md
+    work_unit: ../candidate-b-mybatis-md-change-pilot/runtime/WU-P017-001.md
+
+  usage_rule:
+    - "이 YAML은 상세 개발설계의 대체물이 아니다."
+    - "Blueprint + current source evidence + target proof를 함께 사용한다."
+    - "6W/UI/Code/Schema의 CRITICAL OPEN은 실제 고객 Source Write를 제한한다."
+
   subject:
     rq_id: RQ-PILOT-017
     task_id: TASK-P017-DEV-01
     program_id: PGM-ATT-CLOSE-001
+
   evidence_revision:
-    canonical: 12
+    canonical: 13
     source_commit: fixture-v1
     source_hashes:
       AttendanceCloseService.java: FIXTURE_HASH_SERVICE_V1
       AttendanceCloseMapper.java: FIXTURE_HASH_MAPPER_V1
       AttendanceCloseMapper.xml: FIXTURE_HASH_XML_V1
+
   intent:
     fr_ids: [FR-P017-01, FR-P017-03, FR-P017-04]
     br_ids: [BR-P017-01, BR-P017-02, BR-P017-03]
     ac_ids: [AC-01, AC-03, AC-04, AC-05]
     change_request_ids: [CR-PILOT-001]
+
+  design_coverage:
+    six_w: PARTIAL_WITH_CRITICAL_OPEN_WHO_WHERE
+    ui: NO_UI_CHANGE_ASSUMED_ENTRY_OPEN
+    fields: PRESENT_WITH_CODE_OPEN
+    crud: PRESENT
+    core_logic: PRESENT
+    integration: UPSTREAM_APPROVAL_BLIND_SPOT
+    query_data: PRESENT_WITH_SCHEMA_RUNTIME_OPEN
+    common_code: OPEN_CODE_MASTER
+    transaction: OBSERVED_FIXTURE
+    authorization: OPEN_CRITICAL
+    source_mapping: CURRENT_FIXTURE
+    test_mapping: PRESENT_NOT_EXECUTED
+
   target:
     files:
       - src/main/java/com/acme/attendance/AttendanceCloseService.java
@@ -27,59 +58,42 @@ development_evidence_pack:
     symbols:
       - AttendanceCloseService.closeDaily
       - AttendanceCloseMapper.hasApprovedCorrection
-    mapper_statements:
-      - selectPlannedMinutes
-      - isMonthClosed
-      - hasApprovedCorrection
-      - upsertDailyAttendance
-  source_context:
+
+  source_context_summary:
     as_is: "30분 단위 절삭, 월마감 수정요청 예외 없음"
     to_be: "10분 단위, 승인 수정요청 허용, FORCE_CLOSE 제외"
-    calls:
-      - AttendanceCloseMapper.selectPlannedMinutes
-      - AttendanceCloseMapper.isMonthClosed
-      - AttendanceCloseMapper.hasApprovedCorrection
-      - AttendanceCloseMapper.upsertDailyAttendance
     reads: [TB_WORK_PLAN, TB_ATT_CLOSE, TB_ATT_CORRECTION_REQ]
     writes: [TB_ATT_DAILY, TB_ATT_CLOSE]
     transaction_owner: AttendanceCloseService.closeDaily
-  brownfield_convention:
-    profile_revision: 1
-    applicable_standards:
-      - SERVICE_TRANSACTION_BOUNDARY
-      - MYBATIS_INTERFACE_XML_ID_MATCH
-      - NO_UNRELATED_REFACTORING
-    similar_references:
-      - "validation-before-write Service pattern"
-    protected_paths: [generated/**]
-    legacy_deviations:
-      - "Oracle MERGE 유지"
-  blind_spots:
-    - "실제 Oracle index/lock/runtime은 fixture에서 검증하지 않음"
-  assumptions: []
+
+  critical_open:
+    - actual_authorization_profile
+    - actual_menu_or_batch_entry
+    - actual_month_close_key_scope
+    - actual_approval_and_close_common_codes
+    - actual_correction_request_schema_index
+    - runtime_lock_performance
+
   target_write_proof:
-    result: PASS_FOR_FIXTURE
+    fixture_result: PASS_FOR_FIXTURE_SERVICE_MAPPER_ONLY
+    real_customer_result: NOT_READY
     evidence:
-      - type: CANONICAL_RELATION
-        ref: TASK-P017-DEV-01->PGM-ATT-CLOSE-001
-      - type: CURRENT_SOURCE_SYMBOL
-        ref: AttendanceCloseService.closeDaily
-      - type: MAPPER_RELATION
-        ref: AttendanceCloseMapper#AttendanceCloseMapper.xml
-    invariant_checks:
-      - TASK_PROGRAM_RELATION: PASS
-      - PROGRAM_ARTIFACT_RELATION: PASS
-      - MAPPER_INTERFACE_XML: PASS
-    ambiguity: SAFE_FOR_FIXTURE
+      - CANONICAL_RELATION
+      - CURRENT_SOURCE_SYMBOL
+      - MAPPER_RELATION
+
   execution:
     central_store: AVAILABLE_SIMULATION
     pgm_lane_required: true
     pgm_lane: OWNED_BY_WU-P017-001
     work_unit_required: true
     work_unit_id: WU-P017-001
+
   action_permissions:
     proposal: ALLOW
-    draft_source_write: ALLOW
+    fixture_draft_source_write: ALLOW
+    real_customer_source_write: DENY
+    ui_source_write: DENY
     merge: DENY
     release: DENY
     verify_pass: DENY
