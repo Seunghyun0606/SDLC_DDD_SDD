@@ -46,6 +46,19 @@ brownfield-starter/
 9. Business Impact는 Source 관계만으로 자동 확정하지 않는다.
 10. 영향 결과에는 `직접 영향 / 간접 영향 / 확인 필요 / 분석 제외`를 구분한다.
 
+## Project Impact Adapter 경계
+Core는 `sdlc/design/contracts/brownfield-impact-contract.json`에서 공통 Node/Edge/Coverage/출력 형식만 제공한다.
+
+실제 프로젝트의 다음 해석은 `sdlc/custom/project/adapters/impact/`에서 **별도 구현**해야 한다.
+- Java/Spring/.NET/Node 등 언어·Framework별 Call/Symbol 관계
+- JPA/MyBatis/JDBC/ORM/SQL/Table lineage
+- Stored Procedure/Trigger/ETL
+- Kafka/JMS/Event/외부 API 연결
+- Reflection/Dynamic dispatch/Runtime wiring
+- 프로젝트 고유 Config/Feature Flag/Scheduler
+
+Adapter가 없더라도 분석 가능한 범위는 진행하지만 결과는 `PARTIAL_PROJECT_ADAPTER_REQUIRED`이며 완전한 영향분석으로 표시하지 않는다.
+
 ## 입력 수준별 기대 결과
 | 입력 수준 | 기대 결과 | 제한 |
 |---|---|---|
@@ -67,20 +80,37 @@ brownfield-starter/
 - Build/Module dependency
 - Runtime/Dynamic 분석이 필요한 사각지대
 
-## Reverse Engineering 입력
-현재 Branch에서는 Reverse Engineering 자체를 Core 기능으로 확정하지 않는다. 다만 향후 비교를 위해 다음 입력을 예약한다.
-- `baseline_ref`: 기존 산출물과 연결된 Source 기준점
-- `observed_ref`: 현재 Source 기준점
-- `reverse_scope`: INVENTORY | DRIFT_CHECK | REVERSE_SPEC | SOURCE_DIFF
+## Reverse Engineering 범위
+현재 Core에서 실제 구현된 범위는 **`DRIFT_CHECK`**다.
 
-이 값이 있더라도 현재는 자동 Business Truth 수정이 아니라 Reverse Candidate 생성 대상으로만 취급한다.
+### Core 구현 완료: DRIFT_CHECK
+다음 입력으로 현재 Source와 기존 산출물의 Source Evidence freshness를 비교한다.
+- baseline source manifest
+- observed source manifest
+- artifact evidence index + 명시적 reverse propagation edge
+
+`detect_source_drift.py`는 다음 결과만 만든다.
+- `STALE_SOURCE_EVIDENCE`
+- `STALE_PROPAGATED`
+- `CHECK_REQUIRED_REVERSE`
+- 재생성/사람검토 Reverse Candidate
+
+기존 문서 또는 Business Truth를 자동 덮어쓰지 않는다.
+
+### 고도화 영역
+다음은 아직 Core 자동 기능이 아니다.
+- 전체 Source Inventory 자동 역설계
+- Reverse Program Spec 자동 생성
+- Semantic Source Diff
+- Source에서 BR을 자동 Business Truth로 승격
+- 자동 문서 재작성/병합
 
 ## 준비도 판정
 ### STARTABLE
 분석 Seed와 Repository 기준점이 존재한다.
 
 ### IMPACT_ANALYSIS_READY
-Seed 관련 Source 후보와 직접 관계가 탐색되었고, 분석 Coverage와 사각지대가 함께 기록되어 있다.
+Seed 관련 Source 후보와 직접 관계가 탐색되었고, 분석 Coverage와 사각지대가 함께 기록되어 있다. 프로젝트별 Impact Adapter가 필요한 영역은 구현/설정 상태가 함께 표시되어야 한다.
 
 ### IMPLEMENTATION_READY
 실제 변경 Target이 확정되고 Program DoR가 충족되며 Build/Test 실행 경로가 확인되어야 한다.
