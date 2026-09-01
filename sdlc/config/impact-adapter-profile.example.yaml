@@ -1,11 +1,11 @@
-schema_version: 2
+schema_version: 3
 mode: BROWNFIELD
 contract: sdlc/design/contracts/brownfield-impact-contract.json
 adapter:
   enabled: false
   adapter_id: PROJECT_SPECIFIC_REQUIRED
   implementation_root: sdlc/custom/project/adapters/impact
-  # 아래 Pilot은 사용 가능한 Project Adapter 예시일 뿐 기본 활성화 대상이 아니다.
+  # Project 구조와 지원 범위를 확인한 뒤 명시적으로 선택한다. 자동 활성화하지 않는다.
   available_pilots:
     - adapter_id: JAVA_SPRING_MYBATIS_STATIC_PILOT_V0_1
       implementation: sdlc/custom/project/adapters/impact/java_spring_mybatis.py
@@ -28,6 +28,27 @@ adapter:
         - KAFKA_JMS_EVENT
         - CONFIG_FEATURE_FLAG_SCHEDULER
         - BUILD_DEPENDENCY_GRAPH
+        - TEST_SEMANTIC_COVERAGE
+    - adapter_id: JAVA_SPRING_ENTERPRISE_STATIC_V0_2
+      implementation: sdlc/custom/project/adapters/impact/java_spring_enterprise.py
+      status: PILOT_PARTIAL_COVERAGE
+      auto_enable: false
+      extends: JAVA_SPRING_MYBATIS_STATIC_PILOT_V0_1
+      additionally_supported_as_static_candidates:
+        - JPA_ENTITY_TABLE_REPOSITORY
+        - JDBC_SQL_LITERAL_TABLE_LINEAGE
+        - SPRING_TRANSACTIONAL_ANNOTATION
+        - FEIGN_HTTP_CLIENT
+        - KAFKA_LISTENER_PUBLICATION_HINT
+        - SCHEDULED_AND_APPLICATION_CONFIG
+      still_not_supported:
+        - JAVA_FULL_AST_TYPE_RESOLUTION
+        - SPRING_RUNTIME_PROXY_WIRING
+        - REFLECTION_DYNAMIC_DISPATCH
+        - TRANSACTION_RUNTIME_PROPAGATION
+        - JPA_QUERY_METHOD_RUNTIME_SEMANTICS
+        - STORED_PROCEDURE_TRIGGER_ETL
+        - LIVE_DB_API_BROKER_TOPOLOGY
         - TEST_SEMANTIC_COVERAGE
 project_context:
   language: UNKNOWN
@@ -57,3 +78,4 @@ rules:
   source_relation_does_not_confirm_business_impact: true
   pilot_fixture_pass_does_not_mean_production_complete: true
   project_adapter_is_not_core_required: true
+  static_candidate_does_not_equal_runtime_truth: true
