@@ -1,67 +1,69 @@
 schema_version: 1
 session_namespace: SDLC_DESIGN_SESSION_FIRST
-branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.5-human-customer-br-intake-v0.1
-branch_version: human-customer-br-intake-v0.1.0
-parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.4-full-requirements-java-pilot-v0.1
-parent_commit: beed26ffce1b58d814596282ed599a45c6809866
+branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.6-critical-review-starter-reverse-v0.1
+branch_version: critical-review-starter-reverse-v0.1.0
+parent_branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.5-human-customer-br-intake-v0.1
+parent_commit: c9d1f2aafaedcd20e05adcceacdb25addbfd0c0b
 main_base_commit: 31c46890334a12b0b4bd4227508d7bf9634a7be1
 design_baseline: v1.5.1
-candidate_design_version: v1.5.5-rc.1
-status: DOCUMENT_EXPERIENCE_VALIDATED
+candidate_design_version: v1.5.6-rc.1
+status: CRITICAL_REVIEW_STARTER_IMPLEMENTED_CI_PENDING
 merge_to_main: false
-purpose: 사람 친화적 한글 산출물, Canonical 기반 고객 커뮤니케이션 View, 비정형 고객문서 BR Intake 계약 검증
-capabilities:
-  korean_visible_core_templates: ENHANCED_IMPLEMENTED_VALIDATED
-  customer_document_view: ENHANCED_IMPLEMENTED_VALIDATED
-  customer_template_profile: ENHANCED_IMPLEMENTED_VALIDATED
-  terminology_profile: ENHANCED_IMPLEMENTED_VALIDATED
-  br_intake_manifest: ENHANCED_IMPLEMENTED_VALIDATED
-  br_candidate_provenance: ENHANCED_IMPLEMENTED_VALIDATED
-  br_conflict_handling: ENHANCED_IMPLEMENTED_VALIDATED
-  document_extraction_contract: CONTRACT_IMPLEMENTED_VALIDATED
-  legacy_overlay_heading_compatibility: ENHANCED_IMPLEMENTED_VALIDATED
-  format_specific_extraction_adapters: DESIGNED_NOT_IMPLEMENTED
-pilot:
-  source_file: 요구사항목록.xlsx
-  source_hash: sha256:d7dd76d786e97b66435bf4b9dc03fe04b8d55c580b565f2d45817893349ba39f
-  requirement_candidate: RQ-CAND-0001
-  external_ids: [REQ_TM_FL001, REQ_TM_FL002, REQ_TM_FL003]
-  customer_document_count: 2
-  br_candidate_source: REQ_TM_FL003
-  br_candidate_status: REVIEW_REQUIRED
-  business_truth_promotion: false
+purpose: Greenfield/Brownfield Mode별 Starter Kit을 구성하고 현재 Harness의 산출물 효과성, 사용성, 저수준 Agent 재현성, Brownfield 영향분석, Reverse Engineering, Source 기반 BR/Program Spec 추출 가능성을 비판적으로 재검토
+starter_kits:
+  greenfield: IMPLEMENTED_VALIDATION_PENDING
+  brownfield: IMPLEMENTED_VALIDATION_PENDING
+  contract: sdlc/design/contracts/starter-kit-contract.json
+  setup_mode_routing: IMPLEMENTED_VALIDATION_PENDING
+  auto_mode_preset_fix: IMPLEMENTED_VALIDATION_PENDING
+critical_review:
+  artifact_effectiveness: CONDITIONAL_PASS
+  user_usability: CONDITIONAL_PASS_STARTER_IMPROVED
+  low_level_agent_reproducibility: INSUFFICIENT_NEEDS_GAP_AG_001
+  brownfield_impact_analysis: INSUFFICIENT_NEEDS_GAP_BF_001
+  reverse_source_to_artifacts: NOT_IMPLEMENTED_NEEDS_GAP_RE_001A
+  reverse_source_to_program_spec: PARTIAL_NEEDS_GAP_RE_002
+  reverse_source_to_business_rule: CANDIDATE_ONLY_NO_AUTO_BUSINESS_TRUTH
 validation:
-  previous_v1_5_4_unittest_count: 41
-  document_experience_tests_added: 11
-  program_readiness_legacy_compatibility_test_added: 1
-  combined_unittest_count: 53
-  combined_unittest_result: PASS
-  mermaid_markdown_files_checked: 90
-  mermaid_docs_quality: PASS
-  initial_ci:
-    worklist_sync_quality_run: 116
-    worklist_sync_quality_result: FAILURE_LEGACY_OVERLAY_HEADING
-    docs_quality_run: 66
-    docs_quality_result: SUCCESS
-  compatibility_fix_commit: 02375970610a61675adaed46b81b283873fc3ae0
-  implementation_validation_ci:
-    worklist_sync_quality_run: 118
-    worklist_sync_quality_result: SUCCESS
-    docs_quality_run: 67
-    docs_quality_result: SUCCESS
-new_design_gaps:
-  - id: GAP-DX-001
-    status: IMPLEMENTED_VALIDATED
-    title: Human-readable Korean Artifact Contract
-  - id: GAP-CD-001
-    status: IMPLEMENTED_VALIDATED
-    title: Canonical-derived Customer Document View
-  - id: GAP-BR-001
-    status: IMPLEMENTED_VALIDATED
-    title: Non-blocking Unstructured Customer Document BR Intake
-  - id: GAP-BR-002
-    status: DESIGNED_NOT_IMPLEMENTED
-    title: Format-specific Document Extraction Adapters
-verdict: DOCUMENT_EXPERIENCE_STRUCTURAL_PASS / FORMAT_ADAPTER_PENDING
-next_step: customer/project-specific terminology and customer-document profiles can now be customized; implement format-specific extraction adapters only when the target project requires them
-updated_at: 2026-09-01T21:44:00+09:00
+  previous_combined_unittest_count: 53
+  starter_kit_tests_added: 10
+  expected_combined_unittest_count: 63
+  github_actions: CI_PENDING
+  mermaid_docs_quality: CI_PENDING
+immediate_gaps:
+  - id: GAP-UX-001
+    priority: P0
+    status: IMPLEMENTED_VALIDATION_PENDING
+    title: Mode-specific Greenfield/Brownfield Starter Kit
+  - id: GAP-AG-001
+    priority: P0
+    status: IDENTIFIED_NOT_IMPLEMENTED
+    title: Low-level Agent Deterministic Execution Contract
+  - id: GAP-BF-001
+    priority: P0
+    status: IDENTIFIED_NOT_IMPLEMENTED
+    title: Brownfield Impact Evidence Graph and Coverage Contract
+  - id: GAP-RE-001A
+    priority: P0
+    status: IDENTIFIED_NOT_IMPLEMENTED
+    title: Source Drift Detection and Artifact STALE Propagation
+enhancement_gaps:
+  - id: GAP-AR-001
+    priority: P1
+    status: IDENTIFIED_NOT_IMPLEMENTED
+    title: Stage-specific Artifact Content and Quality Contract
+  - id: GAP-RE-001B
+    priority: P1
+    status: IDENTIFIED_NOT_IMPLEMENTED
+    title: Reverse Delta Candidate Generation
+  - id: GAP-RE-002
+    priority: P1
+    status: IDENTIFIED_NOT_IMPLEMENTED
+    title: Observed Program Inventory and Reverse Program Spec
+  - id: GAP-BR-003
+    priority: P1
+    status: IDENTIFIED_NOT_IMPLEMENTED
+    title: Source-derived Observed BR Candidate Extraction
+verdict: STARTER_KIT_IMPLEMENTED / CRITICAL_GAPS_IDENTIFIED / CI_PENDING
+next_step: validate starter kits and full regression, then decide whether to implement P0 Agent/Brownfield/Drift gaps before the next real-source pilot
+updated_at: 2026-09-01T22:00:00+09:00
