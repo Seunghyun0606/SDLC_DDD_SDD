@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "pilot_id": "GREENFIELD-REQ_TM_FL001",
+  "mode": "GREENFIELD",
+  "source_document": "요구사항목록.xlsx",
+  "external_id": "REQ_TM_FL001",
+  "requirement_group": "탄력근로제 개선 최초근무계획 자동 설정하는 기능",
+  "requirement_text": "탄력근로제 근무계획 저장",
+  "existing_source_repository": null,
+  "customer_document_required": true,
+  "provenance_note": "사용자가 제공한 요구사항목록.xlsx의 요구사항 ID/문구를 Greenfield 입력으로 사용"
+}
