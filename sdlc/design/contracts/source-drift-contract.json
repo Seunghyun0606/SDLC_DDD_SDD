@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "candidate_design": "v1.5.7-rc.1",
+  "schema_version": 2,
+  "candidate_design": "v1.6.0-rc.1",
   "purpose": "Source 변경을 기존 Source Evidence 기반 산출물에 역방향으로 전파하되 Business Truth를 자동 덮어쓰지 않는 Core 공통 계약",
   "scope": "CORE_COMMON_CONTRACT",
   "source_manifest": {
@@ -17,6 +17,36 @@
   },
   "drift_states": ["ADDED", "MODIFIED", "DELETED", "UNCHANGED"],
   "artifact_impact_states": ["STALE_SOURCE_EVIDENCE", "STALE_PROPAGATED", "CHECK_REQUIRED_REVERSE"],
+  "program_spec_reverse_candidate": {
+    "script": "sdlc/scripts/generate_program_spec_reverse_candidate.py",
+    "input": ["baseline_impact_adapter_output", "observed_impact_adapter_output", "program_bindings"],
+    "program_binding_required": ["program_id", "artifact_path", "functional_design_ref", "source_node_ids"],
+    "output_capability": "PROGRAM_SPEC_SEMANTIC_REVERSE_CANDIDATE",
+    "allowed_patch_scope": [
+      "실제 구현 Target",
+      "실제 파일·심볼 근거",
+      "구현 매핑과 차이",
+      "Query·Table·Source 구현 근거",
+      "트랜잭션·실행 제어",
+      "연계 구현 계약",
+      "기술 제어와 운영 조건",
+      "TASK·AC·TC·Source 연결",
+      "구현 준비도"
+    ],
+    "forbidden_auto_update_scope": [
+      "Functional Design",
+      "Business Truth",
+      "업무 규칙",
+      "업무 시나리오",
+      "기능 요구사항 의미",
+      "업무 예외 의미"
+    ],
+    "review_required": true,
+    "auto_apply": false,
+    "artifact_file_modified_by_generator": false,
+    "functional_design_auto_update": false,
+    "business_truth_auto_update": false
+  },
   "rules": {
     "recorded_source_hash_is_primary_freshness_evidence": true,
     "modified_or_deleted_evidence_can_make_artifact_stale": true,
@@ -25,10 +55,13 @@
     "check_required_does_not_propagate_automatically": true,
     "auto_rewrite_artifact": false,
     "auto_update_business_truth": false,
-    "reverse_output_is_candidate_only": true
+    "reverse_output_is_candidate_only": true,
+    "program_spec_reverse_is_implementation_delta_only": true
   },
   "recommended_reverse_policy": {
     "source_derived_artifact": "STALE",
+    "program_spec_implementation_mapping": "CANDIDATE_REVIEW",
+    "functional_design": "CHECK_REQUIRED",
     "upstream_requirement_or_business_truth": "CHECK_REQUIRED",
     "unrelated_or_authoritative_external_document": "NONE"
   }
