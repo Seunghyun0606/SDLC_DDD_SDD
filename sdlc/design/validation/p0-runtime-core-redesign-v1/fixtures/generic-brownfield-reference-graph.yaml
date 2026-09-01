@@ -1,0 +1,67 @@
+version: 1
+reference_graph:
+  graph_id: GRAPH-GENERIC-BROWNFIELD-001
+  project_id: GENERIC-BROWNFIELD-001
+  revision: 1
+  source_revision: rev-a
+  nodes:
+    - node_id: RQ-ORDER-001
+      node_type: RQ
+      title: 주문 취소 요구사항
+      validity: CURRENT
+      truth_state: CONFIRMED
+      source_refs: []
+      evidence_ids: [EV-RQ-001]
+    - node_id: FR-ORDER-001
+      node_type: FR
+      title: 주문을 취소한다
+      validity: CURRENT
+      truth_state: CONFIRMED
+      source_refs: []
+      evidence_ids: [EV-FR-001]
+    - node_id: PGM-ORDER-001
+      node_type: PGM
+      title: 주문 취소 프로그램
+      validity: CURRENT
+      truth_state: CONFIRMED
+      source_refs: []
+      evidence_ids: [EV-PGM-001]
+    - node_id: ART-ORDER-001
+      node_type: ART
+      title: 주문 서비스 구현 파일
+      validity: CURRENT
+      truth_state: OBSERVED
+      source_refs: [src/order/service.py]
+      evidence_ids: [EV-SRC-001]
+  edges:
+    - edge_id: EDGE-RQ-FR-001
+      from_id: RQ-ORDER-001
+      relation_type: DECOMPOSES_TO
+      to_id: FR-ORDER-001
+      truth_state: CONFIRMED
+      evidence_ids: [EV-RQ-001, EV-FR-001]
+      source_refs: []
+      status: CONFIRMED
+    - edge_id: EDGE-FR-PGM-001
+      from_id: FR-ORDER-001
+      relation_type: IMPLEMENTED_BY
+      to_id: PGM-ORDER-001
+      truth_state: CONFIRMED
+      evidence_ids: [EV-PGM-001]
+      source_refs: []
+      status: CONFIRMED
+    - edge_id: EDGE-PGM-ART-001
+      from_id: PGM-ORDER-001
+      relation_type: REALIZED_BY
+      to_id: ART-ORDER-001
+      truth_state: CONFIRMED
+      evidence_ids: [EV-SRC-001]
+      source_refs: [src/order/service.py]
+      status: CONFIRMED
+  unresolved_references: []
+  validation:
+    dangling_node_refs: []
+    missing_provenance_edges: []
+    duplicate_node_ids: []
+    duplicate_edge_ids: []
+    stale_source_revision: false
