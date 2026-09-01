@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "candidate_design": "v1.5.7-rc.1",
+  "purpose": "저수준 Agent가 Stage별 문서를 읽고 추가 암묵지 없이 유사한 품질의 산출물을 생성하기 위한 Core 공통 실행계약",
+  "scope": "CORE_COMMON_CONTRACT",
+  "required_reference_sections": [
+    "## Purpose",
+    "## Required Input",
+    "## Optional Input",
+    "## Retrieval Strategy",
+    "## 실행 계약(Agent Execution Contract)",
+    "## Steps",
+    "## Output",
+    "## Quality Check",
+    "## Alert Conditions",
+    "## Token Strategy",
+    "## Do Not"
+  ],
+  "execution_contract_required_markers": [
+    "입력 필드",
+    "근거 분류",
+    "실행 순서",
+    "계속/중단 조건",
+    "출력 필드 매핑",
+    "품질 게이트",
+    "미확정/실패 처리"
+  ],
+  "evidence_classes": ["GIVEN", "OBSERVED", "INFERRED", "ASSUMED", "CONFIRMED"],
+  "uncertainty_states": ["OPEN", "CHECK_REQUIRED", "CONFLICT", "STALE"],
+  "common_rules": {
+    "missing_optional_input_is_non_blocking": true,
+    "missing_required_business_truth_does_not_allow_invention": true,
+    "source_observation_is_not_automatic_business_truth": true,
+    "output_must_map_to_canonical_or_explicit_candidate": true,
+    "quality_gate_failure_is_reported_not_hidden": true,
+    "dangerous_source_write_uses_execution_guard": true
+  },
+  "format_guidance": {
+    "reference_document_is_executable_instruction": true,
+    "template_is_user_facing_output_format": true,
+    "project_specific_retrieval_logic_belongs_to_profile_or_adapter": true
+  }
+}
