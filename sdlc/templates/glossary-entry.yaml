@@ -1,0 +1,15 @@
+glossary_entry:
+  term_id: TERM-<sequence>
+  project_id: ""
+  term: ""
+  normalized_term: ""
+  definition: ""
+  truth_state: OPEN
+  revision: 1
+  aliases: []
+  scope_ids: []
+  provenance:
+    evidence_ids: []
+    source_refs: []
+  conflicts_with: []
+  status: CANDIDATE  # CANDIDATE | CONFIRMED | SUPERSEDED | REJECTED
