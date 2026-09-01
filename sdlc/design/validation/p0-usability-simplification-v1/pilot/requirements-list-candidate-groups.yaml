@@ -1,0 +1,369 @@
+version: 1
+source:
+  file: 요구사항목록.xlsx
+  sheet: Sheet1
+  data_rows: 142
+  source_id_unique: true
+normalization_policy:
+  purpose: pilot-only candidate grouping; not canonical publication
+  group_key:
+  - Level2
+  - 요구사항명
+  group_key_match: EXACT
+  publish_canonical_rq: false
+  publish_canonical_fr: false
+  preserve_source_requirement_id: true
+  default_boundary_status: OPEN
+  default_canonical_decision: UNRESOLVED
+  notes:
+  - Exact grouping is only a review candidate.
+  - Same name does not prove same business outcome.
+  - Source rows remain immutable legacy records.
+summary:
+  source_rows: 142
+  candidate_groups: 22
+  largest_group_size: 39
+  groups_ge_10_rows: 3
+  auto_published_rq: 0
+  auto_published_fr: 0
+candidate_groups:
+- candidate_group_id: RQG-CAND-001
+  level1: 근태관리
+  level2: 근무계획 수립(탄력근로제)
+  requirement_name: 탄력근로제 개선 최초근무계획 자동 설정하는 기능
+  source_count: 3
+  source_ids:
+  - REQ_TM_FL001
+  - REQ_TM_FL002
+  - REQ_TM_FL003
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 3
+- candidate_group_id: RQG-CAND-002
+  level1: 근태관리
+  level2: 근무계획 수립(탄력근로제)
+  requirement_name: 탄력근로제 개선 고과제 예외사항 요청하는 기능
+  source_count: 4
+  source_ids:
+  - REQ_TM_FL004
+  - REQ_TM_FL005
+  - REQ_TM_FL006
+  - REQ_TM_FL007
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 4
+- candidate_group_id: RQG-CAND-003
+  level1: 근태관리
+  level2: 근무계획 수립(탄력근로제)
+  requirement_name: 탄력근로제 개선 연봉제 예외사항 요청하는 기능
+  source_count: 6
+  source_ids:
+  - REQ_TM_FL008
+  - REQ_TM_FL009
+  - REQ_TM_FL010
+  - REQ_TM_FL011
+  - REQ_TM_FL012
+  - REQ_TM_FL013
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 6
+- candidate_group_id: RQG-CAND-004
+  level1: 근태관리
+  level2: 근무계획 수립(탄력근로제)
+  requirement_name: 탄력근로제 개선 고과제/연봉제 예외사항 요청하는 기능
+  source_count: 8
+  source_ids:
+  - REQ_TM_FL014
+  - REQ_TM_FL015
+  - REQ_TM_FL016
+  - REQ_TM_FL017
+  - REQ_TM_FL018
+  - REQ_TM_FL019
+  - REQ_TM_FL020
+  - REQ_TM_FL021
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 8
+- candidate_group_id: RQG-CAND-005
+  level1: 근태관리
+  level2: 근무계획 수립(탄력근로제)
+  requirement_name: 탄력근로제 개선 근무계획 확정/안내하는 기능
+  source_count: 4
+  source_ids:
+  - REQ_TM_FL022
+  - REQ_TM_FL023
+  - REQ_TM_FL024
+  - REQ_TM_FL025
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 4
+- candidate_group_id: RQG-CAND-006
+  level1: 근태관리
+  level2: 근무계획 수립(탄력근로제)
+  requirement_name: 탄력근로제 개선 운영이력 조회하는 기능
+  source_count: 1
+  source_ids:
+  - REQ_TM_FL026
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 1
+- candidate_group_id: RQG-CAND-007
+  level1: 근태관리
+  level2: 근태/휴가 (ESS)
+  requirement_name: 탄력근로제 개선 확정 조회하는 기능
+  source_count: 1
+  source_ids:
+  - REQ_TM_FL027
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 1
+- candidate_group_id: RQG-CAND-008
+  level1: 근태관리
+  level2: 근태 Report
+  requirement_name: 탄력근로제 개선 검증 Report 조회하는 기능
+  source_count: 8
+  source_ids:
+  - REQ_TM_FL028
+  - REQ_TM_FL029
+  - REQ_TM_FL030
+  - REQ_TM_FL031
+  - REQ_TM_FL032
+  - REQ_TM_FL033
+  - REQ_TM_FL034
+  - REQ_TM_FL035
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 8
+- candidate_group_id: RQG-CAND-009
+  level1: 근태관리
+  level2: Interface
+  requirement_name: 탄력근로제 개선 데이터 HR Analytics 송신하는 기능
+  source_count: 1
+  source_ids:
+  - REQ_TM_FL036
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 1
+- candidate_group_id: RQG-CAND-010
+  level1: 근태관리
+  level2: 근태기록
+  requirement_name: 탄력근로제 개선 휴가내역 근태 집계하는 기능
+  source_count: 1
+  source_ids:
+  - REQ_TM_FL037
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 1
+- candidate_group_id: RQG-CAND-011
+  level1: 근태관리
+  level2: 근태기록
+  requirement_name: 탄력근로제 개선 근무내역 근태 집계하는 기능
+  source_count: 1
+  source_ids:
+  - REQ_TM_FL038
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 1
+- candidate_group_id: RQG-CAND-012
+  level1: 근태관리
+  level2: 근태기록
+  requirement_name: 탄력근로제 개선 출장/교육내역 집계하는 기능
+  source_count: 1
+  source_ids:
+  - REQ_TM_FL039
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 1
+- candidate_group_id: RQG-CAND-013
+  level1: 근태관리
+  level2: 근태/휴가 (ESS)
+  requirement_name: 10분단위 근무계획 개선 근무계획 반영을 구현
+  source_count: 9
+  source_ids:
+  - REQ_TM_TE001
+  - REQ_TM_TE002
+  - REQ_TM_TE003
+  - REQ_TM_TE004
+  - REQ_TM_TE005
+  - REQ_TM_TE006
+  - REQ_TM_TE007
+  - REQ_TM_TE008
+  - REQ_TM_TE009
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 9
+- candidate_group_id: RQG-CAND-014
+  level1: 근태관리
+  level2: 선택적근무제
+  requirement_name: 10분단위 근무계획 개선 선택적근무관리 반영을 구현
+  source_count: 1
+  source_ids:
+  - REQ_TM_TE010
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 1
+- candidate_group_id: RQG-CAND-015
+  level1: 근태관리
+  level2: 선택적근무제
+  requirement_name: 10분단위 근무계획 개선 선택적근무관리 반영하는 기능
+  source_count: 1
+  source_ids:
+  - REQ_TM_TE011
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 1
+- candidate_group_id: RQG-CAND-016
+  level1: 근태관리
+  level2: 근태기록
+  requirement_name: 10분단위 근무계획 개선 근태기록 반영을 구현
+  source_count: 4
+  source_ids:
+  - REQ_TM_TE012
+  - REQ_TM_TE013
+  - REQ_TM_TE014
+  - REQ_TM_TE015
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 4
+- candidate_group_id: RQG-CAND-017
+  level1: 근태관리
+  level2: 근태마감
+  requirement_name: 10분단위 근무계획 개선 근태마감 반영을 구현
+  source_count: 39
+  source_ids:
+  - REQ_TM_TE016
+  - REQ_TM_TE017
+  - REQ_TM_TE018
+  - REQ_TM_TE019
+  - REQ_TM_TE020
+  - REQ_TM_TE021
+  - REQ_TM_TE022
+  - REQ_TM_TE023
+  - REQ_TM_TE024
+  - REQ_TM_TE025
+  - REQ_TM_TE026
+  - REQ_TM_TE027
+  - REQ_TM_TE028
+  - REQ_TM_TE029
+  - REQ_TM_TE030
+  - REQ_TM_TE031
+  - REQ_TM_TE032
+  - REQ_TM_TE033
+  - REQ_TM_TE034
+  - REQ_TM_TE035
+  - REQ_TM_TE036
+  - REQ_TM_TE037
+  - REQ_TM_TE038
+  - REQ_TM_TE039
+  - REQ_TM_TE040
+  - REQ_TM_TE041
+  - REQ_TM_TE042
+  - REQ_TM_TE043
+  - REQ_TM_TE044
+  - REQ_TM_TE045
+  - REQ_TM_TE046
+  - REQ_TM_TE047
+  - REQ_TM_TE048
+  - REQ_TM_TE049
+  - REQ_TM_TE050
+  - REQ_TM_TE051
+  - REQ_TM_TE052
+  - REQ_TM_TE053
+  - REQ_TM_TE054
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 39
+- candidate_group_id: RQG-CAND-018
+  level1: 근태관리
+  level2: 근태현황/통계
+  requirement_name: 10분단위 근무계획 개선 근태현황/통계 반영을 구현
+  source_count: 22
+  source_ids:
+  - REQ_TM_TE055
+  - REQ_TM_TE056
+  - REQ_TM_TE057
+  - REQ_TM_TE058
+  - REQ_TM_TE059
+  - REQ_TM_TE060
+  - REQ_TM_TE061
+  - REQ_TM_TE062
+  - REQ_TM_TE063
+  - REQ_TM_TE064
+  - REQ_TM_TE065
+  - REQ_TM_TE066
+  - REQ_TM_TE067
+  - REQ_TM_TE068
+  - REQ_TM_TE069
+  - REQ_TM_TE070
+  - REQ_TM_TE071
+  - REQ_TM_TE072
+  - REQ_TM_TE073
+  - REQ_TM_TE074
+  - REQ_TM_TE075
+  - REQ_TM_TE076
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 22
+- candidate_group_id: RQG-CAND-019
+  level1: 근태관리
+  level2: Batch
+  requirement_name: 10분단위 근무계획 개선 근무집계 반영을 구현
+  source_count: 23
+  source_ids:
+  - REQ_TM_TE077
+  - REQ_TM_TE078
+  - REQ_TM_TE079
+  - REQ_TM_TE080
+  - REQ_TM_TE081
+  - REQ_TM_TE082
+  - REQ_TM_TE083
+  - REQ_TM_TE084
+  - REQ_TM_TE085
+  - REQ_TM_TE086
+  - REQ_TM_TE087
+  - REQ_TM_TE088
+  - REQ_TM_TE089
+  - REQ_TM_TE090
+  - REQ_TM_TE091
+  - REQ_TM_TE092
+  - REQ_TM_TE093
+  - REQ_TM_TE094
+  - REQ_TM_TE095
+  - REQ_TM_TE096
+  - REQ_TM_TE097
+  - REQ_TM_TE098
+  - REQ_TM_TE099
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 23
+- candidate_group_id: RQG-CAND-020
+  level1: 근태관리
+  level2: Interface
+  requirement_name: 10분단위 근무계획 개선 Yellow Page 송신 반영을 구현
+  source_count: 1
+  source_ids:
+  - REQ_TM_TE100
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 1
+- candidate_group_id: RQG-CAND-021
+  level1: 근태관리
+  level2: 근태/휴가 (ESS)
+  requirement_name: 10분단위 근무계획 개선 입출문시간 정보에 반영을 구현
+  source_count: 2
+  source_ids:
+  - REQ_TM_TE101
+  - REQ_TM_TE102
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 2
+- candidate_group_id: RQG-CAND-022
+  level1: 근태관리
+  level2: 메인화면
+  requirement_name: 10분단위 근무계획 개선 주간스케쥴 반영을 구현
+  source_count: 1
+  source_ids:
+  - REQ_TM_TE103
+  boundary_status: OPEN
+  canonical_decision: UNRESOLVED
+  functional_item_candidate_count: 1
