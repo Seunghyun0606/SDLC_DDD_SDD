@@ -72,6 +72,37 @@ def validate(root: Path) -> list[str]:
         if not c['developer_specification'].get('legacy_program_dor_17_fields_preserved'):
             errors.append('legacy 17-field Program DoR must remain preserved')
 
+    open_cfg=c.get('open_resolution', {})
+    open_path=root/open_cfg.get('contract','sdlc/design/contracts/open-resolution-contract.json')
+    if open_path.is_file():
+        oc=json.loads(open_path.read_text(encoding='utf-8'))
+        principles=oc.get('principles', {})
+        if not principles.get('open_is_actionable_design_backlog'):
+            errors.append('OPEN must be an actionable design backlog')
+        if not principles.get('sop_is_optional') or not principles.get('missing_sop_does_not_block_design'):
+            errors.append('SOP must remain optional for OPEN resolution')
+        if not principles.get('proposal_is_not_automatic_business_truth'):
+            errors.append('designer/developer proposal must not become business truth automatically')
+        if not principles.get('existing_system_observation_is_not_automatic_target_policy'):
+            errors.append('AS-IS observation must not become TO-BE policy automatically')
+        required=set(oc.get('required_item_fields', []))
+        for field in ['resolution_method','basis_class','decision_owner_role','resolution_status','downstream_impact']:
+            if field not in required: errors.append(f'OPEN resolution item missing required field: {field}')
+        states=set(oc.get('resolution_status', []))
+        for state in ['PROPOSED','OBSERVED_AS_IS','ACCEPTED_DESIGN','CONFIRMED_BUSINESS','CONFLICT']:
+            if state not in states: errors.append(f'OPEN resolution status missing: {state}')
+    else:
+        errors.append('open resolution contract missing')
+
+    open_skill=root/open_cfg.get('skill','.cursor/skills/open-resolve/SKILL.md')
+    if open_skill.is_file():
+        txt=open_skill.read_text(encoding='utf-8')
+        for marker in ['SOP는 유용한 Evidence이지만 필수 입력이 아니다','DESIGNER_PROPOSAL','DEVELOPER_PROPOSAL','OBSERVED_AS_IS','ACCEPTED_DESIGN','CONFIRMED_BUSINESS']:
+            if marker not in txt: errors.append(f'OPEN resolution skill missing marker {marker}')
+
+    if 'open_resolution:' not in profile or 'sop_required: false' not in profile:
+        errors.append('project profile must configure non-blocking OPEN resolution')
+
     sop_path=root/c['sop_extraction']['skill']
     if sop_path.is_file():
         sop=sop_path.read_text(encoding='utf-8')
