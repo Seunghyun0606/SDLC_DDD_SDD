@@ -1,0 +1,16 @@
+schema_version: 1
+command_id: CMD-001
+command: /check
+project_context:
+  project_id: PROJECT-001
+  mode: AUTO
+  stage: CHECK
+target:
+  target_type: WORK_UNIT
+  target_id: WORK-001
+requested_capabilities: []
+write_capabilities: []
+capability_inputs: {}
+write_proofs: {}
+human_actions: []
+adapter_configs: {}
