@@ -56,7 +56,7 @@ stage_order:
 stages:
   INTAKE:
     display_name_ko: 요구사항 접수
-    skill: sop-business-extraction
+    skill: requirement-intake
     agent_level: L1_WITH_DETERMINISTIC_GUARDS
     required_input_types: [REQUIREMENT_SOURCE]
     capability_candidates: []
