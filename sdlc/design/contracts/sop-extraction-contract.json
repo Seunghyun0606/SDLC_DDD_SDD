@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "candidate_design": "v1.5.8-rc.1",
+  "purpose": "SOP/업무규정/매뉴얼/요구자료에서 업무 시나리오·Business Rule·Process·Data·Screen·Integration 후보를 일관되게 추출하기 위한 Core 공통 추출 계약",
+  "scope": "CORE_COMMON_SEMANTIC_EXTRACTION_CONTRACT",
+  "input_contract": "sdlc/design/contracts/br-document-extraction-contract.json",
+  "required_extraction_targets": [
+    "document_context",
+    "six_w_business_scenarios",
+    "actors_roles_profiles",
+    "triggers_frequency_deadlines",
+    "procedures_steps",
+    "business_rules_conditions_actions",
+    "exceptions_escalations",
+    "states_transitions_approvals",
+    "business_objects_fields",
+    "codes_reference_values",
+    "screens_forms_menus",
+    "interfaces_events_inputs_outputs",
+    "controls_audit_compliance",
+    "sla_cutoff_retention",
+    "conflicts_ambiguities_questions",
+    "source_provenance"
+  ],
+  "candidate_outputs": ["PROC_CANDIDATE","BR_CANDIDATE","FR_CANDIDATE","SCENARIO_CANDIDATE","DATA_CONCEPT_CANDIDATE","SCREEN_CANDIDATE","INTEGRATION_CANDIDATE","CLARIFICATION_CANDIDATE"],
+  "rules": {
+    "extract_only_supported_content": true,
+    "missing_information_is_not_invented": true,
+    "each_candidate_requires_document_id_and_locator": true,
+    "table_slide_cell_relationships_must_be_preserved_when_available": true,
+    "source_statement_and_normalized_statement_are_both_preserved": true,
+    "source_rule_is_candidate_until_authority_or_human_confirmation": true,
+    "conflicting_documents_create_conflict_candidate": true,
+    "format_specific_parser_is_not_core_skill_responsibility": true
+  },
+  "format_adapter_boundary": {
+    "core_skill_consumes_normalized_evidence_chunks": true,
+    "pdf_docx_xlsx_pptx_ocr_parser_implementation": "ADAPTER_OR_TOOL_RESPONSIBILITY",
+    "adapter_contract": "sdlc/design/contracts/br-document-extraction-contract.json"
+  }
+}
