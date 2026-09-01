@@ -1,0 +1,36 @@
+version: 1
+artifact_type: CONFORMANCE_CASE_MATRIX
+execution_evidence:
+  repository_checkout_executed: false
+  reason: GITHUB_DNS_UNAVAILABLE_IN_SESSION_RUNTIME
+  expected_results_are_not_runtime_results: true
+suites:
+  - suite_id: P07-LOCAL-FILESYSTEM-SOURCE
+    cases:
+      - {case_id: SOURCE-SNAPSHOT-OK, expected_provider_status: OK}
+      - {case_id: SOURCE-OBJECT-OK, expected_provider_status: OK}
+      - {case_id: SOURCE-SEARCH-OK, expected_provider_status: OK}
+      - {case_id: SOURCE-DIFF-OK, expected_provider_status: OK}
+      - {case_id: SOURCE-PATH-TRAVERSAL-BLOCKED, expected_provider_status: BLOCKED, expected_code: SOURCE_SCOPE_VIOLATION}
+      - {case_id: SOURCE-UNSUPPORTED-BLOCKED, expected_provider_status: BLOCKED, expected_code: UNSUPPORTED_OPERATION}
+    additional_self_test:
+      - {case: BOUNDED_SCAN_LIMIT, expected_provider_status: PARTIAL}
+  - suite_id: P07-SUBPROCESS-TEST
+    cases:
+      - {case_id: TEST-DISCOVER-OK, expected_provider_status: OK}
+      - {case_id: TEST-PASS-OK, expected_provider_status: OK, expected_test_status: PASSED}
+      - {case_id: TEST-FAIL-IS-NOT-PROVIDER-ERROR, expected_provider_status: OK, expected_test_status: FAILED}
+      - {case_id: TEST-TIMEOUT-BLOCKED, expected_provider_status: BLOCKED, expected_code: ADAPTER_TIMEOUT, expected_retryable: true}
+      - {case_id: TEST-COMMAND-NOT-FOUND-BLOCKED, expected_provider_status: BLOCKED, expected_code: TEST_COMMAND_NOT_FOUND}
+      - {case_id: TEST-UNSUPPORTED-BLOCKED, expected_provider_status: BLOCKED, expected_code: UNSUPPORTED_OPERATION}
+    additional_self_test:
+      - {case: DISCOVERY_PATTERN_NOT_INJECTED, expected_provider_status: BLOCKED, expected_code: TEST_DISCOVERY_PATTERN_REQUIRED}
+anti_overfitting:
+  core_forbidden_tokens:
+    - REQ_TM_TE
+    - RQG-CAND-6BB6D66548
+    - 근태
+    - AttendanceClose
+    - TB_ATT_
+    - 10분
+  sample_requirement_used_to_define_adapter_contract: false
