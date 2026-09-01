@@ -7,6 +7,9 @@ bootstrap:
   reuse_source_conventions: true
   reuse_test_conventions: true
   require_manual_confirmation: false
+  p1_foundation_config: sdlc/config/p1-foundation.yaml
+  project_bootstrap_manifest: sdlc/templates/project-bootstrap-manifest.yaml
+  jit_discovery: true
 
 preset:
   name: brownfield-auto
@@ -40,12 +43,28 @@ commands:
   router_must_not_invent_provider_result: true
 
 customization:
+  strategy: LATE_BOUND_OVERLAY
+  require_upfront_completion: false
   project_overlay: sdlc/custom/project
+  project_overlay_template: sdlc/templates/project-overlay.yaml
   domain_overlays: []
+  create_overlay_only_on_observed_difference: true
+  copy_core_truth_into_overlay: false
+
+knowledge:
+  provenance_required: true
+  source_behavior_auto_confirms_business_truth: false
+  reference_graph_template: sdlc/templates/reference-graph.yaml
 
 workflow:
   process_blocking: false
   execution_guard_enabled: true
+  open_item_template: sdlc/templates/open-item.yaml
+
+scale_out:
+  representative_vertical_slice_required: true
+  representative_vertical_slice_minimum: 1
+  actual_source_required_for_source_claims: true
 
 pm_tracking:
   assignee_required: false
