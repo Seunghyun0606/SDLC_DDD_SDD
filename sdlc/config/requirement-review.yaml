@@ -1,0 +1,77 @@
+version: 1
+status: ACTIVE_P0_2_CANDIDATE
+
+review_item_type: RQ_GROUP_REVIEW
+candidate_entity_type: RQ_GROUP_CANDIDATE
+
+states:
+  - READY_FOR_REVIEW
+  - NEEDS_EVIDENCE
+  - DECISION_RECORDED
+  - READY_TO_PUBLISH
+  - PUBLISHED
+  - REJECTED
+
+allowed_decisions:
+  - KEEP_AS_RQ
+  - MAP_TO_EXISTING_RQ_AS_FR
+  - MERGE_INTO_NEW_RQ
+  - SPLIT_TO_MULTIPLE_RQ
+  - REJECT_AS_REQUIREMENT
+  - UNRESOLVED
+
+required_review_fields:
+  - review_id
+  - source_group_id
+  - source_requirement_ids
+  - source_count
+  - decision
+  - boundary_status
+  - decision_basis
+  - evidence_ids
+  - decided_by
+  - decided_at
+  - decision_revision
+
+review_rules:
+  - id: RQR-001
+    statement: Candidate Group은 검토 전 Canonical Requirement로 표시하지 않는다.
+    enforcement: HARD_VALIDATION
+  - id: RQR-002
+    statement: UNRESOLVED는 decided_by/decided_at 없이도 저장할 수 있으나 Publish할 수 없다.
+    enforcement: HARD_VALIDATION
+  - id: RQR-003
+    statement: CONFIRMED 결정은 decided_by, decided_at, decision_basis, evidence_ids가 모두 필요하다.
+    enforcement: HARD_VALIDATION
+  - id: RQR-004
+    statement: source_count는 source_requirement_ids 개수와 일치해야 한다.
+    enforcement: HARD_VALIDATION
+  - id: RQR-005
+    statement: Candidate Group의 Source ID 집합은 Review 과정에서 조용히 변경할 수 없다.
+    enforcement: REVISION_GUARD
+  - id: RQR-006
+    statement: SPLIT/MERGE 결정은 L2 이상 또는 Human reviewer를 필요로 한다.
+    enforcement: ESCALATE
+
+priority_heuristic:
+  note: 검토 순서 보조용이며 Business Truth가 아니다.
+  high_when_any:
+    - source_count_gte_20
+    - interface_or_batch_area
+    - boundary_ambiguous
+  medium_when_any:
+    - source_count_gte_5
+  otherwise: LOW
+
+worklist_projection:
+  candidate_group_as_requirement: false
+  item_type: RQ_GROUP_REVIEW
+  stage: DECOMPOSE
+  default_status: READY_FOR_REVIEW
+  requirement_id_field: source_group_id
+  alerts_field:
+    - boundary_status
+    - required_evidence
+  note_field:
+    - source_count
+    - source_id_range
