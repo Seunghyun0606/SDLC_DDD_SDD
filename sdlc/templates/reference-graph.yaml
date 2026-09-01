@@ -4,28 +4,28 @@ reference_graph:
   revision: 1
   source_revision: ""
 
-nodes:
-  - node_id: ""
-    node_type: ""
-    title: ""
-    validity: CURRENT
-    truth_state: OPEN
-    source_ref: ""
+  nodes:
+    - node_id: ""
+      node_type: ""
+      title: ""
+      validity: CURRENT
+      truth_state: OPEN
+      source_ref: ""
 
-edges:
-  - edge_id: ""
-    from_id: ""
-    relation_type: ""
-    to_id: ""
-    truth_state: OPEN
-    evidence_ids: []
-    source_refs: []
-    status: OPEN
+  edges:
+    - edge_id: ""
+      from_id: ""
+      relation_type: ""
+      to_id: ""
+      truth_state: OPEN
+      evidence_ids: []
+      source_refs: []
+      status: OPEN
 
-unresolved_references: []
+  unresolved_references: []
 
-validation:
-  dangling_node_refs: []
-  missing_provenance_edges: []
-  duplicate_edge_ids: []
-  stale_source_revision: false
+  validation:
+    dangling_node_refs: []
+    missing_provenance_edges: []
+    duplicate_edge_ids: []
+    stale_source_revision: false
