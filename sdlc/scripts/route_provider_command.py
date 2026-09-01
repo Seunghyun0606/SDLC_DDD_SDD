@@ -13,6 +13,7 @@ COMMAND_CAPABILITY = {
     "/setup": "command.route.setup",
 }
 USABLE_PROVIDER_STATES = {"AVAILABLE", "DEGRADED"}
+WRITE_PROOF_FIELDS = ("expected_revision", "idempotency_key", "permission_proof_ref")
 
 
 def load(path: Path) -> dict[str, Any]:
@@ -22,9 +23,11 @@ def load(path: Path) -> dict[str, Any]:
 def select(registry: dict[str, Any], capability: str, write_intent: bool = False):
     declared, usable = [], []
     for provider in ((registry.get("registry") or {}).get("providers") or []):
-        if provider.get("enabled") is not True or capability not in (provider.get("capabilities") or []):
+        if capability not in (provider.get("capabilities") or []):
             continue
         declared.append(provider)
+        if provider.get("enabled") is not True:
+            continue
         if provider.get("provider_state") not in USABLE_PROVIDER_STATES:
             continue
         if write_intent and provider.get("mode") != "READ_WRITE":
@@ -46,6 +49,17 @@ def _unique(values):
     return out
 
 
+def _validate_write_proofs(context: dict[str, Any], write_caps: set[str]):
+    errors = []
+    proofs = context.get("write_proofs") or {}
+    for capability in sorted(write_caps):
+        proof = proofs.get(capability) or {}
+        for field in WRITE_PROOF_FIELDS:
+            if not proof.get(field):
+                errors.append(f"ROUTE-WRITE-001: {capability} requires write_proofs.{capability}.{field}")
+    return errors
+
+
 def build_plan(registry: dict[str, Any], context: dict[str, Any]):
     errors = []
     command = context.get("command")
@@ -56,6 +70,7 @@ def build_plan(registry: dict[str, Any], context: dict[str, Any]):
     required = _unique([router_capability] + list(context.get("requested_capabilities") or []))
     optional = [cap for cap in _unique(context.get("optional_capabilities") or []) if cap not in required]
     write_caps = set(context.get("write_capabilities") or [])
+    errors.extend(_validate_write_proofs(context, write_caps))
 
     resolved, open_items = [], []
     for requirement, capabilities in (("REQUIRED", required), ("OPTIONAL", optional)):
@@ -83,13 +98,14 @@ def build_plan(registry: dict[str, Any], context: dict[str, Any]):
     blocking_open = [item for item in open_items if item.get("blocking")]
     status = "READY" if not blocking_open and not blocking_human else "ACTION_REQUIRED"
 
+    # Compatibility guard for callers that still use the legacy top-level write_intent fields.
     if context.get("write_intent") and not context.get("permission_proof_ref"):
         errors.append("ROUTE-002: write_intent requires permission_proof_ref")
     if context.get("write_intent") and not context.get("idempotency_key"):
         errors.append("ROUTE-003: write_intent requires idempotency_key")
 
     plan = {
-        "schema_version": 2,
+        "schema_version": 3,
         "artifact_type": "PROVIDER_RUNTIME_PLAN",
         "runtime_plan": {
             "plan_id": context.get("plan_id", "PLAN-RUNTIME-001"),
@@ -98,11 +114,12 @@ def build_plan(registry: dict[str, Any], context: dict[str, Any]):
             "target": context.get("target") or {},
             "requested_capabilities": required,
             "optional_capabilities": optional,
+            "write_capabilities": sorted(write_caps),
             "resolved_providers": resolved,
             "human_actions": human_actions,
             "open_items": open_items,
             "executable": status == "READY" and not errors,
-            "write_intent": bool(context.get("write_intent")),
+            "write_intent": bool(write_caps) or bool(context.get("write_intent")),
             "status": "INVALID" if errors else status,
         },
     }
