@@ -28,10 +28,20 @@ class OpenResolutionContractTest(unittest.TestCase):
         self.assertTrue(self.contract['principles']['existing_system_observation_is_not_automatic_target_policy'])
         self.assertIn('OBSERVED_AS_IS',self.contract['resolution_status'])
 
-    def test_required_item_fields_make_resolution_traceable(self):
-        required=set(self.contract['required_item_fields'])
+    def test_human_view_is_five_simple_statuses(self):
+        self.assertEqual(['미확정','확인중','제안','확정','보류'],self.contract['human_view']['status_values'])
+        self.assertTrue(self.contract['principles']['human_view_is_simpler_than_machine_metadata'])
+
+    def test_machine_fields_remain_traceable_but_not_human_required(self):
+        machine=set(self.contract['machine_required_item_fields'])
         expected={'open_item_id','category','decision_domain','resolution_method','basis_class','proposed_or_observed_value','evidence_or_rationale','decision_owner_role','resolution_status','downstream_impact'}
-        self.assertTrue(expected.issubset(required))
+        self.assertTrue(expected.issubset(machine))
+        human=set(self.contract['human_view']['required_fields'])
+        self.assertNotIn('decision_domain',human)
+        self.assertNotIn('basis_class',human)
+        self.assertNotIn('resolution_method',human)
+        self.assertIn('resolution_action',human)
+        self.assertIn('human_status',human)
 
     def test_default_routes_are_category_specific(self):
         route=self.contract['default_resolution_route']
@@ -45,20 +55,21 @@ class OpenResolutionContractTest(unittest.TestCase):
         for marker in ['authority_matrix:','BUSINESS:','TECHNICAL:','can_confirm:','can_propose:','sop_required: false']:
             self.assertIn(marker,txt)
 
-    def test_workbook_covers_business_and_developer_open_items(self):
+    def test_workbook_uses_human_first_sections(self):
         txt=(ROOT/'sdlc/templates/core/open-resolution-workbook.md').read_text(encoding='utf-8')
-        for marker in ['### OPEN 해소 목록','### 6하원칙 업무정의 해소표','### 화면·필드·CRUD 해소표','### 업무 규칙·상태·예외 해소표','### 데이터·조회·공통코드 해소표','### 연계·권한·NFR·테스트 해소표','### 결정 기록']:
+        for marker in ['### OPEN 해소 목록','### 업무 시나리오 확인','### 설계 확인 항목','### 결정 기록','### 내부 자동 관리 정보']:
             self.assertIn(marker,txt)
+        header='| OPEN ID | 관련 항목 | 무엇을 확인하거나 결정해야 하는가 | 어떻게 확인할 것인가 | 현재 확인된 내용 또는 제안 | 누가 확인하거나 결정하는가 | 진행 상태 |'
+        self.assertIn(header,txt)
 
-    def test_interview_view_is_not_question_only(self):
-        txt=(ROOT/'sdlc/templates/core/interview-questions.md').read_text(encoding='utf-8')
-        for marker in ['왜 필요한가','권장 선택지/예시','인터뷰 없이 분석으로 해소할 항목','설계자·개발자 제안 항목','확인/채택 권한자']:
-            self.assertIn(marker,txt)
+    def test_interview_view_is_derived_not_source_of_resolution(self):
+        skill=(ROOT/'.cursor/skills/open-resolve/SKILL.md').read_text(encoding='utf-8')
+        self.assertIn('동일 OPEN 정보에서 필요한 고객 질문만 파생',skill)
 
-    def test_clarify_uses_multiple_resolution_routes(self):
+    def test_clarify_hides_machine_taxonomy_from_required_user_input(self):
         txt=(ROOT/'.cursor/skills/work/references/clarify.md').read_text(encoding='utf-8')
-        for marker in ['인터뷰·현행/Source/Data 분석·프로젝트 표준·설계/개발 제안','open-resolution-workbook.md','모든 OPEN을 인터뷰 질문으로만 바꾸지 않는다']:
-            self.assertIn(marker,txt)
+        self.assertIn('Machine metadata',txt)
+        self.assertIn('일반 사용자에게 Decision Domain/Resolution Method/Basis Class를 필수 입력으로 요구하지 않는다',txt)
 
     def test_greenfield_and_brownfield_do_not_require_sop(self):
         g=(ROOT/'sdlc/starter-kits/greenfield/README.md').read_text(encoding='utf-8')
