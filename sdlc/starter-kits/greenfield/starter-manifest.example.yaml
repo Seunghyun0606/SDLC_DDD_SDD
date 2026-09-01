@@ -1,0 +1,43 @@
+schema_version: 1
+mode: GREENFIELD
+project:
+  name: example-greenfield
+  objective: "새 시스템/기능이 해결해야 하는 업무 문제를 자연어로 작성"
+  success_criteria: []
+
+requirement_sources:
+  # 최소 1개. 자유형 자연어, Markdown, XLSX, DOCX, PDF 등 원본 등록 가능.
+  - document_id: REQ-SRC-001
+    path: requirements/originals/requirements.md
+    authority: UNKNOWN
+
+business_context:
+  stakeholder_map: business-context/stakeholder-map.md
+  process_context: business-context/process-context.md
+  data_concepts: business-context/data-concepts.md
+  glossary: business-context/glossary.csv
+
+constraints:
+  architecture_and_stack: constraints/architecture-and-stack.md
+  nfr_security_compliance: constraints/nfr-security-compliance.md
+  integration_inventory: constraints/integration-inventory.md
+
+profiles:
+  terminology: profiles/terminology-profile.json
+  customer_document: profiles/customer-document-profile.json
+
+readiness:
+  startable_minimum:
+    - project.objective
+    - requirement_sources
+  design_ready_recommended:
+    - business_context.stakeholder_map
+    - business_context.process_context
+    - business_context.data_concepts
+    - constraints.nfr_security_compliance
+  implementation_ready_rule: "Program DoR OPEN = 0 and approved target architecture/source target available"
+
+non_blocking:
+  unknown_value: UNKNOWN
+  missing_recommended_input: OPEN
+  dangerous_write_requires_execution_guard: true
