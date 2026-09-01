@@ -1,0 +1,106 @@
+version: 1
+status: DECISION_REQUIRED
+
+stage_input_pack:
+  metadata:
+    pack_id: FILL_ME
+    project_id: FILL_ME
+    stage: FILL_ME
+    generated_at: null
+    source_revision: null
+    profile: STANDARD
+
+  target:
+    primary_id: FILL_ME
+    target_type: RQ
+    source_requirement_ids: []
+    related_ids:
+      rq: []
+      fr: []
+      br: []
+      ac: []
+      proc: []
+      pgm: []
+      task: []
+      tc: []
+
+  required_inputs:
+    - id: FILL_ME
+      type: artifact_or_source
+      locator: FILL_ME
+      revision: null
+      required: true
+      available: false
+
+  resolved_facts:
+    - fact_id: FILL_ME
+      value: FILL_ME
+      truth: GIVEN
+      evidence_ids: []
+      confidence: HIGH
+
+  evidence:
+    - evidence_id: FILL_ME
+      provider: BUSINESS_DOCUMENT
+      locator: FILL_ME
+      revision: null
+      observed_value: FILL_ME
+      confidence: HIGH
+
+  open_items:
+    - open_id: FILL_ME
+      type: MISSING_INFORMATION
+      question: FILL_ME
+      blocks_reasoning: false
+      blocks_action: false
+      required_evidence: []
+      escalation: NONE
+
+  alerts: []
+  assumptions: []
+
+  task_contract:
+    purpose: FILL_ME
+    allowed_scope: []
+    prohibited_scope: []
+    output_schema: FILL_ME
+    minimum_agent_level: L1
+    escalation_conditions:
+      - EVIDENCE_CONFLICT
+      - BOUNDARY_AMBIGUOUS
+      - HIGH_BLAST_RADIUS
+      - SECURITY_CRITICAL
+      - MISSING_REQUIRED_SOURCE
+      - CROSS_SYSTEM_TRANSACTION
+
+  retrieval_plan:
+    ordered_sources: []
+    max_documents: 7
+    max_source_files: 10
+    stop_when:
+      - required_output_fields_resolved_or_open
+      - direct_relation_exhausted
+      - next_search_requires_unsupported_inference
+
+  output_requirements:
+    preserve_ids: true
+    preserve_open_items: true
+    preserve_truth_status: true
+    no_silent_confirmation: true
+    no_silent_id_merge: true
+    next_stage_handoff_required: true
+
+  deterministic_validators:
+    - REQUIRED_FIELD_CHECK
+    - ID_FORMAT_CHECK
+    - DUPLICATE_ID_CHECK
+    - TRACE_LINK_CHECK
+    - OPEN_PRESERVATION_CHECK
+    - REVISION_CHECK
+    - STATUS_TRANSITION_CHECK
+
+  completion:
+    status: NOT_STARTED
+    quality: WARNING
+    next_action: FILL_ME
+    escalation_target: null
