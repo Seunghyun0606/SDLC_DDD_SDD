@@ -3,6 +3,7 @@
 
 Examples:
   python sdlc/scripts/harness.py setup --name my-project --mode AUTO
+  python sdlc/scripts/harness.py intake requirements.xlsx
   python sdlc/scripts/harness.py check --setup
   python sdlc/scripts/harness.py work --target RQ-001 --plan-only
   python sdlc/scripts/harness.py change --target RQ-001 --change "환불 상태 조회 추가"
@@ -24,6 +25,7 @@ def _load(name: str, filename: str):
     spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
+    sys.modules[name] = mod
     spec.loader.exec_module(mod)
     return mod
 
@@ -47,11 +49,7 @@ def _value_from_args(args: list[str], option: str, default: str) -> str:
 
 
 def _runtime_profile_args(args: list[str]) -> tuple[list[str], dict]:
-    """Resolve the single project entry and append machine-only effective artifacts.
-
-    Effective paths are appended last so ``.sdlc/project.yaml`` remains authoritative even
-    when stale legacy profile/provider arguments were supplied by an old wrapper.
-    """
+    """Resolve the single project entry and append machine-only effective artifacts."""
     config = _load("harness_runtime_config", "runtime_config.py")
     root = _root_from_args(args)
     resolved = config.resolve_runtime_config(root)
@@ -73,11 +71,13 @@ def main(argv: list[str] | None = None) -> int:
     args = list(argv if argv is not None else sys.argv[1:])
     if not args or args[0] in {"-h", "--help", "help"}:
         print(__doc__.strip())
-        print("\nCommands: setup | work | change | check")
+        print("\nCommands: setup | intake | work | change | check")
         return 0
     command = args.pop(0).lower()
     if command == "setup":
         return _load("harness_setup", "bootstrap_project.py").main(args)
+    if command == "intake":
+        return _load("harness_intake", "intake_requirements.py").main(args)
     if command in {"work", "change"}:
         try:
             args, _ = _runtime_profile_args(args)
