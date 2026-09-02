@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
-"""User-facing /work adapter.
-
-The guarded executor remains ``run_work.py``. This adapter only improves the handoff:
-- new human-readable artifacts go under ``docs/`` instead of ``sdlc/runtime``;
-- machine context/result/handoff stay under ``sdlc/runtime``;
-- only uncertainty explicitly tagged as an authority decision is surfaced to a person;
-- the result includes the next user command without asking users to learn Skill/Contract internals.
-"""
+"""User-facing /work adapter around the guarded ``run_work.py`` executor."""
 from __future__ import annotations
 
 import argparse
@@ -30,23 +23,14 @@ def _load(name: str, filename: str):
 
 
 WORK = _load("wp4_guarded_work", "run_work.py")
-
 HUMAN_DECISION_CATEGORIES = {
     "BUSINESS_POLICY", "SCOPE", "APPROVAL", "TECHNICAL_CHOICE", "ACCEPTANCE",
 }
 STAGE_LABELS = {
-    "INTAKE": "요구사항정의",
-    "DECOMPOSE": "요구사항정의",
-    "CLARIFY": "확인질문",
-    "PROCESS": "업무프로세스",
-    "DISCOVERY": "현행근거",
-    "IMPACT": "영향분석",
-    "DESIGN": "기능설계",
-    "PROGRAM": "프로그램명세",
-    "DEVELOPMENT": "구현결과",
-    "TEST": "테스트시나리오",
-    "VERIFY": "검증결과",
-    "KNOWLEDGE_PROMOTION": "운영지식",
+    "INTAKE": "요구사항정의", "DECOMPOSE": "요구사항정의", "CLARIFY": "확인질문",
+    "PROCESS": "업무프로세스", "DISCOVERY": "현행근거", "IMPACT": "영향분석",
+    "DESIGN": "기능설계", "PROGRAM": "프로그램명세", "DEVELOPMENT": "구현결과",
+    "TEST": "테스트시나리오", "VERIFY": "검증결과", "KNOWLEDGE_PROMOTION": "운영지식",
 }
 SUCCESS = {"APPLIED", "IDEMPOTENT", "NO_CHANGE", "DRY_RUN_VALIDATED"}
 SAFE_NAME_RE = re.compile(r"[^0-9A-Za-z가-힣_.-]+")
@@ -58,8 +42,7 @@ def _safe_name(value: str, fallback: str) -> str:
 
 
 def _target_name(plan: dict[str, Any]) -> str:
-    entity = ((plan.get("target") or {}).get("entity") or {})
-    fields = entity.get("fields") or {}
+    fields = ((((plan.get("target") or {}).get("entity") or {}).get("fields")) or {})
     for key in ("name", "requirement_name", "title", "normalized_text"):
         if str(fields.get(key) or "").strip():
             return str(fields[key]).strip()
@@ -70,25 +53,7 @@ def default_document_path(plan: dict[str, Any]) -> str:
     target = _safe_name(str((plan.get("target") or {}).get("id") or "TARGET"), "TARGET")
     name = _safe_name(_target_name(plan), "작업")
     stage = str((plan.get("selection") or {}).get("stage") or "WORK")
-    label = STAGE_LABELS.get(stage, stage)
-    return f"docs/10_산출물/{target}_{name}_{label}.md"
-
-
-def use_human_document_default(plan: dict[str, Any], explicit_artifact: str | None) -> dict[str, Any]:
-    """Move only implicit legacy runtime documents to docs/. Explicit/user docs are preserved."""
-    if explicit_artifact:
-        return plan
-    selection = plan.get("selection") or {}
-    current = str(selection.get("artifact_path") or "")
-    if selection.get("artifact_reason") == "NEW_STAGE_ARTIFACT" or current.startswith("sdlc/runtime/work/"):
-        rel = default_document_path(plan)
-        abs_path, rel = WORK.safe_repo_path(Path(plan["root"]) if plan.get("root") else Path("."), rel) if False else (None, rel)
-        selection["artifact_path"] = rel
-        selection["artifact_reason"] = "USER_DOCUMENT_DEFAULT"
-        selection["artifact_override"] = False
-        selection["artifact_existed_at_plan_time"] = False
-        selection["artifact_hash_at_plan_time"] = None
-    return plan
+    return f"docs/10_산출물/{target}_{name}_{STAGE_LABELS.get(stage, stage)}.md"
 
 
 def partition_uncertainty(stage_result: dict[str, Any] | None) -> tuple[list[dict[str, Any]], list[Any]]:
@@ -133,12 +98,11 @@ def build_user_handoff(target: str, plan: dict[str, Any], execution: dict[str, A
     execution = execution or {}
     stage_result = _load_stage_result(Path(plan.get("_root") or "."), execution) if execution else None
     review_items, agent_open = partition_uncertainty(stage_result)
-    status = execution.get("status")
-    executable_success = status in SUCCESS
-    if executable_success and review_items:
+    success = execution.get("status") in SUCCESS
+    if success and review_items:
         next_command = f"python sdlc/scripts/harness.py review --target {target} --by <확인자> --answer <결정내용>"
         message = "Agent 초안이 완료되었습니다. 아래 판단권한 항목만 확인하면 됩니다."
-    elif executable_success:
+    elif success:
         next_command = f"python sdlc/scripts/harness.py work --target {target}"
         message = "Agent 초안/검증이 완료되었습니다. 사람 판단이 필요한 항목이 없어 다음 단계로 진행할 수 있습니다."
     else:
@@ -156,8 +120,7 @@ def build_user_handoff(target: str, plan: dict[str, Any], execution: dict[str, A
 
 
 def _handoff_path(root: Path, target: str) -> Path:
-    safe = _safe_name(target, "TARGET")
-    return root / "sdlc/runtime/work-handoff" / f"{safe}.json"
+    return root / "sdlc/runtime/work-handoff" / f"{_safe_name(target, 'TARGET')}.json"
 
 
 def _write_handoff(root: Path, target: str, plan: dict[str, Any], execution: dict[str, Any], handoff: dict[str, Any]) -> Path:
@@ -176,6 +139,20 @@ def _write_handoff(root: Path, target: str, plan: dict[str, Any], execution: dic
         "stage_result_path": execution.get("result_path"),
     })
     return path
+
+
+def _provider_policy() -> dict[str, Any]:
+    return {
+        "goal": "Evidence로 가능한 내용을 Agent가 먼저 작성하고 사람에게는 판단권한 항목만 요청한다.",
+        "human_decision_categories": sorted(HUMAN_DECISION_CATEGORIES),
+        "uncertainty_metadata": {
+            "requires_human_decision": "true only when a project authority must decide",
+            "category": "one of human_decision_categories",
+            "question": "one concrete decision question",
+        },
+        "agent_owned_unknown_rule": "Evidence 조사나 분석으로 확인 가능한 미확정은 OPEN/CHECK_REQUIRED로 유지하고 requires_human_decision을 붙이지 않는다.",
+        "no_invention": True,
+    }
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -208,15 +185,9 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         plan = WORK.build_plan(
-            root,
-            target_id=args.target,
-            store_path=store_path,
-            stage=args.stage,
-            artifact=args.artifact,
-            max_hops=hops,
-            allow_business_truth_change=args.allow_business_truth_change,
-            project_profile=project_profile,
-            source_profile=source_profile,
+            root, target_id=args.target, store_path=store_path, stage=args.stage, artifact=args.artifact,
+            max_hops=hops, allow_business_truth_change=args.allow_business_truth_change,
+            project_profile=project_profile, source_profile=source_profile,
         )
         plan["_root"] = str(root)
         if not args.artifact:
@@ -231,19 +202,18 @@ def main(argv: list[str] | None = None) -> int:
                     "artifact_existed_at_plan_time": artifact_abs.is_file(),
                     "artifact_hash_at_plan_time": WORK._hash_file(artifact_abs),
                 })
+        plan["human_handoff_policy"] = _provider_policy()
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         print(json.dumps({"status": "PLAN_FAILED", "error": str(exc)}, ensure_ascii=False, indent=2))
         return 2
 
     if args.plan_out:
-        WORK.save_json(Path(args.plan_out), plan)
+        out = Path(args.plan_out) if Path(args.plan_out).is_absolute() else root / args.plan_out
+        WORK.save_json(out, plan)
     if args.plan_only:
         handoff = {
-            "document": plan["selection"]["artifact_path"],
-            "review_required": False,
-            "review_items": [],
-            "agent_open_items": [],
-            "next_stage_candidate": plan.get("next_stage_candidate"),
+            "document": plan["selection"]["artifact_path"], "review_required": False,
+            "review_items": [], "agent_open_items": [], "next_stage_candidate": plan.get("next_stage_candidate"),
             "next_command": f"python sdlc/scripts/harness.py work --target {args.target}",
             "message": "이 문서는 사람이 빈 Template을 작성하는 대상이 아닙니다. Provider 연결 시 Agent가 Evidence 기반 초안을 작성합니다.",
         }
@@ -256,21 +226,15 @@ def main(argv: list[str] | None = None) -> int:
         handoff = build_user_handoff(args.target, plan, result)
         output = {**result, "user_handoff": handoff}
         if args.result_out:
-            WORK.save_json(Path(args.result_out), output)
+            out = Path(args.result_out) if Path(args.result_out).is_absolute() else root / args.result_out
+            WORK.save_json(out, output)
         print(json.dumps(output, ensure_ascii=False, indent=2))
         return 4
 
     try:
         provider = WORK.load_json(provider_path)
-        if args.run_dir:
-            run_dir = Path(args.run_dir) if Path(args.run_dir).is_absolute() else root / args.run_dir
-        else:
-            safe_target = _safe_name(args.target, "TARGET")
-            run_dir = root / "sdlc/runtime/work-runs" / f"{safe_target}-{plan['selection']['stage']}"
-        result = WORK.execute_plan(
-            root, plan, provider_config=provider, run_dir=run_dir, store_path=store_path,
-            dry_run=args.dry_run, source_profile=source_profile,
-        )
+        run_dir = (Path(args.run_dir) if Path(args.run_dir).is_absolute() else root / args.run_dir) if args.run_dir else root / "sdlc/runtime/work-runs" / f"{_safe_name(args.target, 'TARGET')}-{plan['selection']['stage']}"
+        result = WORK.execute_plan(root, plan, provider_config=provider, run_dir=run_dir, store_path=store_path, dry_run=args.dry_run, source_profile=source_profile)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         result = {"status": "EXECUTION_FAILED", "error": str(exc), "canonical_applied": False}
 
@@ -278,8 +242,8 @@ def main(argv: list[str] | None = None) -> int:
     handoff_path = _write_handoff(root, args.target, plan, result, handoff)
     output = {**result, "user_handoff": handoff, "handoff_path": handoff_path.relative_to(root).as_posix()}
     if args.result_out:
-        out_path = Path(args.result_out) if Path(args.result_out).is_absolute() else root / args.result_out
-        WORK.save_json(out_path, output)
+        out = Path(args.result_out) if Path(args.result_out).is_absolute() else root / args.result_out
+        WORK.save_json(out, output)
     print(json.dumps(output, ensure_ascii=False, indent=2))
     return 0 if result.get("status") in SUCCESS else 3
 
