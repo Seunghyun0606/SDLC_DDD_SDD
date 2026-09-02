@@ -1,6 +1,18 @@
 {
-  "schema_version": 2,
-  "candidate_design": "v1.5.7-rc.1",
+  "schema_version": 3,
+  "candidate_design": "v1.7-onboarding-v0.1",
+  "user_onboarding": {
+    "entrypoint": "docs/00_시작/START_HERE.md",
+    "project_setup_guide": "docs/00_시작/프로젝트_설정_가이드.md",
+    "internal_framework_structure_required_for_user": false,
+    "primary_setup_inputs": ["project_name", "project_mode", "delivery_profile"],
+    "unknown_mode_defaults_to": "AUTO",
+    "general_delivery_defaults_to": "STANDARD",
+    "agent_draft_first": true,
+    "human_reviews_decisions_not_blank_templates": true,
+    "unknown_information_remains_open": true,
+    "zero_to_one_requirement_intake": "WP03_NOT_YET_CONNECTED"
+  },
   "modes": {
     "GREENFIELD": {
       "starter_path": "sdlc/starter-kits/greenfield",
@@ -37,7 +49,10 @@
     "secrets_must_not_be_in_starter_kit": true,
     "business_truth_is_not_inferred_from_source_automatically": true,
     "implementation_ready_requires_program_dor": true,
-    "canonical_ids_remain_stable": true
+    "canonical_ids_remain_stable": true,
+    "onboarding_entrypoint_must_exist": true,
+    "setup_must_route_user_to_entrypoint": true,
+    "setup_must_not_fake_missing_requirement_target": true
   },
   "reverse_engineering": {
     "status": "PARTIAL_CORE_ENABLED",
