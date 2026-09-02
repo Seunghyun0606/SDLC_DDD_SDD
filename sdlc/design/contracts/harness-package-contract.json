@@ -1,6 +1,6 @@
 {
-  "schema_version": 15,
-  "candidate_design": "v1.7-requirement-intake-v0.1",
+  "schema_version": 16,
+  "candidate_design": "v1.7-wp4-work-handoff-v0.1",
   "core_required_files": [
     ".cursor/rules/00-core.mdc",
     ".cursor/rules/10-project.mdc",
@@ -14,6 +14,9 @@
     "sdlc/scripts/import_requirements.py",
     "sdlc/scripts/bootstrap_project.py",
     "sdlc/scripts/runtime_config.py",
+    "sdlc/scripts/work_handoff.py",
+    "sdlc/scripts/review_work.py",
+    "sdlc/scripts/capture_customer_decision.py",
     "sdlc/scripts/run_work.py",
     "sdlc/scripts/run_change.py",
     "sdlc/scripts/run_check.py",
@@ -52,7 +55,6 @@
     "CUSTOMER_EXTENSION": [
       "sdlc/design/contracts/customer-document-contract.json",
       "sdlc/scripts/render_customer_document.py",
-      "sdlc/scripts/capture_customer_decision.py",
       "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md",
       "sdlc/templates/customer/standard/A02_영향_개발범위_공유서.md",
       "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md"
@@ -123,7 +125,10 @@
     "br_candidate_schema": "sdlc/design/contracts/br-candidate.schema.json",
     "br_document_extraction_contract": "sdlc/design/contracts/br-document-extraction-contract.json",
     "sop_extraction_contract": "sdlc/design/contracts/sop-extraction-contract.json",
-    "requirement_analysis_legacy_view_is_not_active_output": true
+    "requirement_analysis_legacy_view_is_not_active_output": true,
+    "default_work_document_root": "docs/10_산출물",
+    "machine_work_runtime_root": "sdlc/runtime/work-runs",
+    "machine_handoff_root": "sdlc/runtime/work-handoff"
   },
   "canonical_runtime": {
     "script": "sdlc/scripts/apply_canonical_delta.py",
@@ -151,7 +156,10 @@
   },
   "work_execution": {
     "entrypoint": "sdlc/scripts/harness.py",
+    "user_work_adapter": "sdlc/scripts/work_handoff.py",
     "executor": "sdlc/scripts/run_work.py",
+    "human_review_adapter": "sdlc/scripts/review_work.py",
+    "decision_recorder": "sdlc/scripts/capture_customer_decision.py",
     "setup_executor": "sdlc/scripts/bootstrap_project.py",
     "intake_executor": "sdlc/scripts/intake_requirements.py",
     "change_executor": "sdlc/scripts/run_change.py",
@@ -175,7 +183,13 @@
     "provider_write_scope_guard": true,
     "provider_failure_rolls_back_git_changes": true,
     "development_build_test_before_canonical_commit": true,
-    "delivery_profiles": ["FAST", "STANDARD", "FULL"]
+    "delivery_profiles": ["FAST", "STANDARD", "FULL"],
+    "default_human_document_root": "docs/10_산출물",
+    "machine_runtime_root": "sdlc/runtime",
+    "human_decision_categories": ["BUSINESS_POLICY", "SCOPE", "APPROVAL", "TECHNICAL_CHOICE", "ACCEPTANCE"],
+    "human_review_requires_explicit_authority_metadata": true,
+    "review_input_json_required_from_user": false,
+    "review_command_auto_mutates_business_fields": false
   },
   "requirement_intake": {
     "entrypoint": "sdlc/scripts/harness.py intake",
@@ -234,6 +248,7 @@
     "required_in_all_stage_references": true,
     "format_strengthening_is_core_common": true,
     "stage_result_validator": "sdlc/scripts/validate_agent_stage_result.py",
+    "user_work_adapter": "sdlc/scripts/work_handoff.py",
     "work_executor": "sdlc/scripts/run_work.py",
     "machine_verifiable_output": true,
     "semantic_repeatability_check": true,
