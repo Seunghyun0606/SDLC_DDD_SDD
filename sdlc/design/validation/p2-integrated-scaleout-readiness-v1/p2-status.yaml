@@ -2,7 +2,7 @@ schema_version: 1
 artifact_type: P2_INTEGRATED_SCALEOUT_STATUS
 status:
   branch_family: SDLC_DESIGN_SESSION_SECOND
-  implementation_state: P2_IMPLEMENTATION_COMPLETE_CI_PENDING
+  implementation_state: P2_ENGINEERING_COMPLETE_CI_PASS
   controlled_pilot_scaleout_candidate: true
   production_scaleout_ready: false
   production_ready_claim_allowed: false
@@ -14,10 +14,26 @@ status:
     - interface_and_batch_analyzers_available_in_registry
     - evidence_based_scaleout_gate_without_boolean_readiness_override
     - scaleout_gate_checks_runtime_paths_and_prior_phase_status
+    - single_user_facade_requirement_intake_to_worklist_and_human_view_sync
+    - facade_requirement_intake_end_to_end_ci_test
+    - p2_representative_slice_regression_pass
+    - p1_usability_regression_pass
+    - structural_regression_pass
+    - p0_production_readiness_regression_pass
   selftest:
     script: sdlc/scripts/test_p2_integrated_scaleout.py
     expected_state: PASS
+    check_count: 5
     ci_workflow: .github/workflows/p2-integrated-scaleout-selftest.yml
+    successful_runs:
+      - run_id: 33583122959
+        purpose: corrected_scaleout_gate_and_full_regression
+      - run_id: 33583282965
+        purpose: facade_intake_end_to_end_and_full_regression
+  scaleout_assessment:
+    controlled_pilot_scaleout_ready: true
+    production_scaleout_ready: false
+    state: CONTROLLED_PILOT_SCALEOUT_READY_EXTERNAL_E2E_REQUIRED
   external_gate:
     state: BLOCKED_EXTERNAL
     reason: Real customer Source/Build/Test/DB-or-Interface/Reverse-Sync evidence is not present in this Harness repository.
@@ -32,4 +48,8 @@ status:
     - batch_schedule_observation_is_not_business_truth
     - controlled_pilot_readiness_is_not_production_readiness
     - missing_customer_e2e_is_not_success
-  next_action: Run CI; then integrate P2 intake command into the single user facade and close P2 engineering if regressions pass.
+  engineering_exit:
+    p2_engineering_complete: true
+    remaining_p2_harness_code_gap: false
+    blocked_external_is_not_counted_as_harness_implementation_gap: true
+  next_action: Use a real customer Source/Build/Test/DB-or-Interface/Reverse-Sync environment to close the external production gate, or proceed to the next design phase while keeping production_ready_claim_allowed=false.
