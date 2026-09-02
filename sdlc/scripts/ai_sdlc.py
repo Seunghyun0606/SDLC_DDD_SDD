@@ -198,6 +198,53 @@ def cmd_sync_worklist(a: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_intake_requirements(a: argparse.Namespace) -> int:
+    root = a.project_root.resolve(); repo = repo_root(); rt = runtime_dir(root)
+    rt.mkdir(parents=True, exist_ok=True)
+    xlsx = a.xlsx if a.xlsx.is_absolute() else (root / a.xlsx)
+    xlsx = xlsx.resolve()
+    if not xlsx.is_file():
+        raise SystemExit(f"requirements workbook not found: {xlsx}")
+    intake = rt / "requirement-intake.yaml"
+    intake_args = [str(xlsx), "--config", str(repo / "sdlc/config/requirement-intake.yaml"), "-o", str(intake)]
+    if a.sheet:
+        intake_args.extend(["--sheet", a.sheet])
+    for source_id in a.only_id:
+        intake_args.extend(["--only-id", source_id])
+    run(repo / "sdlc/scripts/intake_requirements_xlsx.py", intake_args)
+
+    registration_result = rt / "requirement-worklist-registration-result.yaml"
+    run(repo / "sdlc/scripts/register_requirement_worklist.py", [
+        str(intake),
+        "--canonical", str(rt / "worklist-canonical.yaml"),
+        "--ledger", str(rt / "requirement-worklist-registration.yaml"),
+        "--config", str(repo / "sdlc/config/requirement-worklist-registration.yaml"),
+        "--result", str(registration_result),
+    ])
+
+    run(repo / "sdlc/scripts/sync_worklist.py", [
+        "--canonical", str(rt / "worklist-canonical.yaml"),
+        "--md", str(root / "docs/00_관리/전체작업목록.md"),
+        "--xlsx", str(root / "docs/00_관리/전체작업목록.xlsx"),
+        "--columns", str(repo / "sdlc/config/worklist-columns.yaml"),
+    ])
+    result = {
+        "schema_version": 1,
+        "artifact_type": "REQUIREMENT_INTAKE_FACADE_RESULT",
+        "requirement_intake": {
+            "source": str(xlsx),
+            "intake_artifact": str(intake),
+            "registration_result": str(registration_result),
+            "canonical_worklist": str(rt / "worklist-canonical.yaml"),
+            "human_views": [str(root / "docs/00_관리/전체작업목록.md"), str(root / "docs/00_관리/전체작업목록.xlsx")],
+            "canonical_rq_created": False,
+            "next": "Review SOURCE_REQUIREMENT candidate boundaries before Canonical RQ publish.",
+        },
+    }
+    print(yaml.safe_dump(result, allow_unicode=True, sort_keys=False), end="")
+    return 0
+
+
 def cmd_promote_knowledge(a: argparse.Namespace) -> int:
     root = a.project_root.resolve(); repo = repo_root(); rt = runtime_dir(root)
     run(repo / "sdlc/scripts/promote_knowledge.py", [str(a.candidate.resolve()), "--config", str(repo / "sdlc/config/knowledge-promotion.yaml"), "--registry", str(rt / "knowledge-registry.yaml"), "--result", str(rt / "knowledge-promotion-result.yaml")])
@@ -220,6 +267,8 @@ def build_parser() -> argparse.ArgumentParser:
     check.add_argument("target_id", nargs="?"); check.add_argument("--project-root", type=Path, default=Path(".")); check.set_defaults(func=cmd_check)
     sync = sub.add_parser("sync-worklist", help="synchronize Canonical Worklist with MD/XLSX views")
     sync.add_argument("--project-root", type=Path, default=Path(".")); sync.set_defaults(func=cmd_sync_worklist)
+    intake = sub.add_parser("intake-requirements", help="ingest XLSX requirements, register non-canonical work items, and sync MD/XLSX views")
+    intake.add_argument("xlsx", type=Path); intake.add_argument("--sheet"); intake.add_argument("--only-id", action="append", default=[]); intake.add_argument("--project-root", type=Path, default=Path(".")); intake.set_defaults(func=cmd_intake_requirements)
     promote = sub.add_parser("promote-knowledge", help="promote one reviewed knowledge candidate into the project registry")
     promote.add_argument("candidate", type=Path); promote.add_argument("--project-root", type=Path, default=Path(".")); promote.set_defaults(func=cmd_promote_knowledge)
     return p
