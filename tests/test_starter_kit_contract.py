@@ -55,6 +55,27 @@ class StarterKitContractTest(unittest.TestCase):
         self.assertIn("greenfield-default", setup)
         self.assertIn("brownfield-auto", setup)
 
+    def test_single_user_onboarding_entrypoint_is_connected(self):
+        onboarding = CONTRACT["user_onboarding"]
+        self.assertFalse(onboarding["internal_framework_structure_required_for_user"])
+        self.assertEqual(["project_name", "project_mode", "delivery_profile"], onboarding["primary_setup_inputs"])
+        self.assertTrue(onboarding["agent_draft_first"])
+        self.assertTrue(onboarding["human_reviews_decisions_not_blank_templates"])
+        self.assertTrue(onboarding["unknown_information_remains_open"])
+        self.assertEqual(".sdlc/project.yaml", onboarding["project_config"])
+        self.assertEqual("CONNECTED", onboarding["zero_to_one_requirement_intake"])
+        self.assertTrue(onboarding["intake_returns_concrete_rq_target"])
+        self.assertTrue((ROOT / onboarding["entrypoint"]).is_file())
+        self.assertTrue((ROOT / onboarding["project_setup_guide"]).is_file())
+
+    def test_setup_skill_points_to_start_here_and_real_intake(self):
+        setup = (ROOT / ".cursor/skills/setup/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("docs/00_시작/START_HERE.md", setup)
+        self.assertIn(".sdlc/project.yaml", setup)
+        self.assertIn("Fast Path — 최초 5개 질문", setup)
+        self.assertIn("harness.py intake", setup)
+        self.assertIn("내부 Machine taxonomy를 사용자 입력 양식으로 요구하지 않는다", setup)
+
     def test_project_profile_no_longer_defaults_auto_to_brownfield(self):
         profile = (ROOT / "sdlc/config/project-profile.example.yaml").read_text(encoding="utf-8")
         self.assertIn("name: AUTO", profile)
