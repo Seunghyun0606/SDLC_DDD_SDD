@@ -12,19 +12,22 @@
 
 일반 분석가·설계자·개발자·QA에게 `project-profile.yaml`, `source-profile.yaml`, Starter Manifest, Contract 구조를 먼저 학습시키지 않는다.
 
-기존 호환 파일은 Runtime이 계산한다.
+기존 호환/실행 파일은 Runtime이 계산한다.
 
 ```text
-.sdlc/project.yaml                         # 사람이 보는 Source of Truth
+.sdlc/project.yaml                            # 사람이 보는 Source of Truth
         ↓ Runtime Resolver
-.sdlc/runtime/effective/project-profile.json  # Machine artifact
-.sdlc/runtime/effective/source-profile.json   # Machine artifact
-.sdlc/runtime/effective/project-context.json  # Machine context
-sdlc/config/project-profile.yaml              # Legacy compatibility snapshot
-sdlc/config/source-profile.yaml               # Legacy compatibility snapshot
+.sdlc/runtime/effective/project-profile.json # Machine runtime input
+.sdlc/runtime/effective/source-profile.json  # Machine runtime input
+.sdlc/runtime/effective/agent-provider.json  # Project guard가 반영된 Provider input
+.sdlc/runtime/effective/project-context.json # Agent project context
+.sdlc/runtime/effective/config-usage.json     # Config 소비 판정
+sdlc/config/project-profile.yaml             # Legacy compatibility snapshot
+sdlc/config/source-profile.yaml              # Legacy compatibility snapshot
+sdlc/config/agent-provider.json              # Provider command/timeout base
 ```
 
-Legacy profile에는 `MACHINE-GENERATED ... DO NOT EDIT` 표시를 넣는다. 새 프로젝트에서 두 profile을 수정해 설정을 바꾸는 UX로 회귀하지 않는다.
+Legacy profile에는 `MACHINE-GENERATED ... DO NOT EDIT` 표시를 넣는다. 새 프로젝트에서 두 profile을 수정해 설정을 바꾸는 UX로 회귀하지 않는다. `agent-provider.json`의 command/timeout 같은 연결 정보는 base로 남지만 `git.protected_branches`처럼 Project Config와 중복되는 정책은 `.sdlc/project.yaml` 값이 effective provider에서 우선한다.
 
 ## 기본 원칙
 
@@ -34,7 +37,8 @@ Legacy profile에는 `MACHINE-GENERATED ... DO NOT EDIT` 표시를 넣는다. �
 4. 빈 Template이나 수십 개 Config placeholder를 사람이 채우게 하지 않는다.
 5. 업무정책·범위·승인·기술 선택처럼 사람의 판단권한이 필요한 것만 확인한다.
 6. 알 수 없는 사실은 합리적으로 보인다는 이유로 확정하지 않는다.
-7. 설정 key가 Runtime/Extension/문서 중 어디에서도 사용되지 않으면 `DEAD_CONFIG`로 실패시킨다. 조용히 무시하지 않는다.
+7. 설정 key가 Runtime/Extension/Agent Context 중 어디에서도 사용되지 않으면 `DEAD_CONFIG`로 실패시킨다. 조용히 무시하지 않는다.
+8. 잘못된 schema/mode/delivery 값을 기본값으로 조용히 바꾸지 않고 fail-closed 한다.
 
 ## 실제 첫 실행
 
@@ -113,7 +117,10 @@ technology:
 source:
   roots:
     - "src/main/java"
+  excludes:
+    - "target/**"
 git:
+  branch_strategy: "pull-request"
   protected_branches:
     - "main"
 documents:
@@ -130,8 +137,10 @@ Architecture/Coding/Data/Interface/Security/Deployment 같은 프로젝트 맥�
 
 - **Runtime 소비**: Delivery, Source root, Build/Test, 보호 Branch 등 실행에 직접 사용
 - **Extension 소비 영역**: `extensions.*`
-- **문서/프로젝트 Context**: Language/Framework/Architecture/Coding/Data/Interface/Security/Deployment 등
+- **Agent/문서 Project Context**: 프로젝트명, Language/Framework, Source exclude, Architecture/Coding/Data/Interface/Security/Deployment, Branch strategy, 미확정 항목 등
 - **Dead Config**: 등록된 소비자가 없는 key. Runtime resolution 실패
+
+Project Context는 파일만 생성하고 끝내지 않는다. 공식 `harness.py work/change`가 만든 plan의 `project_context`에 포함되어 Provider의 `{context_path}` 입력으로 전달된다.
 
 기계 판정 목록은 `sdlc/design/config-usage-inventory.json`에 기록한다. 사용자에게 이 내부 inventory를 작성하도록 요구하지 않는다.
 
@@ -164,7 +173,7 @@ Git Repository라는 사실만으로 Brownfield라고 판정하지 않는다. �
 신규 Project Entry가 존재하는 순간:
 
 ```text
-.sdlc/project.yaml > Legacy profile
+.sdlc/project.yaml > Legacy profile / duplicated Provider policy
 ```
 
 순서가 고정된다.
@@ -192,8 +201,10 @@ python -m unittest tests.test_project_entry_config -v
 - `.sdlc/project.yaml` 하나로 Delivery가 FAST/STANDARD/FULL에 실제 반영되는가
 - Source root가 Work Runtime의 write scope로 전달되는가
 - Build/Test가 Development verification 설정으로 전달되는가
-- Legacy profile 변경이 Project Entry를 덮어쓰지 못하는가
-- 등록되지 않은 Config key가 `DEAD_CONFIG`로 실패하는가
+- Project Context가 `work/change` Agent plan에 들어가는가
+- Legacy profile/provider 값이 Project Entry를 덮어쓰지 못하는가
+- Project Config의 보호 Branch가 실제 Provider 실행 전에 차단되는가
+- 등록되지 않은 Config key와 잘못된 mode/profile이 fail-closed 되는가
 
 Provider가 준비된 뒤 첫 작업 계획:
 
@@ -205,5 +216,6 @@ python sdlc/scripts/harness.py work --target <RQ-ID> --plan-only
 
 - Config/Runtime/Test가 연결되어도 실제 저수준 Agent 반복실행 검증을 대신하지 않는다.
 - 실제 Human이 `.sdlc/project.yaml`을 별도 설명 없이 수정할 수 있는지는 Human Pilot에서 확인해야 한다.
+- 저수준 Agent가 전달된 Project Context를 올바르게 사용하고 OPEN을 발명 없이 유지하는지는 실제 Agent 실증이 필요하다.
 - Brownfield Coverage가 부족하면 Impact COMPLETE로 표현하지 않는다.
 - Business Truth는 권한자 확인 없이 확정하지 않는다.
