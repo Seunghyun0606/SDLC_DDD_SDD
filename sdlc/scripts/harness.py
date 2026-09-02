@@ -5,10 +5,12 @@ Examples:
   python sdlc/scripts/harness.py setup --name my-project --mode AUTO
   python sdlc/scripts/harness.py intake requirements.xlsx
   python sdlc/scripts/harness.py check --setup
-  python sdlc/scripts/harness.py work --target RQ-001 --plan-only
+  python sdlc/scripts/harness.py work --target RQ-001
+  python sdlc/scripts/harness.py review --target RQ-001 --by 홍길동 --answer "승인 주체는 팀장"
   python sdlc/scripts/harness.py change --target RQ-001 --change "환불 상태 조회 추가"
 
 Project users maintain one setting file: .sdlc/project.yaml.
+They do not need to edit Rule/Skill/Reference/Contract files or blank stage templates.
 """
 from __future__ import annotations
 
@@ -70,7 +72,7 @@ def _runtime_profile_args(args: list[str]) -> tuple[list[str], dict]:
 
 
 def _run_setup(args: list[str]) -> int:
-    """Keep WP-02 bootstrap semantics but expose the unified WP-01/WP-03 handoff."""
+    """Keep bootstrap semantics but expose the unified first-use handoff."""
     setup = _load("harness_setup", "bootstrap_project.py")
     captured = StringIO()
     with redirect_stdout(captured):
@@ -108,13 +110,15 @@ def main(argv: list[str] | None = None) -> int:
     args = list(argv if argv is not None else sys.argv[1:])
     if not args or args[0] in {"-h", "--help", "help"}:
         print(__doc__.strip())
-        print("\nCommands: setup | intake | work | change | check")
+        print("\nCommands: setup | intake | work | review | change | check")
         return 0
     command = args.pop(0).lower()
     if command == "setup":
         return _run_setup(args)
     if command == "intake":
         return _load("harness_intake", "intake_requirements.py").main(args)
+    if command == "review":
+        return _load("harness_review", "review_work.py").main(args)
     if command in {"work", "change"}:
         try:
             args, _ = _runtime_profile_args(args)
@@ -122,7 +126,7 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps({"status": "PROJECT_CONFIG_FAILED", "error": str(exc)}, ensure_ascii=False, indent=2))
             return 2
         if command == "work":
-            return _load("harness_work", "run_work.py").main(args)
+            return _load("harness_work_handoff", "work_handoff.py").main(args)
         return _load("harness_change", "run_change.py").main(args)
     if command == "check":
         return _load("harness_check", "run_check.py").main(args)
