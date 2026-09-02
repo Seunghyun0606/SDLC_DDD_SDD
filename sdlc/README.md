@@ -78,6 +78,7 @@ python sdlc/scripts/test_structural_redesign.py
 python sdlc/scripts/test_p2_representative_slice.py
 python sdlc/scripts/test_p0_production_readiness.py
 python sdlc/scripts/test_p1_usability_authority.py
+python sdlc/scripts/test_p1_operational_usability.py
 ```
 
 Self-test PASS는 Harness primitive의 검증이며 실제 고객 Source 검증을 대체하지 않는다.
