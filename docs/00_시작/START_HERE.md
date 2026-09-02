@@ -14,7 +14,7 @@ Framework의 Rule, Skill, Reference, Contract, Canonical 구조를 먼저 공부
 → 다음 작업 진행
 ```
 
-> 현재 구현 경계: 이 Branch에는 `setup/work/change/check`가 연결되어 있지만, **빈 프로젝트에서 요구사항 한 건을 입력해 RQ ID를 만들고 바로 `work`로 넘기는 단일 intake 명령은 아직 없습니다.** XLSX 요구사항 후보 추출 Runtime은 존재하지만 Canonical RQ 등록까지 자동 연결되지는 않습니다. 이 연결은 Session 3 / WP-03 범위입니다. 따라서 아래에서는 가능한 흐름과 아직 끊긴 지점을 명확히 구분합니다.
+> 현재 구현 경계: 이 Branch에는 `setup/work/change/check`가 연결되어 있지만, **빈 프로젝트에서 요구사항 한 건을 입력해 RQ ID를 만들고 바로 `work`로 넘기는 단일 intake 명령은 아직 없습니다.** XLSX 요구사항 후보 추출 Runtime은 존재하지만 Canonical RQ 등록과 첫 Target 반환까지 자동 연결되지는 않습니다. 이 연결은 Session 3 / WP-03 범위입니다. 따라서 아래에서는 가능한 흐름과 아직 끊긴 지점을 명확히 구분합니다.
 
 ## 1. 이 Harness로 무엇을 할 수 있나
 
