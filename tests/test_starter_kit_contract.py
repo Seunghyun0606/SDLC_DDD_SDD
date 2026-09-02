@@ -48,14 +48,25 @@ class StarterKitContractTest(unittest.TestCase):
             self.assertTrue((ROOT / f"sdlc/starter-kits/{mode}/README.md").is_file())
             self.assertTrue((ROOT / f"sdlc/starter-kits/{mode}/starter-manifest.example.yaml").is_file())
 
-    def test_setup_routes_to_mode_specific_starter_kits(self):
-        setup = (ROOT / ".cursor/skills/setup/SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("sdlc/starter-kits/greenfield/", setup)
-        self.assertIn("sdlc/starter-kits/brownfield/", setup)
-        self.assertIn("greenfield-default", setup)
-        self.assertIn("brownfield-auto", setup)
+    def test_single_user_onboarding_entrypoint_is_contracted_and_exists(self):
+        onboarding = CONTRACT["user_onboarding"]
+        self.assertFalse(onboarding["internal_framework_structure_required_for_user"])
+        self.assertEqual(["project_name", "project_mode", "delivery_profile"], onboarding["primary_setup_inputs"])
+        self.assertTrue(onboarding["agent_draft_first"])
+        self.assertTrue(onboarding["human_reviews_decisions_not_blank_templates"])
+        self.assertTrue(onboarding["unknown_information_remains_open"])
+        self.assertEqual("WP03_NOT_YET_CONNECTED", onboarding["zero_to_one_requirement_intake"])
+        self.assertTrue((ROOT / onboarding["entrypoint"]).is_file())
+        self.assertTrue((ROOT / onboarding["project_setup_guide"]).is_file())
 
-    def test_project_profile_no_longer_defaults_auto_to_brownfield(self):
+    def test_setup_routes_to_start_here_not_internal_profiles(self):
+        setup = (ROOT / ".cursor/skills/setup/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("docs/00_시작/START_HERE.md", setup)
+        self.assertIn("기본 setup에서는 다음 세 가지", setup)
+        self.assertIn("내부 Machine taxonomy를 사용자 입력 양식으로 요구하지 않는다", setup)
+        self.assertIn("WP-03", setup)
+
+    def test_project_profile_keeps_auto_mode_compatibility_until_wp02(self):
         profile = (ROOT / "sdlc/config/project-profile.example.yaml").read_text(encoding="utf-8")
         self.assertIn("name: AUTO", profile)
         self.assertIn("GREENFIELD: greenfield-default", profile)
