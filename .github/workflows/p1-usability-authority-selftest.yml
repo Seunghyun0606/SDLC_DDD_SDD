@@ -33,11 +33,14 @@ jobs:
             sdlc/scripts/promote_knowledge.py \
             sdlc/scripts/lint_p1_knowledge.py \
             sdlc/scripts/validate_contract_authority.py \
-            sdlc/scripts/test_p1_usability_authority.py
+            sdlc/scripts/test_p1_usability_authority.py \
+            sdlc/scripts/test_p1_operational_usability.py
       - name: Validate P1 authority index
         run: python sdlc/scripts/validate_contract_authority.py sdlc/config/contract-authority.yaml --repo-root .
       - name: Run P1 usability/authority self-test
         run: python sdlc/scripts/test_p1_usability_authority.py
+      - name: Run P1 operational usability smoke test
+        run: python sdlc/scripts/test_p1_operational_usability.py
       - name: Run structural regression
         run: python sdlc/scripts/test_structural_redesign.py
       - name: Run P0 regression
