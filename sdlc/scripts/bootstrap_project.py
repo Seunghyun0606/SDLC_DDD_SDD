@@ -232,7 +232,7 @@ def bootstrap(root: Path, *, name: str, mode: str = "AUTO", delivery: str = "STA
         "schema_version": 1, "status": status, "project_name": name, "mode": resolved, "delivery_profile": delivery,
         "detected": d, "adapter_assessment": adapter, "provider_ready": provider_ready, "open_items": opens, "writes": writes,
         "validation": validation,
-        "next_commands": ["python sdlc/scripts/harness.py check --setup", "python sdlc/scripts/harness.py work --target <RQ-ID> --plan-only"],
+        "next_commands": ["python sdlc/scripts/harness.py check --setup", "python sdlc/scripts/harness.py intake <requirement-file.xlsx>"],
     }
     result_path = root / "sdlc/runtime/setup/setup-result.json"; result_path.parent.mkdir(parents=True, exist_ok=True)
     result_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

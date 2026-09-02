@@ -1,39 +1,21 @@
 # AI-SDLC Harness — Project Quick Start
 
-이 문서는 **처음 Harness를 프로젝트 Repository에 도입하는 일반 SI/SM 참여자**를 위한 실행 기준이다. Contract/Profile 이름을 먼저 학습할 필요가 없다.
+이 문서는 Harness 설계 내부를 모르는 일반 SI/SM 참여자가 **프로젝트 자료를 제공하고 첫 요구사항 작업까지 연결**하기 위한 실행 기준이다. Rule/Skill/Reference/Contract 구조를 먼저 학습할 필요가 없다.
 
-## 1. Production Project에 무엇을 가져가는가
+## 1. 기본 사용자 흐름
 
-### 최소 실행 Core
-다음 범위가 기본 배포 대상이다.
+```text
+프로젝트 자료 제공
+  → Intake가 근거/후보와 실제 RQ Target 생성
+  → Agent가 Requirement 초안 작성
+  → 사람은 정책·범위·승인 등 판단 항목만 확인
+  → Agent가 문서 완성
+  → 다음 Stage 안내
+```
 
-- `.cursor/rules/**`
-- `.cursor/skills/work`, `change`, `check`, `setup`
-- `sdlc/scripts/harness.py`
-- `sdlc/scripts/bootstrap_project.py`, `runtime_config.py`
-- `sdlc/scripts/run_work.py`, `run_change.py`, `run_check.py`
-- `sdlc/scripts/apply_canonical_delta.py`, `validate_agent_stage_result.py`, `validate_program_spec.py`
-- `sdlc/templates/core/**`
-- `sdlc/config/program-spec-readiness.json`
-- 실행에 필요한 `sdlc/design/contracts/**` 공통 Contract
+사람이 빈 `requirement.md` Template의 placeholder를 직접 채우는 방식은 기본 Workflow가 아니다.
 
-정확한 목록은 `sdlc/design/contracts/harness-package-contract.json`의 `core_required_files`가 기준이다.
-
-### 필요할 때만 추가
-- Brownfield Source 영향/Reverse: `deployment_sets.BROWNFIELD_EXTENSION`
-- 고객 산출물: `deployment_sets.CUSTOMER_EXTENSION`
-- DOCX/PPTX/XLSX/PDF 업무문서 ingestion: `deployment_sets.DOCUMENT_INGEST_EXTENSION`
-- Jira/APM/DB/API Catalog 등 외부 결과: `deployment_sets.EXTERNAL_TOOL_EXTENSION`
-
-### Production Project에 복사할 필요가 없는 것
-- `tests/**`
-- `sdlc/validation/**`
-- `docs/99_파일럿/**`
-- Validation report / Sample fixture
-
-이들은 Harness 자체 검증용이며 프로젝트 수행 필수 파일이 아니다.
-
-## 2. 첫 명령 — /setup
+## 2. 최초 설정
 
 ```bash
 python sdlc/scripts/harness.py setup \
@@ -42,196 +24,126 @@ python sdlc/scripts/harness.py setup \
   --delivery STANDARD
 ```
 
-`AUTO`는 Git Repository라는 사실만으로 Brownfield라고 판단하지 않고 실제 Source/build/schema 자산을 본다.
+실제 Agent wrapper가 있으면 `--provider-command`를 추가한다. Provider가 없으면 문서 생성 성공으로 취급하지 않지만, Requirement Intake와 계획 확인은 진행할 수 있다.
 
-실제 Agent wrapper가 준비되어 있으면:
-
-```bash
-python sdlc/scripts/harness.py setup \
-  --name <project-name> \
-  --mode AUTO \
-  --delivery STANDARD \
-  --provider-command '<agent-command> --context {context_path} --result {result_path}'
-```
-
-Setup Runtime이 실제 생성하는 파일:
-
-```text
-sdlc/config/project-profile.yaml
-sdlc/config/source-profile.yaml
-sdlc/config/agent-provider.json
-sdlc/canonical/store.json
-sdlc/runtime/setup/setup-result.json
-```
-
-Provider가 연결되지 않았으면 `CONFIGURED_PROVIDER_REQUIRED`로 끝난다. 이 상태를 작업 실행 성공으로 보지 않는다.
-
-## 3. 설정 확인
+설정 확인:
 
 ```bash
 python sdlc/scripts/harness.py check --setup
-python sdlc/scripts/validate_harness_structure.py .
 ```
 
-확인할 것:
-- Greenfield/Brownfield Mode
-- Delivery Profile
-- Source root
-- Build/Test command
-- Agent Provider
-- 현재 Git branch/dirty 상태
+## 3. 요구사항 자료를 그대로 인입한다
 
-## 4. 작은 변경과 큰 프로젝트를 다르게 수행한다
-
-### FAST
-XS/S 운영 변경·소규모 기능.
-- 불필요한 PROCESS/DISCOVERY/VERIFY는 조건부
-- Program Spec 준비도는 7개 핵심 항목만 필수
-- Customer 문서는 기본 최소
-- Reverse는 직접 관련 범위 우선
-
-### STANDARD
-일반 SI/SM 기능.
-- 업무흐름/영향/설계/Program/Test/Verify 사용
-- Program Spec 17개 준비도 사용
-
-### FULL
-대형/고위험 구축.
-- 전체 Stage + Knowledge Promotion 후보
-- 조직별 Architecture/Governance는 Project Overlay로 추가
-
-새 Preset을 계속 만들지 말고 기본적으로 이 3개만 사용한다.
-
-## 5. 첫 요구사항 진행
-
-Requirement가 Canonical에 등록된 뒤 실제 변경 전에 계획부터 확인한다.
+표준 한국어 2행 Header XLSX는 별도 Mapping/Profile 없이 바로 실행한다.
 
 ```bash
-python sdlc/scripts/harness.py work --target RQ-001 --plan-only
+python sdlc/scripts/harness.py intake 요구사항목록.xlsx
 ```
 
-Provider가 준비됐으면:
+기본 Header는 `Level1 / Level2 / 요구사항 ID / 요구사항명 / 요구사항`이다. 고객 파일의 컬럼명이 다를 때만 `--profile`을 사용한다.
+
+Intake는 다음을 수행한다.
+
+- 원문, 외부 요구사항 ID, Sheet/Row, Source Hash 보존
+- 동일한 업무영역/요구사항명 묶음을 RQ **후보**로 등록
+- 각 원본 요구 행을 FR **후보**로 등록
+- 유사 그룹은 자동 병합하지 않고 사람 확인 대상으로 남김
+- 현재 문제·기대 결과·업무 규칙을 근거 없이 만들지 않고 OPEN 유지
+- 기존 `CONFIRMED_BUSINESS`를 재인입 Source로 덮어쓰거나 낮추지 않음
+- 실제 `RQ-001` 같은 다음 작업 Target을 반환
+
+기본 출력은 역할을 분리한다.
+
+```text
+사용자 확인 문서   docs/00_관리/요구사항_인입결과.md
+Machine Artifact  sdlc/runtime/intake/requirements-import.json
+Canonical Store   sdlc/canonical/store.json
+```
+
+Machine JSON은 사용자가 직접 작성하거나 편집하는 문서가 아니다.
+
+파싱 결과만 보고 Canonical을 변경하지 않으려면 진단용으로 `--candidate-only`를 사용한다.
+
+## 4. Agent 초안으로 이어간다
+
+Intake가 반환한 실제 Target을 그대로 사용한다.
 
 ```bash
 python sdlc/scripts/harness.py work --target RQ-001
 ```
 
-`/work`는 다음을 실제 Guard한다.
-- Provider 미연결 실패
-- 기본 `main/master` 직접 write 금지
-- dirty workspace 기본 차단
-- 실행 중 Git HEAD 변경 차단
-- 허용 Source root 밖 Provider write 차단
-- DEVELOPMENT build/test 실패 시 Canonical commit 금지
-- 실패 시 이번 Provider 실행에서 생긴 Git working-tree 변경 rollback
-- Canonical file lock + 최신 revision 재확인 + atomic replace
-
-Hosting 서비스의 Branch Protection 자체는 프로젝트에서 별도로 켜야 한다.
-
-## 6. 변경과 조회
+Provider가 아직 연결되지 않았다면:
 
 ```bash
-python sdlc/scripts/harness.py change \
-  --target RQ-001 \
-  --change '환불 상태 조회를 추가한다'
+python sdlc/scripts/harness.py work --target RQ-001 --plan-only
+```
 
+Canonical RQ는 기본적으로 DECOMPOSE로 연결되고, 관련 FR 후보도 Agent Context에 포함된다. Agent는 `sdlc/templates/core/requirement.md` 형식의 초안을 만들되, 업무 정책·범위·승인·기술 선택처럼 권한이나 추가 근거가 필요한 값은 OPEN/Proposal로 남긴다.
+
+완성된 Intake 예시는 `sdlc/guides/요구사항_인입_완성예시.md`를 본다. 예시는 작성용 빈 양식이 아니다.
+
+## 5. 사람이 확인하는 범위
+
+사람에게 우선 노출할 것은 다음과 같다.
+
+- 유사 RQ를 실제로 합칠지
+- 중복 외부 ID의 기준 원문
+- 업무 정책과 적용 범위
+- 승인/권한이 필요한 결정
+- Source로 확인할 수 없는 기대 결과
+- 기술 선택 중 프로젝트 의사결정이 필요한 항목
+
+나머지 근거 정리, ID 연결, 문서 초안, 추적성 표는 Agent/Runtime이 먼저 만든다.
+
+## 6. Delivery Profile
+
+- `FAST`: XS/S 운영 변경·소규모 기능
+- `STANDARD`: 일반 SI/SM 기능
+- `FULL`: 대형/고위험 구축
+
+Preset을 계속 늘리지 않고 이 세 Profile을 기본으로 사용한다.
+
+## 7. Brownfield와 비정형 자료
+
+Brownfield에서는 Source/build/schema 자산을 Evidence로 조사하되, 찾지 못한 것을 영향 없음으로 확정하지 않는다. 기존 DOCX/PPTX/XLSX/PDF 업무문서의 일반 Evidence 추출은 `extract_document_evidence.py` 경로를 사용한다. 이번 `harness intake`의 Core 입력은 **구조화된 요구사항 XLSX**이며, 모든 문서 포맷을 하나의 새 Framework로 다시 만들지 않는다.
+
+## 8. 변경과 조회
+
+```bash
+python sdlc/scripts/harness.py change --target RQ-001 --change '변경 내용'
 python sdlc/scripts/harness.py check --target RQ-001
 ```
 
-`/change`도 `/work`와 같은 Git/Canonical Guard를 사용한다. Source 관찰만으로 고객/업무 확정 내용을 바꾸지 않는다.
+`/work`와 `/change`는 Provider/Git/Source Scope/Build/Test/Canonical Guard를 사용한다. Source 관찰만으로 고객/업무 확정 내용을 바꾸지 않는다.
 
-## 7. Greenfield 시작법
+## 9. 배포 구조
 
-Source가 없는 것은 정상이다. 부족한 기술 선택은 Proposal/Open으로 진행할 수 있으며 업무 정책은 권한 확인 없이 확정하지 않는다.
+Minimum executable core의 실제 파일 목록은 `sdlc/design/contracts/harness-package-contract.json`이 기준이다. `harness.py intake`가 공식 첫 요구사항 경로이므로 `import_requirements.py`도 Core에 포함된다.
 
-권장 첫 Prompt:
+추가 기능은 필요할 때만 Extension으로 사용한다.
 
-> 이 Repository는 신규 Greenfield 프로젝트다. 현재 제공된 요구사항과 프로젝트 자료를 확인하고 개발 언어, Framework, DB, UI/API, Build/Test, Architecture/Coding/Naming/Test 정책 중 확정된 것과 미확정된 것을 구분해줘. Source가 없는 것은 정상으로 취급하고 기술 항목은 근거가 있으면 Proposal로 제안하되 고객/업무 정책은 임의 확정하지 마. 첫 요구사항의 FR/AC를 만들고 다음 설계까지 반드시 결정할 항목과 나중에 결정해도 되는 OPEN을 분리해줘.
+- Brownfield Source 영향/Reverse
+- 고객 산출물 Projection
+- 일반 Document Ingestion
+- Jira/APM/DB/API Catalog 등 외부 Tool Evidence
 
-## 8. Brownfield 시작법
+Validation/Test/Sample은 Production Project 배포 필수가 아니다.
 
-먼저 실제 Evidence coverage를 조사한다. “찾지 못함”을 “영향 없음”으로 해석하지 않는다.
+## 10. Customization
 
-권장 첫 Prompt:
-
-> 이 Repository는 Brownfield 프로젝트다. 변경 설계 전에 Source root, 모듈, Build/Test, Language/Framework, Controller/API, Service, Repository/Mapper, DB Schema, Batch/Scheduler, Interface/Event, Test, 배포구조, 기존 문서와 Git history를 조사해줘. 확인한 내용은 현행 근거로 기록하고 찾지 못한 항목은 Coverage Gap으로 남겨줘. 현재 Adapter가 분석 가능한 범위와 추가 Adapter/Tool이 필요한 범위를 구분한 뒤 Project/Source Profile 초안을 만들어줘. Source만 보고 Business 목적이나 정책을 확정하지 마.
-
-포함 Adapter:
-- `java_spring_mybatis.py`: 직접 호출/MyBatis/Table 중심 Pilot
-- `java_spring_enterprise.py`: JPA/JDBC/@Transactional/Feign/Kafka/Scheduled/Config 정적 후보 확장
-
-두 Adapter 모두 Runtime proxy/reflection/live DB/APM/broker topology는 완전 분석하지 않는다.
-
-## 9. 기존 DOCX/PPTX/XLSX/PDF 업무문서
-
-원본을 다시 작성시키지 않는다.
-
-```bash
-python sdlc/scripts/extract_document_evidence.py \
-  --input <customer-file> \
-  --output sdlc/runtime/evidence/<name>.json
-```
-
-- DOCX/PPTX/XLSX는 OOXML 구조를 사용해 paragraph/slide/cell range를 보존한다.
-- PDF는 text parser가 사용 가능할 때만 추출한다.
-- 읽을 수 없으면 `EXTRACTION_REQUIRED`; 규칙이 없다고 판단하지 않는다.
-- OCR/스캔은 외부 Document Tool이 필요하다.
-
-## 10. 고객 문서
-
-Active Customer View는 A01/A02/A03 세 종류만 기본 사용한다.
-
-고객 피드백/승인을 다시 근거로 연결할 때:
-
-```bash
-python sdlc/scripts/capture_customer_decision.py --input <customer-decision.json>
-```
-
-승인 결과를 기록하는 것과 Business Truth 필드를 변경하는 것은 별개다. 실제 업무 필드 변경에는 명시적 `--apply-business-change`가 필요하다.
-
-## 11. 외부 Tool/MCP
-
-새 Tool마다 새 Stage/Contract를 만들지 않는다. Tool 결과를 JSON으로 받은 후 공통 Evidence로 정규화한다.
-
-```bash
-python sdlc/scripts/normalize_external_evidence.py \
-  --input <provider-result.json> \
-  --provider <JIRA|SONAR|DATADOG|DB_CATALOG|API_CATALOG|...> \
-  --output <evidence.json>
-```
-
-공통 경계:
-
-`External Provider → Evidence Chunk → Stage/Canonical Context`
-
-## 12. 사용자에게 보이는 문서
-
-한국어 자연어가 기본이다.
-- 근거 위치
-- 원본 식별값
-- 확인 수준
-- 현재 상태
-- 제안
-- 미확정
-- 현행 확인
-
-`Locator / Source Hash / Confidence` 같은 Machine 이름은 frontmatter/comment 또는 내부 metadata로 유지한다.
-
-## 13. Customization
-
-기본 사용자가 이해할 계층은 세 개만 둔다.
+기본 사용자가 이해할 계층은 다음 세 개면 충분하다.
 
 `Core → Project Overlay → Local Override`
 
 Domain/Preset Overlay는 실제 공유 필요나 기존 호환성이 있을 때만 사용한다.
 
-## 14. 현재 검증 한계
+## 11. 현재 검증 한계
 
-이 Branch의 Runtime/Behavioral Test가 통과하더라도 다음은 별도 실증이 필요하다.
-- 실제 외부 Agent Provider 품질
-- 저수준 Agent 반복 수행 품질
-- 일반 분석가/개발자의 첫 사용성
-- 실제 고객 합의 품질
-- 프로젝트 GitHub/GitLab Branch Protection 정책
+Runtime/Behavioral Test가 성공해도 다음은 별도 실증 대상이다.
 
-Fixture Provider 성공은 실제 Agent 성공으로 간주하지 않는다.
+- 실제 외부 저수준 Agent가 Source Evidence에서 안정적으로 Requirement 초안을 만드는지
+- 일반 분석가/설계자/개발자/QA가 설명 없이 `setup → intake → work`를 수행하는지
+- 사람이 확인해야 할 항목 수와 불필요한 질문 비율이 실제 프로젝트에서 충분히 낮은지
+- 실제 고객 합의가 Candidate/OPEN에서 CONFIRMED로 안전하게 전환되는지
+
+Fixture나 Script 성공을 실제 Agent/Human 사용성 증거로 간주하지 않는다.
