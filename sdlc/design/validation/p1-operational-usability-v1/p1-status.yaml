@@ -2,8 +2,18 @@ schema_version: 1
 artifact_type: P1_OPERATIONAL_USABILITY_STATUS
 status:
   branch: SDLC_DESIGN_SESSION_SECOND/p1/operational-usability-v1
-  engineering_state: IMPLEMENTED_SELFTEST_PENDING_REMOTE_CI
+  engineering_state: REMOTE_CI_PASS
   production_ready: false
+  implementation_commit: b5869fca15c413b2be4abd65f2476d986f50f06a
+  remote_ci:
+    workflow: P1 Operational Usability Self-Test
+    run_id: 33580613275
+    conclusion: success
+    checks:
+      p0_regression: success
+      existing_p1_foundation_regression: success
+      p1_operational_usability: success
+      authority_index: success
   completed:
     - single_contract_authority_index
     - greenfield_project_decision_registry
@@ -12,6 +22,8 @@ status:
     - worklist_same_revision_conflict_guard
     - reviewed_knowledge_promotion_registry
     - user_facade_sync_worklist_and_promote_knowledge
+    - guide_numbering_cleanup
+    - design_history_non_authoritative_marker
   retained_external_gate:
     state: BLOCKED_EXTERNAL
     item: real_customer_source_build_test_e2e
@@ -19,5 +31,5 @@ status:
   truth_guards:
     source_observation_is_not_business_truth: true
     same_revision_view_conflict_is_not_silently_overwritten: true
-    guide_or_validation_history_is_not_primary_authority: true
+    guide_or_design_history_is_not_primary_authority: true
     production_claim_requires_real_customer_e2e: true

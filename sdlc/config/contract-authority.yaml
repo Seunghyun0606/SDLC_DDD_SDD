@@ -20,10 +20,12 @@ authorities:
   reverse_sync_policy: {path: sdlc/config/reverse-sync-classification.yaml, kind: MACHINE_PRIMARY}
   version_conflict_policy: {path: sdlc/config/version-control-runtime.yaml, kind: MACHINE_PRIMARY}
 non_authoritative_roots:
+  - sdlc/design
   - sdlc/design/validation
   - sdlc/design/experiments
   - sdlc/guides
 rules:
+  - design_docs_are_reference_or_history_not_runtime_authority
   - validation_history_must_not_override_active_contract
   - guide_must_link_to_primary_authority_when_defining_machine_behavior
   - generated_view_must_not_become_canonical_by_edit_without_import_and_revision_check
