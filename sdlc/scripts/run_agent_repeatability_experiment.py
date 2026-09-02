@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """Execute the same provider command repeatedly and measure Stage Result repeatability.
 
-This utility does not provide an LLM. A project command must write a Stage Result JSON
-and its referenced artifact inside each run directory. Results are validated with
-validate_agent_stage_result.py and compared using semantic fingerprints.
+This utility does not provide or identify an LLM. A project command must write a Stage Result
+JSON and its referenced artifact inside each run directory. Results are validated with
+``validate_agent_stage_result.py`` and compared using semantic fingerprints.
 
-Provider classification is explicit:
-- EXTERNAL_AGENT: an actual Agent/LLM provider; only this class may produce an Agent empirical PASS.
-- VALIDATION_FIXTURE: deterministic/local fixture used only to prove runner mechanics.
-- any other class: executable provider, but not accepted as Agent empirical evidence.
+Important evidence boundary:
+- ``provider_class`` is a project declaration, not proof of Provider identity.
+- ``EXTERNAL_AGENT`` therefore cannot by itself produce an actual-Agent empirical PASS.
+- ``VALIDATION_FIXTURE`` proves runner mechanics only.
+- Actual low-level Agent evidence must be recorded by a separate observed pilot.
 
 For full Harness repeatability including target/stage/artifact planning and Canonical
-execution, prefer run_work_repeatability_experiment.py.
+execution, prefer ``run_work_repeatability_experiment.py``.
 """
 from __future__ import annotations
 
@@ -67,6 +68,7 @@ def run_experiment(config: dict[str, Any], output_root: Path) -> dict[str, Any]:
     _validate_config(config)
     provider_id = str(config["provider_id"])
     provider_class = str(config.get("provider_class") or "UNCLASSIFIED_PROVIDER")
+    declared_external_agent = provider_class == "EXTERNAL_AGENT"
     run_count = int(config["run_count"])
     result_filename = str(config.get("result_filename") or "stage-result.json")
 
@@ -75,6 +77,9 @@ def run_experiment(config: dict[str, Any], output_root: Path) -> dict[str, Any]:
             "schema_version": 1,
             "provider_id": provider_id,
             "provider_class": provider_class,
+            "provider_class_is_declaration_only": True,
+            "declared_external_agent": declared_external_agent,
+            "provider_identity_verified": False,
             "run_count_requested": run_count,
             "run_count_executed": 0,
             "verdict": "NOT_EXECUTED_PROVIDER_UNAVAILABLE_OR_DISABLED",
@@ -84,6 +89,7 @@ def run_experiment(config: dict[str, Any], output_root: Path) -> dict[str, Any]:
             "provider_command_executed": False,
             "actual_provider_executed": False,
             "actual_agent_provider_executed": False,
+            "external_agent_empirical_evidence_status": "NOT_VERIFIED_BY_RUNNER",
             "llm_determinism_proven": False,
         }
 
@@ -149,19 +155,21 @@ def run_experiment(config: dict[str, Any], output_root: Path) -> dict[str, Any]:
         verdict = "FAIL_STAGE_RESULT_VALIDATION"
     elif not all_match:
         verdict = "FAIL_SEMANTIC_REPEATABILITY_MISMATCH"
-    elif provider_class == "EXTERNAL_AGENT":
-        verdict = "PASS_REPEATED_AGENT_OUTPUT_SEMANTIC_MATCH"
+    elif declared_external_agent:
+        verdict = "PASS_REPEATABILITY_DECLARED_EXTERNAL_PROVIDER_UNVERIFIED"
     elif provider_class == "VALIDATION_FIXTURE":
         verdict = "PASS_REPEATABILITY_FIXTURE_PROVIDER"
     else:
         verdict = "PASS_REPEATABILITY_UNCLASSIFIED_PROVIDER"
 
     command_executed = len(runs) > 0
-    actual_agent = provider_class == "EXTERNAL_AGENT" and all_commands_ok and all_valid
     return {
         "schema_version": 1,
         "provider_id": provider_id,
         "provider_class": provider_class,
+        "provider_class_is_declaration_only": True,
+        "declared_external_agent": declared_external_agent,
+        "provider_identity_verified": False,
         "run_count_requested": run_count,
         "run_count_executed": len(runs),
         "verdict": verdict,
@@ -170,9 +178,10 @@ def run_experiment(config: dict[str, Any], output_root: Path) -> dict[str, Any]:
         "semantic_match_rate": (match_count / run_count) if run_count else None,
         "provider_command_executed": command_executed,
         "actual_provider_executed": command_executed,
-        "actual_agent_provider_executed": actual_agent,
+        "actual_agent_provider_executed": False,
+        "external_agent_empirical_evidence_status": "NOT_VERIFIED_BY_RUNNER",
         "llm_determinism_proven": False,
-        "interpretation": "동일 Provider 명령의 관측된 Stage Result 의미 일치율이다. VALIDATION_FIXTURE 성공은 Agent/LLM 실증이 아니며 LLM의 이론적 결정론을 증명하지 않는다.",
+        "interpretation": "동일 Provider 명령의 Stage Result 의미 일치율만 관측한다. provider_class 라벨은 Agent 신원 증거가 아니며 실제 저수준 Agent 실증은 별도 관찰 Pilot이 필요하다.",
     }
 
 
@@ -199,7 +208,7 @@ def main(argv: list[str] | None = None) -> int:
         "actual_agent_provider_executed": result["actual_agent_provider_executed"],
     }, ensure_ascii=False))
     return 0 if result["verdict"] in {
-        "PASS_REPEATED_AGENT_OUTPUT_SEMANTIC_MATCH",
+        "PASS_REPEATABILITY_DECLARED_EXTERNAL_PROVIDER_UNVERIFIED",
         "PASS_REPEATABILITY_FIXTURE_PROVIDER",
         "PASS_REPEATABILITY_UNCLASSIFIED_PROVIDER",
         "NOT_EXECUTED_PROVIDER_UNAVAILABLE_OR_DISABLED",
