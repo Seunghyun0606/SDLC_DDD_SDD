@@ -45,6 +45,10 @@ def build_delta(data: dict, store: dict, source_name: str) -> tuple[dict, dict]:
     rq_new, fr_new = _ids(store, "RQ"), _ids(store, "FR")
     rows, source_hash = data["source_records"], data["source_metadata"]["source_hash"]
     ops, targets, parent, preserved = [], [], {}, []
+    external_counts: dict[str, int] = {}
+    for fr in data["fr_candidates"]:
+        ext = str(fr.get("external_requirement_id") or "")
+        external_counts[ext] = external_counts.get(ext, 0) + 1
 
     def entity(eid: str, kind: str, fields: dict, loc: str):
         evidence = {"evidence_class":"GIVEN", "locator":loc, "source_hash":source_hash,
@@ -67,7 +71,12 @@ def build_delta(data: dict, store: dict, source_name: str) -> tuple[dict, dict]:
         }, _locator(rows, source_ids))
 
     for fr in data["fr_candidates"]:
-        stable = fr.get("stable_key") or f'external:{fr["external_requirement_id"]}'
+        base_stable = fr.get("stable_key") or f'external:{fr["external_requirement_id"]}'
+        # Duplicate external IDs are explicitly a review condition. Keep each source row
+        # as a separate FR candidate instead of silently collapsing them on re-intake.
+        stable = base_stable
+        if external_counts.get(str(fr.get("external_requirement_id") or ""), 0) > 1:
+            stable = f'{base_stable}|source:{fr["source_record_id"]}'
         eid = fr_old.get(stable) or next(fr_new); source_ids = [fr["source_record_id"]]
         entity(eid, "FR", {"name":fr["name"], "external_requirement_id":fr["external_requirement_id"],
                            "intake_stable_key":stable, "source_record_id":fr["source_record_id"],
