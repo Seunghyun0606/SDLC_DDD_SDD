@@ -1,10 +1,44 @@
 # /setup
 
-프로젝트 최초 도입용 설정 Skill. 실제 실행 Runtime은 `sdlc/scripts/bootstrap_project.py`이며 비숙련 사용자는 `sdlc/scripts/harness.py`만 사용해도 된다.
+프로젝트 최초 도입용 설정 Skill. 실제 실행 Runtime은 `sdlc/scripts/bootstrap_project.py`이며 일반 사용자는 `sdlc/scripts/harness.py setup`만 사용한다.
+
+## 사용자에게 보이는 설정은 하나
+
+새 프로젝트에서 사람이 직접 유지하는 기본 설정 파일은 다음 **1개**다.
+
+```text
+.sdlc/project.yaml
+```
+
+일반 분석가·설계자·개발자·QA에게 `project-profile.yaml`, `source-profile.yaml`, Starter Manifest, Contract 구조를 먼저 학습시키지 않는다.
+
+기존 호환/실행 파일은 Runtime이 계산한다.
+
+```text
+.sdlc/project.yaml                            # 사람이 보는 Source of Truth
+        ↓ Runtime Resolver
+.sdlc/runtime/effective/project-profile.json # Machine runtime input
+.sdlc/runtime/effective/source-profile.json  # Machine runtime input
+.sdlc/runtime/effective/agent-provider.json  # Project guard가 반영된 Provider input
+.sdlc/runtime/effective/project-context.json # Agent project context
+.sdlc/runtime/effective/config-usage.json     # Config 소비 판정
+sdlc/config/project-profile.yaml             # Legacy compatibility snapshot
+sdlc/config/source-profile.yaml              # Legacy compatibility snapshot
+sdlc/config/agent-provider.json              # Provider command/timeout base
+```
+
+Legacy profile에는 `MACHINE-GENERATED ... DO NOT EDIT` 표시를 넣는다. 새 프로젝트에서 두 profile을 수정해 설정을 바꾸는 UX로 회귀하지 않는다. `agent-provider.json`의 command/timeout 같은 연결 정보는 base로 남지만 `git.protected_branches`처럼 Project Config와 중복되는 정책은 `.sdlc/project.yaml` 값이 effective provider에서 우선한다.
 
 ## 기본 원칙
 
-신규 프로젝트 담당자가 Harness 내부 Profile/Rule/Contract 구조를 학습하지 않아도 시작할 수 있어야 한다. 최초 설정은 **Fast Path — 최초 5개 질문(입력)** 범위로 충분해야 하며, 실제 필요가 확인된 항목만 Advanced Setup으로 연다. 사용자가 여러 Config 파일을 직접 채우는 것을 기본 절차로 만들지 않는다.
+1. 사용자는 프로젝트명·유형·진행 수준과 실제 프로젝트 자료만 제공한다.
+2. Source root, Build/Test, Language/Framework/DB는 Repository에서 먼저 자동 탐색한다.
+3. 자동으로 확인하지 못한 값은 `unresolved`에 모은다.
+4. 빈 Template이나 수십 개 Config placeholder를 사람이 채우게 하지 않는다.
+5. 업무정책·범위·승인·기술 선택처럼 사람의 판단권한이 필요한 것만 확인한다.
+6. 알 수 없는 사실은 합리적으로 보인다는 이유로 확정하지 않는다.
+7. 설정 key가 Runtime/Extension/Agent Context 중 어디에서도 사용되지 않으면 `DEAD_CONFIG`로 실패시킨다. 조용히 무시하지 않는다.
+8. 잘못된 schema/mode/delivery 값을 기본값으로 조용히 바꾸지 않고 fail-closed 한다.
 
 ## 실제 첫 실행
 
@@ -15,68 +49,173 @@ python sdlc/scripts/harness.py setup \
   --delivery STANDARD
 ```
 
-Provider가 있으면 같은 명령에 `--provider-command`를 연결한다. Provider가 없다는 사실은 OPEN으로 유지하며 실제 문서 생성 성공으로 과장하지 않는다.
+실제 Agent/CLI Provider가 준비되어 있으면 같은 명령에 연결한다.
+
+```bash
+python sdlc/scripts/harness.py setup \
+  --name <project-name> \
+  --mode AUTO \
+  --delivery STANDARD \
+  --provider-command '<agent-command> --context {context_path} --result {result_path}'
+```
+
+Provider가 연결되지 않았으면 `CONFIGURED_PROVIDER_REQUIRED`로 남긴다. 설정 파일이 존재한다는 이유만으로 실제 Agent 작업 성공이라고 표현하지 않는다.
 
 ## Fast Path — 최초 5개 질문
 
-1. **프로젝트 유형** — `GREENFIELD / BROWNFIELD / HYBRID / AUTO`, 모르면 AUTO
-2. **요구사항 또는 변경요청 위치** — 원본 파일/폴더/이슈 기준점
-3. **Source/Repository 위치** — Greenfield는 없음 가능
-4. **Build/Test 경로** — 모르면 자동 탐색 후 OPEN
-5. **고객용 문서 필요 여부** — internal / customer / both
+이 5개는 여러 Config 파일을 작성시키기 위한 질문이 아니라 **setup 입력과 프로젝트 자료 위치를 파악하기 위한 질문**이다.
 
-이 입력으로 설정 초안을 만든 뒤 프로젝트 참여자는 Requirement Template을 직접 작성하지 않는다.
+1. **프로젝트 유형**
+   - `GREENFIELD / BROWNFIELD / HYBRID / AUTO`
+   - 모르면 `AUTO`.
+2. **요구사항 또는 변경요청 위치**
+   - 실제 파일/문서/Issue 위치만 알려준다.
+3. **Source/Repository 위치**
+   - Greenfield에서 Source가 없으면 정상이다.
+   - Brownfield는 실제 Source 기준점이 필요하다.
+4. **Build/Test 경로**
+   - 알고 있으면 제공하고, 모르면 Agent/Runtime이 탐색한다.
+5. **고객용 문서 필요 여부**
+   - 프로젝트 수행 맥락을 위한 질문이며 기본 Project Config를 여러 파일로 늘리지 않는다.
 
-## 설정 다음 실제 사용자 흐름
+## Mode별 사용자 안내
 
-```bash
-python sdlc/scripts/harness.py check --setup
-python sdlc/scripts/harness.py intake 요구사항목록.xlsx
+프로젝트 유형에 따라 참고할 시작 자료만 달라진다. Config 파일 수는 늘어나지 않는다.
+
+- `GREENFIELD` → `sdlc/starter-kits/greenfield/`
+- `BROWNFIELD` → `sdlc/starter-kits/brownfield/`
+- `HYBRID` → Brownfield Source 기준과 Greenfield 신규 영역을 함께 사용
+- `AUTO` → Repository Evidence를 보고 Mode를 결정한 뒤 위 안내로 연결
+
+기존 Starter/Preset 호환을 위해 Machine 내부에는 다음 mapping을 유지할 수 있다.
+
+- `GREENFIELD` → `greenfield-default`
+- `BROWNFIELD` → `brownfield-auto`
+
+이 ID들은 **Legacy compatibility용**이며 일반 사용자가 선택·입력하거나 별도 설정 파일로 관리할 필요가 없다. Starter Kit도 또 다른 설정 Source of Truth로 사용하지 않는다.
+
+## `.sdlc/project.yaml` 작성 원칙
+
+Bootstrap은 빈 항목을 대량 생성하지 않는다. 확인된 값 중심으로 만든다.
+
+예시:
+
+```yaml
+schema_version: 1
+project:
+  name: "order-service"
+  mode: "BROWNFIELD"
+delivery:
+  profile: "STANDARD"
+technology:
+  language: "Java"
+  framework: "Spring"
+  build:
+    - "./mvnw -q -DskipTests package"
+  test:
+    - "./mvnw test"
+source:
+  roots:
+    - "src/main/java"
+  excludes:
+    - "target/**"
+git:
+  branch_strategy: "pull-request"
+  protected_branches:
+    - "main"
+documents:
+  language: "ko-KR"
+unresolved:
+  - "부분취소 업무정책 확인 필요"
 ```
 
-표준 2행 Header XLSX는 별도 Column Profile 없이 인입한다. Runtime은 Candidate/OPEN 상태의 Canonical RQ/FR을 만들고 실제 `RQ-001` 같은 Target과 다음 `/work` 명령을 반환한다.
+Architecture/Coding/Data/Interface/Security/Deployment 같은 프로젝트 맥락은 **확인된 값이 있을 때만** 추가한다. 상세 작성 완료 예시는 `sdlc/config/project.example.yaml`을 참고한다. 예시 값을 실제 프로젝트의 사실처럼 복사하지 않는다.
 
-```bash
-python sdlc/scripts/harness.py work --target RQ-001
-```
+## Config 소비 구분
 
-사람이 해야 할 일은 유사 그룹 병합 여부, 업무 정책·범위·승인처럼 판단권한이 필요한 항목 확인이다. 현재 문제/기대 결과가 Source로 확인되지 않으면 Agent가 발명하지 않고 OPEN으로 둔다.
+`runtime_config.py`는 모든 leaf key를 다음으로 분류한다.
+
+- **Runtime 소비**: Delivery, Source root, Build/Test, 보호 Branch 등 실행에 직접 사용
+- **Extension 소비 영역**: `extensions.*`
+- **Agent/문서 Project Context**: 프로젝트명, Language/Framework, Source exclude, Architecture/Coding/Data/Interface/Security/Deployment, Branch strategy, 미확정 항목 등
+- **Dead Config**: 등록된 소비자가 없는 key. Runtime resolution 실패
+
+Project Context는 파일만 생성하고 끝내지 않는다. 공식 `harness.py work/change`가 만든 plan의 `project_context`에 포함되어 Provider의 `{context_path}` 입력으로 전달된다.
+
+기계 판정 목록은 `sdlc/design/config-usage-inventory.json`에 기록한다. 사용자에게 이 내부 inventory를 작성하도록 요구하지 않는다.
 
 ## 자동 탐색 범위
 
-`bootstrap_project.py`는 build file, 흔한 Source/Test/Resource root, Language/Framework 신호, Schema/DDL, Build/Test command 후보를 Evidence로 조사한다. Git Repository라는 사실만으로 Brownfield라고 판정하지 않는다.
+`bootstrap_project.py`는 다음을 근거 기반으로 조사한다.
 
-## 호환 Mapping과 Delivery
+- `pom.xml`, Gradle, `package.json`, `pyproject.toml`
+- 흔한 Source/Test/Resource root
+- Java/Spring/MyBatis/JPA/Kafka 사용 신호
+- Schema/DDL 파일
+- Maven/Gradle/NPM/Python Test command 후보
 
-Starter Kit/Preset ID와 경로는 기존 자동화 호환을 위해 남아 있다. 이는 사용자가 선택하거나 내부 구조를 학습해야 한다는 의미가 아니다.
+Git Repository라는 사실만으로 Brownfield라고 판정하지 않는다. 찾지 못한 Source/Build/Test를 `없음`이나 `영향 없음`으로 확정하지 않는다.
 
-- GREENFIELD → `sdlc/starter-kits/greenfield/` → legacy internal preset `greenfield-default`
-- BROWNFIELD → `sdlc/starter-kits/brownfield/` → legacy internal preset `brownfield-auto`
+## Delivery Profile
 
-새 프로젝트의 문서량/Stage 제어는 `FAST / STANDARD / FULL` Delivery Profile로 처리한다.
+- `FAST`: 소규모 운영 변경/기능
+- `STANDARD`: 일반 SI/SM 기능
+- `FULL`: 대형·고위험 범위
+
+새 Preset을 계속 만들지 않고 이 세 Profile을 Runtime 정책으로 사용한다.
+
+## 기존 프로젝트 Compatibility
+
+`.sdlc/project.yaml`이 없는 기존 프로젝트만 `sdlc/config/project-profile.yaml` + `source-profile.yaml`을 Legacy fallback으로 읽을 수 있다.
+
+`setup` 실행 시 기존 Legacy profile만 발견되면 사용되는 핵심 값을 `.sdlc/project.yaml`로 옮긴 뒤 두 profile은 Machine compatibility snapshot으로 재생성한다.
+
+신규 Project Entry가 존재하는 순간:
+
+```text
+.sdlc/project.yaml > Legacy profile / duplicated Provider policy
+```
+
+순서가 고정된다.
 
 ## OPEN 처리
 
-사람이 기본적으로 보는 상태는 `미확정 / 확인중 / 제안 / 확정 / 보류` 정도로 단순화한다. Machine taxonomy는 내부 metadata에 둔다. Business Truth는 권한자의 확인 없이 확정하지 않는다.
+사람이 보는 핵심은 다음뿐이다.
 
-## Advanced Setup
+- 무엇을 확인해야 하는가
+- 현재 확인된 근거는 무엇인가
+- 어떤 판단/승인이 필요한가
+- 누가 결정하는가
 
-다음은 실제 프로젝트 필요가 확인될 때만 연다.
-
-- 고객 용어/고객 문서 Projection
-- 비정형 문서 Evidence 추출
-- 프로젝트별 결정 권한 Matrix
-- Brownfield Framework별 Impact Adapter
-- Project Overlay
-
-기본 Customization 개념은 `Core → Project Overlay → Local Override` 세 단계만 노출한다.
+기술 탐색으로 확인할 수 있는 내용을 사람에게 질문하지 않는다. Source에서 확인한 사실만으로 Business Truth를 확정하지 않는다.
 
 ## Validation
 
 ```bash
 python sdlc/scripts/harness.py check --setup
-python sdlc/scripts/validate_harness_structure.py .
-python sdlc/scripts/validate_document_experience.py .
+python -m unittest tests.test_project_entry_config -v
 ```
 
-Intake와 `/work --plan-only` Behavioral Test가 통과해도 실제 외부 Agent 품질과 일반 사용자 First-use usability는 별도 실증 대상이다.
+확인 기준:
+
+- `.sdlc/project.yaml` 하나로 Delivery가 FAST/STANDARD/FULL에 실제 반영되는가
+- Source root가 Work Runtime의 write scope로 전달되는가
+- Build/Test가 Development verification 설정으로 전달되는가
+- Project Context가 `work/change` Agent plan에 들어가는가
+- Legacy profile/provider 값이 Project Entry를 덮어쓰지 못하는가
+- Project Config의 보호 Branch가 실제 Provider 실행 전에 차단되는가
+- 등록되지 않은 Config key와 잘못된 mode/profile이 fail-closed 되는가
+
+Provider가 준비된 뒤 첫 작업 계획:
+
+```bash
+python sdlc/scripts/harness.py work --target <RQ-ID> --plan-only
+```
+
+## 준비도 경계
+
+- Config/Runtime/Test가 연결되어도 실제 저수준 Agent 반복실행 검증을 대신하지 않는다.
+- 실제 Human이 `.sdlc/project.yaml`을 별도 설명 없이 수정할 수 있는지는 Human Pilot에서 확인해야 한다.
+- 저수준 Agent가 전달된 Project Context를 올바르게 사용하고 OPEN을 발명 없이 유지하는지는 실제 Agent 실증이 필요하다.
+- Brownfield Coverage가 부족하면 Impact COMPLETE로 표현하지 않는다.
+- Business Truth는 권한자 확인 없이 확정하지 않는다.

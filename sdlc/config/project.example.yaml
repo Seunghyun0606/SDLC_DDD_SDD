@@ -1,0 +1,56 @@
+# 작성 완료 예시입니다. 새 프로젝트에서는 이 파일 자체를 수정하지 말고
+# setup이 만든 .sdlc/project.yaml 한 파일만 유지합니다.
+# 모르는 값을 예시 값으로 복사하지 말고 unresolved에 남깁니다.
+schema_version: 1
+project:
+  name: "order-service"
+  mode: "BROWNFIELD"
+  description: "주문/결제/재고 연계 서비스를 유지보수하는 프로젝트"
+delivery:
+  profile: "STANDARD"
+technology:
+  language: "Java"
+  framework: "Spring Boot"
+  build:
+    - "./mvnw -q -DskipTests package"
+  test:
+    - "./mvnw test"
+source:
+  roots:
+    - "src/main/java"
+  test_roots:
+    - "src/test/java"
+  resource_roots:
+    - "src/main/resources"
+  excludes:
+    - ".git/**"
+    - "target/**"
+architecture:
+  style: "Layered"
+  modules:
+    - "order"
+    - "payment"
+    - "inventory"
+git:
+  branch_strategy: "feature-branch + pull-request"
+  protected_branches:
+    - "main"
+coding:
+  convention: "프로젝트 Java Coding Convention"
+  naming: "기존 코드의 package/class/method naming 유지"
+data:
+  database: "PostgreSQL"
+  orm_mapper: "JPA"
+  migration: "Flyway"
+interface:
+  api: "REST"
+  event: "Kafka"
+  batch: "없음"
+security:
+  standard: "프로젝트 보안 가이드 v2"
+deployment:
+  environment: "dev/test/prod"
+documents:
+  language: "ko-KR"
+unresolved:
+  - "부분취소 시 재고 복구 순서의 업무정책 확인 필요"

@@ -31,7 +31,8 @@ def build_change_plan(
 ) -> dict[str, Any]:
     root = root.resolve()
     store = APPLY.load_store(store_path)
-    policy = CONFIG.delivery_policy(project_profile or {}) if project_profile else None
+    profile = project_profile or {}
+    policy = CONFIG.delivery_policy(profile) if profile else None
     hops = int(policy.get("graph_hops", 4) if policy else 4)
     distances = WORK._related_entity_ids(store, target_id, hops)
     allowed_existing = set(distances)
@@ -80,6 +81,7 @@ def build_change_plan(
             "program_readiness": policy.get("program_readiness") if policy else "FULL",
             "explicit_stage_outside_profile": False,
         },
+        "project_context": CONFIG.nested(profile, "project_context", default={}),
         "canonical": {"store_path": str(store_path), "base_revision": store["revision"], "allowed_existing_entity_ids": sorted(allowed_existing)},
         "version_baseline": {"git_available": git.get("available", False), "git_commit": git.get("head"), "git_branch": git.get("branch"), "dirty_paths": sorted(WORK.git_changed_paths(root)), "canonical_revision": store["revision"]},
         "source_policy": {"allowed_write_roots": CONFIG.source_roots(source_profile or {})},

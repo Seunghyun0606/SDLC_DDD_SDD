@@ -19,8 +19,6 @@ jobs:
             sdlc/scripts/runtime_config.py \
             sdlc/scripts/bootstrap_project.py \
             sdlc/scripts/harness.py \
-            sdlc/scripts/import_requirements.py \
-            sdlc/scripts/intake_requirements.py \
             sdlc/scripts/run_work.py \
             sdlc/scripts/run_change.py \
             sdlc/scripts/run_check.py \
@@ -30,11 +28,11 @@ jobs:
             sdlc/scripts/capture_customer_decision.py \
             sdlc/scripts/run_knowledge_promotion.py \
             sdlc/custom/project/adapters/impact/java_spring_enterprise.py
-      - name: P0 P1 and requirement intake behavioral regression
+      - name: P0 P1 behavioral regression
         run: |
           python -m unittest \
-            tests.test_p0_p1_production_readiness \
-            tests.test_requirement_intake_runtime -v
+            tests.test_project_entry_config \
+            tests.test_p0_p1_production_readiness -v
       - name: Existing core runtime regressions
         run: |
           python -m unittest \

@@ -1,6 +1,6 @@
 {
-  "schema_version": 15,
-  "candidate_design": "v1.7-requirement-intake-v0.1",
+  "schema_version": 14,
+  "candidate_design": "v1.6-p0-p1-production-readiness-remediation-v0.1",
   "core_required_files": [
     ".cursor/rules/00-core.mdc",
     ".cursor/rules/10-project.mdc",
@@ -10,8 +10,6 @@
     ".cursor/skills/check/SKILL.md",
     ".cursor/skills/setup/SKILL.md",
     "sdlc/scripts/harness.py",
-    "sdlc/scripts/intake_requirements.py",
-    "sdlc/scripts/import_requirements.py",
     "sdlc/scripts/bootstrap_project.py",
     "sdlc/scripts/runtime_config.py",
     "sdlc/scripts/run_work.py",
@@ -153,7 +151,6 @@
     "entrypoint": "sdlc/scripts/harness.py",
     "executor": "sdlc/scripts/run_work.py",
     "setup_executor": "sdlc/scripts/bootstrap_project.py",
-    "intake_executor": "sdlc/scripts/intake_requirements.py",
     "change_executor": "sdlc/scripts/run_change.py",
     "check_executor": "sdlc/scripts/run_check.py",
     "target_types_are_open_ended": true,
@@ -176,19 +173,6 @@
     "provider_failure_rolls_back_git_changes": true,
     "development_build_test_before_canonical_commit": true,
     "delivery_profiles": ["FAST", "STANDARD", "FULL"]
-  },
-  "requirement_intake": {
-    "entrypoint": "sdlc/scripts/harness.py intake",
-    "executor": "sdlc/scripts/intake_requirements.py",
-    "standard_xlsx_profile_required": false,
-    "machine_artifact": "sdlc/runtime/intake/requirements-import.json",
-    "human_report": "docs/00_관리/요구사항_인입결과.md",
-    "canonical_store": "sdlc/canonical/store.json",
-    "auto_merge_similar_groups": false,
-    "auto_confirm_business_truth": false,
-    "confirmed_business_reintake_overwrite": false,
-    "returns_concrete_rq_target": true,
-    "next_stage": "DECOMPOSE"
   },
   "business_scenario": {
     "contract": "sdlc/design/contracts/business-scenario-sixw-contract.json",

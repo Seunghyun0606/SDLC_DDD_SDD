@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic /check runtime.
-
-/check must not depend on an Agent to answer basic operational questions. It reports the
-current Canonical revision, project/provider readiness, target progress, OPEN-like states,
-Source evidence coverage and latest reverse candidates. Semantic recommendations can still
-be added by an Agent, but the core status is machine-derived.
-"""
+"""Deterministic /check runtime using the single project configuration entry point."""
 from __future__ import annotations
 
 import argparse
@@ -78,33 +72,48 @@ def _latest_reverse(root: Path) -> dict[str, Any] | None:
 
 def check(root: Path, *, target_id: str | None = None, setup_only: bool = False) -> dict[str, Any]:
     root = root.resolve()
-    project_path = root / "sdlc/config/project-profile.yaml"
-    source_path = root / "sdlc/config/source-profile.yaml"
     provider_path = root / "sdlc/config/agent-provider.json"
     store_path = root / "sdlc/canonical/store.json"
-    project = CONFIG.load_config(project_path)
-    source = CONFIG.load_config(source_path)
+    setup_result = root / "sdlc/runtime/setup/setup-result.json"
+    resolved = CONFIG.resolve_runtime_config(root)
+    project = resolved["project"]
+    project_profile = resolved["project_profile"]
+    source_profile = resolved["source_profile"]
     provider = _provider(provider_path)
     git = WORK.git_metadata(root)
-    setup_result = root / "sdlc/runtime/setup/setup-result.json"
-    policy = CONFIG.delivery_policy(project) if project else None
+    policy = CONFIG.delivery_policy(project_profile) if project_profile else None
+    config_ok = resolved["source_kind"] != "UNCONFIGURED"
 
     base = {
-        "schema_version": 1,
-        "status": "READY" if project_path.is_file() and source_path.is_file() and provider["enabled"] else "SETUP_OR_PROVIDER_REQUIRED",
+        "schema_version": 2,
+        "status": "READY" if config_ok and provider["enabled"] else "SETUP_OR_PROVIDER_REQUIRED",
         "setup": {
-            "project_profile": project_path.is_file(),
-            "source_profile": source_path.is_file(),
+            "project_config": (root / CONFIG.PROJECT_ENTRY_PATH).is_file(),
+            "config_source": resolved["source_kind"],
+            "user_config": CONFIG.PROJECT_ENTRY_PATH,
+            # Compatibility visibility only; users do not edit these files.
+            "project_profile": (root / CONFIG.LEGACY_PROJECT_PROFILE_PATH).is_file(),
+            "source_profile": (root / CONFIG.LEGACY_SOURCE_PROFILE_PATH).is_file(),
+            "legacy_profiles_role": "MACHINE_GENERATED_OR_LEGACY_FALLBACK",
             "provider": provider,
             "canonical_store": store_path.is_file(),
             "last_setup_result": setup_result.relative_to(root).as_posix() if setup_result.is_file() else None,
         },
         "project": {
+            "name": CONFIG.nested(project, "project", "name", default=None) if project else None,
             "mode": CONFIG.project_mode(project) if project else "UNCONFIGURED",
             "delivery_profile": policy.get("profile") if policy else "UNCONFIGURED",
             "enabled_stages": policy.get("enabled_stages") if policy else [],
-            "source_write_roots": CONFIG.source_roots(source),
+            "source_write_roots": CONFIG.source_roots(source_profile),
+            "build_commands": CONFIG.build_commands(project),
+            "test_commands": CONFIG.test_commands(project),
+            "language": CONFIG.nested(project, "technology", "language", default=None),
+            "framework": CONFIG.nested(project, "technology", "framework", default=None),
+            "database": CONFIG.nested(project, "data", "database", default=None),
+            "document_language": CONFIG.nested(project, "documents", "language", default=None),
+            "unresolved": CONFIG.nested(project, "unresolved", default=[]),
         },
+        "config_usage": resolved["usage"],
         "git": {**git, "dirty_paths": sorted(WORK.git_changed_paths(root)) if git.get("available") else []},
     }
     if setup_only:
@@ -112,7 +121,9 @@ def check(root: Path, *, target_id: str | None = None, setup_only: bool = False)
 
     store = APPLY.load_store(store_path)
     base["canonical"] = {
-        "revision": store["revision"], "entity_count": len(store.get("entities", {})), "relation_count": len(store.get("relations", [])),
+        "revision": store["revision"],
+        "entity_count": len(store.get("entities", {})),
+        "relation_count": len(store.get("relations", [])),
     }
     if target_id:
         entity = store.get("entities", {}).get(target_id)
@@ -122,9 +133,14 @@ def check(root: Path, *, target_id: str | None = None, setup_only: bool = False)
             latest = WORK._latest_target_stage(entity)
             related = WORK._related_entity_ids(store, target_id, int(policy.get("graph_hops", 4) if policy else 4))
             base["target"] = {
-                "id": target_id, "found": True, "entity_type": entity.get("entity_type"), "truth_status": entity.get("truth_status"),
-                "latest_stage": latest, "next_stage": WORK._next_stage(latest, policy.get("enabled_stages") if policy else None) if latest else None,
-                "open_or_check_required": _open_values(entity), "related_entity_count": len(related),
+                "id": target_id,
+                "found": True,
+                "entity_type": entity.get("entity_type"),
+                "truth_status": entity.get("truth_status"),
+                "latest_stage": latest,
+                "next_stage": WORK._next_stage(latest, policy.get("enabled_stages") if policy else None) if latest else None,
+                "open_or_check_required": _open_values(entity),
+                "related_entity_count": len(related),
                 "provenance_count": len(entity.get("provenance", [])),
             }
     reverse = _latest_reverse(root)
@@ -140,10 +156,10 @@ def check(root: Path, *, target_id: str | None = None, setup_only: bool = False)
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Show executable Harness/project/target status.")
+    ap = argparse.ArgumentParser(description="Show Harness/project/target status from .sdlc/project.yaml.")
     ap.add_argument("--root", default=".")
     ap.add_argument("--target")
-    ap.add_argument("--setup", action="store_true", help="Only check bootstrap/provider readiness")
+    ap.add_argument("--setup", action="store_true", help="Only check project/provider readiness")
     ap.add_argument("--out")
     args = ap.parse_args(argv)
     try:
