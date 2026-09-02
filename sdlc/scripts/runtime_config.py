@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-"""Small dependency-free runtime configuration helper.
+"""Runtime configuration resolver for the SDLC Harness.
 
-Human-maintained project/source profiles stay YAML. The runtime only needs a conservative
-subset of YAML (mappings, scalar lists and simple nested objects), so the Harness does not
-require PyYAML just to bootstrap or execute. JSON is also accepted.
+New projects have one human-maintained entry point: ``.sdlc/project.yaml``.
+Legacy ``sdlc/config/project-profile.yaml`` and ``source-profile.yaml`` remain readable only
+for backward compatibility. Runtime consumers should call ``resolve_runtime_config`` rather
+than asking a project user to understand multiple profile files.
+
+The Harness intentionally supports only a conservative YAML subset so bootstrap/work/check do
+not require PyYAML. Unknown user-config leaves are reported as DEAD_CONFIG instead of being
+silently ignored.
 """
 from __future__ import annotations
 
@@ -11,6 +16,10 @@ import json
 import shlex
 from pathlib import Path
 from typing import Any
+
+PROJECT_ENTRY_PATH = ".sdlc/project.yaml"
+LEGACY_PROJECT_PROFILE_PATH = "sdlc/config/project-profile.yaml"
+LEGACY_SOURCE_PROFILE_PATH = "sdlc/config/source-profile.yaml"
 
 DELIVERY_PROFILES: dict[str, dict[str, Any]] = {
     "FAST": {
@@ -44,6 +53,37 @@ DELIVERY_PROFILES: dict[str, dict[str, Any]] = {
         "reverse_default": "RELATED_GRAPH",
     },
 }
+
+# Every leaf accepted in the human project entry must have an explicit owner.
+# This list is deliberately small: adding a field without a consumer becomes DEAD_CONFIG.
+RUNTIME_CONSUMED_PATHS = {
+    "schema_version",
+    "project.name",
+    "project.mode",
+    "delivery.profile",
+    "technology.language",
+    "technology.framework",
+    "technology.build",
+    "technology.test",
+    "source.roots",
+    "source.test_roots",
+    "source.resource_roots",
+    "source.excludes",
+    "git.branch_strategy",
+    "git.protected_branches",
+    "documents.language",
+    "unresolved",
+}
+RUNTIME_CONTEXT_PREFIXES = (
+    "architecture.",
+    "coding.",
+    "data.",
+    "interface.",
+    "security.",
+    "deployment.",
+)
+EXTENSION_PREFIXES = ("extensions.",)
+DOCUMENT_ONLY_PATHS = {"project.description", "documents.customer_language"}
 
 
 def _strip_comment(line: str) -> str:
@@ -85,7 +125,7 @@ def _scalar(raw: str) -> Any:
 
 
 def load_yaml_subset(path: Path) -> dict[str, Any]:
-    """Parse the subset used by Harness profiles; fail closed on malformed indentation."""
+    """Parse the subset used by Harness config; fail closed on malformed indentation."""
     root: dict[str, Any] = {}
     stack: list[tuple[int, Any]] = [(-1, root)]
     pending_list_keys: dict[int, tuple[dict[str, Any], str]] = {}
@@ -188,10 +228,181 @@ def command_list(value: Any) -> list[list[str]]:
     return []
 
 
-def source_roots(source_profile: dict[str, Any]) -> list[str]:
+def source_roots(config: dict[str, Any]) -> list[str]:
     roots: list[str] = []
     for key in ["roots", "test_roots", "resource_roots"]:
-        value = nested(source_profile, "source", key, default=[])
+        value = nested(config, "source", key, default=[])
         if isinstance(value, list):
             roots.extend(str(x).rstrip("/") for x in value if str(x).strip())
     return sorted(set(roots))
+
+
+def build_commands(config: dict[str, Any]) -> list[list[str]]:
+    value = nested(config, "technology", "build", default=None)
+    if value is None:
+        value = nested(config, "build", "commands", default=[])
+    return command_list(value)
+
+
+def test_commands(config: dict[str, Any]) -> list[list[str]]:
+    value = nested(config, "technology", "test", default=None)
+    if value is None:
+        value = nested(config, "test", "commands", default=[])
+    return command_list(value)
+
+
+def _flatten_leaves(value: Any, prefix: str = "") -> list[str]:
+    if isinstance(value, dict):
+        rows: list[str] = []
+        for key, child in value.items():
+            child_prefix = f"{prefix}.{key}" if prefix else str(key)
+            rows.extend(_flatten_leaves(child, child_prefix))
+        return rows
+    # Lists are one configuration leaf. Their items are values, not independent keys.
+    return [prefix] if prefix else []
+
+
+def classify_project_config(project: dict[str, Any]) -> dict[str, list[str]]:
+    result = {"runtime": [], "extension": [], "document": [], "dead": []}
+    for path in sorted(set(_flatten_leaves(project))):
+        if path in RUNTIME_CONSUMED_PATHS or any(path.startswith(prefix) for prefix in RUNTIME_CONTEXT_PREFIXES):
+            result["runtime"].append(path)
+        elif any(path.startswith(prefix) for prefix in EXTENSION_PREFIXES):
+            result["extension"].append(path)
+        elif path in DOCUMENT_ONLY_PATHS:
+            result["document"].append(path)
+        else:
+            result["dead"].append(path)
+    return result
+
+
+def ensure_no_dead_config(project: dict[str, Any]) -> None:
+    dead = classify_project_config(project)["dead"]
+    if dead:
+        raise ValueError("unused project config key(s): " + ", ".join(dead))
+
+
+def compact_project_context(project: dict[str, Any]) -> dict[str, Any]:
+    """Return only project facts useful to the Stage Agent; omit internal compatibility metadata."""
+    keys = ["project", "technology", "architecture", "coding", "data", "interface", "security", "deployment", "documents", "unresolved"]
+    return {key: project[key] for key in keys if key in project}
+
+
+def legacy_to_project(project_profile: dict[str, Any], source_profile: dict[str, Any]) -> dict[str, Any]:
+    """Map the runtime-consumed legacy subset into the single user-facing model."""
+    project: dict[str, Any] = {
+        "schema_version": 1,
+        "project": {
+            "name": nested(project_profile, "project", "name", default="project"),
+            "mode": project_mode(project_profile),
+        },
+        "delivery": {"profile": delivery_profile(project_profile)},
+        "technology": {
+            "language": nested(project_profile, "technology", "language", default="OPEN"),
+            "framework": nested(project_profile, "technology", "framework", default="OPEN"),
+            "build": nested(source_profile, "build", "commands", default=[]),
+            "test": nested(source_profile, "test", "commands", default=[]),
+        },
+        "source": {
+            "roots": nested(source_profile, "source", "roots", default=[]),
+            "test_roots": nested(source_profile, "source", "test_roots", default=[]),
+            "resource_roots": nested(source_profile, "source", "resource_roots", default=[]),
+            "excludes": nested(source_profile, "source", "excludes", default=[]),
+        },
+        "git": {
+            "branch_strategy": "PROJECT_DEFINED",
+            "protected_branches": nested(project_profile, "workflow", "protected_branches", default=["main", "master"]),
+        },
+        "documents": {"language": nested(project_profile, "documents", "language", default="ko-KR")},
+        "unresolved": [],
+    }
+    database = nested(project_profile, "technology", "database", default=None)
+    if database is not None:
+        project["data"] = {"database": database}
+    return project
+
+
+def project_to_legacy_profiles(project: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Build compatibility objects for old callers. These are derived, never the source of truth."""
+    project_profile = {
+        "project": {
+            "name": nested(project, "project", "name", default="project"),
+            "mode": project_mode(project),
+        },
+        "delivery": {"profile": delivery_profile(project)},
+        "technology": {
+            "language": nested(project, "technology", "language", default="OPEN"),
+            "framework": nested(project, "technology", "framework", default="OPEN"),
+            "database": nested(project, "data", "database", default="OPEN"),
+        },
+        "documents": {"language": nested(project, "documents", "language", default="ko-KR")},
+        "workflow": {
+            "execution_guard_enabled": True,
+            "protected_branches": nested(project, "git", "protected_branches", default=["main", "master"]),
+        },
+    }
+    source_profile = {
+        "schema_version": 1,
+        "source": {
+            "roots": nested(project, "source", "roots", default=[]),
+            "test_roots": nested(project, "source", "test_roots", default=[]),
+            "resource_roots": nested(project, "source", "resource_roots", default=[]),
+            "excludes": nested(project, "source", "excludes", default=[]),
+            "existing_assets_first": True,
+            "static_analysis_first": True,
+            "full_repository_llm_scan": False,
+        },
+        "build": {"commands": nested(project, "technology", "build", default=[])},
+        "test": {"commands": nested(project, "technology", "test", default=[])},
+    }
+    return project_profile, source_profile
+
+
+def resolve_runtime_config(
+    root: Path,
+    *,
+    project_config_path: Path | None = None,
+    legacy_project_path: Path | None = None,
+    legacy_source_path: Path | None = None,
+    validate_usage: bool = True,
+) -> dict[str, Any]:
+    """Resolve one effective configuration, preferring ``.sdlc/project.yaml``.
+
+    Returns both the unified project model and derived legacy-shaped objects so existing
+    execution code can migrate incrementally without exposing those shapes to project users.
+    """
+    root = root.resolve()
+    project_path = project_config_path or (root / PROJECT_ENTRY_PATH)
+    if not project_path.is_absolute():
+        project_path = root / project_path
+    legacy_project = legacy_project_path or (root / LEGACY_PROJECT_PROFILE_PATH)
+    legacy_source = legacy_source_path or (root / LEGACY_SOURCE_PROFILE_PATH)
+    if not legacy_project.is_absolute():
+        legacy_project = root / legacy_project
+    if not legacy_source.is_absolute():
+        legacy_source = root / legacy_source
+
+    if project_path.is_file():
+        project = load_config(project_path)
+        if validate_usage:
+            ensure_no_dead_config(project)
+        source_kind = "PROJECT_ENTRY"
+    else:
+        legacy_project_data = load_config(legacy_project)
+        legacy_source_data = load_config(legacy_source)
+        if not legacy_project_data and not legacy_source_data:
+            project = {}
+            source_kind = "UNCONFIGURED"
+        else:
+            project = legacy_to_project(legacy_project_data, legacy_source_data)
+            source_kind = "LEGACY_PROFILES"
+
+    project_profile, source_profile = project_to_legacy_profiles(project) if project else ({}, {})
+    return {
+        "source_kind": source_kind,
+        "user_config_path": project_path,
+        "project": project,
+        "project_profile": project_profile,
+        "source_profile": source_profile,
+        "usage": classify_project_config(project) if project else {"runtime": [], "extension": [], "document": [], "dead": []},
+    }
