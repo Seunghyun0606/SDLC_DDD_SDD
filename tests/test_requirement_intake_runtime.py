@@ -90,14 +90,17 @@ class RequirementIntakeRuntimeTest(unittest.TestCase):
                     "setup", "--root", str(root), "--name", "sample",
                     "--mode", "GREENFIELD", "--delivery", "STANDARD", "--no-validate",
                 ])
-            self.assertEqual(4, code, out.getvalue())
+            self.assertEqual(0, code, out.getvalue())
             result = json.loads(out.getvalue())
+            self.assertEqual("SETUP_READY_PROVIDER_PENDING", result["status"])
+            self.assertFalse(result["provider_ready"])
             self.assertEqual("docs/00_시작/START_HERE.md", result["user_entrypoint"]["start_here"])
             self.assertEqual("CONNECTED", result["user_entrypoint"]["zero_to_one_intake"])
             self.assertIn("python sdlc/scripts/harness.py intake <requirement-file.xlsx>", result["next_commands"])
             self.assertFalse(any("<RQ-ID>" in command for command in result["next_commands"]))
             persisted = json.loads((root / "sdlc/runtime/setup/setup-result.json").read_text(encoding="utf-8"))
             self.assertEqual(result["next_commands"], persisted["next_commands"])
+            self.assertEqual("SETUP_READY_PROVIDER_PENDING", persisted["status"])
 
     def test_official_harness_intake_registers_targets_and_work_resolves_decompose(self):
         with tempfile.TemporaryDirectory() as td:
