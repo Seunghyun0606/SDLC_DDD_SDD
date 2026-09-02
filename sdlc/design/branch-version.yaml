@@ -25,9 +25,16 @@ evidence_status:
   contract: REUSED_WITH_STRICTER_RUNTIME_INTERPRETATION
   config: UPDATED
   runtime: UPDATED
-  behavioral_test: IN_PROGRESS
+  behavioral_test: CI_PASS_253_TESTS_BLACKBOX_FIRST_USE_OK
   external_agent_empirical: NOT_RUN
   human_first_use: NOT_RUN
+behavioral_observation:
+  unittest_count: 253
+  unittest_result: OK
+  blackbox_first_use_test_count: 1
+  blackbox_first_use_result: OK
+  mermaid_markdown_files_checked: 118
+  pr_workflows_success: 5
 validation_boundary:
   provider_class_is_declaration_only: true
   fixture_is_external_agent_evidence: false
@@ -40,5 +47,5 @@ inherited_validation_boundary:
   verdict: CONTROLLED_PILOT_READY_CI_PASS_EXTERNAL_AGENT_HUMAN_VALIDATION_PENDING
   self_assessment_is_not_validation: true
   production_ready_claimed: false
-next_step: "WP-5 black-box Behavioral Pilot과 전체 회귀 CI를 완료한 뒤, 실제 저수준 Agent 및 실제 프로젝트 참여자 관찰 실증은 별도 Evidence로 남긴다."
+next_step: "실제 저수준 External Agent와 일반 프로젝트 참여자를 대상으로 관찰 Pilot을 수행하고 Agent 초안 정확성·Human 질문 비율·first-use 막힘 지점을 별도 Evidence로 기록한다."
 merge_to_main: false
