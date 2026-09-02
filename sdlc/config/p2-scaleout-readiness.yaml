@@ -1,0 +1,32 @@
+version: 1
+status: ACTIVE_P2_INTEGRATED_SCALEOUT
+scaleout_readiness:
+  accepted_p0_states:
+    - IMPLEMENTATION_COMPLETE_EXTERNAL_VALIDATION_REQUIRED
+    - P0_ENGINEERING_COMPLETE_SELFTEST_PASS
+    - IMPLEMENTATION_COMPLETE_SELFTEST_PASS
+  accepted_p1_states:
+    - P1_ENGINEERING_COMPLETE_SELFTEST_PASS
+  required_available_analyzers:
+    - generic-file-inventory
+    - java-spring
+    - sql-database
+    - interface-contract
+    - batch-scheduler
+  required_runtime_paths:
+    - sdlc/scripts/analyze_batch_scheduler.py
+    - sdlc/scripts/register_requirement_worklist.py
+    - sdlc/scripts/sync_worklist.py
+    - sdlc/scripts/analyze_interface_contract.py
+    - sdlc/adapters/production/git_worktree_source.py
+    - sdlc/adapters/production/subprocess_test.py
+  production_evidence_required:
+    - real_customer_source_validated
+    - actual_test_runtime_validated
+    - reverse_sync_reviewed
+    - production_verified
+    - evidence_refs
+  rules:
+    - controlled_pilot_readiness_is_not_production_readiness
+    - production_readiness_cannot_be_asserted_by_cli_boolean
+    - blocked_external_is_not_failure_of_harness_engineering

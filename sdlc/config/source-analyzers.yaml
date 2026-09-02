@@ -1,5 +1,5 @@
-version: 3
-status: ACTIVE_P0_PRODUCTION_READINESS_CANDIDATE
+version: 4
+status: ACTIVE_P2_INTEGRATED_SCALEOUT
 
 registry:
   analyzers:
@@ -39,11 +39,14 @@ registry:
       limitations: [runtime_only_dynamic_interfaces_require_external_evidence]
 
     - analyzer_id: batch-scheduler
-      state: UNCONFIGURED
+      state: AVAILABLE
       responsibility: ADAPTER
-      maturity: NOT_IMPLEMENTED
+      maturity: BOUNDED_CONFIG_AND_ANNOTATION_PARSER
       detects: [batch_job, scheduler, cron, workflow]
-      module: null
+      module: sdlc/scripts/analyze_batch_scheduler.py
+      invocation: EXPLICIT_FILE_LIST_ONLY
+      supported_contracts: [crontab, SpringScheduled, SpringBatchSignals, KubernetesCronJob, GitHubActionsSchedule]
+      limitations: [no_runtime_scheduler_catalog, no_quartz_database_resolution, no_execution_history]
 
 selection_rules:
   - inventory_only_never_confirms_business_relation

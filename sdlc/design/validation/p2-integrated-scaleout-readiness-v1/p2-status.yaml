@@ -1,0 +1,35 @@
+schema_version: 1
+artifact_type: P2_INTEGRATED_SCALEOUT_STATUS
+status:
+  branch_family: SDLC_DESIGN_SESSION_SECOND
+  implementation_state: P2_IMPLEMENTATION_COMPLETE_CI_PENDING
+  controlled_pilot_scaleout_candidate: true
+  production_scaleout_ready: false
+  production_ready_claim_allowed: false
+  completed_capabilities:
+    - batch_scheduler_analyzer_bounded_observation_only
+    - requirement_intake_to_noncanonical_worklist_registration
+    - idempotent_source_requirement_registration
+    - changed_source_requirement_requires_review_before_update
+    - interface_and_batch_analyzers_available_in_registry
+    - evidence_based_scaleout_gate_without_boolean_readiness_override
+    - scaleout_gate_checks_runtime_paths_and_prior_phase_status
+  selftest:
+    script: sdlc/scripts/test_p2_integrated_scaleout.py
+    expected_state: PASS
+    ci_workflow: .github/workflows/p2-integrated-scaleout-selftest.yml
+  external_gate:
+    state: BLOCKED_EXTERNAL
+    reason: Real customer Source/Build/Test/DB-or-Interface/Reverse-Sync evidence is not present in this Harness repository.
+    required_evidence:
+      - real_customer_source_validated
+      - actual_test_runtime_validated
+      - reverse_sync_reviewed
+      - production_verified
+      - evidence_refs
+  truth_guards:
+    - source_requirement_registration_does_not_create_canonical_rq
+    - batch_schedule_observation_is_not_business_truth
+    - controlled_pilot_readiness_is_not_production_readiness
+    - missing_customer_e2e_is_not_success
+  next_action: Run CI; then integrate P2 intake command into the single user facade and close P2 engineering if regressions pass.

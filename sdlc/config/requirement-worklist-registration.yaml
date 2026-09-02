@@ -1,0 +1,17 @@
+version: 1
+status: ACTIVE_P2_INTEGRATED_SCALEOUT
+registration:
+  work_item_id_prefix: SRCREQ-
+  defaults:
+    item_type: SOURCE_REQUIREMENT
+    stage: DECOMPOSE
+    status: READY_FOR_REVIEW
+    quality: OPEN
+    validity: CANDIDATE
+    alerts: Canonical RQ boundary review required; do not auto-confirm from intake
+  invariants:
+    - source_requirement_truth_state_remains_given
+    - source_requirement_registration_never_creates_canonical_rq
+    - existing_changed_source_requirement_requires_review
+    - duplicate_source_requirement_id_is_denied
+    - registration_is_idempotent_by_source_signature
