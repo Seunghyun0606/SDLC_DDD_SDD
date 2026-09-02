@@ -402,6 +402,7 @@ def build_plan(
             "program_readiness": policy.get("program_readiness") if policy else "FULL",
             "explicit_stage_outside_profile": explicit_outside_profile,
         },
+        "project_context": CONFIG.nested(profile, "project_context", default={}),
         "canonical": {"store_path": str(store_path), "base_revision": store["revision"], "allowed_existing_entity_ids": sorted(allowed_existing)},
         "version_baseline": {
             "git_available": git.get("available", False), "git_commit": git.get("head"), "git_branch": git.get("branch"),
@@ -517,7 +518,6 @@ def execute_plan(
     provider_changes: set[str] = set()
     try:
         with repository_write_lock(root, timeout_seconds=float(provider_config.get("write_lock_timeout_seconds", 10))):
-            # Recheck after acquiring the lock.
             if git_before.get("available"):
                 current = git_metadata(root)
                 if current.get("head") != git_before.get("head"):
@@ -570,7 +570,6 @@ def execute_plan(
                 return _execution_failure(execution, "FAIL_PLAN_STALE_CANONICAL_REVISION", root=root, provider_changes=provider_changes)
 
             delta = stage_result.get("canonical_delta") if isinstance(stage_result.get("canonical_delta"), dict) else {}
-            # Preserve the Source baseline on every provenance-bearing operation without creating a new Contract.
             if git_before.get("available") and delta.get("operations"):
                 for op in delta["operations"]:
                     if isinstance(op, dict):
@@ -592,7 +591,6 @@ def execute_plan(
             if validation["status"] != "PASS" or not validation["executable"]:
                 return _execution_failure(execution, "FAIL_STAGE_RESULT_VALIDATION", root=root, provider_changes=provider_changes)
 
-            # Source code must be verified before the Canonical meaning commit.
             if stage == "DEVELOPMENT" and not dry_run:
                 build_commands = CONFIG.command_list(CONFIG.nested(source_profile, "build", "commands", default=[]))
                 test_commands = CONFIG.command_list(CONFIG.nested(source_profile, "test", "commands", default=[]))
