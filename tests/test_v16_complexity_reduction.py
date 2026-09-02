@@ -1,8 +1,23 @@
+import importlib.util
 import json
+import tempfile
 import unittest
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
+
+
+def load(name, rel):
+    path=ROOT/rel
+    spec=importlib.util.spec_from_file_location(name,path)
+    mod=importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(mod)
+    return mod
+
+
+SETUP=load('v17_setup','sdlc/scripts/bootstrap_project.py')
+
 
 class ComplexityReductionRegressionTest(unittest.TestCase):
     def test_requirement_intake_and_analysis_use_one_active_artifact(self):
@@ -44,14 +59,51 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
         self.assertIn('확정',workbook)
         self.assertIn('보류',workbook)
 
-    def test_setup_has_five_question_fast_path(self):
+    def test_setup_uses_three_primary_user_choices(self):
         setup=(ROOT/'.cursor/skills/setup/SKILL.md').read_text(encoding='utf-8')
-        self.assertIn('5개 질문',setup)
+        self.assertIn('프로젝트명',setup)
         self.assertIn('프로젝트 유형',setup)
-        self.assertIn('요구사항 또는 변경요청 위치',setup)
-        self.assertIn('Source/Repository 위치',setup)
-        self.assertIn('Build/Test 경로',setup)
-        self.assertIn('고객용 문서 필요 여부',setup)
+        self.assertIn('진행 수준',setup)
+        self.assertIn('Source root, Build/Test, Framework, DB 등은 Repository에서 먼저 자동 탐색',setup)
+        self.assertNotIn('Fast Path — 최초 5개 입력',setup)
+
+    def test_start_here_is_single_user_entrypoint_and_exposes_real_intake_gap(self):
+        start=(ROOT/'docs/00_시작/START_HERE.md').read_text(encoding='utf-8')
+        for marker in [
+            '프로젝트 종류를 선택한다',
+            '처음 준비할 자료',
+            '최초 실행',
+            'Agent가 자동으로 해야 하는 일',
+            '사람이 반드시 확인하는 일',
+            '요구사항 또는 변경요청을 등록한다',
+            '문제가 생겼을 때 어디를 볼까',
+        ]:
+            self.assertIn(marker,start)
+        self.assertIn('WP-03',start)
+        self.assertIn('Canonical RQ 등록과 첫 Target 반환',start)
+        self.assertNotIn('.cursor/skills/',start)
+        self.assertNotIn('sdlc/design/contracts/',start)
+
+    def test_starter_kits_defer_to_start_here_instead_of_internal_contracts(self):
+        green=(ROOT/'sdlc/starter-kits/greenfield/README.md').read_text(encoding='utf-8')
+        brown=(ROOT/'sdlc/starter-kits/brownfield/README.md').read_text(encoding='utf-8')
+        for text in [green,brown]:
+            self.assertIn('docs/00_시작/START_HERE.md',text)
+            self.assertNotIn('sdlc/design/contracts/',text)
+            self.assertNotIn('.cursor/skills/',text)
+        self.assertIn('Coverage Gap',brown)
+        self.assertIn('WP-03',green)
+
+    def test_bootstrap_routes_user_to_start_here_without_fake_target(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result=SETUP.bootstrap(Path(tmp),name='onboarding',mode='GREENFIELD',delivery='STANDARD',validate=False)
+            self.assertEqual('CONFIGURED_PROVIDER_REQUIRED',result['status'])
+            entry=result['user_entrypoint']
+            self.assertEqual('docs/00_시작/START_HERE.md',entry['start_here'])
+            self.assertEqual('WP03_NOT_YET_CONNECTED',entry['zero_to_one_intake'])
+            self.assertEqual(['python sdlc/scripts/harness.py check --setup'],result['next_commands'])
+            self.assertIn('work --target <RQ-ID> --plan-only',result['next_if_target_exists'][1])
+            self.assertIn('내부 Canonical을 수동 편집하지 않는다',result['next_if_no_target'])
 
     def test_customer_documents_have_three_active_views_and_projection_runtime(self):
         harness=json.loads((ROOT/'sdlc/design/contracts/harness-package-contract.json').read_text(encoding='utf-8'))
