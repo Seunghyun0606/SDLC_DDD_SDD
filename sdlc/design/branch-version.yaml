@@ -1,51 +1,51 @@
 schema_version: 1
 session: SDLC_DESIGN_SESSION_FIRST
-branch: SDLC_DESIGN_SESSION_FIRST/feature/v1.7-work-handoff-v0.1
-parent_branch: SDLC_DESIGN_SESSION_FIRST/integration/v1.7-wp1-wp3-v0.1
-parent_commit: 13a3cf2547b7d5668c8e91d1734d5c3be85238ea
-candidate: v1.7-wp4-work-handoff-v0.1
+branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.7-first-use-evidence-v0.1
+parent_branch: SDLC_DESIGN_SESSION_FIRST/feature/v1.7-work-handoff-v0.1
+parent_commit: 41718128c1db4e94f81c1af9eba94d93015c5e41
+candidate: v1.7-wp5-first-use-evidence-v0.1
 work_package:
-  session: 4
-  id: WP-4
-  objective: "프로젝트 자료 → Agent 초안 → 사람 판단 항목만 확인 → 다음 단계 안내의 /work 사용자 경로를 연결한다."
+  session: 5
+  id: WP-5
+  objective: "실제 프로젝트 first-use 관점에서 setup→intake→work→review 경로를 검증하고, Config 라벨·Fixture·CI와 실제 Agent/Human 실증을 혼동하지 않도록 한다."
 scope:
-  - "공식 harness work의 기본 사용자 산출물을 docs/ 아래로 분리"
-  - "Machine context/result/handoff는 sdlc/runtime/ 아래 유지"
-  - "uncertainty 중 업무정책·범위·승인·기술선택·인수처럼 판단권한이 명시된 항목만 Human review로 노출"
-  - "기존 customer decision capture를 JSON 작성 없이 사용할 수 있는 review facade 제공"
-  - "완성된 요구사항 정의 예시 제공"
+  - "공식 setup/check에서 Provider 미연결을 프로젝트 setup 실패와 구분"
+  - "기존 project.yaml을 덮어쓰지 않고 Provider command만 나중에 연결 가능하게 함"
+  - "provider_class=EXTERNAL_AGENT 자기선언만으로 actual Agent empirical PASS를 만들지 않음"
+  - "공식 harness CLI만 사용하는 black-box first-use Behavioral Pilot 추가"
+  - "사용자 문서와 Machine Runtime 분리, authority-only review 경로를 pilot에서 재검증"
 non_goals:
-  - "새 SDLC Stage 추가"
-  - "새 Canonical entity type 추가"
-  - "기존 run_work 안전 가드 재작성"
-  - "확인되지 않은 Business Truth 자동 확정"
+  - "새 SDLC Stage 또는 Canonical entity 추가"
+  - "새 사용자 입력 Template 추가"
+  - "Fixture를 실제 External Agent 또는 Human 실증으로 승격"
+  - "Provider 제품/벤더 종속 기능 추가"
   - "main merge 또는 직접 수정"
 evidence_status:
-  document: DOCUMENTED
-  contract: CONTRACTED
-  config: REUSED
-  runtime: CONNECTED
-  behavioral_test: CI_PASS
+  document: UPDATED
+  contract: REUSED_WITH_STRICTER_RUNTIME_INTERPRETATION
+  config: UPDATED
+  runtime: UPDATED
+  behavioral_test: CI_PASS_253_TESTS_BLACKBOX_FIRST_USE_OK
   external_agent_empirical: NOT_RUN
   human_first_use: NOT_RUN
-behavioral_evidence:
-  head: e390a9e78c19118828d27e66704c32df07ba5c68
-  full_unittest: "252 tests, OK"
-  wp4_behavioral_tests: 6
-  mermaid: "117 Markdown files checked"
-  workflows:
-    worklist_sync_quality: SUCCESS
-    p0_p1_production_readiness: SUCCESS
-    docs_quality: SUCCESS
-    greenfield_work_executor_e2e: SUCCESS
-    public_brownfield_pilot: SUCCESS
-  boundary: "Fixture/CI는 Runtime wiring과 Behavioral contract를 검증하며 실제 외부 Agent 의미 품질이나 Human first-use usability를 증명하지 않는다."
+behavioral_observation:
+  unittest_count: 253
+  unittest_result: OK
+  blackbox_first_use_test_count: 1
+  blackbox_first_use_result: OK
+  mermaid_markdown_files_checked: 118
+  pr_workflows_success: 5
+validation_boundary:
+  provider_class_is_declaration_only: true
+  fixture_is_external_agent_evidence: false
+  ci_is_human_first_use_evidence: false
+  production_ready_claimed: false
+  rule: "실제 Agent/Human 관찰이 없으면 empirical status는 NOT_RUN/NOT_VERIFIED로 남긴다."
 inherited_validation_boundary:
-  note: "아래 status/verdict는 v1.6 P0/P1 기준선의 CI/Behavioral 검증 경계를 보존하기 위한 호환 marker이며 Production Ready 또는 외부 Agent/Human 검증 완료를 뜻하지 않는다."
+  note: "아래 status/verdict는 이전 기준선의 CI/Behavioral 검증 경계를 보존하기 위한 호환 marker이며 WP-5 자체 또는 실제 Agent/Human 실증 PASS를 뜻하지 않는다."
   status: P0_P1_CI_BEHAVIORAL_AND_INTEGRATION_PASS_EXTERNAL_EMPIRICAL_PENDING
   verdict: CONTROLLED_PILOT_READY_CI_PASS_EXTERNAL_AGENT_HUMAN_VALIDATION_PENDING
   self_assessment_is_not_validation: true
   production_ready_claimed: false
-validation_rule: "PASS/READY 문구가 아니라 실제 Runtime 실행과 Behavioral Test 결과를 근거로 판정한다."
-next_step: "WP-4 구현 범위는 CI Behavioral evidence까지 닫혔다. 다음 Session에서는 실제 저수준 External Agent와 일반 프로젝트 참여자의 first-use 실증을 별도 Evidence로 수행한다."
+next_step: "실제 저수준 External Agent와 일반 프로젝트 참여자를 대상으로 관찰 Pilot을 수행하고 Agent 초안 정확성·Human 질문 비율·first-use 막힘 지점을 별도 Evidence로 기록한다."
 merge_to_main: false
