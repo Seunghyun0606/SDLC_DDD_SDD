@@ -18,6 +18,7 @@ from typing import Any
 PROJECT_ENTRY_PATH = ".sdlc/project.yaml"
 LEGACY_PROJECT_PROFILE_PATH = "sdlc/config/project-profile.yaml"
 LEGACY_SOURCE_PROFILE_PATH = "sdlc/config/source-profile.yaml"
+DEFAULT_PROVIDER_CONFIG_PATH = "sdlc/config/agent-provider.json"
 EFFECTIVE_DIR = ".sdlc/runtime/effective"
 
 DELIVERY_PROFILES: dict[str, dict[str, Any]] = {
@@ -53,10 +54,9 @@ DELIVERY_PROFILES: dict[str, dict[str, Any]] = {
     },
 }
 
-# Leaves with an executable core consumer today.
+# Leaves with a deterministic executable core consumer today.
 RUNTIME_CONSUMED_PATHS = {
     "schema_version",
-    "project.name",
     "project.mode",
     "delivery.profile",
     "technology.build",
@@ -64,21 +64,22 @@ RUNTIME_CONSUMED_PATHS = {
     "source.roots",
     "source.test_roots",
     "source.resource_roots",
-    "source.excludes",
     "git.protected_branches",
-    "unresolved",
 }
-# Useful project context is retained, but is not misreported as an execution switch.
+# These are passed to the Stage Agent as project context, but are not execution switches.
 DOCUMENT_CONTEXT_PREFIXES = (
     "architecture.", "coding.", "data.", "interface.", "security.", "deployment.",
 )
 DOCUMENT_ONLY_PATHS = {
+    "project.name",
     "project.description",
     "technology.language",
     "technology.framework",
+    "source.excludes",
     "git.branch_strategy",
     "documents.language",
     "documents.customer_language",
+    "unresolved",
 }
 EXTENSION_PREFIXES = ("extensions.",)
 
@@ -152,7 +153,6 @@ def load_yaml_subset(path: Path) -> dict[str, Any]:
             parent[key] = _scalar(raw_value)
             continue
 
-        # Look ahead to decide list versus mapping.
         look = index
         child_is_list = False
         while look < len(lines):
@@ -292,6 +292,24 @@ def classify_project_config(project: dict[str, Any]) -> dict[str, list[str]]:
     return result
 
 
+def _validate_project_entry(project: dict[str, Any]) -> None:
+    if project.get("schema_version") != 1:
+        raise ValueError("project config schema_version must be 1")
+    raw_mode = str(nested(project, "project", "mode", default="AUTO") or "AUTO").upper()
+    if raw_mode not in {"GREENFIELD", "BROWNFIELD", "HYBRID", "AUTO"}:
+        raise ValueError(f"unsupported project.mode: {raw_mode}")
+    raw_delivery = str(nested(project, "delivery", "profile", default="STANDARD") or "STANDARD").upper()
+    if raw_delivery not in DELIVERY_PROFILES:
+        raise ValueError(f"unsupported delivery.profile: {raw_delivery}")
+    for key in ["roots", "test_roots", "resource_roots", "excludes"]:
+        value = nested(project, "source", key, default=[])
+        if not isinstance(value, list) or not all(isinstance(x, str) for x in value):
+            raise ValueError(f"source.{key} must be a list of strings")
+    protected = nested(project, "git", "protected_branches", default=["main", "master"])
+    if not isinstance(protected, list) or not all(isinstance(x, str) and x.strip() for x in protected):
+        raise ValueError("git.protected_branches must be a list of non-empty strings")
+
+
 def ensure_no_dead_config(project: dict[str, Any]) -> None:
     dead = classify_project_config(project)["dead"]
     if dead:
@@ -299,7 +317,10 @@ def ensure_no_dead_config(project: dict[str, Any]) -> None:
 
 
 def compact_project_context(project: dict[str, Any]) -> dict[str, Any]:
-    keys = ["project", "technology", "architecture", "coding", "data", "interface", "security", "deployment", "documents", "unresolved"]
+    keys = [
+        "project", "technology", "source", "architecture", "git", "coding", "data",
+        "interface", "security", "deployment", "documents", "unresolved",
+    ]
     return {key: project[key] for key in keys if key in project}
 
 
@@ -353,6 +374,7 @@ def project_to_legacy_profiles(project: dict[str, Any]) -> tuple[dict[str, Any],
             "execution_guard_enabled": True,
             "protected_branches": nested(project, "git", "protected_branches", default=["main", "master"]),
         },
+        "project_context": compact_project_context(project),
     }
     source_profile = {
         "schema_version": 1,
@@ -392,6 +414,7 @@ def resolve_runtime_config(
 
     if project_path.is_file():
         project = load_config(project_path)
+        _validate_project_entry(project)
         if validate_usage:
             ensure_no_dead_config(project)
         source_kind = "PROJECT_ENTRY"
@@ -417,8 +440,13 @@ def resolve_runtime_config(
     }
 
 
-def materialize_effective_profiles(root: Path, resolved: dict[str, Any] | None = None) -> dict[str, Path]:
-    """Write machine-only compatibility JSON consumed by existing work/change executors."""
+def materialize_effective_profiles(
+    root: Path,
+    resolved: dict[str, Any] | None = None,
+    *,
+    provider_config_path: Path | None = None,
+) -> dict[str, Path]:
+    """Write machine-only artifacts consumed by work/change executors and Stage Agents."""
     root = root.resolve()
     resolved = resolved or resolve_runtime_config(root)
     if resolved.get("source_kind") == "UNCONFIGURED":
@@ -433,9 +461,22 @@ def materialize_effective_profiles(root: Path, resolved: dict[str, Any] | None =
     source_path.write_text(json.dumps(resolved["source_profile"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     context_path.write_text(json.dumps(resolved["project_context"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     usage_path.write_text(json.dumps(resolved["usage"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return {
+    paths = {
         "project_profile": project_path,
         "source_profile": source_path,
         "project_context": context_path,
         "config_usage": usage_path,
     }
+
+    base_provider = provider_config_path or (root / DEFAULT_PROVIDER_CONFIG_PATH)
+    if not base_provider.is_absolute():
+        base_provider = root / base_provider
+    if base_provider.is_file():
+        provider = load_config(base_provider)
+        protected = nested(resolved["project"], "git", "protected_branches", default=None)
+        if protected is not None:
+            provider["protected_branches"] = list(protected)
+        provider_path = effective / "agent-provider.json"
+        provider_path.write_text(json.dumps(provider, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        paths["provider_config"] = provider_path
+    return paths
