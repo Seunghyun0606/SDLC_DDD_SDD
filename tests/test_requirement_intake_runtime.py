@@ -133,6 +133,36 @@ class RequirementIntakeRuntimeTest(unittest.TestCase):
             self.assertEqual(first["canonical"]["rq_target_ids"], second["canonical"]["rq_target_ids"])
             self.assertEqual(second["canonical"]["status"], "IDEMPOTENT")
 
+    def test_duplicate_external_ids_remain_separate_review_candidates_on_reintake(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            xlsx = root / "requirements.xlsx"
+            make_xlsx(
+                xlsx,
+                [
+                    HEADERS1,
+                    HEADERS2,
+                    [1, "주문", "취소", "DUP-1", "주문 취소", "취소 요청", "", "", ""],
+                    [2, "주문", "취소", "DUP-1", "주문 취소", "환불 요청", "", "", ""],
+                ],
+            )
+            kwargs = dict(
+                xlsx=xlsx,
+                profile_path=None,
+                json_out=root / "out.json",
+                report_out=root / "report.md",
+                store_path=root / "sdlc/canonical/store.json",
+                apply_to_canonical=True,
+            )
+            first = INTAKE.run_intake(**kwargs)
+            second = INTAKE.run_intake(**kwargs)
+            store = json.loads((root / "sdlc/canonical/store.json").read_text(encoding="utf-8"))
+            frs = [e for e in store["entities"].values() if e["entity_type"] == "FR"]
+            self.assertEqual(first["import_result"]["duplicate_external_ids"], 1)
+            self.assertEqual(len(frs), 2)
+            self.assertEqual(second["canonical"]["status"], "IDEMPOTENT")
+            self.assertEqual(len({e["fields"]["intake_stable_key"] for e in frs}), 2)
+
     def test_reintake_does_not_downgrade_confirmed_business(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
