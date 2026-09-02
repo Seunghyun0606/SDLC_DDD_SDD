@@ -4,7 +4,7 @@
 
 ## 기본 원칙
 
-신규 프로젝트 담당자가 Harness 내부 Profile/Rule/Contract 구조를 학습하지 않아도 시작할 수 있어야 한다. 최초 설정은 **Fast Path — 최초 5개 입력** 범위로 충분해야 하며, 실제 필요가 확인된 항목만 Advanced Setup으로 연다. 사용자가 여러 Config 파일을 직접 채우는 것을 기본 절차로 만들지 않는다.
+신규 프로젝트 담당자가 Harness 내부 Profile/Rule/Contract 구조를 학습하지 않아도 시작할 수 있어야 한다. 최초 설정은 **Fast Path — 최초 5개 질문(입력)** 범위로 충분해야 하며, 실제 필요가 확인된 항목만 Advanced Setup으로 연다. 사용자가 여러 Config 파일을 직접 채우는 것을 기본 절차로 만들지 않는다.
 
 ## 실제 첫 실행
 
@@ -17,7 +17,7 @@ python sdlc/scripts/harness.py setup \
 
 Provider가 있으면 같은 명령에 `--provider-command`를 연결한다. Provider가 없다는 사실은 OPEN으로 유지하며 실제 문서 생성 성공으로 과장하지 않는다.
 
-## Fast Path — 최초 5개 입력
+## Fast Path — 최초 5개 질문
 
 1. **프로젝트 유형** — `GREENFIELD / BROWNFIELD / HYBRID / AUTO`, 모르면 AUTO
 2. **요구사항 또는 변경요청 위치** — 원본 파일/폴더/이슈 기준점
@@ -48,12 +48,12 @@ python sdlc/scripts/harness.py work --target RQ-001
 
 ## 호환 Mapping과 Delivery
 
-Starter Kit/Preset ID는 기존 자동화 호환을 위해 남아 있다.
+Starter Kit/Preset ID와 경로는 기존 자동화 호환을 위해 남아 있다. 이는 사용자가 선택하거나 내부 구조를 학습해야 한다는 의미가 아니다.
 
-- GREENFIELD → `greenfield-default`
-- BROWNFIELD → `brownfield-auto`
+- GREENFIELD → `sdlc/starter-kits/greenfield/` → legacy internal preset `greenfield-default`
+- BROWNFIELD → `sdlc/starter-kits/brownfield/` → legacy internal preset `brownfield-auto`
 
-이 값은 사용자가 선택해야 할 새 설정 항목이 아니다. 새 프로젝트의 문서량/Stage 제어는 `FAST / STANDARD / FULL` Delivery Profile로 처리한다.
+새 프로젝트의 문서량/Stage 제어는 `FAST / STANDARD / FULL` Delivery Profile로 처리한다.
 
 ## OPEN 처리
 
