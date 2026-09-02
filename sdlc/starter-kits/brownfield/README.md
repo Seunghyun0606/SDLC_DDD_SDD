@@ -23,7 +23,7 @@ Source:
 현재 운영 Branch/Commit 기준 Repository
 ```
 
-Repository 기준점이 없으면 실제 Source 영향분석을 완료했다고 표현하면 안 됩니다.
+Repository 기준점이 없으면 실제 Source 영향분석을 완료했다고 표현하면 안 됩니다. **SOP는 프로젝트 시작의 필수 입력이 아니다.** 없으면 Source/기존 자료로 확인 가능한 범위를 먼저 분석하고 업무정책은 `확인 필요`로 남깁니다.
 
 ## 있으면 좋은 자료
 
