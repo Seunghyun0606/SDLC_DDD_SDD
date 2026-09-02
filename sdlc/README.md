@@ -77,6 +77,7 @@ Config: `sdlc/config/artifact-profiles.yaml`
 python sdlc/scripts/test_structural_redesign.py
 python sdlc/scripts/test_p2_representative_slice.py
 python sdlc/scripts/test_p0_production_readiness.py
+python sdlc/scripts/test_p1_usability_authority.py
 ```
 
 Self-test PASS는 Harness primitive의 검증이며 실제 고객 Source 검증을 대체하지 않는다.
@@ -86,9 +87,10 @@ Self-test PASS는 Harness primitive의 검증이며 실제 고객 Source 검증�
 - `sdlc/guides/01_SDLC_전체가이드.md`
 - `sdlc/guides/02_SKILL_사용가이드.md`
 - `sdlc/guides/03_TEMPLATE_산출물가이드.md`
-- `sdlc/guides/04_HARNESS_커스터마이징가이드.md`
-- `sdlc/design/contracts/`
-- `sdlc/design/validation/`
+- `sdlc/guides/04_PROVIDER_RUNTIME_사용가이드.md`
+- `sdlc/guides/05_HARNESS_커스터마이징가이드.md`
+- `sdlc/guides/README.md`
+- `sdlc/design/README.md`
 
 ## P1 Operational Usability
 

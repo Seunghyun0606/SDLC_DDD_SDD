@@ -266,7 +266,6 @@ Business Rule/Process/Data/Interface 의미가 `OBSERVED/INFERRED`이면 Source/
 Primary Authority 목록은 `sdlc/config/contract-authority.yaml` 하나에서 확인한다.
 
 - `sdlc/guides/`: 설명용 Derived View
-- `sdlc/design/validation/`: 검증 이력
-- `sdlc/design/experiments/`: 실험 이력
+- `sdlc/design/`: Baseline/Contract/Review/Validation/Experiment를 포함한 설계 Reference & History
 
-이 세 영역은 Active Runtime Contract를 덮어쓰는 Authority가 아니다.
+이 두 영역은 Active Runtime Contract를 덮어쓰는 Authority가 아니다. 상세 경계는 `sdlc/design/README.md`와 `sdlc/guides/README.md`를 따른다.

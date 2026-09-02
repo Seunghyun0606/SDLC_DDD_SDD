@@ -99,13 +99,11 @@ def test_worklist_roundtrip_and_conflict():
         write_canonical(canonical, merged); worklist.write_md(md, merged, cfg); worklist.write_xlsx(xlsx, merged, cfg)
         assert worklist.canonical_rows(canonical)[0]["status"] == "IN_PROGRESS"
 
-        # Same canonical revision edited without increment must be rejected as UNVERSIONED_EDIT.
         bad_md = worklist.parse_md(md, cfg); bad_md[0]["status"] = "DONE"; worklist.write_md(md, bad_md, cfg)
         _, unversioned, _ = worklist.merge(worklist.parse_md(md, cfg), worklist.parse_xlsx(xlsx, cfg), worklist.canonical_rows(canonical), cfg)
         assert unversioned and unversioned[0]["code"] == "UNVERSIONED_EDIT"
         worklist.write_md(md, worklist.canonical_rows(canonical), cfg)
 
-        # MD and XLSX both increment to the same revision with different values: conflict, no canonical mutation.
         md_rows = worklist.parse_md(md, cfg); md_rows[0]["status"] = "DONE"; md_rows[0]["revision"] = "3"; worklist.write_md(md, md_rows, cfg)
         wb = load_workbook(xlsx); ws = wb.active
         labels = [c["label"] for c in cfg["columns"]]; status_col = labels.index("상태") + 1; rev_col = labels.index("변경버전") + 1
@@ -147,8 +145,27 @@ def test_authority_index_shape():
         assert authority.validate(fake, config) == []
 
 
+def test_guide_numbering_and_design_boundary():
+    guides = ROOT / "sdlc" / "guides"
+    numbered = sorted((x.name for x in guides.glob("[0-9][0-9]_*.md")), key=lambda name: int(name.split("_", 1)[0]))
+    numbers = [name.split("_", 1)[0] for name in numbered]
+    assert len(numbers) == len(set(numbers)), f"duplicate guide number: {numbered}"
+    assert numbered == [
+        "01_SDLC_전체가이드.md",
+        "02_SKILL_사용가이드.md",
+        "03_TEMPLATE_산출물가이드.md",
+        "04_PROVIDER_RUNTIME_사용가이드.md",
+        "05_HARNESS_커스터마이징가이드.md",
+    ]
+    config = load("sdlc/config/contract-authority.yaml")
+    roots = set(config.get("non_authoritative_roots") or [])
+    assert "sdlc/design" in roots and "sdlc/guides" in roots
+    assert (ROOT / "sdlc/design/README.md").is_file()
+    assert (ROOT / "sdlc/guides/README.md").is_file()
+
+
 def main() -> int:
-    tests = [test_decision_registry, test_overlay_schema_safe, test_worklist_roundtrip_and_conflict, test_knowledge_promotion_truth_guard, test_authority_index_shape]
+    tests = [test_decision_registry, test_overlay_schema_safe, test_worklist_roundtrip_and_conflict, test_knowledge_promotion_truth_guard, test_authority_index_shape, test_guide_numbering_and_design_boundary]
     for test in tests:
         test(); print(f"PASS {test.__name__}")
     print(f"PASS P1 usability/authority tests={len(tests)}")

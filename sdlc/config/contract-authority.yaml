@@ -1,30 +1,68 @@
 version: 2
 status: ACTIVE_P1_USABILITY_AUTHORITY
-principle: One primary authority per operational concept. Policy/definition authority and generated project-state authority are separate concepts.
+principle: One primary authority per operational concept. Policy/definition authority
+  and generated project-state authority are separate concepts.
 authorities:
-  onboarding_policy: {path: sdlc/config/onboarding-authority.yaml, kind: MACHINE_PRIMARY}
-  user_entrypoint: {path: sdlc/START_HERE.md, kind: HUMAN_PRIMARY}
-  user_command_facade: {path: sdlc/scripts/ai_sdlc.py, kind: RUNTIME_PRIMARY}
-  stage_sequence: {path: sdlc/config/stage-routing.yaml, kind: MACHINE_PRIMARY}
-  human_artifact_definition: {path: sdlc/config/human-artifacts.yaml, kind: MACHINE_PRIMARY}
-  artifact_profile_definition: {path: sdlc/config/artifact-profiles.yaml, kind: MACHINE_PRIMARY}
-  provider_registry_template: {path: sdlc/config/provider-registry.example.yaml, kind: MACHINE_PRIMARY}
-  provider_runtime_binding: {path: .ai-sdlc/runtime-binding.yaml, kind: PROJECT_RUNTIME_PRIMARY, generated: true}
-  project_decision_definition: {path: sdlc/config/project-decisions.yaml, kind: MACHINE_PRIMARY}
-  project_decision_registry: {path: .ai-sdlc/project-decisions.yaml, kind: PROJECT_RUNTIME_PRIMARY, generated: true}
-  overlay_schema: {path: sdlc/config/overlay-schema.yaml, kind: MACHINE_PRIMARY}
-  worklist_columns: {path: sdlc/config/worklist-columns.yaml, kind: MACHINE_PRIMARY}
-  worklist_canonical: {path: .ai-sdlc/worklist-canonical.yaml, kind: PROJECT_RUNTIME_PRIMARY, generated: true}
-  knowledge_promotion_policy: {path: sdlc/config/knowledge-promotion.yaml, kind: MACHINE_PRIMARY}
-  knowledge_registry: {path: .ai-sdlc/knowledge-registry.yaml, kind: PROJECT_RUNTIME_PRIMARY, generated: true}
-  reverse_sync_policy: {path: sdlc/config/reverse-sync-classification.yaml, kind: MACHINE_PRIMARY}
-  version_conflict_policy: {path: sdlc/config/version-control-runtime.yaml, kind: MACHINE_PRIMARY}
+  onboarding_policy:
+    path: sdlc/config/onboarding-authority.yaml
+    kind: MACHINE_PRIMARY
+  user_entrypoint:
+    path: sdlc/START_HERE.md
+    kind: HUMAN_PRIMARY
+  user_command_facade:
+    path: sdlc/scripts/ai_sdlc.py
+    kind: RUNTIME_PRIMARY
+  stage_sequence:
+    path: sdlc/config/stage-routing.yaml
+    kind: MACHINE_PRIMARY
+  human_artifact_definition:
+    path: sdlc/config/human-artifacts.yaml
+    kind: MACHINE_PRIMARY
+  artifact_profile_definition:
+    path: sdlc/config/artifact-profiles.yaml
+    kind: MACHINE_PRIMARY
+  provider_registry_template:
+    path: sdlc/config/provider-registry.example.yaml
+    kind: MACHINE_PRIMARY
+  provider_runtime_binding:
+    path: .ai-sdlc/runtime-binding.yaml
+    kind: PROJECT_RUNTIME_PRIMARY
+    generated: true
+  project_decision_definition:
+    path: sdlc/config/project-decisions.yaml
+    kind: MACHINE_PRIMARY
+  project_decision_registry:
+    path: .ai-sdlc/project-decisions.yaml
+    kind: PROJECT_RUNTIME_PRIMARY
+    generated: true
+  overlay_schema:
+    path: sdlc/config/overlay-schema.yaml
+    kind: MACHINE_PRIMARY
+  worklist_columns:
+    path: sdlc/config/worklist-columns.yaml
+    kind: MACHINE_PRIMARY
+  worklist_canonical:
+    path: .ai-sdlc/worklist-canonical.yaml
+    kind: PROJECT_RUNTIME_PRIMARY
+    generated: true
+  knowledge_promotion_policy:
+    path: sdlc/config/knowledge-promotion.yaml
+    kind: MACHINE_PRIMARY
+  knowledge_registry:
+    path: .ai-sdlc/knowledge-registry.yaml
+    kind: PROJECT_RUNTIME_PRIMARY
+    generated: true
+  reverse_sync_policy:
+    path: sdlc/config/reverse-sync-classification.yaml
+    kind: MACHINE_PRIMARY
+  version_conflict_policy:
+    path: sdlc/config/version-control-runtime.yaml
+    kind: MACHINE_PRIMARY
 non_authoritative_roots:
-  - sdlc/design/validation
-  - sdlc/design/experiments
-  - sdlc/guides
+- sdlc/design
+- sdlc/guides
 rules:
-  - validation_history_must_not_override_active_contract
-  - guide_must_link_to_primary_authority_when_defining_machine_behavior
-  - generated_view_must_not_become_canonical_by_edit_without_import_and_revision_check
-  - generated_runtime_state_must_have_declared_machine_policy
+- validation_history_must_not_override_active_contract
+- guide_must_link_to_primary_authority_when_defining_machine_behavior
+- generated_view_must_not_become_canonical_by_edit_without_import_and_revision_check
+- generated_runtime_state_must_have_declared_machine_policy
