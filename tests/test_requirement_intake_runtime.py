@@ -27,7 +27,6 @@ def load(name: str, filename: str):
 INTAKE = load("wp3_intake", "intake_requirements.py")
 HARNESS = load("wp3_harness", "harness.py")
 WORK = load("wp3_work", "run_work.py")
-SETUP = load("wp3_setup", "bootstrap_project.py")
 
 MAIN = INTAKE.MAIN
 REL = INTAKE.REL
@@ -82,11 +81,23 @@ def fixture(path: Path) -> None:
 
 
 class RequirementIntakeRuntimeTest(unittest.TestCase):
-    def test_setup_guidance_points_to_intake_instead_of_fake_rq_target(self):
+    def test_official_setup_guidance_points_to_start_here_and_intake(self):
         with tempfile.TemporaryDirectory() as td:
-            result = SETUP.bootstrap(Path(td), name="sample", mode="GREENFIELD", validate=False)
+            root = Path(td)
+            out = StringIO()
+            with redirect_stdout(out):
+                code = HARNESS.main([
+                    "setup", "--root", str(root), "--name", "sample",
+                    "--mode", "GREENFIELD", "--delivery", "STANDARD", "--no-validate",
+                ])
+            self.assertEqual(4, code, out.getvalue())
+            result = json.loads(out.getvalue())
+            self.assertEqual("docs/00_시작/START_HERE.md", result["user_entrypoint"]["start_here"])
+            self.assertEqual("CONNECTED", result["user_entrypoint"]["zero_to_one_intake"])
             self.assertIn("python sdlc/scripts/harness.py intake <requirement-file.xlsx>", result["next_commands"])
             self.assertFalse(any("<RQ-ID>" in command for command in result["next_commands"]))
+            persisted = json.loads((root / "sdlc/runtime/setup/setup-result.json").read_text(encoding="utf-8"))
+            self.assertEqual(result["next_commands"], persisted["next_commands"])
 
     def test_official_harness_intake_registers_targets_and_work_resolves_decompose(self):
         with tempfile.TemporaryDirectory() as td:
@@ -136,32 +147,29 @@ class RequirementIntakeRuntimeTest(unittest.TestCase):
     def test_duplicate_external_ids_remain_separate_review_candidates_on_reintake(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
-            xlsx = root / "requirements.xlsx"
+            xlsx = root / "duplicate.xlsx"
             make_xlsx(
                 xlsx,
                 [
                     HEADERS1,
                     HEADERS2,
-                    [1, "주문", "취소", "DUP-1", "주문 취소", "취소 요청", "", "", ""],
-                    [2, "주문", "취소", "DUP-1", "주문 취소", "환불 요청", "", "", ""],
+                    [1, "근태", "계획", "DUP-1", "계획 A", "기능 A", "", "", ""],
+                    [2, "근태", "계획", "DUP-1", "계획 B", "기능 B", "", "", ""],
                 ],
             )
             kwargs = dict(
-                xlsx=xlsx,
-                profile_path=None,
-                json_out=root / "out.json",
-                report_out=root / "report.md",
-                store_path=root / "sdlc/canonical/store.json",
-                apply_to_canonical=True,
+                xlsx=xlsx, profile_path=None, json_out=root / "out.json", report_out=root / "report.md",
+                store_path=root / "store.json", apply_to_canonical=True,
             )
             first = INTAKE.run_intake(**kwargs)
             second = INTAKE.run_intake(**kwargs)
-            store = json.loads((root / "sdlc/canonical/store.json").read_text(encoding="utf-8"))
-            frs = [e for e in store["entities"].values() if e["entity_type"] == "FR"]
             self.assertEqual(first["import_result"]["duplicate_external_ids"], 1)
-            self.assertEqual(len(frs), 2)
-            self.assertEqual(second["canonical"]["status"], "IDEMPOTENT")
-            self.assertEqual(len({e["fields"]["intake_stable_key"] for e in frs}), 2)
+            self.assertEqual(first["import_result"]["fr_candidate_count"], 2)
+            store = json.loads((root / "store.json").read_text(encoding="utf-8"))
+            frs = [x for x in store["entities"].values() if x["entity_type"] == "FR"]
+            self.assertEqual(2, len(frs))
+            self.assertEqual(2, len({x["fields"]["intake_stable_key"] for x in frs}))
+            self.assertEqual(first["canonical"]["rq_target_ids"], second["canonical"]["rq_target_ids"])
 
     def test_reintake_does_not_downgrade_confirmed_business(self):
         with tempfile.TemporaryDirectory() as td:
