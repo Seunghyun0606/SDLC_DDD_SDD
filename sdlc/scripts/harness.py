@@ -37,20 +37,35 @@ def _root_from_args(args: list[str]) -> Path:
     return Path(".").resolve()
 
 
-def _runtime_profile_args(args: list[str]) -> tuple[list[str], dict]:
-    """Resolve the single project entry and append machine compatibility profiles.
+def _value_from_args(args: list[str], option: str, default: str) -> str:
+    for i, value in enumerate(args):
+        if value == option and i + 1 < len(args):
+            return args[i + 1]
+        if value.startswith(option + "="):
+            return value.split("=", 1)[1]
+    return default
 
-    The effective profile paths are internal implementation details; appending them last makes
-    ``.sdlc/project.yaml`` authoritative even if a stale legacy profile argument was supplied.
+
+def _runtime_profile_args(args: list[str]) -> tuple[list[str], dict]:
+    """Resolve the single project entry and append machine-only effective artifacts.
+
+    Effective paths are appended last so ``.sdlc/project.yaml`` remains authoritative even
+    when stale legacy profile/provider arguments were supplied by an old wrapper.
     """
     config = _load("harness_runtime_config", "runtime_config.py")
     root = _root_from_args(args)
     resolved = config.resolve_runtime_config(root)
     if resolved["source_kind"] == "UNCONFIGURED":
         raise ValueError(f"project configuration missing: {config.PROJECT_ENTRY_PATH}; run harness.py setup first")
-    paths = config.materialize_effective_profiles(root, resolved)
+    provider_raw = _value_from_args(args, "--provider-config", config.DEFAULT_PROVIDER_CONFIG_PATH)
+    provider_path = Path(provider_raw)
+    if not provider_path.is_absolute():
+        provider_path = root / provider_path
+    paths = config.materialize_effective_profiles(root, resolved, provider_config_path=provider_path)
     routed = list(args)
     routed += ["--project-profile", str(paths["project_profile"]), "--source-profile", str(paths["source_profile"])]
+    if "provider_config" in paths:
+        routed += ["--provider-config", str(paths["provider_config"])]
     return routed, resolved
 
 
