@@ -3,6 +3,9 @@
 
 Creates only runtime-consumed config, never infers Business Truth, and treats missing
 technical facts as OPEN. Git presence alone is not Brownfield evidence.
+
+User onboarding is intentionally routed to docs/00_시작/START_HERE.md. Setup must not
+pretend that a first RQ exists when zero-to-one intake has not registered one yet.
 """
 from __future__ import annotations
 
@@ -29,6 +32,9 @@ def _load(name: str, path: Path):
 
 APPLY = _load("setup_apply", SCRIPT_DIR / "apply_canonical_delta.py")
 CONFIG = _load("setup_config", SCRIPT_DIR / "runtime_config.py")
+
+USER_START_HERE = "docs/00_시작/START_HERE.md"
+USER_SETUP_GUIDE = "docs/00_시작/프로젝트_설정_가이드.md"
 
 
 def _read(path: Path) -> str:
@@ -232,7 +238,18 @@ def bootstrap(root: Path, *, name: str, mode: str = "AUTO", delivery: str = "STA
         "schema_version": 1, "status": status, "project_name": name, "mode": resolved, "delivery_profile": delivery,
         "detected": d, "adapter_assessment": adapter, "provider_ready": provider_ready, "open_items": opens, "writes": writes,
         "validation": validation,
-        "next_commands": ["python sdlc/scripts/harness.py check --setup", "python sdlc/scripts/harness.py work --target <RQ-ID> --plan-only"],
+        "user_entrypoint": {
+            "start_here": USER_START_HERE,
+            "project_setup_guide": USER_SETUP_GUIDE,
+            "message": "일반 사용자는 Framework 내부 Config/Contract보다 START_HERE에서 다음 행동을 확인한다.",
+            "zero_to_one_intake": "WP03_NOT_YET_CONNECTED",
+        },
+        "next_commands": ["python sdlc/scripts/harness.py check --setup"],
+        "next_if_target_exists": [
+            "python sdlc/scripts/harness.py check --target <RQ-ID>",
+            "python sdlc/scripts/harness.py work --target <RQ-ID> --plan-only",
+        ],
+        "next_if_no_target": "START_HERE의 요구사항 등록 안내를 따른다. 현재 신규 RQ 자동 등록은 WP-03 미구현이므로 내부 Canonical을 수동 편집하지 않는다.",
     }
     result_path = root / "sdlc/runtime/setup/setup-result.json"; result_path.parent.mkdir(parents=True, exist_ok=True)
     result_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
