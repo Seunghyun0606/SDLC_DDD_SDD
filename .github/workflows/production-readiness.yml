@@ -29,7 +29,10 @@ jobs:
             sdlc/scripts/run_knowledge_promotion.py \
             sdlc/custom/project/adapters/impact/java_spring_enterprise.py
       - name: P0 P1 behavioral regression
-        run: python -m unittest tests.test_p0_p1_production_readiness -v
+        run: |
+          python -m unittest \
+            tests.test_project_entry_config \
+            tests.test_p0_p1_production_readiness -v
       - name: Existing core runtime regressions
         run: |
           python -m unittest \
