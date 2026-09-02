@@ -65,6 +65,7 @@
     }
   },
   "work_executor": {
+    "script": "sdlc/scripts/run_work.py",
     "user_entrypoint": "sdlc/scripts/harness.py work",
     "user_handoff_adapter": "sdlc/scripts/work_handoff.py",
     "guarded_executor": "sdlc/scripts/run_work.py",
@@ -98,6 +99,7 @@
   },
   "format_guidance": {
     "reference_document_is_executable_instruction": true,
+    "template_is_user_facing_output_format": true,
     "template_is_agent_output_format_not_user_form": true,
     "project_specific_retrieval_logic_belongs_to_profile_or_adapter": true,
     "stage_result_envelope_is_machine_output_not_user_document": true,
