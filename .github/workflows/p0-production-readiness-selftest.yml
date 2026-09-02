@@ -1,0 +1,38 @@
+name: P0 Production Readiness Self-Test
+
+on:
+  push:
+    branches:
+      - 'SDLC_DESIGN_SESSION_SECOND/**'
+    paths:
+      - 'sdlc/**'
+      - '.github/workflows/p0-production-readiness-selftest.yml'
+  pull_request:
+    paths:
+      - 'sdlc/**'
+      - '.github/workflows/p0-production-readiness-selftest.yml'
+
+jobs:
+  p0-production-readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install runtime dependencies
+        run: python -m pip install pyyaml
+      - name: Compile P0 Python
+        run: |
+          python -m py_compile \
+            sdlc/adapters/production/git_worktree_source.py \
+            sdlc/adapters/production/subprocess_test.py \
+            sdlc/scripts/ai_sdlc.py \
+            sdlc/scripts/analyze_interface_contract.py \
+            sdlc/scripts/guard_revision_ownership.py \
+            sdlc/scripts/invoke_provider_runtime.py \
+            sdlc/scripts/manage_source_claims.py \
+            sdlc/scripts/render_human_artifact.py \
+            sdlc/scripts/test_p0_production_readiness.py
+      - name: Run P0 production-readiness primitive self-test
+        run: python sdlc/scripts/test_p0_production_readiness.py

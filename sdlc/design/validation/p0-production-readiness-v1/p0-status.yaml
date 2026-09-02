@@ -1,0 +1,46 @@
+schema_version: 1
+artifact_type: P0_PRODUCTION_READINESS_STATUS
+status:
+  branch_family: SDLC_DESIGN_SESSION_SECOND
+  implementation_state: IMPLEMENTATION_COMPLETE_EXTERNAL_VALIDATION_REQUIRED
+  engineering_p0_complete: true
+  production_ready_claim_allowed: false
+  real_customer_source_validated: false
+  selftest:
+    script: sdlc/scripts/test_p0_production_readiness.py
+    expected_state: PASS
+    uses_real_git_worktree: true
+    uses_actual_subprocess: true
+    synthetic_or_ephemeral_source: true
+  completed_capabilities:
+    - single_start_here_entrypoint
+    - user_facade_init_work_change_check
+    - production_candidate_git_source_provider
+    - allowlisted_actual_subprocess_test_provider
+    - interface_contract_analyzer_openapi_asyncapi_wsdl
+    - eight_human_artifact_templates_and_renderer
+    - actual_git_revision_and_object_hash_guard
+    - atomic_file_and_program_claim_store
+    - post_write_hash_verification
+  blocked_external:
+    - gate_id: REAL-CUSTOMER-SOURCE-E2E
+      state: BLOCKED_EXTERNAL
+      reason: Actual customer source repository/build/test/DB/interface environment is not available in the harness repository.
+      required_evidence:
+        - actual_customer_source_revision
+        - actual_build_execution
+        - actual_test_execution
+        - actual_db_or_data_contract_evidence_when_applicable
+        - actual_interface_evidence_when_applicable
+        - source_change_and_reverse_sync_review
+      completion_rule: Do not change production_ready_claim_allowed to true until this evidence is reviewed.
+  invariants:
+    - selftest_pass_is_not_customer_source_validation
+    - source_behavior_is_not_business_truth
+    - test_design_is_not_runtime_pass
+    - unavailable_external_evidence_is_not_success
+    - main_branch_must_not_be_modified_by_this_design_session
+  next_phase:
+    allowed: true
+    phase: P1
+    rationale: P0 engineering implementation is complete; the only open P0 gate depends on external customer evidence, not missing harness code.
