@@ -23,7 +23,10 @@
     "semantic_fingerprint_compared": true,
     "volatile_timestamp_difference_ignored": true,
     "llm_determinism_claimed": false,
-    "validation_fixture_provider_is_not_agent_empirical_pass": true
+    "validation_fixture_provider_is_not_agent_empirical_pass": true,
+    "provider_class_is_declaration_only": true,
+    "provider_class_label_is_empirical_agent_proof": false,
+    "actual_low_level_agent_requires_separate_observed_pilot": true
   },
-  "note": "Project가 실제 Agent/LLM CLI 또는 wrapper를 연결한 뒤 enabled=true와 command를 설정한다. /work는 동일 command 형식에 Work Context를 전달한다. Provider가 없는 상태는 PASS가 아니라 NOT_EXECUTED로 기록한다."
+  "note": "Project가 실제 Agent/LLM CLI 또는 wrapper를 연결한 뒤 enabled=true와 command를 설정한다. 반복성 Runner는 Provider command와 의미 일치율만 관측하며 provider_class=EXTERNAL_AGENT 라벨만으로 실제 Agent 실증 PASS를 만들지 않는다. 실제 저수준 Agent와 Human first-use는 별도 관찰 Pilot Evidence로 기록한다."
 }
