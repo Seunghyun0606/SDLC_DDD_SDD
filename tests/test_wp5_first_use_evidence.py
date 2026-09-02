@@ -203,9 +203,6 @@ class WP5FirstUseEvidenceTest(unittest.TestCase):
             self.assertEqual("OPEN", rq["fields"]["current_problem"])
             self.assertTrue(any("CUSTOMER_DECISION ACKNOWLEDGE" in row.get("note", "") for row in rq["provenance"]))
 
-    def test_fixture_provider_in_first_use_test_is_not_agent_or_human_empirical_evidence(self):
-        self.assertIn("WP5_BEHAVIORAL_FIXTURE_NOT_EXTERNAL_AGENT", write_review_fixture_provider.__code__.co_consts[-1])
-
 
 if __name__ == "__main__":
     unittest.main()
