@@ -1,11 +1,38 @@
 # /setup
 
-프로젝트 최초 도입용 설정 Skill. 실제 실행 Runtime은 `sdlc/scripts/bootstrap_project.py`이며 비숙련 사용자는 `sdlc/scripts/harness.py setup`만 사용해도 된다.
+프로젝트 최초 도입용 Setup Instruction이다. 실제 실행 Runtime은 `sdlc/scripts/bootstrap_project.py`이고 사용자 CLI 진입점은 `sdlc/scripts/harness.py setup`이다.
 
-## 기본 원칙
-신규 프로젝트 담당자가 Harness 내부 Profile 구조를 모두 이해하지 않아도 시작할 수 있어야 한다. 최초 설정은 **5개 질문 Fast Path**로 충분해야 하며, 실제 필요가 확인된 항목만 Advanced Setup으로 연다. Config 파일이 존재한다는 이유만으로 기능이 구현됐다고 간주하지 않는다.
+## 목표
 
-## 실제 첫 실행
+신규 프로젝트 참여자가 Framework 내부 Config/Profile/Contract를 이해하지 않고도 시작하게 한다.
+
+사용자에게 보여줄 기본 흐름은 다음뿐이다.
+
+```text
+프로젝트명/유형/진행수준 선택
+→ setup
+→ 자동 탐색 결과와 확인 필요 사항 확인
+→ 자료 제공
+→ Agent 실행 준비
+```
+
+사용자 문서의 첫 진입점은 `docs/00_시작/START_HERE.md`다.
+
+## 사용자에게 필요한 기본 입력
+
+기본 setup에서는 다음 세 가지를 우선 사용한다.
+
+1. 프로젝트명
+2. 프로젝트 유형: `GREENFIELD / BROWNFIELD / HYBRID / AUTO`
+3. 진행 수준: `FAST / STANDARD / FULL`
+
+잘 모르는 프로젝트 유형은 `AUTO`, 일반 SI/SM 진행수준은 `STANDARD`를 기본으로 안내한다.
+
+Source root, Build/Test, Framework, DB 등은 Repository에서 먼저 자동 탐색한다. 탐색할 수 없는 값만 `확인 필요`로 남긴다.
+
+고객 문서 수준, Provider 연결, 특수 Adapter 같은 값은 실제 필요가 생겼을 때만 추가로 확인한다.
+
+## 최초 실행
 
 ```bash
 python sdlc/scripts/harness.py setup \
@@ -14,7 +41,13 @@ python sdlc/scripts/harness.py setup \
   --delivery STANDARD
 ```
 
-실제 Agent/CLI wrapper가 준비되어 있으면 같은 명령에 Provider command를 연결한다.
+상태 확인:
+
+```bash
+python sdlc/scripts/harness.py check --setup
+```
+
+실제 Agent Provider command가 준비되어 있으면 setup에 연결할 수 있다.
 
 ```bash
 python sdlc/scripts/harness.py setup \
@@ -24,141 +57,142 @@ python sdlc/scripts/harness.py setup \
   --provider-command '<agent-command> --context {context_path} --result {result_path}'
 ```
 
-Runtime은 다음 실제 파일만 생성/유지한다.
+## Agent 실행 순서
+
+1. 사용자가 지정한 프로젝트 유형과 진행수준을 읽는다.
+2. `AUTO`이면 Source/build/schema 자산으로 Mode 후보를 판단한다.
+3. 일반적인 Source/Test/Resource root와 Build/Test command 후보를 탐색한다.
+4. 확인된 기술 신호와 확인하지 못한 항목을 분리한다.
+5. 실제 Runtime Config를 생성한다.
+6. 생성 Config를 다시 읽어 round-trip 검증한다.
+7. 구조 Validator가 있으면 실행한다.
+8. Provider 준비 여부와 OPEN을 setup 결과에 기록한다.
+9. 사용자에게 `docs/00_시작/START_HERE.md`와 다음 행동을 안내한다.
+
+Git Repository라는 사실만으로 Brownfield라고 판정하지 않는다.
+
+## 사용자가 준비하는 자료
+
+### Greenfield
+
+- 요구사항/요청 원문
+- SOP/업무정책 자료가 있으면 원본
+- 프로젝트 표준
+- Architecture 결정사항
+- Security/NFR 자료
+
+### Brownfield
+
+- Repository/Source bundle
+- 변경 요청
+- 기존 설계/운영자료
+- DB/Interface/Event/Batch 자료
+- Build/Test/배포 자료
+- 필요한 경우 Log/APM 등 운영 근거
+
+자료가 없으면 Agent가 내용을 발명하지 않고 `확인 필요` 또는 Coverage Gap으로 남긴다.
+
+## 사람이 확인할 내용
+
+사람에게 묻는 것은 판단권한이 필요한 항목으로 제한한다.
+
+- 프로젝트 범위
+- 업무정책
+- 고객 공유 수준
+- 기술/Architecture 선택 승인
+- Security/운영 제약
+- Source write 허용 범위
+- 분석 제외 범위
+
+Source root나 build file처럼 자동 탐색할 수 있는 사실을 사용자에게 먼저 작성시키지 않는다.
+
+## Runtime 내부 동작
+
+이 Section은 Agent/Harness 관리자용이다. 일반 사용자에게 setup 선행 지식으로 요구하지 않는다.
+
+현재 Runtime은 호환성을 위해 다음 파일을 생성/사용한다.
+
 - `sdlc/config/project-profile.yaml`
 - `sdlc/config/source-profile.yaml`
 - `sdlc/config/agent-provider.json`
 - `sdlc/canonical/store.json`
 - `sdlc/runtime/setup/setup-result.json`
 
-생성한 YAML은 다시 읽어 round-trip 검증한다. 실제 Agent Provider가 연결되지 않았으면 `CONFIGURED_PROVIDER_REQUIRED`로 종료하며 `/work` 실행 가능 상태라고 과장하지 않는다.
+이 다중 Config를 사용자 설정 하나로 통합하는 작업은 WP-02 범위다. 이번 WP-01에서는 사용자가 이 파일들을 직접 편집해야 한다고 안내하지 않는다.
 
-## Fast Path — 최초 5개 입력
+## Mode별 처리
 
-1. **프로젝트 유형**
-   - `GREENFIELD / BROWNFIELD / HYBRID / AUTO`
-   - 모르면 `AUTO`로 시작한다.
-2. **요구사항 또는 변경요청 위치**
-   - 파일, 폴더, 이슈, 문서 위치 중 실제 사용 가능한 기준점을 기록한다.
-3. **Source/Repository 위치**
-   - Greenfield로 Source가 없으면 `없음`으로 둔다.
-   - Brownfield는 Repository 또는 Source bundle 기준점이 필요하다.
-4. **Build/Test 경로**
-   - 알고 있으면 기록한다.
-   - 모르면 build file/test root를 탐색하고 찾지 못하면 빈 값/OPEN으로 둔다.
-5. **고객용 문서 필요 여부**
-   - `internal / customer / both`
+- `GREENFIELD`: Source가 없어도 정상 시작 가능
+- `BROWNFIELD`: Repository/Source Evidence 기준으로 현재 동작과 Coverage를 확인
+- `HYBRID`: 기존 Source와 신규 영역을 함께 취급
+- `AUTO`: 실제 자산으로 후보를 결정
 
-이 5개만으로 설정 초안을 만들 수 있다. 단, **실제 문서 생성은 Agent Provider가 연결되어야 한다.**
-
-## 자동 탐색 범위
-`bootstrap_project.py`는 다음을 근거 기반으로 조사한다.
-- `pom.xml`, Gradle, `package.json`, `pyproject.toml`
-- 흔한 Source/Test/Resource root
-- Java/Spring/MyBatis/JPA/Kafka 사용 신호
-- Schema/DDL 파일
-- Maven/Gradle/NPM/Python test command 후보
-
-Git Repository라는 사실만으로 Brownfield라고 판정하지 않는다. Source/build/schema 자산이 없으면 신규 Git Repository도 Greenfield 후보가 될 수 있다.
-
-## Fast Path 자동 기본값
-- Starter Kit과 기존 Preset ID는 호환을 위해 유지한다.
-- 내부 Compatibility Mapping은 `GREENFIELD → greenfield-default`, `BROWNFIELD → brownfield-auto`다.
-- 실제 문서량/Stage 제어는 새 프로젝트에서는 `delivery.profile = FAST / STANDARD / FULL`을 사용한다.
-- 문서 언어는 `ko-KR`을 기본으로 한다.
-- 고객용 문서는 기본 `MINIMAL`이다.
-- OPEN Resolution은 SOP를 요구하지 않는다.
-- Brownfield Adapter가 없거나 Coverage가 부족하면 `PARTIAL_PROJECT_ADAPTER_REQUIRED` 또는 Coverage Gap으로 남긴다.
-- Source root/build/test를 찾지 못하면 “없음”이나 “영향 없음”으로 확정하지 않는다.
-
-## Mode별 시작
-- `GREENFIELD` → `sdlc/starter-kits/greenfield/`
-- `BROWNFIELD` → `sdlc/starter-kits/brownfield/`
-- `HYBRID` → Brownfield Source 기준을 우선하고 신규 영역 요구를 함께 등록한다.
-- `AUTO` → 실제 Source/build/schema 자산으로 Mode Candidate를 결정한다.
+Source root/build/test를 찾지 못하면 `없음`이나 `영향 없음`으로 확정하지 않는다.
 
 ## Delivery Profile
 
-### FAST
-XS/S 운영 변경 및 소규모 기능. 중간 Stage와 관련 없는 Program DoR를 생략한다.
+- `FAST`: 작은 운영 변경
+- `STANDARD`: 일반 SI/SM 기능
+- `FULL`: 대형/고위험 범위
 
-### STANDARD
-일반 SI/SM 기능. Requirement → Process/Impact → Design → Program → Development/Test/Verify의 일반 흐름을 사용한다.
+Preset 종류를 사용자 선택지로 늘리지 않는다.
 
-### FULL
-대형/고위험 프로젝트. 전체 Stage와 Knowledge Promotion 후보까지 사용한다.
+## Provider 처리
 
-Preset을 계속 늘리지 않는다. 프로젝트 규모 차이는 이 3개 Profile 안에서 해결한다.
+Provider가 연결되지 않았으면 실제 문서 생성이 가능한 상태라고 과장하지 않는다.
 
-## Advanced Setup — 필요한 경우에만 설정
+- 기본 Config 생성 가능
+- setup 상태는 `CONFIGURED_PROVIDER_REQUIRED`가 될 수 있음
+- 실제 Agent generation은 Provider 준비 후 진행
 
-### 1. 용어/고객 문서
-- 고객사 업무용어가 중요한 경우
-- 고객 문서 Section/필드가 다른 경우
-- 내부/고객 문서 구성이 달라야 하는 경우
-
-관련 Profile/Overlay:
-- `sdlc/config/terminology-profile.example.json`
-- `sdlc/config/customer-document-profile.example.json`
-- `sdlc/custom/project/`
-
-### 2. 비정형 업무문서
-DOCX/PPTX/XLSX/TXT/MD/CSV는 다음 Runtime으로 Evidence Chunk를 만들 수 있다.
-
-```bash
-python sdlc/scripts/extract_document_evidence.py \
-  --input <file> \
-  --output sdlc/runtime/evidence/<name>.json
-```
-
-PDF는 text parser가 사용 가능할 때 추출하며, 읽을 수 없으면 `EXTRACTION_REQUIRED`로 닫는다. OCR이 필요한 PDF/IMAGE_SCAN은 외부 Tool/Adapter 책임이다. 추출된 문서는 `.cursor/skills/sop-extract/SKILL.md`에서 의미 Candidate로 분석한다.
-
-### 3. 결정 권한
-기본 Authority 역할이 실제 조직과 다를 때만 `open-resolution-profile`을 조정한다. 사용자에게 `Decision Domain`, `Basis Class`, 내부 Status code를 직접 작성시키지 않는다.
-
-### 4. Brownfield Impact Adapter
-Core는 공통 Graph/Coverage/Gap 규칙만 제공한다. Project Adapter는 Framework별 관계를 실제로 찾는다.
-
-포함 Adapter:
-- `java_spring_mybatis.py`: 좁고 안정적인 Pilot
-- `java_spring_enterprise.py`: JPA/JDBC/@Transactional/Feign/Kafka/Scheduled/Config의 정적 후보까지 확장
-
-두 Adapter 모두 Runtime proxy/reflection/live DB/APM/broker topology를 Business Truth처럼 확정하지 않는다. 지원하지 않는 영역은 Coverage Gap 또는 Tool Required다.
-
-### 5. Project Overlay
-신규 프로젝트 기본 Customization 개념은 다음 3개만 이해하면 된다.
-
-`Core → Project Overlay → Local Override`
-
-Domain/Preset 세분화는 기존 프로젝트 호환 또는 실제 공유 필요가 확인된 경우에만 사용한다.
+공식 Reference Provider 제공은 WP-09 범위다.
 
 ## OPEN 처리
-사람이 기본적으로 보는 값은 다음뿐이다.
-- 무엇을 확인/결정해야 하는가
-- 어떻게 확인할 것인가
-- 현재 확인된 내용 또는 제안
-- 누가 확인/결정하는가
-- 진행 상태: `미확정 / 확인중 / 제안 / 확정 / 보류`
 
-Machine taxonomy는 가능한 경우 Agent/Script가 내부 metadata로 관리한다.
+사용자에게는 가능한 한 다음 다섯 가지 정보만 보여준다.
 
-## Validation
+- 무엇을 확인해야 하는가
+- 현재 Agent가 확인한 내용
+- 왜 확인이 필요한가
+- 누가 결정해야 하는가
+- 다음 행동
 
-```bash
-python sdlc/scripts/harness.py check --setup
-python sdlc/scripts/validate_harness_structure.py .
-python sdlc/scripts/validate_document_experience.py .
-```
+내부 Machine taxonomy를 사용자 입력 양식으로 요구하지 않는다.
 
-Provider가 준비된 뒤 첫 작업 계획:
+## Zero-to-One Requirement 현재 경계
 
-```bash
-python sdlc/scripts/harness.py work --target <RQ-ID> --plan-only
-```
+현재 `harness.py`에는 통합 `intake` 명령이 없다.
 
-## 준비도 안내
-- Starter Kit 최소값 충족은 `STARTABLE`이며 `IMPLEMENTATION_READY`가 아니다.
-- OPEN 존재 자체는 실패가 아니다.
-- Business Truth는 권한자의 확인 없이 확정하지 않는다.
-- Brownfield Repository 기준점/Adapter Coverage가 부족하면 영향분석을 COMPLETE로 표시하지 않는다.
-- Production Source write는 Git/Source Target/Build/Test/Canonical Guard를 통과해야 한다.
+`import_requirements.py`는 XLSX Requirement Candidate를 만들 수 있지만 Canonical RQ 등록과 첫 Target 반환까지 자동 연결하지 않는다.
+
+따라서 setup 결과에서 존재하지 않는 `<RQ-ID>`로 곧바로 `work`하라고 성공 경로처럼 안내하지 않는다. 기존 RQ가 있을 때만 `work --target <RQ-ID>`를 안내한다.
+
+신규 요구 한 건 → RQ 생성 → 첫 work 연결은 WP-03 범위다.
+
+## 절대 하지 말 것
+
+- 사용자에게 Rule/Skill/Reference/Contract 위치를 찾아 읽으라고 요구
+- 사용자에게 내부 Profile/Overlay 종류를 먼저 선택하게 함
+- Source 관찰을 Business Truth로 자동 승격
+- 발견하지 못한 Source/DB/Interface를 `영향 없음`으로 처리
+- Provider가 없는데 Agent 실행 준비 완료라고 표현
+- 빈 프로젝트에 RQ가 없는데 `work --target <RQ-ID>`를 바로 다음 성공 단계로 표시
+- setup을 이유로 사용자에게 빈 산출물 Template을 직접 작성하게 함
+
+## Quality Check
+
+setup 완료 시 확인한다.
+
+- project mode가 의도와 맞는가
+- delivery profile이 실제 Runtime에 반영되는가
+- auto-detect 결과와 OPEN이 구분되는가
+- Provider 준비 여부가 사실대로 표시되는가
+- 사용자 안내가 `docs/00_시작/START_HERE.md`로 연결되는가
+- 내부 Config 구조를 사용자가 알아야만 다음 행동을 찾는 상태가 아닌가
+
+## 다음 단계
+
+1. `python sdlc/scripts/harness.py check --setup`
+2. 사용자에게 `docs/00_시작/START_HERE.md`의 다음 행동을 안내
+3. 기존 RQ가 있으면 `work --plan-only`
+4. 첫 RQ가 없으면 WP-03 intake Gap을 명확히 알리고 내부 저장소 수동 편집을 유도하지 않음
