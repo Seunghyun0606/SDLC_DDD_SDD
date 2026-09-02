@@ -1,179 +1,33 @@
-schema_version: 2
-session_namespace: SDLC_DESIGN_SESSION_FIRST
-branch: SDLC_DESIGN_SESSION_FIRST/remediation/v1.6-p0-p1-production-readiness-v0.1
-branch_version: p0-p1-production-readiness-v0.1.1
-parent_branch: SDLC_DESIGN_SESSION_FIRST/refactor/v1.6-complexity-reduction-executable-core-v0.1
-design_baseline: v1.5.1
-candidate_design_version: v1.6-p0-p1-production-readiness-remediation-v0.1
-status: P0_P1_CI_BEHAVIORAL_AND_INTEGRATION_PASS_EXTERNAL_EMPIRICAL_PENDING
+schema_version: 1
+session: SDLC_DESIGN_SESSION_FIRST
+branch: SDLC_DESIGN_SESSION_FIRST/feature/v1.7-work-handoff-v0.1
+parent_branch: SDLC_DESIGN_SESSION_FIRST/integration/v1.7-wp1-wp3-v0.1
+parent_commit: 13a3cf2547b7d5668c8e91d1734d5c3be85238ea
+candidate: v1.7-wp4-work-handoff-v0.1
+work_package:
+  session: 4
+  id: WP-4
+  objective: "프로젝트 자료 → Agent 초안 → 사람 판단 항목만 확인 → 다음 단계 안내의 /work 사용자 경로를 연결한다."
+scope:
+  - "공식 harness work의 기본 사용자 산출물을 docs/ 아래로 분리"
+  - "Machine context/result/handoff는 sdlc/runtime/ 아래 유지"
+  - "uncertainty 중 업무정책·범위·승인·기술선택·인수처럼 판단권한이 명시된 항목만 Human review로 노출"
+  - "기존 customer decision capture를 JSON 작성 없이 사용할 수 있는 review facade 제공"
+  - "완성된 요구사항 정의 예시 제공"
+non_goals:
+  - "새 SDLC Stage 추가"
+  - "새 Canonical entity type 추가"
+  - "기존 run_work 안전 가드 재작성"
+  - "확인되지 않은 Business Truth 자동 확정"
+  - "main merge 또는 직접 수정"
+evidence_status:
+  document: IN_PROGRESS
+  contract: IN_PROGRESS
+  config: REUSED
+  runtime: IN_PROGRESS
+  behavioral_test: PENDING
+  external_agent_empirical: NOT_RUN
+  human_first_use: NOT_RUN
+validation_rule: "PASS/READY 문구가 아니라 실제 Runtime 실행과 Behavioral Test 결과를 근거로 판정한다."
+next_step: "WP-4 Runtime/Behavioral Test를 완료하고 외부 Agent/Human 실증 경계를 별도로 남긴다."
 merge_to_main: false
-production_ready_claimed: false
-self_assessment_is_not_validation: true
-purpose: >-
-  실제 SI/SM 최초 도입 관점에서 확인된 P0/P1 Gap을 문서 선언이 아니라 executable bootstrap,
-  Provider/Git/Canonical guard, delivery profile, raw document evidence, customer round-trip,
-  Brownfield adapter와 behavioral/integration CI로 보완한다. Production Ready는 외부 Agent와 사람 실증 전에는 주장하지 않는다.
-
-principles:
-  minimum_executable_core_separated_from_optional_extensions: true
-  same_business_information_written_once: true
-  single_active_requirement_artifact: true
-  functional_design_is_semantic_source_of_truth: true
-  program_spec_is_implementation_delta: true
-  human_machine_metadata_separated_by_default: true
-  human_open_status_count: 5
-  executable_setup: true
-  executable_work: true
-  executable_change: true
-  executable_check: true
-  single_harness_cli: true
-  delivery_profiles_runtime_consumed: true
-  delivery_profiles:
-    - FAST
-    - STANDARD
-    - FULL
-  fast_program_readiness_required_item_count: 7
-  standard_program_readiness_required_item_count: 17
-  provider_disabled_is_success: false
-  protected_default_branch_write_blocked_by_runtime: true
-  dirty_workspace_blocked_by_default: true
-  source_write_scope_guard: true
-  failed_provider_changes_rollback: true
-  build_test_before_canonical_apply_for_development: true
-  canonical_file_lock: true
-  canonical_revision_rechecked_under_lock: true
-  canonical_atomic_replace: true
-  canonical_delta_idempotency_requires_same_payload_hash: true
-  non_confirmed_evidence_can_overwrite_confirmed_business: false
-  source_observation_is_business_truth: false
-  raw_ooxml_evidence_extraction: true
-  pdf_without_reliable_parser_fails_closed: true
-  external_tool_result_uses_common_evidence_boundary: true
-  customer_decision_round_trip: true
-  customer_business_change_requires_explicit_authorization: true
-  knowledge_promotion_is_review_only: true
-  reverse_auto_rewrites_business_truth: false
-  project_adapter_is_core_required: false
-
-p0_reassessment:
-  executable_bootstrap:
-    status: RESOLVED_CI_BEHAVIORAL
-    evidence: sdlc/scripts/bootstrap_project.py
-  provider_unavailable_false_success:
-    status: RESOLVED_CI_BEHAVIORAL
-    evidence: tests/test_p0_p1_production_readiness.py
-  source_canonical_failure_consistency:
-    status: PARTIAL_CONTROLLED_PILOT
-    implemented:
-      - provider/source changes rollback on stage or canonical failure
-      - build/test gate before canonical apply for DEVELOPMENT
-      - dirty workspace guard blocks subsequent execution until workspace is reconciled
-    residual_gap:
-      - source and Canonical are not automatically committed as one Git commit
-      - repository history can still be made inconsistent by an external/manual partial commit
-  canonical_concurrent_writer_race:
-    status: RESOLVED_CI_BEHAVIORAL
-    evidence: two writers on the same base cannot both commit
-  setup_work_change_check_execution_gap:
-    status: RESOLVED_CI_BEHAVIORAL
-    evidence: sdlc/scripts/harness.py
-  actual_low_level_agent_and_human_validation:
-    status: EXTERNAL_VALIDATION_PENDING
-    reason: no EXTERNAL_AGENT provider or human usability panel is connected to this project session
-
-p1_reassessment:
-  config_exists_without_runtime_support:
-    status: SUBSTANTIALLY_RESOLVED
-    evidence: FAST/STANDARD/FULL are consumed by runtime_config.py and run_work.py
-  core_required_package_overweight:
-    status: RESOLVED_STRUCTURALLY_AND_REGRESSION_TESTED
-    evidence: deployment_sets separate MINIMUM_EXECUTABLE_CORE and optional extensions
-  quick_start_and_package_mismatch:
-    status: RESOLVED_CI_STRUCTURAL
-    evidence: sdlc/README.md and executable harness CLI
-  brownfield_adapter_coverage:
-    status: PARTIAL_BY_DESIGN
-    implemented:
-      - Java/Spring/MyBatis static pilot
-      - Java/Spring enterprise static candidates for JPA/JDBC/Transactional/Feign/Kafka/Scheduled/Config
-    residual_gap:
-      - runtime proxy/dynamic dispatch
-      - live DB/APM/broker metadata
-      - stored procedure/trigger/ETL precision
-  raw_customer_document_ingestion:
-    status: PARTIAL_TOOL_DEPENDENT
-    implemented:
-      - TXT/MD/CSV/DOCX/PPTX/XLSX evidence extraction
-      - source locator and structure preservation
-    residual_gap:
-      - scanned/image PDF OCR requires an external parser/tool
-  human_view_machine_taxonomy:
-    status: RESOLVED_FOR_CORE_VISIBLE_TABLES
-    note: machine compatibility markers remain in frontmatter/comments rather than user-facing columns
-  small_change_program_spec_burden:
-    status: RESOLVED_FOR_FAST_PROFILE
-    note: FAST requires 7 readiness items; STANDARD/FULL retain 17
-  knowledge_promotion_runtime:
-    status: RESOLVED_AS_REVIEW_ONLY_RUNTIME
-  customer_projection_round_trip:
-    status: RESOLVED_FOR_DECISION_PROVENANCE
-    residual_gap: external signature/approval platform integration remains Tool/MCP responsibility
-  reverse_engineering_semantics:
-    status: PARTIAL_INTENTIONALLY_NON_DESTRUCTIVE
-    note: source change produces review candidates; automatic Business Truth rewrite remains forbidden
-
-validation:
-  validation_basis: GITHUB_PR_CI_AND_DIRECT_FILE_INSPECTION
-  draft_pull_request: 53
-  pull_request_base: SDLC_DESIGN_SESSION_FIRST/refactor/v1.6-complexity-reduction-executable-core-v0.1
-  validated_runtime_head: 91fa47d31ec2aeedb7f67d7850b1b3cd43d1e9e0
-  github_ci:
-    production_readiness:
-      run_number: 6
-      result: SUCCESS
-      behavioral_test_count: 15
-    worklist_sync_quality:
-      run_number: 487
-      result: SUCCESS
-      full_unittest_count: 225
-    docs_quality:
-      run_number: 170
-      result: SUCCESS
-    greenfield_work_executor_e2e:
-      run_number: 16
-      result: SUCCESS_FIXTURE_PROVIDER_NOT_AGENT_VALIDATION
-    public_brownfield_pilot:
-      run_number: 29
-      result: SUCCESS_REAL_PUBLIC_REPOSITORY_PARTIAL_COVERAGE
-  behavioral_evidence:
-    bootstrap_minimum_profile: PASS
-    provider_missing_nonzero: PASS
-    protected_branch_runtime_guard: PASS
-    canonical_concurrent_writer_guard: PASS
-    fast_profile_readiness: PASS
-    pptx_slide_locator: PASS
-    xlsx_sheet_range_locator: PASS
-    customer_decision_no_silent_business_mutation: PASS
-    external_evidence_normalization: PASS
-    knowledge_promotion_review_only: PASS
-  actual_external_agent_provider_e2e: NOT_EXECUTED_PROVIDER_UNAVAILABLE
-  actual_low_level_agent_repeatability: NOT_EXECUTED_PROVIDER_UNAVAILABLE
-  human_first_use_usability: NOT_EXECUTED_HUMAN_STUDY_UNAVAILABLE
-  customer_proprietary_repository: NOT_EXECUTED_REPOSITORY_NOT_PROVIDED
-  repository_hosting_branch_protection: NOT_ENFORCED_BY_HARNESS_RUNTIME
-
-not_claimed:
-  - Production Project Ready
-  - fixture provider proves Agent or LLM semantic quality
-  - full Java AST/type or Spring runtime/proxy resolution
-  - all PDF/image documents are parseable without an external OCR/parser
-  - Source observation can automatically update Business Truth
-  - automatic Source/Canonical Git commit transaction
-  - measured usability for real analysts, designers, developers, QA, PM or customers
-  - hosting-level branch protection is configured by the Harness Runtime
-
-verdict: CONTROLLED_PILOT_READY_CI_PASS_EXTERNAL_AGENT_HUMAN_VALIDATION_PENDING
-next_step: >-
-  실제 EXTERNAL_AGENT Provider로 Greenfield와 Brownfield E2E/repeatability를 실행하고,
-  일반 분석가·설계자·개발자 대상 first-use bootstrap pilot을 수행한다. Repository hosting의 default-branch protection도 별도 관리정책으로 활성화한다.
-updated_at: 2026-09-02T08:25:00+09:00
