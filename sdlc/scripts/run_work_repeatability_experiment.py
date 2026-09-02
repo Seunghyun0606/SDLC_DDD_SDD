@@ -5,8 +5,10 @@ This closes the gap between a provider-command loop and the actual Harness execu
 Each run resets the same scratch Canonical store, reuses the same target/stage/artifact,
 executes run_work.py, validates the Stage Result and compares semantic fingerprints.
 
-A validation fixture can prove runner wiring but cannot produce an Agent empirical PASS.
-Only provider_class=EXTERNAL_AGENT is reported as actual_agent_provider_executed=true.
+Evidence boundary: provider_class is a declaration, not verified Agent identity. A validation
+fixture proves runner wiring, and a command declared EXTERNAL_AGENT proves only that the declared
+Provider command ran through /work. Actual low-level Agent evidence requires a separately observed
+pilot; this runner never upgrades itself to that evidence class.
 """
 from __future__ import annotations
 
@@ -57,14 +59,19 @@ def run_experiment(
     if run_count < 2 or run_count > 20:
         raise ValueError("run_count must be between 2 and 20")
     provider_class = str(provider.get("provider_class") or "UNKNOWN")
+    declared_external_agent = provider_class == "EXTERNAL_AGENT"
     if not provider.get("enabled", False):
         return {
             "schema_version": 1,
             "provider_id": provider.get("provider_id"),
             "provider_class": provider_class,
+            "provider_class_is_declaration_only": True,
+            "declared_external_agent": declared_external_agent,
+            "provider_identity_verified": False,
             "run_count_requested": run_count,
             "run_count_executed": 0,
             "actual_agent_provider_executed": False,
+            "external_agent_empirical_evidence_status": "NOT_VERIFIED_BY_RUNNER",
             "verdict": "NOT_EXECUTED_PROVIDER_UNAVAILABLE_OR_DISABLED",
             "runs": [],
             "semantic_match_rate": None,
@@ -113,14 +120,13 @@ def run_experiment(
     all_success = all(row["status"] in {"APPLIED", "IDEMPOTENT", "NO_CHANGE"} for row in runs)
     all_fingerprints = bool(first) and all(value for value in fingerprints)
     all_match = all_fingerprints and match_count == run_count
-    actual_agent = provider_class == "EXTERNAL_AGENT" and all_success
 
     if not all_success:
         verdict = "FAIL_WORK_EXECUTION"
     elif not all_match:
         verdict = "FAIL_SEMANTIC_REPEATABILITY_MISMATCH"
-    elif provider_class == "EXTERNAL_AGENT":
-        verdict = "PASS_REPEATED_AGENT_WORK_OUTPUT_SEMANTIC_MATCH"
+    elif declared_external_agent:
+        verdict = "PASS_WORK_REPEATABILITY_DECLARED_EXTERNAL_PROVIDER_UNVERIFIED"
     elif provider_class == "VALIDATION_FIXTURE":
         verdict = "PASS_WORK_REPEATABILITY_FIXTURE_PROVIDER"
     else:
@@ -130,18 +136,22 @@ def run_experiment(
         "schema_version": 1,
         "provider_id": provider.get("provider_id"),
         "provider_class": provider_class,
+        "provider_class_is_declaration_only": True,
+        "declared_external_agent": declared_external_agent,
+        "provider_identity_verified": False,
         "target_id": target_id,
         "stage": stage,
         "artifact": artifact_rel,
         "run_count_requested": run_count,
         "run_count_executed": len(runs),
-        "actual_agent_provider_executed": actual_agent,
+        "actual_agent_provider_executed": False,
+        "external_agent_empirical_evidence_status": "NOT_VERIFIED_BY_RUNNER",
         "verdict": verdict,
         "runs": runs,
         "semantic_match_count": match_count,
         "semantic_match_rate": match_count / run_count,
         "llm_determinism_proven": False,
-        "interpretation": "동일 Canonical snapshot/target/stage/document 입력에 대한 실제 /work 실행 결과의 의미 일치율이다. LLM 이론적 결정론을 주장하지 않는다.",
+        "interpretation": "동일 Canonical snapshot/target/stage/document 입력의 /work 결과 의미 일치율만 관측한다. provider_class 라벨은 실제 Agent 신원 증거가 아니며 별도 관찰 Pilot이 필요하다.",
     }
 
 
@@ -181,7 +191,7 @@ def main(argv: list[str] | None = None) -> int:
         "actual_agent_provider_executed": result.get("actual_agent_provider_executed"),
     }, ensure_ascii=False))
     return 0 if result.get("verdict") in {
-        "PASS_REPEATED_AGENT_WORK_OUTPUT_SEMANTIC_MATCH",
+        "PASS_WORK_REPEATABILITY_DECLARED_EXTERNAL_PROVIDER_UNVERIFIED",
         "PASS_WORK_REPEATABILITY_FIXTURE_PROVIDER",
         "PASS_WORK_REPEATABILITY_UNCLASSIFIED_PROVIDER",
         "NOT_EXECUTED_PROVIDER_UNAVAILABLE_OR_DISABLED",

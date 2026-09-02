@@ -87,6 +87,7 @@ class AgentRepeatabilityExperimentTest(unittest.TestCase):
         self.assertEqual("NOT_EXECUTED_PROVIDER_UNAVAILABLE_OR_DISABLED", result["verdict"])
         self.assertFalse(result["actual_provider_executed"])
         self.assertFalse(result["actual_agent_provider_executed"])
+        self.assertFalse(result["provider_identity_verified"])
         self.assertEqual(0, result["run_count_executed"])
         self.assertIsNone(result["semantic_match_rate"])
 
@@ -103,13 +104,17 @@ class AgentRepeatabilityExperimentTest(unittest.TestCase):
         self.assertFalse(result["actual_agent_provider_executed"])
         self.assertFalse(result["llm_determinism_proven"])
 
-    def test_external_agent_class_can_claim_observed_agent_repeatability(self):
+    def test_external_agent_label_alone_cannot_claim_actual_agent_evidence(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             provider = self.write_provider(root)
             result = MOD.run_experiment(self.config(provider, provider_class="EXTERNAL_AGENT"), root / "runs")
-        self.assertEqual("PASS_REPEATED_AGENT_OUTPUT_SEMANTIC_MATCH", result["verdict"])
-        self.assertTrue(result["actual_agent_provider_executed"])
+        self.assertEqual("PASS_REPEATABILITY_DECLARED_EXTERNAL_PROVIDER_UNVERIFIED", result["verdict"])
+        self.assertTrue(result["declared_external_agent"])
+        self.assertTrue(result["provider_class_is_declaration_only"])
+        self.assertFalse(result["provider_identity_verified"])
+        self.assertFalse(result["actual_agent_provider_executed"])
+        self.assertEqual("NOT_VERIFIED_BY_RUNNER", result["external_agent_empirical_evidence_status"])
         self.assertFalse(result["llm_determinism_proven"])
 
     def test_semantic_variation_is_detected(self):
@@ -141,13 +146,16 @@ class AgentRepeatabilityExperimentTest(unittest.TestCase):
                 "command": [],
             }, Path("unused"))
 
-    def test_example_profile_requires_real_provider(self):
+    def test_example_profile_requires_real_provider_and_separate_observed_pilot(self):
         profile = json.loads((ROOT / "sdlc/config/agent-repeatability-profile.example.json").read_text(encoding="utf-8"))
         self.assertFalse(profile["enabled"])
         self.assertEqual("EXTERNAL_AGENT_PROVIDER_REQUIRED", profile["provider_id"])
         self.assertEqual("EXTERNAL_AGENT", profile["provider_class"])
         self.assertTrue(profile["rules"]["actual_provider_execution_required_for_pass"])
         self.assertTrue(profile["rules"]["validation_fixture_provider_is_not_agent_empirical_pass"])
+        self.assertTrue(profile["rules"]["provider_class_is_declaration_only"])
+        self.assertFalse(profile["rules"]["provider_class_label_is_empirical_agent_proof"])
+        self.assertTrue(profile["rules"]["actual_low_level_agent_requires_separate_observed_pilot"])
         self.assertFalse(profile["rules"]["llm_determinism_claimed"])
 
 
