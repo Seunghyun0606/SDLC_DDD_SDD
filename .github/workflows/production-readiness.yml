@@ -40,6 +40,7 @@ jobs:
             tests.test_program_spec_readiness \
             tests.test_harness_structure \
             tests.test_document_experience \
+            tests.test_starter_kit_contract \
             tests.test_v16_complexity_reduction -v
       - name: Harness structure
         run: python sdlc/scripts/validate_harness_structure.py .
