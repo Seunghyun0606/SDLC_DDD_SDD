@@ -2,7 +2,7 @@ schema_version: 1
 artifact_type: P1_USABILITY_AUTHORITY_STATUS
 status:
   branch_family: SDLC_DESIGN_SESSION_SECOND
-  implementation_state: P1_ENGINEERING_COMPLETE_SELFTEST_PASS
+  implementation_state: P1_COMPLETE_LOCAL_REGRESSION_PASS
   controlled_pilot_candidate: true
   production_ready_claim_allowed: false
   p0_external_customer_e2e_gate_closed: false
@@ -16,6 +16,7 @@ status:
     - knowledge_promotion_human_confirmation_truth_guard
     - contract_authority_index
     - guide_numbering_and_design_authority_boundary
+    operational_smoke_test: sdlc/scripts/test_p1_operational_usability.py
     p0_regression_required: true
     structural_regression_required: true
   primary_authorities:
@@ -38,6 +39,7 @@ status:
   - validation_and_experiment_history_are_non_authoritative
   - guide_numbering_is_unique_and_ordered
   - design_reference_history_is_explicitly_non_authoritative
+  - operational_decision_overlay_worklist_knowledge_smoke_test_passes
   external_gate:
     state: BLOCKED_EXTERNAL
     inherited_from: sdlc/design/validation/p0-production-readiness-v1/p0-status.yaml
