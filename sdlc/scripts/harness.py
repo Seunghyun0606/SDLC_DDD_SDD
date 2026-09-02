@@ -15,6 +15,8 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -67,6 +69,41 @@ def _runtime_profile_args(args: list[str]) -> tuple[list[str], dict]:
     return routed, resolved
 
 
+def _run_setup(args: list[str]) -> int:
+    """Keep WP-02 bootstrap semantics but expose the unified WP-01/WP-03 handoff."""
+    setup = _load("harness_setup", "bootstrap_project.py")
+    captured = StringIO()
+    with redirect_stdout(captured):
+        code = setup.main(args)
+    raw = captured.getvalue().strip()
+    try:
+        result = json.loads(raw)
+    except json.JSONDecodeError:
+        print(raw)
+        return code
+    if isinstance(result, dict) and result.get("status") != "SETUP_FAILED":
+        result["user_entrypoint"] = {
+            "start_here": "docs/00_시작/START_HERE.md",
+            "project_setup_guide": "docs/00_시작/프로젝트_설정_가이드.md",
+            "zero_to_one_intake": "CONNECTED",
+            "message": "setup 확인 후 요구사항 원본을 intake하면 실제 RQ Target과 다음 work 명령을 받는다.",
+        }
+        result["next_commands"] = [
+            "python sdlc/scripts/harness.py check --setup",
+            "python sdlc/scripts/harness.py intake <requirement-file.xlsx>",
+        ]
+        result.pop("next_if_target_exists", None)
+        result.pop("next_if_no_target", None)
+        root = _root_from_args(args)
+        result_path = root / "sdlc/runtime/setup/setup-result.json"
+        result_path.parent.mkdir(parents=True, exist_ok=True)
+        result_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return code
+    print(raw)
+    return code
+
+
 def main(argv: list[str] | None = None) -> int:
     args = list(argv if argv is not None else sys.argv[1:])
     if not args or args[0] in {"-h", "--help", "help"}:
@@ -75,7 +112,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     command = args.pop(0).lower()
     if command == "setup":
-        return _load("harness_setup", "bootstrap_project.py").main(args)
+        return _run_setup(args)
     if command == "intake":
         return _load("harness_intake", "intake_requirements.py").main(args)
     if command in {"work", "change"}:
