@@ -1,0 +1,44 @@
+version: 2
+status: ACTIVE_P1_USABILITY_AUTHORITY
+primary_entrypoint: sdlc/START_HERE.md
+secondary_docs:
+  - sdlc/README.md
+  - sdlc/guides/01_SDLC_전체가이드.md
+  - sdlc/guides/02_SKILL_사용가이드.md
+rules:
+  secondary_docs_must_not_define_conflicting_first_command: true
+  runtime_internal_paths_are_not_customer_inputs: true
+  customer_inputs_have_one_canonical_location: true
+  non_admin_roles_use_user_facade_before_runtime_internal_files: true
+customer_input_locations:
+  requirements: inputs/customer/requirements/
+  policy: inputs/customer/policy/
+  process: inputs/customer/process/
+  existing_docs: inputs/customer/existing-docs/
+first_command: python sdlc/scripts/ai_sdlc.py init --project-root .
+commands:
+  init: python sdlc/scripts/ai_sdlc.py init --project-root .
+  work: python sdlc/scripts/ai_sdlc.py work <ID> --project-root .
+  change: python sdlc/scripts/ai_sdlc.py change <ID> "<변경 내용>" --project-root .
+  check: python sdlc/scripts/ai_sdlc.py check <ID> --project-root .
+  sync_worklist: python sdlc/scripts/ai_sdlc.py sync-worklist --project-root .
+  promote_knowledge: python sdlc/scripts/ai_sdlc.py promote-knowledge <candidate.yaml> --project-root .
+role_entrypoints:
+  PM:
+    - sdlc/START_HERE.md
+    - docs/00_관리/전체작업목록.md
+  BA:
+    - sdlc/START_HERE.md
+    - inputs/customer/requirements/
+  DEVELOPER:
+    - sdlc/START_HERE.md
+  TESTER:
+    - sdlc/START_HERE.md
+  HARNESS_ADMIN:
+    - sdlc/START_HERE.md
+    - ai-sdlc.yaml
+    - sdlc/config/
+    - .ai-sdlc/
+  AGENT:
+    - sdlc/START_HERE.md
+    - sdlc/config/stage-routing.yaml

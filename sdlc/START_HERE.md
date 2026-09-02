@@ -218,3 +218,55 @@ python sdlc/scripts/test_p0_production_readiness.py
 ```
 
 이 테스트는 임시 **실제 Git Worktree + 실제 subprocess**를 사용하지만 고객 Source 검증은 아니다. 출력의 `real_customer_source_validated: false`를 임의로 바꾸지 않는다.
+
+## 15. Project Decision Registry
+
+기술/운영 결정의 Primary Authority는 `sdlc/config/project-decisions.yaml`이다. `init` 실행 시 `.ai-sdlc/project-decisions.yaml`이 생성된다.
+
+- `OPEN`: 아직 미확정. 관련 없는 분석은 계속 가능
+- `CANDIDATE`: 후보값이 있으나 확정 아님
+- `CONFIRMED`: 값 + 결정자/Owner + 근거 필요
+- Source 관찰만으로 `CONFIRMED` 자동 승격 금지
+
+특히 Greenfield의 개발언어, Framework, Architecture, Directory/Module, DB, Transaction, API, Error, Logging, Security, Test, CI/CD, 문서 규칙, Naming/Coding, Branch 전략을 한 Registry에서 확인한다.
+
+```bash
+python sdlc/scripts/validate_project_decisions.py .ai-sdlc/project-decisions.yaml
+```
+
+## 16. 전체작업목록 MD ↔ XLSX
+
+다음 두 파일은 동일한 Canonical Work Item의 Human View다.
+
+- `docs/00_관리/전체작업목록.md`
+- `docs/00_관리/전체작업목록.xlsx`
+
+Canonical Runtime Authority는 `.ai-sdlc/worklist-canonical.yaml`이다.
+
+```bash
+python sdlc/scripts/ai_sdlc.py sync-worklist --project-root .
+```
+
+기존 항목을 수정하면 `변경버전`을 올린다. 같은 버전에서 MD/XLSX/Canonical 값이 다르면 `SYNC_CONFLICT`로 중지하며 어느 쪽도 조용히 덮어쓰지 않는다.
+
+## 17. Knowledge Promotion
+
+Source/Agent에서 얻은 지식은 바로 Canonical Business Truth가 아니다.
+
+`CANDIDATE → Review → PROMOTED` 절차를 사용한다.
+
+```bash
+python sdlc/scripts/ai_sdlc.py promote-knowledge .ai-sdlc/knowledge-candidate.yaml --project-root .
+```
+
+Business Rule/Process/Data/Interface 의미가 `OBSERVED/INFERRED`이면 Source/Agent 결과만으로 Promotion하지 않는다. Review에 `decision: CONFIRM`, `human_confirmation: true`, 검토자/시각/근거가 명시된 경우에만 사람 확인 사실을 근거로 `CONFIRMED`로 전환한 뒤 Promotion한다. `OPEN`은 Promotion할 수 없고, Promotion은 Canonical Publish를 자동 요청하지 않는다.
+
+## 18. Authority가 헷갈릴 때
+
+Primary Authority 목록은 `sdlc/config/contract-authority.yaml` 하나에서 확인한다.
+
+- `sdlc/guides/`: 설명용 Derived View
+- `sdlc/design/validation/`: 검증 이력
+- `sdlc/design/experiments/`: 실험 이력
+
+이 세 영역은 Active Runtime Contract를 덮어쓰는 Authority가 아니다.

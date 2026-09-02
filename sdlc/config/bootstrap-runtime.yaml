@@ -1,5 +1,5 @@
 version: 2
-status: ACTIVE_P0_PRODUCTION_READINESS_CANDIDATE
+status: ACTIVE_P1_USABILITY_AUTHORITY
 
 bootstrap:
   auto_mode_detection: true
@@ -23,6 +23,8 @@ bootstrap:
     - schema
     - sql
 
+decision_authority: sdlc/config/project-decisions.yaml
+# Compatibility-only list for bootstrap() direct-call fixtures; ai_sdlc init derives the runtime decision registry from decision_authority.
 greenfield_decisions:
   - development_language
   - framework

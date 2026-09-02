@@ -1,0 +1,33 @@
+version: 2
+status: ACTIVE_P1_USABILITY_AUTHORITY
+policy:
+  unknown_target_key: DENY
+  create_missing_parent_path: DENY
+  type_mismatch: DENY
+  stale_base_value: DENY
+  safety_invariant_override: DENY
+  exact_or_declared_prefix_only: true
+  active_requires_project_scope: true
+  active_requires_reason: true
+  active_requires_revision: true
+  active_requires_evidence_or_given_source: true
+  active_requires_activated_by_and_at: true
+allowed_targets:
+  project.name: {type: string}
+  project.mode: {type: enum, values: [AUTO, GREENFIELD, BROWNFIELD, HYBRID]}
+  artifacts.profile: {type: enum, values: [LITE, STANDARD, ENTERPRISE]}
+  providers.registry: {type: string}
+  providers.adapter_config: {type: any}
+  customization.overlays: {type: list}
+allowed_prefixes:
+  - {prefix: paths., type: string}
+  - {prefix: terminology.aliases., type: string}
+  - {prefix: provider_bindings., type: any}
+protected_prefixes:
+  - truth_policy.
+  - safety.
+  - invariants.
+  - verification_gate.
+  - write_guard.
+  - canonical_publish.
+truth_states: [GIVEN, OBSERVED, INFERRED, CONFIRMED, OPEN]

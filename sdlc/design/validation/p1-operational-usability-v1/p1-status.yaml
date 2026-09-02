@@ -1,0 +1,23 @@
+schema_version: 1
+artifact_type: P1_OPERATIONAL_USABILITY_STATUS
+status:
+  branch: SDLC_DESIGN_SESSION_SECOND/p1/operational-usability-v1
+  engineering_state: IMPLEMENTED_SELFTEST_PENDING_REMOTE_CI
+  production_ready: false
+  completed:
+    - single_contract_authority_index
+    - greenfield_project_decision_registry
+    - semantic_overlay_guard_existing_key_type_revision
+    - worklist_md_xlsx_canonical_sync
+    - worklist_same_revision_conflict_guard
+    - reviewed_knowledge_promotion_registry
+    - user_facade_sync_worklist_and_promote_knowledge
+  retained_external_gate:
+    state: BLOCKED_EXTERNAL
+    item: real_customer_source_build_test_e2e
+    reason: Actual customer Source/Build/Test/DB/Interface environment is not available in this repository review session.
+  truth_guards:
+    source_observation_is_not_business_truth: true
+    same_revision_view_conflict_is_not_silently_overwritten: true
+    guide_or_validation_history_is_not_primary_authority: true
+    production_claim_requires_real_customer_e2e: true
