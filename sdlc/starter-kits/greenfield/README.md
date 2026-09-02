@@ -7,7 +7,7 @@
 1. 프로젝트가 해결하려는 문제 또는 목표
 2. 최소 한 건의 요구사항/요청 원문
 
-Source, SOP, Architecture가 아직 없어도 시작할 수 있습니다. 없는 정보를 만들지 않고 OPEN으로 남깁니다.
+Source, SOP, Architecture가 아직 없어도 시작할 수 있습니다. **SOP는 프로젝트 시작의 필수 입력이 아니다.** 없는 정보를 만들지 않고 OPEN으로 남깁니다.
 
 ## 시작 명령
 
@@ -43,6 +43,17 @@ python sdlc/scripts/harness.py work --target RQ-001 --plan-only
 - 남은 OPEN
 
 사람이 Starter Manifest나 빈 Template을 먼저 채우는 방식은 기본 절차가 아닙니다.
+
+## OPEN 해소 기본 경로
+
+```text
+Agent가 제공 자료와 확인 가능한 근거를 먼저 추가 탐색
+→ 근거로 해소 가능한 OPEN은 초안에 반영
+→ 그래도 결정권한이 필요한 항목만 사람에게 확인
+→ 확인 결과로 초안을 갱신
+```
+
+SOP가 없다는 이유만으로 모든 질문을 사람에게 돌리지 않습니다.
 
 ## 하지 말아야 할 것
 
