@@ -1,7 +1,7 @@
 {
-  "schema_version": 3,
-  "candidate_design": "v1.6.0-rc.1-p0-runtime-hardening",
-  "purpose": "저수준 Agent가 Stage별 문서를 읽고 추가 암묵지 없이 유사한 품질의 산출물을 생성하며, 사용자가 Target/Stage/Artifact를 명시적으로 다시 선택해도 공통 Runtime에서 안전하게 검증할 수 있게 하는 Core 실행계약",
+  "schema_version": 4,
+  "candidate_design": "v1.7-wp4-work-handoff-v0.1",
+  "purpose": "저수준 Agent가 Evidence 기반 산출물을 작성하고 Machine 결과를 검증 가능하게 남기되, 일반 사용자는 내부 Rule/Skill/Reference/Contract를 학습하지 않고 사람 판단권한 항목만 확인하도록 하는 Core 실행계약",
   "scope": "CORE_COMMON_CONTRACT",
   "required_reference_sections": [
     "## Purpose",
@@ -38,7 +38,10 @@
     "artifact_and_canonical_delta_must_reference_same_stage_output": true,
     "target_stage_and_artifact_can_be_selected_independently": true,
     "explicit_stage_selection_does_not_authorize_business_truth_change": true,
-    "existing_entity_mutation_is_scoped_to_selected_target_graph": true
+    "existing_entity_mutation_is_scoped_to_selected_target_graph": true,
+    "evidence_researchable_unknown_stays_agent_owned_open": true,
+    "human_review_requires_explicit_authority_metadata": true,
+    "human_review_does_not_auto_mutate_business_fields": true
   },
   "runtime_output_envelope": {
     "schema_version": 1,
@@ -53,10 +56,22 @@
     "artifact_path_must_be_repository_relative": true,
     "delta_stage_must_match_result_stage": true,
     "delta_source_artifact_must_match_artifact_path": true,
-    "quality_fail_is_not_executable": true
+    "quality_fail_is_not_executable": true,
+    "optional_human_decision_metadata": {
+      "requires_human_decision": true,
+      "category": ["BUSINESS_POLICY", "SCOPE", "APPROVAL", "TECHNICAL_CHOICE", "ACCEPTANCE"],
+      "question": "사람이 실제로 결정해야 하는 한 가지 질문",
+      "rule": "requires_human_decision=true 이고 허용 category인 uncertainty만 일반 사용자 review 항목으로 노출한다. 단순 Evidence 부족이나 Agent가 추가 조사 가능한 OPEN은 사람에게 떠넘기지 않는다."
+    }
   },
   "work_executor": {
-    "script": "sdlc/scripts/run_work.py",
+    "user_entrypoint": "sdlc/scripts/harness.py work",
+    "user_handoff_adapter": "sdlc/scripts/work_handoff.py",
+    "guarded_executor": "sdlc/scripts/run_work.py",
+    "human_review_adapter": "sdlc/scripts/review_work.py",
+    "decision_recorder": "sdlc/scripts/capture_customer_decision.py",
+    "default_human_document_root": "docs/10_산출물",
+    "machine_runtime_root": "sdlc/runtime",
     "target_id_open_ended": true,
     "explicit_stage_reentry": true,
     "explicit_artifact_override": true,
@@ -65,7 +80,10 @@
     "target_graph_scope_guard": true,
     "confirmed_business_change_requires_explicit_authorization": true,
     "provider_command_required_for_generation": true,
-    "provider_disabled_result": "NOT_EXECUTED_PROVIDER_UNAVAILABLE_OR_DISABLED"
+    "provider_disabled_result": "NOT_EXECUTED_PROVIDER_UNAVAILABLE_OR_DISABLED",
+    "user_document_and_machine_result_are_separate": true,
+    "human_review_is_new_stage": false,
+    "review_json_user_authored": false
   },
   "repeatability": {
     "semantic_fingerprint_supported": true,
@@ -80,8 +98,10 @@
   },
   "format_guidance": {
     "reference_document_is_executable_instruction": true,
-    "template_is_user_facing_output_format": true,
+    "template_is_agent_output_format_not_user_form": true,
     "project_specific_retrieval_logic_belongs_to_profile_or_adapter": true,
-    "stage_result_envelope_is_machine_output_not_user_document": true
+    "stage_result_envelope_is_machine_output_not_user_document": true,
+    "normal_user_must_not_edit_rule_skill_reference_contract": true,
+    "normal_user_must_not_start_from_blank_stage_template": true
   }
 }
