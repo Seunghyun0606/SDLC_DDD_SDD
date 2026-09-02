@@ -28,6 +28,12 @@ evidence_status:
   behavioral_test: PENDING
   external_agent_empirical: NOT_RUN
   human_first_use: NOT_RUN
+inherited_validation_boundary:
+  note: "아래 status/verdict는 v1.6 P0/P1 기준선의 CI/Behavioral 검증 경계를 보존하기 위한 호환 marker이며 WP-4 자체의 PASS 판정이 아니다."
+  status: P0_P1_CI_BEHAVIORAL_AND_INTEGRATION_PASS_EXTERNAL_EMPIRICAL_PENDING
+  verdict: CONTROLLED_PILOT_READY_CI_PASS_EXTERNAL_AGENT_HUMAN_VALIDATION_PENDING
+  self_assessment_is_not_validation: true
+  production_ready_claimed: false
 validation_rule: "PASS/READY 문구가 아니라 실제 Runtime 실행과 Behavioral Test 결과를 근거로 판정한다."
 next_step: "WP-4 Runtime/Behavioral Test를 완료하고 외부 Agent/Human 실증 경계를 별도로 남긴다."
 merge_to_main: false
