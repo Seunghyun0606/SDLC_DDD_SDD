@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-"""Runtime configuration resolver for the SDLC Harness.
+"""Resolve the SDLC Harness project configuration.
 
-New projects have one human-maintained entry point: ``.sdlc/project.yaml``.
-Legacy ``sdlc/config/project-profile.yaml`` and ``source-profile.yaml`` remain readable only
-for backward compatibility. Runtime consumers should call ``resolve_runtime_config`` rather
-than asking a project user to understand multiple profile files.
+Human-maintained entry point:
+    .sdlc/project.yaml
 
-The Harness intentionally supports only a conservative YAML subset so bootstrap/work/check do
-not require PyYAML. Unknown user-config leaves are reported as DEAD_CONFIG instead of being
-silently ignored.
+Legacy project/source profiles remain readable for old projects, but new projects derive
+machine compatibility profiles from the single project entry. Unknown leaves fail closed as
+DEAD_CONFIG so a setting cannot silently pretend to be effective.
 """
 from __future__ import annotations
 
@@ -20,6 +18,7 @@ from typing import Any
 PROJECT_ENTRY_PATH = ".sdlc/project.yaml"
 LEGACY_PROJECT_PROFILE_PATH = "sdlc/config/project-profile.yaml"
 LEGACY_SOURCE_PROFILE_PATH = "sdlc/config/source-profile.yaml"
+EFFECTIVE_DIR = ".sdlc/runtime/effective"
 
 DELIVERY_PROFILES: dict[str, dict[str, Any]] = {
     "FAST": {
@@ -54,42 +53,40 @@ DELIVERY_PROFILES: dict[str, dict[str, Any]] = {
     },
 }
 
-# Every leaf accepted in the human project entry must have an explicit owner.
-# This list is deliberately small: adding a field without a consumer becomes DEAD_CONFIG.
+# Leaves with an executable core consumer today.
 RUNTIME_CONSUMED_PATHS = {
     "schema_version",
     "project.name",
     "project.mode",
     "delivery.profile",
-    "technology.language",
-    "technology.framework",
     "technology.build",
     "technology.test",
     "source.roots",
     "source.test_roots",
     "source.resource_roots",
     "source.excludes",
-    "git.branch_strategy",
     "git.protected_branches",
-    "documents.language",
     "unresolved",
 }
-RUNTIME_CONTEXT_PREFIXES = (
-    "architecture.",
-    "coding.",
-    "data.",
-    "interface.",
-    "security.",
-    "deployment.",
+# Useful project context is retained, but is not misreported as an execution switch.
+DOCUMENT_CONTEXT_PREFIXES = (
+    "architecture.", "coding.", "data.", "interface.", "security.", "deployment.",
 )
+DOCUMENT_ONLY_PATHS = {
+    "project.description",
+    "technology.language",
+    "technology.framework",
+    "git.branch_strategy",
+    "documents.language",
+    "documents.customer_language",
+}
 EXTENSION_PREFIXES = ("extensions.",)
-DOCUMENT_ONLY_PATHS = {"project.description", "documents.customer_language"}
 
 
 def _strip_comment(line: str) -> str:
     quoted = False
     quote = ""
-    out = []
+    out: list[str] = []
     for ch in line:
         if ch in {"'", '"'}:
             if not quoted:
@@ -120,52 +117,73 @@ def _scalar(raw: str) -> Any:
     try:
         return int(text)
     except ValueError:
-        pass
-    return text
+        return text
 
 
 def load_yaml_subset(path: Path) -> dict[str, Any]:
-    """Parse the subset used by Harness config; fail closed on malformed indentation."""
+    """Parse the conservative YAML subset used by Harness config."""
+    lines = path.read_text(encoding="utf-8").splitlines()
     root: dict[str, Any] = {}
-    stack: list[tuple[int, Any]] = [(-1, root)]
-    pending_list_keys: dict[int, tuple[dict[str, Any], str]] = {}
-
-    for number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-        clean = _strip_comment(raw)
-        if not clean.strip():
+    stack: list[tuple[int, dict[str, Any]]] = [(-1, root)]
+    index = 0
+    while index < len(lines):
+        number = index + 1
+        raw = _strip_comment(lines[index])
+        index += 1
+        if not raw.strip():
             continue
-        indent = len(clean) - len(clean.lstrip(" "))
+        indent = len(raw) - len(raw.lstrip(" "))
         if indent % 2:
             raise ValueError(f"YAML indentation must use two-space levels: {path}:{number}")
-        text = clean.strip()
+        text = raw.strip()
+        if text.startswith("- "):
+            raise ValueError(f"list item without a key: {path}:{number}")
+        if ":" not in text:
+            raise ValueError(f"unsupported YAML line: {path}:{number}: {text}")
         while stack and indent <= stack[-1][0]:
             stack.pop()
+        if not stack:
+            raise ValueError(f"invalid YAML indentation: {path}:{number}")
         parent = stack[-1][1]
-
-        if text.startswith("- "):
-            value = _scalar(text[2:])
-            if not isinstance(parent, list):
-                pending = pending_list_keys.get(stack[-1][0])
-                if not pending:
-                    raise ValueError(f"list item without list key: {path}:{number}")
-                owner, key = pending
-                owner[key] = []
-                parent = owner[key]
-                stack[-1] = (stack[-1][0], parent)
-            parent.append(value)
-            continue
-
-        if ":" not in text or not isinstance(parent, dict):
-            raise ValueError(f"unsupported YAML line: {path}:{number}: {text}")
         key, raw_value = text.split(":", 1)
         key = key.strip()
-        value = _scalar(raw_value)
-        if raw_value.strip() == "":
-            parent[key] = {}
-            pending_list_keys[indent] = (parent, key)
-            stack.append((indent, parent[key]))
+        raw_value = raw_value.strip()
+        if raw_value:
+            parent[key] = _scalar(raw_value)
+            continue
+
+        # Look ahead to decide list versus mapping.
+        look = index
+        child_is_list = False
+        while look < len(lines):
+            candidate = _strip_comment(lines[look])
+            if not candidate.strip():
+                look += 1
+                continue
+            child_indent = len(candidate) - len(candidate.lstrip(" "))
+            if child_indent <= indent:
+                break
+            child_is_list = candidate.strip().startswith("- ")
+            break
+        if child_is_list:
+            values: list[Any] = []
+            while index < len(lines):
+                item_raw = _strip_comment(lines[index])
+                if not item_raw.strip():
+                    index += 1
+                    continue
+                item_indent = len(item_raw) - len(item_raw.lstrip(" "))
+                if item_indent <= indent:
+                    break
+                if item_indent != indent + 2 or not item_raw.strip().startswith("- "):
+                    raise ValueError(f"only scalar list items are supported: {path}:{index + 1}")
+                values.append(_scalar(item_raw.strip()[2:]))
+                index += 1
+            parent[key] = values
         else:
-            parent[key] = value
+            child: dict[str, Any] = {}
+            parent[key] = child
+            stack.append((indent, child))
     return root
 
 
@@ -212,7 +230,6 @@ def delivery_policy(project: dict[str, Any], *, resolved_mode: str | None = None
 
 
 def command_list(value: Any) -> list[list[str]]:
-    """Normalize build/test config into argv lists without invoking a shell."""
     if value in (None, "", []):
         return []
     if isinstance(value, str):
@@ -258,18 +275,17 @@ def _flatten_leaves(value: Any, prefix: str = "") -> list[str]:
             child_prefix = f"{prefix}.{key}" if prefix else str(key)
             rows.extend(_flatten_leaves(child, child_prefix))
         return rows
-    # Lists are one configuration leaf. Their items are values, not independent keys.
     return [prefix] if prefix else []
 
 
 def classify_project_config(project: dict[str, Any]) -> dict[str, list[str]]:
     result = {"runtime": [], "extension": [], "document": [], "dead": []}
     for path in sorted(set(_flatten_leaves(project))):
-        if path in RUNTIME_CONSUMED_PATHS or any(path.startswith(prefix) for prefix in RUNTIME_CONTEXT_PREFIXES):
+        if path in RUNTIME_CONSUMED_PATHS:
             result["runtime"].append(path)
         elif any(path.startswith(prefix) for prefix in EXTENSION_PREFIXES):
             result["extension"].append(path)
-        elif path in DOCUMENT_ONLY_PATHS:
+        elif path in DOCUMENT_ONLY_PATHS or any(path.startswith(prefix) for prefix in DOCUMENT_CONTEXT_PREFIXES):
             result["document"].append(path)
         else:
             result["dead"].append(path)
@@ -283,13 +299,11 @@ def ensure_no_dead_config(project: dict[str, Any]) -> None:
 
 
 def compact_project_context(project: dict[str, Any]) -> dict[str, Any]:
-    """Return only project facts useful to the Stage Agent; omit internal compatibility metadata."""
     keys = ["project", "technology", "architecture", "coding", "data", "interface", "security", "deployment", "documents", "unresolved"]
     return {key: project[key] for key in keys if key in project}
 
 
 def legacy_to_project(project_profile: dict[str, Any], source_profile: dict[str, Any]) -> dict[str, Any]:
-    """Map the runtime-consumed legacy subset into the single user-facing model."""
     project: dict[str, Any] = {
         "schema_version": 1,
         "project": {
@@ -323,7 +337,6 @@ def legacy_to_project(project_profile: dict[str, Any], source_profile: dict[str,
 
 
 def project_to_legacy_profiles(project: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Build compatibility objects for old callers. These are derived, never the source of truth."""
     project_profile = {
         "project": {
             "name": nested(project, "project", "name", default="project"),
@@ -366,17 +379,12 @@ def resolve_runtime_config(
     legacy_source_path: Path | None = None,
     validate_usage: bool = True,
 ) -> dict[str, Any]:
-    """Resolve one effective configuration, preferring ``.sdlc/project.yaml``.
-
-    Returns both the unified project model and derived legacy-shaped objects so existing
-    execution code can migrate incrementally without exposing those shapes to project users.
-    """
     root = root.resolve()
     project_path = project_config_path or (root / PROJECT_ENTRY_PATH)
-    if not project_path.is_absolute():
-        project_path = root / project_path
     legacy_project = legacy_project_path or (root / LEGACY_PROJECT_PROFILE_PATH)
     legacy_source = legacy_source_path or (root / LEGACY_SOURCE_PROFILE_PATH)
+    if not project_path.is_absolute():
+        project_path = root / project_path
     if not legacy_project.is_absolute():
         legacy_project = root / legacy_project
     if not legacy_source.is_absolute():
@@ -388,13 +396,13 @@ def resolve_runtime_config(
             ensure_no_dead_config(project)
         source_kind = "PROJECT_ENTRY"
     else:
-        legacy_project_data = load_config(legacy_project)
-        legacy_source_data = load_config(legacy_source)
-        if not legacy_project_data and not legacy_source_data:
+        old_project = load_config(legacy_project)
+        old_source = load_config(legacy_source)
+        if not old_project and not old_source:
             project = {}
             source_kind = "UNCONFIGURED"
         else:
-            project = legacy_to_project(legacy_project_data, legacy_source_data)
+            project = legacy_to_project(old_project, old_source)
             source_kind = "LEGACY_PROFILES"
 
     project_profile, source_profile = project_to_legacy_profiles(project) if project else ({}, {})
@@ -402,7 +410,32 @@ def resolve_runtime_config(
         "source_kind": source_kind,
         "user_config_path": project_path,
         "project": project,
+        "project_context": compact_project_context(project) if project else {},
         "project_profile": project_profile,
         "source_profile": source_profile,
         "usage": classify_project_config(project) if project else {"runtime": [], "extension": [], "document": [], "dead": []},
+    }
+
+
+def materialize_effective_profiles(root: Path, resolved: dict[str, Any] | None = None) -> dict[str, Path]:
+    """Write machine-only compatibility JSON consumed by existing work/change executors."""
+    root = root.resolve()
+    resolved = resolved or resolve_runtime_config(root)
+    if resolved.get("source_kind") == "UNCONFIGURED":
+        raise ValueError("project configuration is missing")
+    effective = root / EFFECTIVE_DIR
+    effective.mkdir(parents=True, exist_ok=True)
+    project_path = effective / "project-profile.json"
+    source_path = effective / "source-profile.json"
+    context_path = effective / "project-context.json"
+    usage_path = effective / "config-usage.json"
+    project_path.write_text(json.dumps(resolved["project_profile"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    source_path.write_text(json.dumps(resolved["source_profile"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    context_path.write_text(json.dumps(resolved["project_context"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    usage_path.write_text(json.dumps(resolved["usage"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return {
+        "project_profile": project_path,
+        "source_profile": source_path,
+        "project_context": context_path,
+        "config_usage": usage_path,
     }
