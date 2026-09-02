@@ -1,153 +1,129 @@
-# Brownfield Starter Kit
+# Brownfield 시작 안내
 
-## 목적
-기존 Application Source를 보유한 프로젝트에서 실제 Source Evidence를 기준으로 현재 동작, 변경 대상, 영향 범위와 재사용 가능성을 분석하기 위한 시작 패키지다.
+처음 사용하는 경우 먼저 `docs/00_시작/START_HERE.md`를 읽으세요.
 
-Brownfield의 핵심은 문서가 많은 것이 아니라 **분석 Seed와 Repository 기준점이 명확한 것**이다.
+이 문서는 **기존 운영 시스템을 변경·고도화하는 프로젝트**에서 무엇을 준비하면 되는지 설명합니다. 일반 사용자가 Impact Contract, Adapter 내부 규칙, Runtime taxonomy를 먼저 학습할 필요는 없습니다.
 
-## 최소 시작 가능 입력
-1. 분석/변경 목적(`analysis_seed`)
-2. 접근 가능한 Repository 또는 Source bundle 기준점(`repository.reference`)
+## 최소 시작 자료
 
-Source root/build/test를 모르면 Harness가 탐색할 수 있으나, Repository 기준점 자체가 없으면 DISCOVERY 이후 결과를 실제 Brownfield Source 분석으로 확정해서는 안 된다.
+Brownfield에서 가장 중요한 것은 문서의 양이 아니라 **무엇을 바꾸려는지와 실제 Source 기준점이 있는지**입니다.
 
-SOP/업무매뉴얼은 **선택 Evidence**다. SOP가 없으면 기존 시스템/Source/Data 분석으로 AS-IS를 확인하고, 업무정책이 필요한 OPEN은 인터뷰/Workshop으로, 기술 설계 OPEN은 Developer/Architect 제안과 Project Standard로 해소한다.
+최소한 다음 두 가지가 필요합니다.
 
-## 권장 패키지
+1. 변경 요청 또는 분석 목적
+2. 접근 가능한 Repository/Source bundle
+
+예:
+
 ```text
-brownfield-starter/
-├─ starter-manifest.yaml
-├─ change-or-analysis-request.md          # 분석 Seed/변경 목적
-├─ source/
-│  ├─ repository-reference.md             # URL/path + branch/tag/commit
-│  ├─ source-profile.yaml                 # roots/excludes/build/test
-│  ├─ module-inventory.md                 # 권장, 없으면 탐색 대상
-│  └─ known-hotspots.md                   # 선택
-├─ system-evidence/
-│  ├─ architecture.md                     # 기존 문서가 있으면 원본/링크
-│  ├─ screen-menu-inventory.md            # UI 프로젝트이면 권장
-│  ├─ db-schema-and-migrations.md          # 권장
-│  ├─ data-query-convention.md             # Query/Mapper 관례가 있으면 권장
-│  ├─ common-code-dictionary.md            # 공통코드/기준정보가 있으면 권장
-│  ├─ interface-inventory.md              # 권장
-│  ├─ runtime-config-inventory.md          # Secret 제외
-│  └─ build-test-baseline.md               # 권장
-├─ business-docs/
-│  └─ originals/                          # 있으면 사용: SOP, 정책, 매뉴얼, 요구서, PPTX/XLSX
-└─ profiles/
-   ├─ terminology-profile.json            # 선택
-   ├─ customer-document-profile.json      # 선택
-   └─ open-resolution-profile.yaml        # 결정권한 Customizing 시 권장
+변경 요청:
+기존 주문 취소 기능에 부분취소를 추가한다.
+
+Source:
+현재 운영 Branch/Commit 기준 Repository
 ```
 
-## Brownfield 기본 탐색 순서
-1. 변경/분석 Seed를 RQ/FR/PGM/키워드 후보로 정규화한다.
-2. SOP/업무문서가 있으면 포맷 Adapter로 구조 보존 Evidence Chunk를 만들고 `sop-extract` Skill로 6W/PROC/BR/Data/Screen/Integration Candidate를 추출한다.
-3. SOP 유무와 관계없이 현재 OPEN을 `open-resolve` Skill의 해소 Backlog로 만든다.
-4. Repository 기준 Commit/Tag/Branch를 고정하고 Source Hash 기준을 만든다.
-5. Build file, module, source/test/resource root, UI/menu, DB/mapper/common-code/interface 자산을 먼저 인덱싱한다.
-6. 기존 Trace/Index/Program Summary가 있으면 우선 재사용한다.
-7. Seed와 직접 관련된 Symbol/Endpoint/Job/Event/Table/Screen 후보를 찾는다.
-8. Caller/Consumer와 Callee/Dependency를 양방향으로 확장한다.
-9. Data read/write, Transaction, Interface, Event, Config/Feature Flag, Test 관계를 확장한다.
-10. 분석으로 해소된 항목은 `OBSERVED_AS_IS`로 기록하고, TO-BE에 그대로 쓸지는 별도 결정한다.
-11. Business 정책/목적/권한이 필요한 OPEN은 Business Owner 인터뷰/Workshop으로 확인한다.
-12. Query/Transaction/Error/Integration 등 기술 OPEN은 Project Standard와 Developer/Architect 제안으로 구체화할 수 있다.
-13. 영향 결과에는 `직접 영향 / 간접 영향 / 확인 필요 / 분석 제외`를 구분한다.
+Repository 기준점이 없으면 실제 Source 영향분석을 완료했다고 표현하면 안 됩니다.
 
-## Project Impact Adapter 경계
-Core는 `sdlc/design/contracts/brownfield-impact-contract.json`에서 공통 Node/Edge/Coverage/출력 형식만 제공한다.
+## 있으면 좋은 자료
 
-실제 프로젝트의 다음 해석은 `sdlc/custom/project/adapters/impact/`에서 **별도 구현**해야 한다.
-- Java/Spring/.NET/Node 등 언어·Framework별 Call/Symbol 관계
-- JPA/MyBatis/JDBC/ORM/SQL/Table lineage
-- Stored Procedure/Trigger/ETL
-- Kafka/JMS/Event/외부 API 연결
-- Reflection/Dynamic dispatch/Runtime wiring
-- 프로젝트 고유 Config/Feature Flag/Scheduler
+- 기존 기능/업무 설계서
+- SOP/운영 매뉴얼/정책 문서
+- DB Schema/ERD/DDL
+- Mapper/Query/Procedure 자료
+- REST/API/Swagger/외부 인터페이스 자료
+- Kafka/Event/Batch/Scheduler 자료
+- Build/Test/배포 기준
+- Log/APM/장애 이력
+- 운영자나 업무담당자가 알고 있는 예외 정책
 
-Adapter가 없더라도 분석 가능한 범위는 진행하지만 결과는 `PARTIAL_PROJECT_ADAPTER_REQUIRED`이며 완전한 영향분석으로 표시하지 않는다.
+자료가 없으면 Agent는 그 영역을 `영향 없음`으로 단정하지 않고 Coverage Gap 또는 `확인 필요`로 남깁니다.
 
-## OPEN 해소 기본 경로
-| OPEN 유형 | 우선 해소 방법 | 결과 상태 |
-|---|---|---|
-| 현재 화면/Menu/Field | 기존 시스템/UI Source 분석 | OBSERVED_AS_IS |
-| CRUD/API/Service/Transaction | Source 분석 | OBSERVED_AS_IS |
-| Table/Query/Common Code | Schema/Mapper/Data 분석 | OBSERVED_AS_IS |
-| 업무 목적/Why/정책 | Business Owner 인터뷰/정책 근거 | CONFIRMED_BUSINESS 후보 |
-| TO-BE 화면/UX | Designer Proposal + 권한자 검토 | PROPOSED/ACCEPTED_DESIGN |
-| TO-BE Query/Transaction/Error | Developer Proposal + Project Standard | ACCEPTED_DESIGN 가능 |
-| 연계 계약 | Source/기존 시스템 분석 + Integration Owner 결정 | OBSERVED_AS_IS/ACCEPTED_DESIGN |
+## 사용자가 하는 일
 
-현행 관찰 결과를 TO-BE 정책으로 자동 승격하지 않는다.
+```text
+변경 요청과 기존 자료 제공
+→ setup 결과 확인
+→ Agent가 Source/문서 기반 AS-IS와 영향 후보 작성
+→ 사람이 업무정책/범위/위험 판단만 확인
+→ Agent가 기능설계/프로그램명세 초안 보완
+```
 
-## 개발 상세 명세의 프로젝트 근거
-Core Template은 화면/필드/CRUD/Logic/Query/Table/Common Code/Integration 항목을 강제하지만 실제 값은 프로젝트별 Evidence 또는 명시적 Design Decision으로 채운다.
+사람에게 Source 후보, Mapper/Table 후보, 호출관계를 처음부터 직접 채우게 하지 않습니다. 확인 가능한 기술 사실은 Agent/도구가 먼저 찾아야 합니다.
 
-- 화면/메뉴: 화면 소스, Route/Menu config, 기존 UI 표준 또는 승인된 신규 설계
-- Field: 화면/DTO/Validation/DB/API 실제 근거 또는 승인된 Target Field 설계
-- CRUD: 실제 Entry Point/Service/Repository 행위 또는 Target Program 설계
-- Query/Table: Mapper/Repository/SQL/Schema/Migration 또는 승인된 Data 설계
-- Common Code: 코드 테이블/Enum/Dictionary/기준정보 API 또는 신규 코드 Decision
-- Integration: API Client/Message Producer·Consumer/File/Batch 설정 또는 승인된 Target Contract
+## Agent가 먼저 해야 하는 일
 
-찾지 못한 항목은 `OPEN` 또는 `CHECK_REQUIRED`이며, Open Resolution Workbook에서 다음 해소 Task를 지정한다.
+- 변경 요청을 현재 시스템의 관련 기능 후보와 연결
+- 실제 Repository 기준점과 Source Evidence 확인
+- Entry Point, Service, Data, Interface, Batch/Event 영향 후보 탐색
+- 직접 영향과 간접 영향 구분
+- 분석하지 못한 영역을 Coverage Gap으로 기록
+- 기존 Source에서 관찰한 AS-IS와 고객 업무정책을 구분
+- 기능설계/Program Spec/Test 후보 초안 작성
+- 사람이 결정해야 하는 항목만 `확인 필요`로 모음
 
-## 입력 수준별 기대 결과
-| 입력 수준 | 기대 결과 | 제한 |
-|---|---|---|
-| Seed + Repository만 있음 | Source/Profile 자동 탐색, 관련 Symbol 후보, OPEN Resolution Backlog | 동적 관계/업무 정책 누락 가능 |
-| Source Profile + Build/Test 있음 | Compile/Test baseline과 정적 Trace 신뢰도 상승 | Runtime dynamic relation은 별도 |
-| UI/DB/Common Code/Interface 자료 있음 | 화면·필드·CRUD·Query·Code·Integration 상세화 | 현행 관찰을 TO-BE 정책으로 자동 확정 금지 |
-| 인터뷰/설계 Decision까지 있음 | Functional/Program Spec의 OPEN을 실질적으로 감소 | 권한 없는 개인 제안을 Business Truth로 승격 금지 |
+Source에 코드가 있다는 이유만으로 Business Truth를 자동 확정하지 않습니다.
 
-## Brownfield 영향분석 최소 Coverage 항목
-- Entry Point / UI / API / Batch / Event
-- Service/Domain/Application Symbol
-- Repository/Mapper/Query
-- Table/Column/View/Procedure 후보
-- Caller/Consumer와 Callee/Dependency
-- External API/Message/Event Topic
-- Config/Feature Flag/Scheduler
-- Transaction/Concurrency/Idempotency
-- 관련 Test와 현재 Coverage
-- Build/Module dependency
-- Runtime/Dynamic 분석이 필요한 사각지대
+## 시작 명령
 
-## Reverse Engineering 범위
-현재 Core에서 실제 구현된 범위는 **`DRIFT_CHECK`**다.
+```bash
+python sdlc/scripts/harness.py setup \
+  --name <project-name> \
+  --mode BROWNFIELD \
+  --delivery STANDARD
 
-### Core 구현 완료: DRIFT_CHECK
-다음 입력으로 현재 Source와 기존 산출물의 Source Evidence freshness를 비교한다.
-- baseline source manifest
-- observed source manifest
-- artifact evidence index + 명시적 reverse propagation edge
+python sdlc/scripts/harness.py check --setup
+```
 
-`detect_source_drift.py`는 다음 결과만 만든다.
-- `STALE_SOURCE_EVIDENCE`
-- `STALE_PROPAGATED`
-- `CHECK_REQUIRED_REVERSE`
-- 재생성/사람검토 Reverse Candidate
+기존/신규 영역이 섞였거나 유형이 애매하면 `--mode AUTO` 또는 `HYBRID`를 사용합니다.
 
-기존 문서 또는 Business Truth를 자동 덮어쓰지 않는다.
+## Brownfield 자동 분석의 현재 경계
 
-### 고도화 영역
-다음은 아직 Core 자동 기능이 아니다.
-- 전체 Source Inventory 자동 역설계
-- Reverse Program Spec 자동 생성
-- Semantic Source Diff
-- Source에서 BR을 자동 Business Truth로 승격
-- 자동 문서 재작성/병합
+Core는 일반적인 Repository 기술 신호와 일부 Java/Spring 계열 정적 후보를 확인할 수 있습니다. 그러나 다음처럼 Runtime 또는 프로젝트별 의미가 필요한 관계는 항상 완전 자동이라고 가정하지 않습니다.
 
-## 준비도 판정
-### STARTABLE
-분석 Seed와 Repository 기준점이 존재한다.
+- Reflection/Dynamic dispatch
+- 실제 운영 Transaction 경계
+- Kafka broker topology/schema
+- Scheduler/Feature Flag의 운영 동작
+- DB Procedure/Trigger의 복잡한 영향
+- APM/Log 기반 Runtime 관계
+- 프로젝트 고유 Framework/ORM/Integration
 
-### IMPACT_ANALYSIS_READY
-Seed 관련 Source 후보와 직접 관계가 탐색되었고, 분석 Coverage와 사각지대가 함께 기록되어 있다. 프로젝트별 Impact Adapter가 필요한 영역은 구현/설정 상태가 함께 표시되어야 한다.
+지원하지 못한 영역은 Tool/Adapter 필요 또는 Coverage Gap으로 남깁니다.
 
-### DESIGN_READY
-업무/기능/기술 OPEN이 인터뷰·OBSERVED_AS_IS·PROPOSED·ACCEPTED_DESIGN 등으로 구조화되고 결정권자와 후속 Task가 지정되어 있다.
+상세 지원 범위를 사용자에게 한눈에 보여주는 Capability 문서는 WP-14에서 별도로 정리합니다.
 
-### IMPLEMENTATION_READY
-실제 변경 Target이 확정되고 `developer-spec-contract.json`의 적용 가능한 상세 항목과 Program DoR가 충족되며 Build/Test 실행 경로가 확인되어야 한다.
+## Reverse 관련 표현
+
+현재 자동 기능을 Full Reverse Engineering이라고 부르지 않습니다.
+
+현재 기준으로 실제 구현된 핵심은 Source 변화와 기존 Evidence의 불일치를 찾는 Drift Check 계열입니다. Source에서 업무정책을 자동 확정하거나 기존 기능설계서를 자동 덮어쓰는 기능으로 설명하지 않습니다.
+
+Reverse 용어 정리는 WP-16에서 더 단순화합니다.
+
+## 하지 말아야 할 것
+
+- Source가 발견됐다는 이유만으로 업무정책 확정
+- Adapter가 없는 영역을 분석 완료로 표시
+- 찾지 못한 관계를 `영향 없음`으로 표현
+- 신규 사용자가 내부 Contract/Profile/Adapter 구조를 이해해야 시작할 수 있다고 안내
+- 기존 문서를 전부 먼저 역설계한 뒤에만 변경을 시작
+
+## 다음 단계
+
+기존 RQ Target이 있다면:
+
+```bash
+python sdlc/scripts/harness.py check --target <RQ-ID>
+python sdlc/scripts/harness.py work --target <RQ-ID> --plan-only
+```
+
+기존 RQ의 변경요청은:
+
+```bash
+python sdlc/scripts/harness.py change \
+  --target <RQ-ID> \
+  --change "부분취소를 지원하도록 변경"
+```
+
+새로운 변경 요청에서 처음 RQ를 생성해야 하는 경우에는 아직 Zero-to-One intake 연결이 없으므로 WP-03이 필요합니다. 내부 Canonical을 신규 사용자가 수동 편집해 우회하지 않습니다.
