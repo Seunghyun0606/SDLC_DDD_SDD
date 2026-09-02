@@ -74,6 +74,17 @@ Provider가 연결되지 않았으면 `CONFIGURED_PROVIDER_REQUIRED`로 남긴�
 5. **고객용 문서 필요 여부**
    - 프로젝트 수행 맥락을 위한 질문이며 기본 Project Config를 여러 파일로 늘리지 않는다.
 
+## Mode별 사용자 안내
+
+프로젝트 유형에 따라 참고할 시작 자료만 달라진다. Config 파일 수는 늘어나지 않는다.
+
+- `GREENFIELD` → `sdlc/starter-kits/greenfield/`
+- `BROWNFIELD` → `sdlc/starter-kits/brownfield/`
+- `HYBRID` → Brownfield Source 기준과 Greenfield 신규 영역을 함께 사용
+- `AUTO` → Repository Evidence를 보고 Mode를 결정한 뒤 위 안내로 연결
+
+Starter Kit을 사용자가 또 다른 설정 Source of Truth로 관리하도록 요구하지 않는다.
+
 ## `.sdlc/project.yaml` 작성 원칙
 
 Bootstrap은 빈 항목을 대량 생성하지 않는다. 확인된 값 중심으로 만든다.
