@@ -83,7 +83,12 @@ Provider가 연결되지 않았으면 `CONFIGURED_PROVIDER_REQUIRED`로 남긴�
 - `HYBRID` → Brownfield Source 기준과 Greenfield 신규 영역을 함께 사용
 - `AUTO` → Repository Evidence를 보고 Mode를 결정한 뒤 위 안내로 연결
 
-Starter Kit을 사용자가 또 다른 설정 Source of Truth로 관리하도록 요구하지 않는다.
+기존 Starter/Preset 호환을 위해 Machine 내부에는 다음 mapping을 유지할 수 있다.
+
+- `GREENFIELD` → `greenfield-default`
+- `BROWNFIELD` → `brownfield-auto`
+
+이 ID들은 **Legacy compatibility용**이며 일반 사용자가 선택·입력하거나 별도 설정 파일로 관리할 필요가 없다. Starter Kit도 또 다른 설정 Source of Truth로 사용하지 않는다.
 
 ## `.sdlc/project.yaml` 작성 원칙
 
