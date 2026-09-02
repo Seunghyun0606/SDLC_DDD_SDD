@@ -6,6 +6,7 @@ scaleout_readiness:
     - P0_ENGINEERING_COMPLETE_SELFTEST_PASS
     - IMPLEMENTATION_COMPLETE_SELFTEST_PASS
   accepted_p1_states:
+    - P1_COMPLETE_LOCAL_REGRESSION_PASS
     - P1_ENGINEERING_COMPLETE_SELFTEST_PASS
   required_available_analyzers:
     - generic-file-inventory
