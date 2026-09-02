@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "human_entrypoint": ".sdlc/project.yaml",
+  "policy": {
+    "human_maintained_config_count": 1,
+    "unknown_leaf_behavior": "FAIL_DEAD_CONFIG",
+    "legacy_profiles_are_source_of_truth": false,
+    "machine_effective_directory": ".sdlc/runtime/effective"
+  },
+  "categories": {
+    "runtime_consumed": [
+      "schema_version",
+      "project.name",
+      "project.mode",
+      "delivery.profile",
+      "technology.build",
+      "technology.test",
+      "source.roots",
+      "source.test_roots",
+      "source.resource_roots",
+      "source.excludes",
+      "git.protected_branches",
+      "unresolved"
+    ],
+    "document_or_project_context": [
+      "project.description",
+      "technology.language",
+      "technology.framework",
+      "architecture.*",
+      "git.branch_strategy",
+      "coding.*",
+      "data.*",
+      "interface.*",
+      "security.*",
+      "deployment.*",
+      "documents.language",
+      "documents.customer_language"
+    ],
+    "extension_namespace": [
+      "extensions.*"
+    ],
+    "dead_config": "Any leaf not registered by runtime_config.py is rejected instead of silently ignored."
+  },
+  "legacy_files": {
+    "sdlc/config/project-profile.yaml": "MACHINE_GENERATED_COMPATIBILITY_SNAPSHOT_OR_LEGACY_FALLBACK",
+    "sdlc/config/source-profile.yaml": "MACHINE_GENERATED_COMPATIBILITY_SNAPSHOT_OR_LEGACY_FALLBACK",
+    "starter_manifest": "ADVANCED_OR_COMPATIBILITY_NOT_FIRST_USE_ENTRY",
+    "customer_profile": "ADVANCED_EXTENSION",
+    "open_resolution_profile": "ADVANCED_EXTENSION"
+  },
+  "evidence_boundary": {
+    "execution_fields": "Runtime behavior is changed only by runtime-consumed keys.",
+    "context_fields": "Context/document fields are preserved but must not be described as execution switches.",
+    "extension_fields": "Extension namespace is reserved for an installed extension consumer.",
+    "dead_fields": "Unknown leaves cause configuration resolution to fail."
+  }
+}
