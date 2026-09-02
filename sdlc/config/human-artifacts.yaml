@@ -1,0 +1,70 @@
+version: 1
+status: ACTIVE_P0_PRODUCTION_READINESS_CANDIDATE
+authority: HUMAN_ARTIFACT_PRIMARY
+
+rules:
+  missing_value: OPEN
+  source_evidence_must_not_be_rendered_as_confirmed_business_truth: true
+  runtime_internal_fields_must_not_be_exposed_unless_registered: true
+  every_rendered_artifact_requires_provenance: true
+  filename_pattern: "<대표ID>_<짧은업무명>_<산출물종류>.md"
+
+artifacts:
+  requirement_customer_view:
+    display_name_ko: 요구사항
+    stages: [INTAKE]
+    template: sdlc/templates/human/요구사항.md
+    customer_reviewable: true
+    default_filename_suffix: 요구사항
+  requirement_analysis:
+    display_name_ko: 요구분석
+    stages: [DECOMPOSE, CLARIFY]
+    template: sdlc/templates/human/요구분석.md
+    customer_reviewable: true
+    default_filename_suffix: 요구분석
+  process_analysis:
+    display_name_ko: 프로세스분석
+    stages: [PROCESS]
+    template: sdlc/templates/human/프로세스분석.md
+    customer_reviewable: true
+    default_filename_suffix: 프로세스분석
+  impact_analysis:
+    display_name_ko: 영향분석
+    stages: [IMPACT]
+    template: sdlc/templates/human/영향분석.md
+    customer_reviewable: true
+    default_filename_suffix: 영향분석
+  engineering_design:
+    display_name_ko: 기능설계
+    stages: [DESIGN]
+    template: sdlc/templates/human/기능설계.md
+    customer_reviewable: true
+    default_filename_suffix: 기능설계
+  program_spec:
+    display_name_ko: 프로그램설계
+    stages: [PROGRAM]
+    template: sdlc/templates/human/프로그램설계.md
+    customer_reviewable: true
+    default_filename_suffix: 프로그램설계
+  implementation_result:
+    display_name_ko: 구현결과
+    stages: [DEVELOPMENT]
+    template: sdlc/templates/human/구현결과.md
+    customer_reviewable: true
+    default_filename_suffix: 구현결과
+  test_verification:
+    display_name_ko: 테스트·검증결과
+    stages: [VERIFY]
+    template: sdlc/templates/human/검증결과.md
+    customer_reviewable: true
+    default_filename_suffix: 검증결과
+
+aliases:
+  요구사항: requirement_customer_view
+  요구분석: requirement_analysis
+  프로세스분석: process_analysis
+  영향분석: impact_analysis
+  기능설계: engineering_design
+  프로그램설계: program_spec
+  구현결과: implementation_result
+  검증결과: test_verification

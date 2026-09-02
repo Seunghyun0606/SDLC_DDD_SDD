@@ -7,6 +7,10 @@ artifacts:
 
 providers:
   registry: sdlc/config/provider-registry.example.yaml
+  adapter_config: null
+  # Brownfield 실제 Local Git/Test 연결 예:
+  # registry: sdlc/config/provider-registry.local-production.yaml
+  # adapter_config: ai-sdlc-adapters.yaml
 
 customization:
   overlays: []
@@ -15,3 +19,4 @@ notes:
   - AUTO는 bounded bootstrap evidence로 Greenfield/Brownfield 후보를 결정한다.
   - 미확정 기술/업무 정보는 임의 확정하지 않고 OPEN으로 유지한다.
   - 프로젝트 차이는 관찰된 경우에만 Overlay로 추가한다.
+  - Production Candidate Provider는 adapter_config와 실제 고객 Source E2E 검증이 필요하다.

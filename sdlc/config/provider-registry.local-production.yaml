@@ -1,0 +1,74 @@
+version: 1
+registry:
+  protocol_version: P0.6-1
+  default_timeout_seconds: 120
+  no_implicit_fallback: true
+  preserve_provider_evidence: true
+  providers:
+    - provider_id: git-worktree-source
+      provider_type: SOURCE
+      enabled: true
+      provider_state: AVAILABLE
+      mode: READ_WRITE
+      transport: ADAPTER
+      priority: 10
+      capabilities: [source.snapshot.read, source.object.read, source.search, source.diff, source.write]
+      required_for_modes: [BROWNFIELD, HYBRID]
+      optional_for_modes: [GREENFIELD]
+      constraints:
+        bounded_scope_required: true
+        revision_required: true
+        explicit_write_permission_required: true
+        atomic_write_lock_required: true
+        expected_object_hash_supported: true
+      extensions:
+        module: sdlc.adapters.production.git_worktree_source
+
+    - provider_id: allowlisted-subprocess-test
+      provider_type: TEST
+      enabled: true
+      provider_state: AVAILABLE
+      mode: READ_WRITE
+      transport: ADAPTER
+      priority: 10
+      capabilities: [test.discover, test.execute, test.result.read]
+      required_for_stages: [TEST, VERIFY]
+      constraints:
+        executable_command_or_native_runner_required: true
+        exact_command_allowlist_required: true
+        shell_execution_forbidden: true
+        execution_evidence_required_for_pass: true
+      extensions:
+        module: sdlc.adapters.production.subprocess_test
+
+    - provider_id: canonical-primary
+      provider_type: CANONICAL_REGISTRY
+      enabled: false
+      provider_state: DISABLED
+      mode: READ_WRITE
+      transport: ADAPTER
+      capabilities: [canonical.entity.read, canonical.id.reserve, canonical.publish]
+      constraints: {idempotency_key_required_for_write: true, explicit_write_permission_required: true}
+
+    - provider_id: command-router
+      provider_type: COMMAND_ROUTER
+      enabled: true
+      provider_state: AVAILABLE
+      mode: READ_ONLY
+      transport: LOCAL
+      capabilities: [command.route.work, command.route.change, command.route.check]
+      constraints: {router_must_not_invent_provider_result: true, router_must_not_bypass_blocker: true}
+
+capability_policy:
+  provider_statuses: [AVAILABLE, DEGRADED, UNAVAILABLE, UNCONFIGURED, DISABLED]
+  response_statuses: [OK, PARTIAL, BLOCKED, ERROR]
+  write_modes: [READ_ONLY, READ_WRITE]
+  missing_required_capability: BLOCKED
+  missing_optional_capability: OPEN
+  unavailable_provider_behavior: PRESERVE_OPEN
+  adapter_specific_fields_location: extensions
+
+production_readiness:
+  adapter_maturity: PRODUCTION_CANDIDATE
+  real_customer_source_validation_required: true
+  production_ready_claim_allowed: false

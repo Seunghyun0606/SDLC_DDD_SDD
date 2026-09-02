@@ -1,38 +1,48 @@
-version: 2
-status: ACTIVE_P2_CANDIDATE
+version: 3
+status: ACTIVE_P0_PRODUCTION_READINESS_CANDIDATE
 
 registry:
   analyzers:
     - analyzer_id: generic-file-inventory
       state: AVAILABLE
       responsibility: CORE
+      maturity: CORE_BOUNDED_INVENTORY
       detects: [repository_structure, file_types, build_markers, test_markers, data_candidates]
       module: sdlc/scripts/discover_source_inventory.py
 
     - analyzer_id: java-spring
       state: AVAILABLE
       responsibility: ADAPTER
+      maturity: LIGHTWEIGHT_HEURISTIC
       detects: [java_symbol, spring_route, spring_transaction, dependency_injection]
       module: sdlc/scripts/analyze_java_spring.py
       invocation: EXPLICIT_FILE_LIST_ONLY
+      limitations: [regex_based, no_call_graph, no_type_resolution, no_mapper_binding_resolution]
 
     - analyzer_id: sql-database
       state: AVAILABLE
       responsibility: ADAPTER
+      maturity: LIGHTWEIGHT_HEURISTIC
       detects: [table, view, procedure, function, trigger, sequence, index, data_reference]
       module: sdlc/scripts/analyze_sql_database.py
       invocation: EXPLICIT_FILE_LIST_ONLY
+      limitations: [regex_based, no_live_catalog, no_execution_plan, no_dynamic_sql_resolution]
+
+    - analyzer_id: interface-contract
+      state: AVAILABLE
+      responsibility: ADAPTER
+      maturity: CONTRACT_PARSER
+      detects: [rest_api, async_message, external_interface, schema_contract]
+      module: sdlc/scripts/analyze_interface_contract.py
+      invocation: EXPLICIT_FILE_LIST_ONLY
+      supported_contracts: [OpenAPI, Swagger, AsyncAPI, WSDL]
+      limitations: [runtime_only_dynamic_interfaces_require_external_evidence]
 
     - analyzer_id: batch-scheduler
       state: UNCONFIGURED
       responsibility: ADAPTER
+      maturity: NOT_IMPLEMENTED
       detects: [batch_job, scheduler, cron, workflow]
-      module: null
-
-    - analyzer_id: interface-contract
-      state: UNCONFIGURED
-      responsibility: ADAPTER
-      detects: [rest_api, async_message, external_interface, schema_contract]
       module: null
 
 selection_rules:
@@ -42,3 +52,4 @@ selection_rules:
   - analyzer_requires_explicit_or_confirmed_target_files
   - adding_language_or_framework_support_must_not_modify_core_discovery_contract
   - source_path_name_similarity_must_not_create_confirmed_reference_graph_edge
+  - analyzer_maturity_must_be_exposed_to_caller

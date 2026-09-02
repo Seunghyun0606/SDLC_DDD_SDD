@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
-"""Invoke one P0.6 provider request with P0.8 journal/recovery guards."""
+"""Invoke one P0.6 provider request with journal/recovery guards."""
 from __future__ import annotations
 import argparse, importlib, sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 import yaml
+
+# `python sdlc/scripts/invoke_provider_runtime.py ...` must be able to import
+# `sdlc.adapters.*` from a fresh repository checkout without PYTHONPATH tuning.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 from validate_p06_contracts import validate_request, validate_response
 
 USABLE={"AVAILABLE","DEGRADED"}
@@ -50,7 +57,7 @@ def invoke_request(registry, request_doc, adapter_configs=None, max_read_attempt
         return journal,None
     try: module=importlib.import_module(module_name)
     except Exception as exc:
-        jr["state"]="BLOCKED"; jr["open_items"]=[{"code":"ADAPTER_LOAD_FAILED","message":str(exc)}]
+        jr["state"]="BLOCKED"; jr["open_items"]=[{"code":"ADAPTER_LOAD_FAILED","message":str(exc),"module":module_name}]
         return journal,None
     if not callable(getattr(module,"invoke",None)):
         jr["state"]="BLOCKED"; jr["open_items"]=[{"code":"ADAPTER_PROTOCOL_INVALID"}]

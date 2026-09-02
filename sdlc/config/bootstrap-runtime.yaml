@@ -1,5 +1,5 @@
-version: 1
-status: ACTIVE_STRUCTURAL_REDESIGN_V1
+version: 2
+status: ACTIVE_P0_PRODUCTION_READINESS_CANDIDATE
 
 bootstrap:
   auto_mode_detection: true
@@ -29,6 +29,9 @@ greenfield_decisions:
   - database
   - deployment_target
   - architecture_pattern
+  - directory_module_structure
+  - api_rule
+  - transaction_policy
   - coding_standard
   - naming_rule
   - logging_rule
@@ -37,6 +40,7 @@ greenfield_decisions:
   - test_policy
   - ci_cd
   - document_rule
+  - branch_strategy
 
 truth_policy:
   detected_asset_truth: OBSERVED

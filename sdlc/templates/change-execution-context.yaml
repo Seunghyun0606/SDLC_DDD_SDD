@@ -1,8 +1,10 @@
-version: 1
+version: 2
 change_execution:
   change_id: FILL_ME
   agent_id: FILL_ME
+  project_root: .
   expected_revision: FILL_ME
+  # project_root가 Git repository이면 Guard가 실제 HEAD를 다시 읽는다.
   current_revision: FILL_ME
   agent_branch: agent/<rq-or-change>/<task>/<agent>
   parent_change_branch: change/<rq-or-change>/<slug>
@@ -11,8 +13,14 @@ change_execution:
     owned_paths: []
     shared_paths: []
     coordination_proof_ref: null
+    require_atomic_claim: true
+    active_claim_id: FILL_ME
+    claim_store: .ai-sdlc/claims/source-claims.yaml
+    # Compatibility/import only. 실제 동시성 제어는 claim_store를 사용한다.
     active_claims: []
   constraints:
     deny_revision_mismatch: true
     deny_unowned_write: true
     deny_active_claim_overlap: true
+    require_real_git_revision_when_project_root_is_git: true
+    require_atomic_claim_when_enabled: true

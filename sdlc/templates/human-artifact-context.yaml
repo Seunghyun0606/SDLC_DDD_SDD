@@ -1,0 +1,36 @@
+schema_version: 1
+artifact_type: HUMAN_ARTIFACT_CONTEXT
+context:
+  representative_id: REQ-0001
+  short_business_name: 업무명
+  requirement_id: REQ-0001
+  program_id: OPEN
+  title: 요구사항명
+  project_name: 프로젝트명
+  project_mode: BROWNFIELD
+  source_revision: OPEN
+  truth_state: GIVEN
+  business_background: OPEN
+  request_detail: OPEN
+  desired_result: OPEN
+  scope: OPEN
+  out_of_scope: OPEN
+  as_is: OPEN
+  to_be: OPEN
+  actors: OPEN
+  trigger: OPEN
+  business_rules: OPEN
+  exceptions: OPEN
+  data: OPEN
+  interfaces: OPEN
+  acceptance_criteria: OPEN
+  source_evidence: OPEN
+  source_targets: OPEN
+  implementation_changes: OPEN
+  test_results: OPEN
+  verification_state: NOT_VERIFIED
+  open_items: OPEN
+  assumptions: OPEN
+  customer_decisions: OPEN
+  change_history: OPEN
+  evidence_refs: OPEN

@@ -1,5 +1,5 @@
-version: 1
-status: ACTIVE_P2_CANDIDATE
+version: 2
+status: ACTIVE_P0_PRODUCTION_READINESS_CANDIDATE
 
 branch_model:
   change_branch_pattern: change/<requirement-or-change-id>/<slug>
@@ -13,23 +13,31 @@ branch_model:
 
 write_guard:
   source_write_requires_revision_match: true
+  revision_must_be_read_from_git_when_project_root_available: true
   source_write_requires_agent_branch: true
   source_write_requires_parent_change_branch: true
   requested_path_must_be_owned_or_shared: true
   shared_path_requires_coordination_proof: true
   active_claim_overlap_is_denied: true
+  active_claim_must_be_acquired_atomically: true
+  same_commit_uncommitted_edit_should_use_expected_object_sha256: true
   mismatch_auto_overwrite: DENY
 
 evidence:
   required:
     - expected_revision
-    - current_revision
+    - current_revision_or_git_head
     - requested_paths
     - owned_paths_or_shared_paths
   conditional:
     - coordination_proof_ref
+    - active_claim_id
+    - expected_object_sha256
 
 runtime:
   guard_script: sdlc/scripts/guard_revision_ownership.py
+  claim_manager: sdlc/scripts/manage_source_claims.py
+  default_claim_store: .ai-sdlc/claims/source-claims.yaml
   context_template: sdlc/templates/change-execution-context.yaml
   guard_result_must_be_passed_to_stage_pack_for_source_write: true
+  multi_host_note: shared transactional claim provider is required when agents run on different hosts/filesystems

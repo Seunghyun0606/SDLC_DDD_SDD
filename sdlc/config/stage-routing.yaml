@@ -1,5 +1,5 @@
-version: 2
-status: ACTIVE_STRUCTURAL_REDESIGN_V1
+version: 3
+status: ACTIVE_P0_PRODUCTION_READINESS_CANDIDATE
 
 principles:
   stage_pack_is_execution_entry: true
@@ -8,6 +8,7 @@ principles:
   missing_required_capability_blocks_only_dependent_action: true
   analysis_may_continue_with_nonblocking_open: true
   side_effect_requires_explicit_guard_proof: true
+  human_output_must_resolve_through_human_artifacts_registry: true
 
 stages:
   INTAKE:
@@ -22,7 +23,7 @@ stages:
     skill: requirement-boundary-review
     required_capabilities: []
     optional_capabilities: []
-    output_artifacts: [analysis, stage_input_pack]
+    output_artifacts: [requirement_analysis, stage_input_pack]
     next_stage: CLARIFY
     side_effect_actions: []
 
@@ -30,7 +31,7 @@ stages:
     skill: requirement-boundary-review
     required_capabilities: []
     optional_capabilities: []
-    output_artifacts: [analysis, open_items, stage_input_pack]
+    output_artifacts: [requirement_analysis, open_items, stage_input_pack]
     next_stage: PROCESS
     side_effect_actions: []
 
@@ -132,12 +133,7 @@ open_item_policy:
   default_blocks_reasoning: false
   default_blocks_action: false
   global_action_scope: "*"
-  action_scope_examples:
-    - source.write
-    - test.execute
-    - canonical.publish
-    - db.write
-    - deploy.execute
+  action_scope_examples: [source.write, test.execute, canonical.publish, db.write, deploy.execute]
 
 invariants:
   - nonblocking_open_must_not_stop_read_only_stage_progress
@@ -146,3 +142,4 @@ invariants:
   - greenfield_must_not_require_source_capability_before_source_exists
   - side_effect_capability_must_be_requested_explicitly
   - source_behavior_must_not_auto_confirm_business_truth
+  - human_artifact_id_must_exist_in_human_artifacts_registry_or_be_internal_runtime_artifact

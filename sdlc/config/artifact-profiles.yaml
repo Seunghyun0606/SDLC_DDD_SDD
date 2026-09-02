@@ -1,5 +1,5 @@
-version: 1
-status: ACTIVE_P0_CANDIDATE
+version: 2
+status: ACTIVE_P0_PRODUCTION_READINESS_CANDIDATE
 
 resolver:
   default_profile: STANDARD
@@ -13,6 +13,7 @@ profiles:
     human_artifacts:
       worklist: MUST
       requirement_customer_view: MUST
+      requirement_analysis: OFF
       engineering_design: MUST
       impact_analysis: CONDITIONAL
       process_analysis: CONDITIONAL
@@ -35,6 +36,7 @@ profiles:
     human_artifacts:
       worklist: MUST
       requirement_customer_view: MUST
+      requirement_analysis: MUST
       engineering_design: MUST
       impact_analysis: MUST
       process_analysis: CONDITIONAL
@@ -57,6 +59,7 @@ profiles:
     human_artifacts:
       worklist: MUST
       requirement_customer_view: MUST
+      requirement_analysis: MUST
       engineering_design: MUST
       impact_analysis: MUST
       process_analysis: CONDITIONAL
@@ -96,3 +99,4 @@ invariants:
   - internal_guard_count_must_not_force_equal_number_of_human_documents
   - profile_change_requires_impact_review_not_core_rewrite
   - customer_input_must_not_require_internal_only_artifact
+  - requirement_analysis_may_merge_into_requirement_customer_view_only_in_lite_profile
