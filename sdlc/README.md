@@ -19,7 +19,7 @@
 → harness.py setup
 → .sdlc/project.yaml
 → Runtime Resolver
-→ Machine effective config
+→ Machine effective config/context
 → work/change/check
 ```
 
@@ -52,16 +52,21 @@ Setup 이후 역할은 다음처럼 나뉜다.
 .sdlc/project.yaml
   사람이 유지하는 프로젝트 설정 Source of Truth
 
-.sdlc/runtime/effective/**
-  Runtime이 계산하는 Machine config/context
+.sdlc/runtime/effective/project-profile.json
+.sdlc/runtime/effective/source-profile.json
+.sdlc/runtime/effective/agent-provider.json
+.sdlc/runtime/effective/project-context.json
+  Runtime이 계산하여 실제 work/change에 전달하는 Machine artifact
 
 sdlc/config/project-profile.yaml
 sdlc/config/source-profile.yaml
   기존 Executor 호환용 Machine snapshot
 
 sdlc/config/agent-provider.json
-  Agent 연결 정보. Project setting과 분리
+  Agent 실행 command/timeout 등 연결 정보의 base
 ```
+
+`git.protected_branches` 같은 프로젝트 정책은 `.sdlc/project.yaml`을 기준으로 `effective/agent-provider.json`에 덮어쓴다. 따라서 Provider base 파일의 오래된 보호 Branch 값이 Project Config보다 우선하지 않는다.
 
 Provider가 연결되지 않았으면 `CONFIGURED_PROVIDER_REQUIRED`로 끝난다. 이 상태를 작업 실행 성공으로 보지 않는다.
 
@@ -104,10 +109,12 @@ Config key는 다음 네 범주로 나눈다.
 
 1. **Runtime 소비** — Delivery, Source root, Build/Test, 보호 Branch 등 실행에 직접 반영
 2. **Extension 영역** — 설치된 프로젝트 Extension이 쓰는 `extensions.*`
-3. **문서/프로젝트 Context** — Architecture, Coding, Data, Interface, Security 등
+3. **Agent/문서 Project Context** — 프로젝트명, Language/Framework, Source exclude, Architecture, Coding, Data, Interface, Security, Branch strategy, 미확정 항목 등
 4. **Dead Config** — 등록된 소비자가 없는 key
 
-Dead Config는 조용히 무시하지 않고 Runtime resolution에서 실패시킨다.
+Project Context는 단순 보관 파일로 끝나지 않는다. 공식 `work/change`가 만드는 Provider 입력 plan의 `project_context`에 포함된다. 반대로 실행 동작을 바꾸지 않는 Context 값을 Runtime switch라고 과장하지 않는다.
+
+Dead Config는 조용히 무시하지 않고 Runtime resolution에서 실패시킨다. `schema_version`, Mode, Delivery 값도 잘못된 값을 기본값으로 조용히 바꾸지 않고 실패한다.
 
 Machine inventory는 `sdlc/design/config-usage-inventory.json`에 있다. 일반 프로젝트 사용자가 이 파일을 수정할 필요는 없다.
 
@@ -137,7 +144,7 @@ Requirement가 Canonical에 등록된 뒤 실제 변경 전에 계획부터 확�
 python sdlc/scripts/harness.py work --target RQ-001 --plan-only
 ```
 
-공식 `harness.py` 경로는 `.sdlc/project.yaml`을 읽어 Machine effective profile을 계산한 뒤 기존 Work Executor에 전달한다. 사람이 legacy profile 경로를 선택할 필요가 없다.
+공식 `harness.py` 경로는 `.sdlc/project.yaml`을 읽어 Machine effective profile/provider/context를 계산한 뒤 기존 Work Executor에 전달한다. 사람이 legacy profile 경로를 선택할 필요가 없다.
 
 Provider가 준비됐으면:
 
@@ -145,7 +152,7 @@ Provider가 준비됐으면:
 python sdlc/scripts/harness.py work --target RQ-001
 ```
 
-`/work`는 Provider/Git/Source write/Build/Test/Canonical Guard를 사용한다. Source 관찰만으로 고객의 업무정책을 확정하지 않는다.
+`/work`는 Provider/Git/Source write/Build/Test/Canonical Guard를 사용한다. `.sdlc/project.yaml`의 보호 Branch가 실제 Provider precheck에 적용된다. Source 관찰만으로 고객의 업무정책을 확정하지 않는다.
 
 ## 7. 변경과 조회
 
@@ -157,7 +164,7 @@ python sdlc/scripts/harness.py change \
 python sdlc/scripts/harness.py check --target RQ-001
 ```
 
-`/change`도 같은 단일 Project Config와 Git/Canonical Guard를 사용한다.
+`/change`도 같은 단일 Project Config와 Git/Canonical Guard를 사용하며 동일한 `project_context`를 Agent 입력으로 받는다.
 
 ## 8. Greenfield 시작
 
@@ -191,8 +198,10 @@ Brownfield에서 Agent/도구가 먼저 확인해야 하는 항목:
 새 Project Entry가 존재하면 우선순위는 항상 다음과 같다.
 
 ```text
-.sdlc/project.yaml > legacy profile
+.sdlc/project.yaml > legacy profile/provider policy value
 ```
+
+Provider의 command/timeout 같은 연결 정보 자체는 `agent-provider.json` base에 남지만, Project Config와 중복되는 보호 Branch 정책은 effective artifact에서 Project Config가 우선한다.
 
 ## 11. 기존 DOCX/PPTX/XLSX/PDF 업무문서
 
@@ -227,6 +236,15 @@ python -m unittest tests.test_project_entry_config -v
 python sdlc/scripts/harness.py check --setup
 ```
 
+Behavioral Test는 다음을 확인한다.
+
+- `.sdlc/project.yaml` 하나로 FAST/STANDARD/FULL이 실제 plan에 반영되는가
+- Source root와 Build/Test가 Executor에 전달되는가
+- Project Context가 `work/change` Provider 입력 plan에 포함되는가
+- stale legacy profile/provider 값이 단일 Project Entry를 덮어쓰지 못하는가
+- Project Config의 보호 Branch가 Provider 실행 전에 실제 차단되는가
+- 잘못된/사용되지 않는 Config가 fail-closed 되는가
+
 이 검증은 Config/Runtime 연결을 확인한다. 실제 외부 Agent 품질이나 일반 분석가·개발자의 최초 사용성을 증명하지는 않는다.
 
 ## 14. 현재 검증 한계
@@ -234,7 +252,7 @@ python sdlc/scripts/harness.py check --setup
 별도 실증이 필요한 것:
 
 - 실제 외부 Agent Provider가 `.sdlc/project.yaml` 기반 실행에서 일관되게 동작하는가
-- 저수준 Agent가 모르는 정보를 OPEN으로 남기는가
+- 저수준 Agent가 전달된 Project Context를 적절히 사용하고 모르는 정보를 OPEN으로 남기는가
 - 일반 분석가/개발자/QA가 하나의 설정 파일만 보고 필요한 변경을 할 수 있는가
 - 실제 고객 정책을 Source Evidence로 오승격하지 않는가
 - Hosting의 Branch Protection이 실제 적용됐는가
