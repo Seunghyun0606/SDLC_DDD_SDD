@@ -9,7 +9,7 @@ Brownfield에서는 기존 Source가 존재한다는 이유만으로 업무정�
 - 분석할 요구사항 또는 변경요청 원문
 - 실제 Repository/Source 기준점
 
-있으면 도움이 되는 자료:
+다음은 있으면 도움이 되는 **선택 Evidence**이며 프로젝트 시작의 필수 입력으로 만들지 않습니다.
 
 - DB Schema/DDL
 - API/Interface/Event 명세
