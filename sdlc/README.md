@@ -89,3 +89,16 @@ Self-test PASS는 Harness primitive의 검증이며 실제 고객 Source 검증�
 - `sdlc/guides/04_HARNESS_커스터마이징가이드.md`
 - `sdlc/design/contracts/`
 - `sdlc/design/validation/`
+
+## P1 Operational Usability
+
+P1부터 운영 Contract Authority는 `sdlc/config/contract-authority.yaml`에서 단일화한다.
+
+추가 사용자 명령:
+
+```bash
+python sdlc/scripts/ai_sdlc.py sync-worklist --project-root .
+python sdlc/scripts/ai_sdlc.py promote-knowledge <candidate.yaml> --project-root .
+```
+
+Project Decision은 `sdlc/config/project-decisions.yaml`이 정의하고 `init`이 `.ai-sdlc/project-decisions.yaml`을 생성한다. Overlay는 기존 Base key만 변경할 수 있으며 임의 key 생성, type 변경, stale base overwrite를 거부한다.

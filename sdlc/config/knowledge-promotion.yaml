@@ -1,0 +1,22 @@
+version: 1
+status: ACTIVE_P1_OPERATIONAL_USABILITY
+allowed_types:
+  - BUSINESS_RULE
+  - PROCESS
+  - PROGRAM_RESPONSIBILITY
+  - DATA_MEANING
+  - INTERFACE_MEANING
+  - ARCHITECTURE_DECISION
+  - DEVELOPMENT_STANDARD
+  - OPERATIONAL_CONSTRAINT
+  - KNOWN_EDGE_CASE
+  - VERIFIED_TEST_PATTERN
+policy:
+  candidate_requires_provenance: true
+  promoted_requires_review: true
+  observed_or_inferred_business_semantics_require_human_confirmation: true
+  promotion_does_not_publish_canonical_automatically: true
+  source_behavior_never_auto_confirms_business_truth: true
+  idempotency_key: knowledge_id+revision+review_decision
+business_semantic_types: [BUSINESS_RULE, PROCESS, DATA_MEANING, INTERFACE_MEANING, OPERATIONAL_CONSTRAINT]
+review_decisions: [CONFIRM, REJECT, SUPERSEDE]

@@ -1,0 +1,25 @@
+version: 1
+project_decisions:
+  project_id: FILL_ME
+  project_mode: AUTO
+  revision: 1
+  decisions:
+    development_language: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    framework: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    architecture_pattern: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    directory_module_structure: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    database: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    transaction_policy: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    api_rule: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    error_handling_rule: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    logging_rule: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    security_rule: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    test_policy: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    ci_cd: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    document_rule: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    coding_standard: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    naming_rule: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    branch_strategy: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+    deployment_target: {state: OPEN, value: null, candidate_value: null, owner: "", truth_state: OPEN, basis: "", evidence_refs: []}
+  action_blockers: []
+  open_items: []

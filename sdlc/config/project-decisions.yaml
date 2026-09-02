@@ -1,0 +1,110 @@
+version: 2
+status: ACTIVE_P1_USABILITY_AUTHORITY
+states:
+  - OPEN
+  - CANDIDATE
+  - CONFIRMED
+  - NOT_APPLICABLE
+  - SUPERSEDED
+truth_states:
+  - GIVEN
+  - OBSERVED
+  - INFERRED
+  - CONFIRMED
+  - OPEN
+policy:
+  open_is_allowed: true
+  candidate_is_not_confirmed: true
+  source_observation_must_not_auto_confirm: true
+  confirmed_requires_value: true
+  confirmed_requires_owner: true
+  confirmed_requires_basis: true
+  confirmed_requires_evidence_or_given_source: true
+  do_not_block_unrelated_analysis: true
+
+decisions:
+  development_language:
+    label_ko: 개발언어
+    applies_to: [GREENFIELD, HYBRID]
+    owner_role: ARCHITECT_OR_ENGINEERING_OWNER
+    blocking_actions: [source.write]
+  framework:
+    label_ko: 프레임워크
+    applies_to: [GREENFIELD, HYBRID]
+    owner_role: ARCHITECT_OR_ENGINEERING_OWNER
+    blocking_actions: [source.write]
+  architecture_pattern:
+    label_ko: 아키텍처 스타일
+    applies_to: [GREENFIELD, HYBRID]
+    owner_role: ARCHITECT
+    blocking_actions: [source.write]
+  directory_module_structure:
+    label_ko: 디렉터리 / 모듈 구조
+    applies_to: [GREENFIELD, HYBRID]
+    owner_role: ARCHITECT_OR_ENGINEERING_OWNER
+    blocking_actions: [source.write]
+  database:
+    label_ko: 데이터베이스 선정
+    applies_to: [GREENFIELD, HYBRID]
+    owner_role: ARCHITECT_OR_DATA_OWNER
+    blocking_actions: [source.write]
+  transaction_policy:
+    label_ko: 트랜잭션 원칙
+    applies_to: [GREENFIELD, HYBRID]
+    owner_role: ARCHITECT_OR_ENGINEERING_OWNER
+    blocking_actions: [source.write]
+  api_rule:
+    label_ko: API 규칙
+    applies_to: [GREENFIELD, HYBRID]
+    owner_role: ARCHITECT_OR_INTERFACE_OWNER
+    blocking_actions: [source.write]
+  error_handling_rule:
+    label_ko: 오류 처리 규칙
+    applies_to: [GREENFIELD, HYBRID]
+    owner_role: ARCHITECT_OR_ENGINEERING_OWNER
+    blocking_actions: [source.write]
+  logging_rule:
+    label_ko: 로깅 규칙
+    applies_to: [GREENFIELD, HYBRID]
+    owner_role: ARCHITECT_OR_OPERATION_OWNER
+    blocking_actions: [source.write]
+  security_rule:
+    label_ko: 보안 규칙
+    applies_to: [GREENFIELD, HYBRID]
+    owner_role: SECURITY_OR_ARCHITECT
+    blocking_actions: [source.write, deploy.execute]
+  test_policy:
+    label_ko: 테스트 전략
+    applies_to: [GREENFIELD, HYBRID]
+    owner_role: TEST_OWNER
+    blocking_actions: [test.execute]
+  ci_cd:
+    label_ko: CI/CD 원칙
+    applies_to: [GREENFIELD, HYBRID]
+    owner_role: DEVOPS_OR_ENGINEERING_OWNER
+    blocking_actions: [deploy.execute]
+  document_rule:
+    label_ko: 문서 작성 규칙
+    applies_to: [GREENFIELD, BROWNFIELD, HYBRID]
+    owner_role: PM_OR_ARCHITECT
+    blocking_actions: []
+  coding_standard:
+    label_ko: 코딩 규칙
+    applies_to: [GREENFIELD, BROWNFIELD, HYBRID]
+    owner_role: ARCHITECT_OR_ENGINEERING_OWNER
+    blocking_actions: [source.write]
+  naming_rule:
+    label_ko: 명명 규칙
+    applies_to: [GREENFIELD, BROWNFIELD, HYBRID]
+    owner_role: ARCHITECT_OR_ENGINEERING_OWNER
+    blocking_actions: [source.write]
+  branch_strategy:
+    label_ko: 브랜치 전략
+    applies_to: [GREENFIELD, BROWNFIELD, HYBRID]
+    owner_role: ENGINEERING_OWNER
+    blocking_actions: [source.write]
+  deployment_target:
+    label_ko: 배포 환경
+    applies_to: [GREENFIELD, HYBRID]
+    owner_role: ARCHITECT_OR_DEVOPS_OWNER
+    blocking_actions: [deploy.execute]

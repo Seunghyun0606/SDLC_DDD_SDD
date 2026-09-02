@@ -1,0 +1,44 @@
+name: P1 Usability Authority Self-Test
+
+on:
+  push:
+    branches:
+      - 'SDLC_DESIGN_SESSION_SECOND/**'
+    paths:
+      - 'sdlc/**'
+      - '.github/workflows/p1-usability-authority-selftest.yml'
+  pull_request:
+    paths:
+      - 'sdlc/**'
+      - '.github/workflows/p1-usability-authority-selftest.yml'
+
+jobs:
+  p1-usability-authority:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install self-test dependencies
+        run: python -m pip install pyyaml openpyxl
+      - name: Compile P1 runtime
+        run: |
+          python -m py_compile \
+            sdlc/scripts/ai_sdlc.py \
+            sdlc/scripts/build_project_decision_registry.py \
+            sdlc/scripts/validate_project_decisions.py \
+            sdlc/scripts/resolve_project_overlay.py \
+            sdlc/scripts/sync_worklist.py \
+            sdlc/scripts/promote_knowledge.py \
+            sdlc/scripts/lint_p1_knowledge.py \
+            sdlc/scripts/validate_contract_authority.py \
+            sdlc/scripts/test_p1_usability_authority.py
+      - name: Validate P1 authority index
+        run: python sdlc/scripts/validate_contract_authority.py sdlc/config/contract-authority.yaml --repo-root .
+      - name: Run P1 usability/authority self-test
+        run: python sdlc/scripts/test_p1_usability_authority.py
+      - name: Run structural regression
+        run: python sdlc/scripts/test_structural_redesign.py
+      - name: Run P0 regression
+        run: python sdlc/scripts/test_p0_production_readiness.py

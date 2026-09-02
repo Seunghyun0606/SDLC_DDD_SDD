@@ -7,10 +7,16 @@ artifacts:
 
 providers:
   registry: sdlc/config/provider-registry.example.yaml
-  adapter_config: null
+  adapter_config: null  # Production-candidate Provider 연결 시 명시
   # Brownfield 실제 Local Git/Test 연결 예:
   # registry: sdlc/config/provider-registry.local-production.yaml
   # adapter_config: ai-sdlc-adapters.yaml
+
+# Project Overlay가 추가할 수 있는 명시적 확장 Map. Core Safety key는 여기에 두지 않는다.
+paths: {}
+terminology:
+  aliases: {}
+provider_bindings: {}
 
 customization:
   overlays: []

@@ -86,13 +86,17 @@ def cmd_init(a: argparse.Namespace) -> int:
     bootstrap = rt / "project-bootstrap.yaml"
     run(repo / "sdlc/scripts/bootstrap_project.py", [str(root), str(profile), str(registry), "-o", str(bootstrap)])
     run(repo / "sdlc/scripts/resolve_artifact_profile.py", [str(repo / "sdlc/config/artifact-profiles.yaml"), str(profile), "-o", str(rt / "artifact-plan.yaml")])
+    run(repo / "sdlc/scripts/build_project_decision_registry.py", [str(bootstrap), str(repo / "sdlc/config/project-decisions.yaml"), "-o", str(rt / "project-decisions.yaml")])
     boot = (load(bootstrap).get("project_bootstrap") or {})
     mode = boot.get("resolved_mode")
     first_prompt = "greenfield-first-prompt.md" if mode == "GREENFIELD" else "brownfield-first-prompt.md"
     print(f"READY: mode={mode} profile={boot.get('artifact_profile')} runtime={rt}")
     print(f"FIRST_PROMPT: {repo / 'sdlc/starter/prompts' / first_prompt}")
-    if boot.get("open_items"):
-        print(f"OPEN_ITEMS: {len(boot.get('open_items') or [])} (OPEN은 자동으로 확정하지 않습니다.)")
+    decision_doc = load(rt / "project-decisions.yaml")
+    decision_open = ((decision_doc.get("project_decisions") or {}).get("open_items") or [])
+    total_open = len(boot.get("open_items") or []) + len(decision_open)
+    if total_open:
+        print(f"OPEN_ITEMS: {total_open} (Project Decision 포함, OPEN은 자동으로 확정하지 않습니다.)")
     return 0
 
 
@@ -111,6 +115,19 @@ def cmd_work(a: argparse.Namespace) -> int:
     stage_pack = Path(a.stage_pack).resolve() if a.stage_pack else rt / f"stage-pack-{a.target_id}.yaml"
     if not stage_pack.exists():
         run(repo / "sdlc/scripts/create_initial_stage_pack.py", [str(bootstrap), a.target_id, source_revision(root, a.source_revision), "-o", str(stage_pack)])
+    decision_registry = rt / "project-decisions.yaml"
+    if decision_registry.exists():
+        stage_doc = load(stage_pack)
+        pack_root = stage_doc.get("stage_input_pack") or {}
+        existing = list(pack_root.get("open_items") or [])
+        existing_ids = {x.get("open_id") for x in existing if isinstance(x, dict)}
+        decision_open = ((load(decision_registry).get("project_decisions") or {}).get("open_items") or [])
+        for item in decision_open:
+            if item.get("open_id") not in existing_ids:
+                existing.append(item)
+        pack_root["open_items"] = existing
+        stage_doc["stage_input_pack"] = pack_root
+        dump(stage_pack, stage_doc)
     execution = rt / f"stage-execution-{a.target_id}.yaml"
     artifact_plan = rt / "artifact-plan.yaml"
     args = [str(repo / "sdlc/config/stage-routing.yaml"), str(stage_pack), "-o", str(execution)]
@@ -160,13 +177,30 @@ def cmd_check(a: argparse.Namespace) -> int:
     if not rt.exists():
         print(yaml.safe_dump(result, allow_unicode=True, sort_keys=False), end=""); return 1
     check = result["check"]; check["state"] = "PARTIAL"
-    for name in ["project-bootstrap.yaml", "artifact-plan.yaml", "source-inventory.yaml", "e2e-status.yaml"]:
+    for name in ["project-bootstrap.yaml", "project-decisions.yaml", "artifact-plan.yaml", "worklist-canonical.yaml", "knowledge-registry.yaml", "source-inventory.yaml", "e2e-status.yaml"]:
         check["artifacts"][name] = (rt / name).exists()
     if a.target_id:
         for prefix in ["stage-pack", "stage-execution", "work"]:
             check["artifacts"][f"{prefix}-{a.target_id}.yaml"] = (rt / f"{prefix}-{a.target_id}.yaml").exists()
     check["next"] = "Run work for the target or provide/update e2e-ledger.yaml. Missing runtime evidence is not success."
     print(yaml.safe_dump(result, allow_unicode=True, sort_keys=False), end="")
+    return 0
+
+
+def cmd_sync_worklist(a: argparse.Namespace) -> int:
+    root = a.project_root.resolve(); repo = repo_root(); rt = runtime_dir(root)
+    run(repo / "sdlc/scripts/sync_worklist.py", [
+        "--canonical", str(rt / "worklist-canonical.yaml"),
+        "--md", str(root / "docs/00_관리/전체작업목록.md"),
+        "--xlsx", str(root / "docs/00_관리/전체작업목록.xlsx"),
+        "--columns", str(repo / "sdlc/config/worklist-columns.yaml"),
+    ])
+    return 0
+
+
+def cmd_promote_knowledge(a: argparse.Namespace) -> int:
+    root = a.project_root.resolve(); repo = repo_root(); rt = runtime_dir(root)
+    run(repo / "sdlc/scripts/promote_knowledge.py", [str(a.candidate.resolve()), "--config", str(repo / "sdlc/config/knowledge-promotion.yaml"), "--registry", str(rt / "knowledge-registry.yaml"), "--result", str(rt / "knowledge-promotion-result.yaml")])
     return 0
 
 
@@ -184,6 +218,10 @@ def build_parser() -> argparse.ArgumentParser:
     change.set_defaults(func=cmd_change)
     check = sub.add_parser("check", help="show current runtime/e2e status")
     check.add_argument("target_id", nargs="?"); check.add_argument("--project-root", type=Path, default=Path(".")); check.set_defaults(func=cmd_check)
+    sync = sub.add_parser("sync-worklist", help="synchronize Canonical Worklist with MD/XLSX views")
+    sync.add_argument("--project-root", type=Path, default=Path(".")); sync.set_defaults(func=cmd_sync_worklist)
+    promote = sub.add_parser("promote-knowledge", help="promote one reviewed knowledge candidate into the project registry")
+    promote.add_argument("candidate", type=Path); promote.add_argument("--project-root", type=Path, default=Path(".")); promote.set_defaults(func=cmd_promote_knowledge)
     return p
 
 
