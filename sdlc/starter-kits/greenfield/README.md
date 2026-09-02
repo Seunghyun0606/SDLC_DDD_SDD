@@ -1,84 +1,100 @@
-# Greenfield Starter Kit
+# Greenfield 시작 안내
 
-## 목적
-Source가 아직 없거나 새 기능 영역을 처음 만드는 프로젝트에서 요구를 빠르게 구조화하되, 설계에 필요한 사실과 아직 결정되지 않은 사항을 분리하기 위한 시작 패키지다.
+처음 사용하는 경우 먼저 `docs/00_시작/START_HERE.md`를 읽으세요.
 
-## 최소 시작 가능 입력
-다음 두 가지면 `/setup`과 `/work`를 시작할 수 있다.
+이 문서는 **기존 Source가 없거나 새 시스템/기능 영역을 만드는 프로젝트**에서 어떤 자료를 준비하면 되는지만 설명합니다. 일반 사용자가 Starter Manifest나 내부 Profile을 먼저 작성할 필요는 없습니다.
 
-1. `project-brief.md` 또는 이에 준하는 프로젝트 목적/문제 설명
-2. `requirements/originals/`에 최소 1개의 요구/요청 원문 또는 `starter-manifest.yaml`의 `requirement_sources`
+## 최소 시작 자료
 
-이 단계는 **STARTABLE**일 뿐 구현 준비 완료를 의미하지 않는다.
+처음부터 상세 설계서가 필요하지 않습니다.
 
-SOP/업무매뉴얼은 있으면 좋은 Evidence지만 **필수 입력이 아니다**. 부족한 정보는 `OPEN Resolution Workbook`을 통해 인터뷰, Workshop, Project Standard, 설계자/개발자 제안으로 구체화한다.
+최소한 다음이 있으면 프로젝트 맥락을 잡을 수 있습니다.
 
-## 권장 패키지
+1. 프로젝트가 해결하려는 문제 또는 목표
+2. 최소 한 건의 요구사항/요청 원문
+
+예:
+
 ```text
-greenfield-starter/
-├─ starter-manifest.yaml
-├─ project-brief.md                     # 필수에 가까운 최소 프로젝트 맥락
-├─ requirements/
-│  └─ originals/                        # 요구서, 회의록, 이메일 정리, XLSX 등 원본
-├─ business-context/
-│  ├─ stakeholder-map.md                # 권장
-│  ├─ process-context.md                # 권장
-│  ├─ data-concepts.md                  # 권장
-│  └─ glossary.csv                      # 선택
-├─ constraints/
-│  ├─ architecture-and-stack.md         # 결정된 경우 권장
-│  ├─ ui-ux-and-menu-standard.md        # 화면 프로젝트이면 권장
-│  ├─ data-query-convention.md          # DB/조회 설계 기준이 있으면 권장
-│  ├─ common-code-dictionary.md         # 공통코드 체계가 있으면 권장
-│  ├─ nfr-security-compliance.md        # 권장
-│  └─ integration-inventory.md          # 외부 연계가 있으면 권장
-└─ profiles/
-   ├─ terminology-profile.json          # 선택
-   ├─ customer-document-profile.json    # 선택
-   └─ open-resolution-profile.yaml      # 결정권한 Customizing 시 권장
+고객이 주문을 취소하면 결제를 취소하고 재고를 복구한다.
 ```
 
-## OPEN 해소 기본 경로
-Greenfield에서는 Source가 없다는 이유로 상세설계를 멈추지 않는다.
+SOP, Architecture, 보안 기준이 아직 없으면 없는 상태로 시작하고 `확인 필요`로 남깁니다.
 
-1. 업무 목적/정책/Why/권한은 Customer/Business Owner 인터뷰 또는 Workshop으로 확인한다.
-2. 화면/동선/Field는 Designer가 후보안을 만들 수 있다.
-3. API/Transaction/Query/Error/Integration/NFR는 Developer/Architect가 Project Standard 기반 후보안을 만들 수 있다.
-4. 후보안에는 선택 이유와 대안을 기록한다.
-5. Business 영역은 권한자 확인 후 `CONFIRMED_BUSINESS`, 기술 영역은 Project Authority가 채택하면 `ACCEPTED_DESIGN`으로 해소한다.
-6. 고객에게 모든 기술 세부를 묻지 않는다.
+## 있으면 좋은 자료
 
-## 입력 수준별 기대 결과
-| 입력 수준 | 기대 결과 | 금지되는 과장 |
-|---|---|---|
-| 프로젝트 목적 + 요구 원문만 있음 | RQ/FR/AC 후보, 6W 업무 시나리오 후보, OPEN Resolution Workbook | 상세 DTO/Table/API/화면을 확정값으로 생성 |
-| 인터뷰/설계자 제안으로 Actor/프로세스/화면 후보가 있음 | Functional Design 구체화 | 제안안을 고객 확정 업무정책처럼 표현 |
-| UI/Data/Common Code/Integration/기술 기준까지 있음 | 화면/필드/CRUD/Query/Code 포함 Program Spec 상세화 | 상세 명세 OPEN을 숨기고 READY 표시 |
-| 실제 Scaffold/Repository까지 생성됨 | Source Evidence를 연결하며 Development 진행 | 생성된 Reference Source를 Business Truth로 승격 |
+- 요구사항 Excel/문서/메일/회의 결과
+- SOP/업무매뉴얼/정책 문서
+- 주요 사용자/조직/권한 정보
+- 프로젝트 개발표준
+- Architecture/기술 선택 결정사항
+- 화면/UI 표준
+- Data/공통코드 기준
+- 외부 API/Event/Batch 기준
+- Security/NFR/개인정보/운영 제약
 
-## Greenfield에서 특히 확인할 항목
-- 6하원칙 기준 업무 시나리오: 누가/언제/어디서/무엇을/어떻게/왜
-- 업무 목표와 성공 기준
-- 주요 사용자/Actor와 권한 경계
-- 정상 흐름, 예외 흐름, 상태 전이
-- 화면/메뉴/Field와 사용자 동선(해당 시)
-- CRUD와 핵심 업무 판단/계산 규칙
-- 핵심 업무 데이터의 의미와 소유권
-- Query/Data Model/공통코드 기준
-- 외부 시스템/이벤트/배치 여부
-- 보안/개인정보/감사 요구
-- 성능/가용성/운영 제약
-- 배포·운영 환경 제약
+자료가 부족하다는 이유로 Agent가 화면·API·Table·업무정책을 확정값으로 발명하면 안 됩니다.
 
-## 준비도 판정
-### STARTABLE
-프로젝트 목적과 최소 요구 원문이 존재한다.
+## 사용자가 하는 일
 
-### DESIGN_READY
-6W Scenario와 주요 Design OPEN이 `CONFIRMED_BUSINESS`, `ACCEPTED_DESIGN`, 합리적 `PROPOSED` 중 하나로 구조화되어 있고, 남은 확인사항과 결정권자가 명시되어 있다.
+```text
+자료 제공
+→ setup 결과 확인
+→ Agent 초안 검토
+→ 업무정책/범위/권한/승인처럼 사람이 결정해야 하는 항목만 확인
+```
 
-### IMPLEMENTATION_READY
-실제 또는 승인된 Target Architecture가 있고 `developer-spec-contract.json`의 적용 가능한 상세 항목과 Program DoR 17항목의 OPEN이 해소되어야 한다.
+사람이 빈 Template의 수십 개 항목을 먼저 채우는 방식은 권장하지 않습니다.
 
-## 비고
-Greenfield Starter Kit은 상세한 설계서를 선행 입력으로 강제하지 않는다. Harness가 정형화된 Template과 질문/분석/제안 경로를 제공하고 설계자·개발자가 이를 채워가며 산출물을 완성하는 것이 원칙이다.
+## Agent가 먼저 해야 하는 일
+
+- 요구 원문을 훼손하지 않고 정리
+- 목표와 기능 요구 후보 작성
+- 인수조건 후보 작성
+- 정상/예외 흐름 후보 작성
+- 제공된 표준에 기반한 기술 설계 후보 작성
+- 확인할 수 없는 내용은 `확인 필요`로 분리
+- 다음 작업 안내
+
+업무정책을 사람 확인 없이 확정하지 않습니다.
+
+## 시작 명령
+
+```bash
+python sdlc/scripts/harness.py setup \
+  --name <project-name> \
+  --mode GREENFIELD \
+  --delivery STANDARD
+
+python sdlc/scripts/harness.py check --setup
+```
+
+프로젝트 유형이 애매하면 `--mode AUTO`를 사용합니다.
+
+## 현재 연결 한계
+
+현재 이 Branch에는 `harness.py intake`가 아직 없습니다. 따라서 빈 Greenfield 프로젝트에서 한 줄 요구사항을 RQ ID로 자동 등록하고 바로 `work`로 넘기는 Zero-to-One 흐름은 아직 완성되지 않았습니다.
+
+XLSX 요구사항 후보 추출 Runtime은 있지만 Canonical RQ 등록과 Target 반환까지는 연결되지 않습니다. 신규 사용자가 내부 저장 구조를 수동 편집해 이 문제를 우회하지 않도록 합니다.
+
+이 연결은 Session 3 / WP-03에서 구현해야 합니다.
+
+## 하지 말아야 할 것
+
+- Source가 없다는 이유로 기술 상세를 업무 사실처럼 확정
+- 고객에게 모든 기술 세부를 직접 작성하도록 요구
+- 내부 Status/Contract/Canonical 용어를 사용자 입력값으로 요구
+- 불확실한 내용을 숨긴 채 READY로 표현
+- 첫 사용자가 Starter Manifest/Profile을 이해해야 시작할 수 있다고 안내
+
+## 다음 단계
+
+setup 뒤에는 `docs/00_시작/START_HERE.md`의 요구사항 등록 절차로 돌아갑니다.
+
+RQ Target이 이미 있다면:
+
+```bash
+python sdlc/scripts/harness.py work --target <RQ-ID> --plan-only
+```
+
+첫 RQ가 없다면 WP-03 intake 연결 전까지 내부 Canonical을 직접 수정하지 않습니다.
