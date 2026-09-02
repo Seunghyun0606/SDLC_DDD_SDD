@@ -1,5 +1,5 @@
-version: 2
-status: ACTIVE_P1_USABILITY_AUTHORITY
+version: 3
+status: ACTIVE_P2_INTEGRATED_SCALEOUT
 primary_entrypoint: sdlc/START_HERE.md
 secondary_docs:
   - sdlc/README.md
@@ -18,6 +18,7 @@ customer_input_locations:
 first_command: python sdlc/scripts/ai_sdlc.py init --project-root .
 commands:
   init: python sdlc/scripts/ai_sdlc.py init --project-root .
+  intake_requirements: python sdlc/scripts/ai_sdlc.py intake-requirements <xlsx> --project-root .
   work: python sdlc/scripts/ai_sdlc.py work <ID> --project-root .
   change: python sdlc/scripts/ai_sdlc.py change <ID> "<변경 내용>" --project-root .
   check: python sdlc/scripts/ai_sdlc.py check <ID> --project-root .
