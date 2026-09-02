@@ -34,5 +34,11 @@ validation_boundary:
   ci_is_human_first_use_evidence: false
   production_ready_claimed: false
   rule: "실제 Agent/Human 관찰이 없으면 empirical status는 NOT_RUN/NOT_VERIFIED로 남긴다."
+inherited_validation_boundary:
+  note: "아래 status/verdict는 이전 기준선의 CI/Behavioral 검증 경계를 보존하기 위한 호환 marker이며 WP-5 자체 또는 실제 Agent/Human 실증 PASS를 뜻하지 않는다."
+  status: P0_P1_CI_BEHAVIORAL_AND_INTEGRATION_PASS_EXTERNAL_EMPIRICAL_PENDING
+  verdict: CONTROLLED_PILOT_READY_CI_PASS_EXTERNAL_AGENT_HUMAN_VALIDATION_PENDING
+  self_assessment_is_not_validation: true
+  production_ready_claimed: false
 next_step: "WP-5 black-box Behavioral Pilot과 전체 회귀 CI를 완료한 뒤, 실제 저수준 Agent 및 실제 프로젝트 참여자 관찰 실증은 별도 Evidence로 남긴다."
 merge_to_main: false
