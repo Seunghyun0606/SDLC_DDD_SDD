@@ -250,7 +250,7 @@ def bootstrap(
         "entry": root / CONFIG.PROJECT_ENTRY_PATH,
         "legacy_project": root / CONFIG.LEGACY_PROJECT_PROFILE_PATH,
         "legacy_source": root / CONFIG.LEGACY_SOURCE_PROFILE_PATH,
-        "provider": root / "sdlc/config/agent-provider.json",
+        "provider": root / CONFIG.DEFAULT_PROVIDER_CONFIG_PATH,
         "store": root / "sdlc/canonical/store.json",
     }
     writes: dict[str, str] = {}
@@ -297,14 +297,15 @@ def bootstrap(
     writes[CONFIG.LEGACY_SOURCE_PROFILE_PATH] = write_machine(
         paths["legacy_source"], _machine_snapshot(legacy_source, CONFIG.PROJECT_ENTRY_PATH)
     )
-    effective_paths = CONFIG.materialize_effective_profiles(root, resolved)
-    for key, path in effective_paths.items():
-        writes[path.relative_to(root).as_posix()] = "MACHINE_GENERATED"
 
     desired_provider = _provider(provider_command, CONFIG.nested(project, "git", "protected_branches", default=["main", "master"]))
     provider_status = write_user(paths["provider"], json.dumps(desired_provider, ensure_ascii=False, indent=2) + "\n")
-    writes["sdlc/config/agent-provider.json"] = provider_status
+    writes[CONFIG.DEFAULT_PROVIDER_CONFIG_PATH] = provider_status
     provider = json.loads(paths["provider"].read_text(encoding="utf-8"))
+
+    effective_paths = CONFIG.materialize_effective_profiles(root, resolved, provider_config_path=paths["provider"])
+    for key, path in effective_paths.items():
+        writes[path.relative_to(root).as_posix()] = "MACHINE_GENERATED"
 
     if not paths["store"].exists():
         APPLY.save_store(paths["store"], APPLY.empty_store())
