@@ -33,7 +33,7 @@ Harness의 기본 사용 경험은 다음 한 줄입니다.
 
 ```bash
 python sdlc/scripts/harness.py setup \
-  --name <project-name> \
+  --name my-project \
   --mode AUTO \
   --delivery STANDARD
 
@@ -41,6 +41,27 @@ python sdlc/scripts/harness.py check --setup
 ```
 
 사용자가 직접 유지하는 기본 설정은 `.sdlc/project.yaml` 하나입니다. 내부 Profile/Contract/Starter Manifest를 먼저 작성하지 않습니다.
+
+### Provider가 아직 없어도 setup과 intake는 실패가 아니다
+
+처음 배포할 때 Agent Provider가 아직 연결되지 않았다면 `SETUP_READY_PROVIDER_PENDING`이 표시될 수 있습니다. 이것은 프로젝트 설정 실패가 아닙니다.
+
+이 상태에서도 다음은 바로 할 수 있습니다.
+
+- `.sdlc/project.yaml` 확인
+- 요구사항 원본 intake
+- 실제 RQ Target 생성
+
+Provider는 첫 `work` 실행 전에만 필요합니다.
+
+프로젝트에서 사용할 Agent CLI/wrapper 명령이 정해지면 기술 담당자가 공식 setup 명령으로 1회 연결합니다.
+
+```bash
+python sdlc/scripts/harness.py setup \
+  --provider-command "프로젝트에서 사용하는 Agent 실행 명령"
+```
+
+이 명령을 나중에 다시 실행해도 기존 `.sdlc/project.yaml`을 강제로 다시 작성하지 않고 Provider 연결만 갱신합니다. 일반 분석가·설계자·개발자·QA가 `sdlc/config/agent-provider.json`을 직접 편집하는 것은 기본 절차가 아닙니다.
 
 ## 4. 요구사항을 그대로 인입한다
 
@@ -78,7 +99,7 @@ python sdlc/scripts/harness.py work --target RQ-001
 기본적으로 새 사용자 문서는 `docs/10_산출물/` 아래에 생성됩니다. 예:
 
 ```text
-docs/10_산출물/RQ-001_<요구사항명>_요구사항정의.md
+docs/10_산출물/RQ-001_근무계획승인_요구사항정의.md
 ```
 
 이 문서는 **사용자가 빈 Template을 채우는 파일이 아닙니다.** Agent가 Requirement 원문, Canonical, 프로젝트 자료와 Source Evidence로 작성합니다.
@@ -183,4 +204,6 @@ Greenfield는 Source가 없어도 정상입니다. Brownfield는 찾지 못한 �
 
 ## 검증 경계
 
-Python/fixture Behavioral Test가 통과하더라도 실제 외부 저수준 Agent의 의미 품질과 일반 분석가·설계자·개발자·QA의 First-use usability가 증명되는 것은 아닙니다. 이 두 항목은 별도 실증 대상으로 남깁니다.
+Python/fixture Behavioral Test가 통과하더라도 실제 외부 저수준 Agent의 의미 품질과 일반 분석가·설계자·개발자·QA의 First-use usability가 증명되는 것은 아닙니다.
+
+또한 `provider_class: EXTERNAL_AGENT` 같은 Config 라벨만으로 실제 Agent가 수행했다고 판정하지 않습니다. 반복성 Runtime은 Provider 명령 실행과 결과의 의미 일치율까지만 검증합니다. 실제 저수준 Agent와 실제 Human first-use는 별도 관찰 실증이 필요합니다.
