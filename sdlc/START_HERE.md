@@ -66,16 +66,23 @@ Production Candidate Adapter를 사용하더라도 **실제 고객 Source E2E �
 
 ## 4. 요구사항 Excel Intake
 
-예:
+사용자는 내부 Intake/Worklist Script를 따로 실행하지 않고 단일 façade를 사용한다.
 
 ```bash
-python sdlc/scripts/intake_requirements_xlsx.py \
+python sdlc/scripts/ai_sdlc.py intake-requirements \
   inputs/customer/requirements/요구사항목록.xlsx \
   --only-id REQ_TM_TE100 \
-  -o .ai-sdlc/requirement-intake-REQ_TM_TE100.yaml
+  --project-root .
 ```
 
-Workbook 값은 `GIVEN`으로 보존하며 Canonical ID를 자동 확정하지 않는다.
+이 명령은 다음을 순서대로 수행한다.
+
+1. Workbook 값을 `GIVEN` Requirement Intake로 보존한다.
+2. Source Requirement를 `SOURCE_REQUIREMENT / READY_FOR_REVIEW / CANDIDATE` Work Item으로 등록한다.
+3. `.ai-sdlc/worklist-canonical.yaml`을 Runtime Authority로 유지한다.
+4. `docs/00_관리/전체작업목록.md`와 `.xlsx` Human View를 동기화한다.
+
+**Canonical RQ는 자동 생성하지 않는다.** 같은 Source Requirement ID의 내용이 기존 등록 이후 바뀌면 silent overwrite하지 않고 Review Required로 중지한다.
 
 ## 5. 첫 Prompt
 
@@ -87,9 +94,11 @@ Bootstrap 결과의 Mode에 따라 그대로 사용한다.
 ## 6. 사용자 명령
 
 ```bash
+python sdlc/scripts/ai_sdlc.py intake-requirements <xlsx> --project-root .
 python sdlc/scripts/ai_sdlc.py work <요구사항ID> --project-root .
 python sdlc/scripts/ai_sdlc.py check <요구사항ID> --project-root .
 python sdlc/scripts/ai_sdlc.py change <요구사항ID> "변경 내용" --project-root .
+python sdlc/scripts/ai_sdlc.py sync-worklist --project-root .
 ```
 
 사용자는 내부 Stage Skill을 직접 골라 실행하지 않는다. `work`가 Stage Router를 통해 Skill/Capability/출력 계획을 결정한다.
@@ -128,6 +137,9 @@ python sdlc/scripts/render_human_artifact.py \
 
 - `.ai-sdlc/project-bootstrap.yaml`
 - `.ai-sdlc/artifact-plan.yaml`
+- `.ai-sdlc/requirement-intake.yaml`
+- `.ai-sdlc/requirement-worklist-registration.yaml`
+- `.ai-sdlc/worklist-canonical.yaml`
 - Stage Input Pack / Stage Execution Plan
 - Provider Request/Response / Invocation Journal
 - Source Analysis Result
@@ -142,13 +154,26 @@ python sdlc/scripts/render_human_artifact.py \
 3. Requirement와 관련된 파일만 Analyzer로 전달한다.
 4. Java/SQL heuristic 결과는 `OBSERVED/INFERRED` Evidence다.
 5. OpenAPI/AsyncAPI/WSDL은 `interface-contract` Analyzer로 분석한다.
-6. 지원되지 않는 Batch/Scheduler/동적 Runtime 관계는 `OPEN`으로 남긴다.
+6. Crontab, Spring Scheduled/Batch signal, Kubernetes CronJob, GitHub Actions schedule은 `batch-scheduler` Analyzer로 bounded 분석한다.
+7. Live Scheduler Catalog, 실행이력, 동적 Runtime 관계처럼 관찰하지 못한 내용은 `OPEN`으로 남긴다.
+
+Interface 예:
 
 ```bash
 python sdlc/scripts/analyze_interface_contract.py . \
   --file contracts/openapi.yaml \
   -o .ai-sdlc/interface-analysis.yaml
 ```
+
+Batch/Scheduler 예:
+
+```bash
+python sdlc/scripts/analyze_batch_scheduler.py . \
+  deploy/cronjob.yaml src/main/java/example/Job.java \
+  -o .ai-sdlc/batch-scheduler-analysis.yaml
+```
+
+Analyzer에서 관찰된 Schedule이나 Job은 Source Evidence이며 Business Truth를 자동 확정하지 않는다.
 
 ## 9. Source 수정 전 필수 절차
 
@@ -211,13 +236,17 @@ LITE는 Human 문서를 줄일 수 있지만 Revision/Truth/Test/OPEN/Provider G
 4. `sdlc/README.md`
 5. Harness 관리자만 `sdlc/guides/`, `sdlc/config/`, `sdlc/design/` 확인
 
-## 14. Harness 자체 P0 Self-Test
+## 14. Harness 자체 Self-Test
 
 ```bash
 python sdlc/scripts/test_p0_production_readiness.py
+python sdlc/scripts/test_p1_usability_authority.py
+python sdlc/scripts/test_p1_operational_usability.py
+python sdlc/scripts/test_p2_representative_slice.py
+python sdlc/scripts/test_p2_integrated_scaleout.py
 ```
 
-이 테스트는 임시 **실제 Git Worktree + 실제 subprocess**를 사용하지만 고객 Source 검증은 아니다. 출력의 `real_customer_source_validated: false`를 임의로 바꾸지 않는다.
+Harness Self-test PASS는 실제 고객 Source/Build/Test/DB/Interface/Reverse-Sync E2E 검증을 대체하지 않는다.
 
 ## 15. Project Decision Registry
 
@@ -261,7 +290,20 @@ python sdlc/scripts/ai_sdlc.py promote-knowledge .ai-sdlc/knowledge-candidate.ya
 
 Business Rule/Process/Data/Interface 의미가 `OBSERVED/INFERRED`이면 Source/Agent 결과만으로 Promotion하지 않는다. Review에 `decision: CONFIRM`, `human_confirmation: true`, 검토자/시각/근거가 명시된 경우에만 사람 확인 사실을 근거로 `CONFIRMED`로 전환한 뒤 Promotion한다. `OPEN`은 Promotion할 수 없고, Promotion은 Canonical Publish를 자동 요청하지 않는다.
 
-## 18. Authority가 헷갈릴 때
+## 18. Scale-out Readiness
+
+Scale-out 판정은 `sdlc/config/p2-scaleout-readiness.yaml`과 `sdlc/scripts/assess_scaleout_readiness.py`가 담당한다.
+
+- P0/P1 Engineering 상태
+- 필수 Analyzer Availability
+- 필수 Runtime 구현 파일
+- 실제 고객 E2E Evidence
+
+를 읽어서 판정한다. CLI boolean만으로 Production Ready를 만들 수 없다.
+
+현재 Harness 내부 Self-test만 통과한 상태는 **Controlled Pilot Scale-out Candidate**이며, 실제 고객 Source/Build/Test/DB-or-Interface/Reverse-Sync 검증 전에는 Production Scale-out Ready가 아니다.
+
+## 19. Authority가 헷갈릴 때
 
 Primary Authority 목록은 `sdlc/config/contract-authority.yaml` 하나에서 확인한다.
 
