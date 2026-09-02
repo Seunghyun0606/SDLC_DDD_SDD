@@ -1,0 +1,26 @@
+name: P1 Operational Usability Self-Test
+on:
+  push:
+    branches:
+      - 'SDLC_DESIGN_SESSION_SECOND/p1/**'
+  pull_request:
+    paths:
+      - 'sdlc/**'
+      - '.github/workflows/p1-operational-usability-selftest.yml'
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pyyaml
+      - name: P0 regression
+        run: python sdlc/scripts/test_p0_production_readiness.py
+      - name: Existing P1 foundation regression
+        run: python sdlc/scripts/test_p1_foundation.py
+      - name: P1 operational usability
+        run: python sdlc/scripts/test_p1_operational_usability.py
+      - name: Authority index
+        run: python sdlc/scripts/validate_contract_authority.py sdlc/config/contract-authority.yaml --repo-root .
