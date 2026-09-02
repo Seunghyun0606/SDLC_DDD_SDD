@@ -1,160 +1,139 @@
 # AI-SDLC Harness — Project Quick Start
 
-이 문서는 **처음 Harness를 프로젝트 Repository에 도입하는 일반 SI/SM 참여자**를 위한 실행 기준이다. Contract/Profile 이름을 먼저 학습할 필요가 없다.
+처음 Harness를 프로젝트에 도입하는 일반 SI/SM 참여자는 `docs/00_시작/START_HERE.md`에서 시작한다. Contract/Profile/Starter Manifest 구조를 먼저 학습할 필요가 없다.
 
-## 1. 첫 설정에서 알아야 할 것은 하나
+## 원하는 사용자 흐름
 
-새 프로젝트에서 사람이 직접 유지하는 기본 설정 파일은 다음 하나다.
+```text
+프로젝트 자료 제공
+→ setup
+→ Agent/Runtime이 확인 가능한 설정과 근거를 먼저 구성
+→ intake로 요구사항 원본을 RQ/FR Candidate로 등록
+→ 사람이 판단해야 할 항목만 확인
+→ 실제 RQ Target으로 work 진행
+→ 다음 단계 자동 안내
+```
+
+사람이 빈 Template이나 여러 Config 파일을 먼저 채우는 것을 기본 절차로 만들지 않는다.
+
+## 1. 프로젝트 설정은 하나
+
+새 프로젝트에서 사람이 직접 유지하는 설정 Source of Truth는 다음 하나다.
 
 ```text
 .sdlc/project.yaml
 ```
 
-`project-profile.yaml`, `source-profile.yaml`, Runtime effective profile은 Framework 내부 호환/실행용이다. 일반 사용자가 이 파일들을 나눠 수정하지 않는다.
-
-설정 흐름:
-
-```text
-프로젝트 자료/Repository
-→ harness.py setup
-→ .sdlc/project.yaml
-→ Runtime Resolver
-→ Machine effective config/context
-→ work/change/check
-```
-
-모르는 기술/업무 사실은 예시 값으로 채우지 않고 `unresolved` 또는 이후 산출물의 확인 필요 항목으로 남긴다.
-
-## 2. 첫 명령 — /setup
+첫 실행:
 
 ```bash
 python sdlc/scripts/harness.py setup \
   --name <project-name> \
   --mode AUTO \
   --delivery STANDARD
+
+python sdlc/scripts/harness.py check --setup
 ```
 
-`AUTO`는 Git Repository라는 사실만으로 Brownfield라고 판단하지 않고 실제 Source/build/schema 자산을 본다.
+`setup`은 Repository에서 Source root, Build/Test, Language/Framework/DB 신호를 먼저 탐색한다. 확인할 수 없는 것은 `unresolved`로 남긴다.
 
-실제 Agent wrapper가 준비되어 있으면:
-
-```bash
-python sdlc/scripts/harness.py setup \
-  --name <project-name> \
-  --mode AUTO \
-  --delivery STANDARD \
-  --provider-command '<agent-command> --context {context_path} --result {result_path}'
-```
-
-Setup 이후 역할은 다음처럼 나뉜다.
+Machine artifact는 Runtime이 계산한다.
 
 ```text
-.sdlc/project.yaml
-  사람이 유지하는 프로젝트 설정 Source of Truth
-
 .sdlc/runtime/effective/project-profile.json
 .sdlc/runtime/effective/source-profile.json
 .sdlc/runtime/effective/agent-provider.json
 .sdlc/runtime/effective/project-context.json
-  Runtime이 계산하여 실제 work/change에 전달하는 Machine artifact
-
-sdlc/config/project-profile.yaml
-sdlc/config/source-profile.yaml
-  기존 Executor 호환용 Machine snapshot
-
-sdlc/config/agent-provider.json
-  Agent 실행 command/timeout 등 연결 정보의 base
+.sdlc/runtime/effective/config-usage.json
 ```
 
-`git.protected_branches` 같은 프로젝트 정책은 `.sdlc/project.yaml`을 기준으로 `effective/agent-provider.json`에 덮어쓴다. 따라서 Provider base 파일의 오래된 보호 Branch 값이 Project Config보다 우선하지 않는다.
+기존 `sdlc/config/project-profile.yaml`, `source-profile.yaml`은 Legacy compatibility snapshot이며 새 프로젝트의 사용자 설정 Source of Truth가 아니다.
 
-Provider가 연결되지 않았으면 `CONFIGURED_PROVIDER_REQUIRED`로 끝난다. 이 상태를 작업 실행 성공으로 보지 않는다.
+## 2. 요구사항 원본을 바로 인입
 
-## 3. `.sdlc/project.yaml`을 어떻게 다루는가
-
-사람이 빈 설정표를 수십 칸 작성하지 않는다. `setup`이 Repository에서 확인할 수 있는 값을 먼저 채운다.
-
-주요 영역:
-
-- 프로젝트명 / Greenfield·Brownfield·Hybrid
-- `FAST / STANDARD / FULL`
-- 확인된 Language/Framework
-- Source/Test/Resource root
-- Build/Test command
-- Git 보호 Branch
-- 확인된 Data/Interface/Architecture/Security 등의 프로젝트 맥락
-- 아직 확인이 필요한 항목
-
-작성 완료 예시는 `sdlc/config/project.example.yaml`에 있다. 예시 값을 실제 프로젝트 사실처럼 복사하면 안 된다.
-
-설정 확인:
+표준 2행 Header XLSX는 별도 Column Profile 없이 인입할 수 있다.
 
 ```bash
-python sdlc/scripts/harness.py check --setup
+python sdlc/scripts/harness.py intake 요구사항목록.xlsx
 ```
 
-확인할 것:
+기본 결과:
 
-- `config_source = PROJECT_ENTRY`인지
-- Mode / Delivery Profile
-- Source root
-- Build/Test command
-- Agent Provider
-- `unresolved`
-- Dead Config가 없는지
+- Machine artifact: `sdlc/runtime/intake/requirements-import.json`
+- Human report: `docs/00_관리/요구사항_인입결과.md`
+- Canonical store: `sdlc/canonical/store.json`
+- 실제 작업 Target: `RQ-001` 같은 RQ ID
 
-## 4. Config가 실제로 소비되는지 확인한다
+Source row, Sheet, 외부 요구사항 ID, Source Hash는 근거로 보존한다. 유사 제목은 자동 병합하지 않고 Review 대상으로 남긴다. 업무 사실은 `CANDIDATE` 또는 OPEN이며 자동으로 `CONFIRMED_BUSINESS`가 되지 않는다.
 
-Config key는 다음 네 범주로 나눈다.
+비표준 고객 Column 명칭만 `--profile`을 선택적으로 사용한다.
 
-1. **Runtime 소비** — Delivery, Source root, Build/Test, 보호 Branch 등 실행에 직접 반영
-2. **Extension 영역** — 설치된 프로젝트 Extension이 쓰는 `extensions.*`
-3. **Agent/문서 Project Context** — 프로젝트명, Language/Framework, Source exclude, Architecture, Coding, Data, Interface, Security, Branch strategy, 미확정 항목 등
-4. **Dead Config** — 등록된 소비자가 없는 key
+## 3. 반환된 Target으로 작업
 
-Project Context는 단순 보관 파일로 끝나지 않는다. 공식 `work/change`가 만드는 Provider 입력 plan의 `project_context`에 포함된다. 반대로 실행 동작을 바꾸지 않는 Context 값을 Runtime switch라고 과장하지 않는다.
-
-Dead Config는 조용히 무시하지 않고 Runtime resolution에서 실패시킨다. `schema_version`, Mode, Delivery 값도 잘못된 값을 기본값으로 조용히 바꾸지 않고 실패한다.
-
-Machine inventory는 `sdlc/design/config-usage-inventory.json`에 있다. 일반 프로젝트 사용자가 이 파일을 수정할 필요는 없다.
-
-## 5. FAST / STANDARD / FULL
-
-### FAST
-XS/S 운영 변경·소규모 기능.
-- 불필요한 PROCESS/DISCOVERY/VERIFY는 조건부
-- Program Spec 준비도는 핵심 항목 중심
-- Reverse는 직접 관련 범위 우선
-
-### STANDARD
-일반 SI/SM 기능.
-- 업무흐름/영향/설계/Program/Test/Verify 사용
-
-### FULL
-대형/고위험 구축.
-- 전체 Stage + Knowledge Promotion 후보
-
-새 Preset을 계속 만들지 않고 기본적으로 이 세 Profile을 사용한다.
-
-## 6. 첫 Requirement 작업
-
-Requirement가 Canonical에 등록된 뒤 실제 변경 전에 계획부터 확인한다.
+먼저 계획을 확인한다.
 
 ```bash
 python sdlc/scripts/harness.py work --target RQ-001 --plan-only
 ```
 
-공식 `harness.py` 경로는 `.sdlc/project.yaml`을 읽어 Machine effective profile/provider/context를 계산한 뒤 기존 Work Executor에 전달한다. 사람이 legacy profile 경로를 선택할 필요가 없다.
-
-Provider가 준비됐으면:
+실제 Provider가 준비되어 있으면:
 
 ```bash
 python sdlc/scripts/harness.py work --target RQ-001
 ```
 
-`/work`는 Provider/Git/Source write/Build/Test/Canonical Guard를 사용한다. `.sdlc/project.yaml`의 보호 Branch가 실제 Provider precheck에 적용된다. Source 관찰만으로 고객의 업무정책을 확정하지 않는다.
+RQ는 기존 Work Runtime에서 `DECOMPOSE`로 연결되며 관련 FR Candidate도 Canonical graph를 통해 Context에 포함된다.
 
-## 7. 변경과 조회
+## 4. 사람과 Agent의 역할
+
+Agent/Runtime이 먼저 할 일:
+
+- Repository/문서에서 확인 가능한 기술 사실 탐색
+- 요구사항 원본과 Provenance 보존
+- RQ/FR/AC/설계 초안 작성
+- 불확실한 사실은 OPEN 유지
+- 다음 작업 명령 안내
+
+사람이 확인할 일:
+
+- 유사 요구사항 실제 병합 여부
+- 중복 외부 ID의 기준 원문
+- 업무정책·범위·승인·권한
+- 프로젝트 기술 선택
+- 실제 의사결정권한이 필요한 OPEN
+
+## 5. Greenfield / Brownfield
+
+Greenfield는 Source가 없어도 시작할 수 있다. 기술 상세가 없으면 업무 사실처럼 발명하지 않는다.
+
+Brownfield는 먼저 실제 Evidence coverage를 확인한다. 찾지 못한 영역을 영향 없음으로 해석하지 않는다. Source root, API/Controller, Service, Mapper/Repository, DB, Batch, Interface/Event, Test/Build coverage gap을 명시한다.
+
+시작 자료:
+
+- `sdlc/starter-kits/greenfield/`
+- `sdlc/starter-kits/brownfield/`
+
+## 6. FAST / STANDARD / FULL
+
+- `FAST`: 소규모 운영 변경/기능
+- `STANDARD`: 일반 SI/SM 기능
+- `FULL`: 대형·고위험 범위
+
+새 Preset을 계속 추가하지 않고 세 Delivery Profile을 Runtime 정책으로 사용한다.
+
+## 7. 기존 업무문서
+
+DOCX/PPTX/XLSX 등 기존 자료는 원본을 다시 작성시키지 않고 Evidence로 추출한다.
+
+```bash
+python sdlc/scripts/extract_document_evidence.py \
+  --input <customer-file> \
+  --output sdlc/runtime/evidence/<name>.json
+```
+
+읽지 못한 영역은 Coverage Gap으로 남긴다.
+
+## 8. 변경과 조회
 
 ```bash
 python sdlc/scripts/harness.py change \
@@ -164,97 +143,14 @@ python sdlc/scripts/harness.py change \
 python sdlc/scripts/harness.py check --target RQ-001
 ```
 
-`/change`도 같은 단일 Project Config와 Git/Canonical Guard를 사용하며 동일한 `project_context`를 Agent 입력으로 받는다.
+`work/change`는 `.sdlc/project.yaml`에서 계산된 Project Context와 Git/Source/Canonical Guard를 사용한다.
 
-## 8. Greenfield 시작
-
-Source가 없는 것은 정상이다. `setup`이 확인하지 못한 Framework/DB/Build 등의 기술 사실은 `unresolved`로 남길 수 있다. 사람은 업무정책, 범위, 승인, 기술 선택처럼 실제 판단이 필요한 항목에 집중한다.
-
-Agent는 자료에서 확인할 수 있는 내용은 먼저 초안으로 만들고, 모르는 내용을 업무 사실로 발명하지 않는다.
-
-## 9. Brownfield 시작
-
-먼저 실제 Evidence coverage를 조사한다. “찾지 못함”을 “영향 없음”으로 해석하지 않는다.
-
-Brownfield에서 Agent/도구가 먼저 확인해야 하는 항목:
-
-- Source root / Module
-- Build/Test
-- Language/Framework
-- Controller/API, Service, Repository/Mapper
-- DB Schema
-- Batch/Scheduler
-- Interface/Event
-- 기존 Test/배포 자료
-
-확인 결과는 `.sdlc/project.yaml`과 이후 분석 산출물에 반영하고, 분석하지 못한 영역은 Coverage Gap 또는 확인 필요로 남긴다. 사용자에게 Project Profile/Source Profile 두 개를 별도로 작성시키지 않는다.
-
-## 10. 기존 프로젝트 Compatibility
-
-`.sdlc/project.yaml`이 없는 기존 프로젝트만 기존 `project-profile.yaml` + `source-profile.yaml`을 fallback으로 읽는다.
-
-`setup`이 legacy 파일을 발견하면 현재 Runtime에서 실제 사용하는 핵심 값을 단일 Project Entry로 옮기고, 이후 legacy 두 파일은 Machine compatibility snapshot으로 재생성한다.
-
-새 Project Entry가 존재하면 우선순위는 항상 다음과 같다.
-
-```text
-.sdlc/project.yaml > legacy profile/provider policy value
-```
-
-Provider의 command/timeout 같은 연결 정보 자체는 `agent-provider.json` base에 남지만, Project Config와 중복되는 보호 Branch 정책은 effective artifact에서 Project Config가 우선한다.
-
-## 11. 기존 DOCX/PPTX/XLSX/PDF 업무문서
-
-원본을 다시 작성시키지 않는다.
+## 9. Validation
 
 ```bash
-python sdlc/scripts/extract_document_evidence.py \
-  --input <customer-file> \
-  --output sdlc/runtime/evidence/<name>.json
+python -m unittest tests.test_project_entry_config tests.test_requirement_intake_runtime -v
+python sdlc/scripts/validate_harness_structure.py .
+python sdlc/scripts/validate_document_experience.py .
 ```
 
-읽을 수 없는 문서는 규칙이 없다고 판단하지 않고 Extraction/Coverage Gap으로 남긴다.
-
-## 12. 사용자에게 보이는 문서
-
-한국어 자연어가 기본이다.
-
-- 근거 위치
-- 원본 식별값
-- 확인 수준
-- 현재 상태
-- 제안
-- 미확정
-- 현행 확인
-
-Machine 이름은 내부 metadata에서 유지하더라도 사용자 입력값으로 요구하지 않는다.
-
-## 13. Validation
-
-```bash
-python -m unittest tests.test_project_entry_config -v
-python sdlc/scripts/harness.py check --setup
-```
-
-Behavioral Test는 다음을 확인한다.
-
-- `.sdlc/project.yaml` 하나로 FAST/STANDARD/FULL이 실제 plan에 반영되는가
-- Source root와 Build/Test가 Executor에 전달되는가
-- Project Context가 `work/change` Provider 입력 plan에 포함되는가
-- stale legacy profile/provider 값이 단일 Project Entry를 덮어쓰지 못하는가
-- Project Config의 보호 Branch가 Provider 실행 전에 실제 차단되는가
-- 잘못된/사용되지 않는 Config가 fail-closed 되는가
-
-이 검증은 Config/Runtime 연결을 확인한다. 실제 외부 Agent 품질이나 일반 분석가·개발자의 최초 사용성을 증명하지는 않는다.
-
-## 14. 현재 검증 한계
-
-별도 실증이 필요한 것:
-
-- 실제 외부 Agent Provider가 `.sdlc/project.yaml` 기반 실행에서 일관되게 동작하는가
-- 저수준 Agent가 전달된 Project Context를 적절히 사용하고 모르는 정보를 OPEN으로 남기는가
-- 일반 분석가/개발자/QA가 하나의 설정 파일만 보고 필요한 변경을 할 수 있는가
-- 실제 고객 정책을 Source Evidence로 오승격하지 않는가
-- Hosting의 Branch Protection이 실제 적용됐는가
-
-Fixture/Test 성공은 실제 Agent/Human 성공으로 간주하지 않는다.
+Behavioral Test는 Runtime 연결을 확인한다. 실제 외부 저수준 Agent의 문맥 이해력이나 일반 분석가·개발자·QA의 First-use usability는 별도 실증 대상이며, fixture/test 성공만으로 Production Ready라고 판정하지 않는다.
