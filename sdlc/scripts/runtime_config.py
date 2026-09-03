@@ -7,6 +7,14 @@ Human-maintained entry point:
 Legacy project/source profiles remain readable for old projects, but new projects derive
 machine compatibility profiles from the single project entry. Unknown leaves fail closed as
 DEAD_CONFIG so a setting cannot silently pretend to be effective.
+
+Agent execution is project-configurable but vendor-neutral:
+- INTERACTIVE: the currently running IDE/CLI Agent performs the Stage work.
+- HEADLESS: Harness launches a configured external Provider command.
+
+When ``agent`` is omitted the default is INTERACTIVE. A previously configured legacy
+``sdlc/config/agent-provider.json`` remains readable as a compatibility fallback so existing
+automation projects are not silently switched to interactive execution.
 """
 from __future__ import annotations
 
@@ -20,6 +28,7 @@ LEGACY_PROJECT_PROFILE_PATH = "sdlc/config/project-profile.yaml"
 LEGACY_SOURCE_PROFILE_PATH = "sdlc/config/source-profile.yaml"
 DEFAULT_PROVIDER_CONFIG_PATH = "sdlc/config/agent-provider.json"
 EFFECTIVE_DIR = ".sdlc/runtime/effective"
+AGENT_EXECUTION_MODES = {"INTERACTIVE", "HEADLESS"}
 
 DELIVERY_PROFILES: dict[str, dict[str, Any]] = {
     "FAST": {
@@ -65,6 +74,11 @@ RUNTIME_CONSUMED_PATHS = {
     "source.test_roots",
     "source.resource_roots",
     "git.protected_branches",
+    "agent.execution",
+    "agent.provider.id",
+    "agent.provider.command",
+    "agent.provider.timeout_seconds",
+    "agent.provider.result_filename",
 }
 # These are passed to the Stage Agent as project context, but are not execution switches.
 DOCUMENT_CONTEXT_PREFIXES = (
@@ -245,6 +259,108 @@ def command_list(value: Any) -> list[list[str]]:
     return []
 
 
+def provider_command(project: dict[str, Any]) -> list[str]:
+    raw = nested(project, "agent", "provider", "command", default=[])
+    if raw in (None, "", []):
+        return []
+    if isinstance(raw, str):
+        return shlex.split(raw)
+    if isinstance(raw, list) and all(isinstance(x, str) and x.strip() for x in raw):
+        return [str(x) for x in raw]
+    raise ValueError("agent.provider.command must be a command string or a list of non-empty strings")
+
+
+def agent_execution_mode(project: dict[str, Any]) -> str:
+    value = str(nested(project, "agent", "execution", default="INTERACTIVE") or "INTERACTIVE").upper()
+    if value not in AGENT_EXECUTION_MODES:
+        raise ValueError(f"unsupported agent.execution: {value}; expected INTERACTIVE or HEADLESS")
+    return value
+
+
+def resolve_agent_runtime(project: dict[str, Any], legacy_provider: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Resolve interactive/headless execution while preserving enabled legacy Provider automation."""
+    protected = list(nested(project, "git", "protected_branches", default=["main", "master"]) or ["main", "master"])
+    explicit_agent = isinstance(project.get("agent"), dict)
+    legacy = dict(legacy_provider or {})
+    legacy_command = legacy.get("command")
+    legacy_enabled = bool(
+        not explicit_agent
+        and legacy.get("enabled")
+        and isinstance(legacy_command, list)
+        and legacy_command
+        and all(isinstance(x, str) and x for x in legacy_command)
+    )
+    if legacy_enabled:
+        legacy["protected_branches"] = protected
+        legacy.setdefault("schema_version", 1)
+        legacy.setdefault("provider_class", "EXTERNAL_AGENT")
+        legacy["execution_mode"] = "HEADLESS"
+        return {
+            "schema_version": 1,
+            "execution_mode": "HEADLESS",
+            "config_source": "LEGACY_PROVIDER_CONFIG",
+            "provider_required": True,
+            "ready": True,
+            "provider_id": legacy.get("provider_id") or "LEGACY_AGENT_PROVIDER",
+            "deprecation": "Move Provider settings to .sdlc/project.yaml agent.provider.*",
+            "provider_config": legacy,
+        }
+
+    mode = agent_execution_mode(project)
+    if mode == "INTERACTIVE":
+        provider = {
+            "schema_version": 1,
+            "execution_mode": "INTERACTIVE",
+            "provider_id": "CURRENT_INTERACTIVE_AGENT",
+            "provider_class": "INTERACTIVE_AGENT",
+            "enabled": False,
+            "provider_required": False,
+            "timeout_seconds": 0,
+            "result_filename": "stage-result.json",
+            "command": [],
+            "protected_branches": protected,
+            "allow_dirty_workspace": True,
+            "allow_protected_branch_write": False,
+            "allow_unverified_source_write": False,
+        }
+        return {
+            "schema_version": 1,
+            "execution_mode": "INTERACTIVE",
+            "config_source": "PROJECT_DEFAULT" if not explicit_agent else "PROJECT_ENTRY",
+            "provider_required": False,
+            "ready": True,
+            "provider_id": provider["provider_id"],
+            "provider_config": provider,
+        }
+
+    command = provider_command(project)
+    if not command:
+        raise ValueError("agent.execution HEADLESS requires agent.provider.command")
+    provider = {
+        "schema_version": 1,
+        "execution_mode": "HEADLESS",
+        "provider_id": str(nested(project, "agent", "provider", "id", default="PROJECT_AGENT_PROVIDER") or "PROJECT_AGENT_PROVIDER"),
+        "provider_class": "EXTERNAL_AGENT",
+        "enabled": True,
+        "timeout_seconds": int(nested(project, "agent", "provider", "timeout_seconds", default=180) or 180),
+        "result_filename": str(nested(project, "agent", "provider", "result_filename", default="stage-result.json") or "stage-result.json"),
+        "command": command,
+        "protected_branches": protected,
+        "allow_dirty_workspace": False,
+        "allow_protected_branch_write": False,
+        "allow_unverified_source_write": False,
+    }
+    return {
+        "schema_version": 1,
+        "execution_mode": "HEADLESS",
+        "config_source": "PROJECT_ENTRY",
+        "provider_required": True,
+        "ready": True,
+        "provider_id": provider["provider_id"],
+        "provider_config": provider,
+    }
+
+
 def source_roots(config: dict[str, Any]) -> list[str]:
     roots: list[str] = []
     for key in ["roots", "test_roots", "resource_roots"]:
@@ -308,6 +424,21 @@ def _validate_project_entry(project: dict[str, Any]) -> None:
     protected = nested(project, "git", "protected_branches", default=["main", "master"])
     if not isinstance(protected, list) or not all(isinstance(x, str) and x.strip() for x in protected):
         raise ValueError("git.protected_branches must be a list of non-empty strings")
+    agent = project.get("agent")
+    if agent is not None and not isinstance(agent, dict):
+        raise ValueError("agent must be a mapping")
+    mode = agent_execution_mode(project)
+    provider = nested(project, "agent", "provider", default={})
+    if provider not in ({}, None) and not isinstance(provider, dict):
+        raise ValueError("agent.provider must be a mapping")
+    if mode == "HEADLESS":
+        if not provider_command(project):
+            raise ValueError("agent.execution HEADLESS requires agent.provider.command")
+        timeout = nested(project, "agent", "provider", "timeout_seconds", default=180)
+        if not isinstance(timeout, int) or timeout <= 0:
+            raise ValueError("agent.provider.timeout_seconds must be a positive integer")
+    elif isinstance(provider, dict) and provider:
+        raise ValueError("agent.provider settings are only valid when agent.execution is HEADLESS")
 
 
 def ensure_no_dead_config(project: dict[str, Any]) -> None:
@@ -436,6 +567,7 @@ def resolve_runtime_config(
         "project_context": compact_project_context(project) if project else {},
         "project_profile": project_profile,
         "source_profile": source_profile,
+        "agent_execution_mode": agent_execution_mode(project) if project else "INTERACTIVE",
         "usage": classify_project_config(project) if project else {"runtime": [], "extension": [], "document": [], "dead": []},
     }
 
@@ -471,12 +603,19 @@ def materialize_effective_profiles(
     base_provider = provider_config_path or (root / DEFAULT_PROVIDER_CONFIG_PATH)
     if not base_provider.is_absolute():
         base_provider = root / base_provider
-    if base_provider.is_file():
-        provider = load_config(base_provider)
-        protected = nested(resolved["project"], "git", "protected_branches", default=None)
-        if protected is not None:
-            provider["protected_branches"] = list(protected)
-        provider_path = effective / "agent-provider.json"
-        provider_path.write_text(json.dumps(provider, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        paths["provider_config"] = provider_path
+    legacy_provider = load_config(base_provider) if base_provider.is_file() else {}
+    agent_runtime = resolve_agent_runtime(resolved["project"], legacy_provider=legacy_provider)
+
+    execution_path = effective / "agent-execution.json"
+    execution_view = {key: value for key, value in agent_runtime.items() if key != "provider_config"}
+    execution_path.write_text(json.dumps(execution_view, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    paths["agent_execution"] = execution_path
+
+    provider = dict(agent_runtime["provider_config"])
+    protected = nested(resolved["project"], "git", "protected_branches", default=None)
+    if protected is not None:
+        provider["protected_branches"] = list(protected)
+    provider_path = effective / "agent-provider.json"
+    provider_path.write_text(json.dumps(provider, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    paths["provider_config"] = provider_path
     return paths

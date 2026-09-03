@@ -10,7 +10,7 @@ Examples:
   python sdlc/scripts/harness.py change --target RQ-001 --change "환불 상태 조회 추가"
 
 Project users maintain one setting file: .sdlc/project.yaml.
-They do not need to edit Rule/Skill/Reference/Contract files or blank stage templates.
+Agent execution is vendor-neutral: INTERACTIVE is the default; HEADLESS is opt-in.
 """
 from __future__ import annotations
 
@@ -56,8 +56,25 @@ def _has_flag(args: list[str], option: str) -> bool:
     return option in args
 
 
+def _drop_option(args: list[str], option: str) -> list[str]:
+    """Drop ``--option value`` and ``--option=value`` from routed argv."""
+    out: list[str] = []
+    skip = False
+    for value in args:
+        if skip:
+            skip = False
+            continue
+        if value == option:
+            skip = True
+            continue
+        if value.startswith(option + "="):
+            continue
+        out.append(value)
+    return out
+
+
 def _runtime_profile_args(args: list[str]) -> tuple[list[str], dict]:
-    """Resolve the single project entry and append machine-only effective artifacts."""
+    """Resolve project entry and append machine-only effective artifacts plus Agent runtime."""
     config = _load("harness_runtime_config", "runtime_config.py")
     root = _root_from_args(args)
     resolved = config.resolve_runtime_config(root)
@@ -68,22 +85,26 @@ def _runtime_profile_args(args: list[str]) -> tuple[list[str], dict]:
     if not provider_path.is_absolute():
         provider_path = root / provider_path
     paths = config.materialize_effective_profiles(root, resolved, provider_config_path=provider_path)
+    execution = json.loads(paths["agent_execution"].read_text(encoding="utf-8"))
+    resolved["agent_runtime"] = execution
+
     routed = list(args)
-    routed += ["--project-profile", str(paths["project_profile"]), "--source-profile", str(paths["source_profile"])]
-    if "provider_config" in paths:
-        routed += ["--provider-config", str(paths["provider_config"])]
+    routed = _drop_option(routed, "--project-profile")
+    routed = _drop_option(routed, "--source-profile")
+    routed = _drop_option(routed, "--provider-config")
+    routed += [
+        "--project-profile", str(paths["project_profile"]),
+        "--source-profile", str(paths["source_profile"]),
+        "--provider-config", str(paths["provider_config"]),
+    ]
     return routed, resolved
 
 
 def _connect_provider_from_setup_args(setup, args: list[str], result: dict) -> dict:
-    """Allow official setup to connect a Provider later without rewriting project.yaml.
+    """Backward-compatible ``--provider-command`` bridge for existing automation users.
 
-    ``bootstrap_project.py`` intentionally preserves existing user files unless ``--force`` is
-    supplied. For first-use UX that meant a Provider command supplied on a later setup run could
-    not replace the initial UNCONFIGURED provider without either editing an internal JSON file or
-    forcing the whole project entry. The official harness fixes only that handoff: project.yaml is
-    still preserved, while an explicitly supplied Provider command updates the machine Provider
-    config and regenerates effective runtime profiles.
+    New projects should configure HEADLESS under ``.sdlc/project.yaml``. This bridge deliberately
+    keeps the old provider JSON only as a legacy fallback and marks it deprecated.
     """
     provider_command = _value_from_args(args, "--provider-command", "").strip()
     if not provider_command:
@@ -100,22 +121,25 @@ def _connect_provider_from_setup_args(setup, args: list[str], result: dict) -> d
     provider_path = root / config.DEFAULT_PROVIDER_CONFIG_PATH
     provider_path.parent.mkdir(parents=True, exist_ok=True)
     provider_path.write_text(json.dumps(provider, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    config.materialize_effective_profiles(root, resolved, provider_config_path=provider_path)
+    effective = config.materialize_effective_profiles(root, resolved, provider_config_path=provider_path)
+    execution = json.loads(effective["agent_execution"].read_text(encoding="utf-8"))
 
-    result["provider_ready"] = True
+    result["agent_execution"] = execution
+    result["provider_ready"] = execution.get("execution_mode") == "HEADLESS" and bool(execution.get("ready"))
     result["status"] = "READY_FOR_PLAN"
     result["open_items"] = [x for x in result.get("open_items", []) if x != "실제 Agent Provider command"]
-    result.setdefault("writes", {})[config.DEFAULT_PROVIDER_CONFIG_PATH] = "UPDATED_BY_OFFICIAL_SETUP"
+    result.setdefault("writes", {})[config.DEFAULT_PROVIDER_CONFIG_PATH] = "UPDATED_BY_LEGACY_SETUP_OPTION"
     result["provider_connection"] = {
-        "status": "CONNECTED",
+        "status": "CONNECTED_LEGACY_COMPATIBILITY",
+        "deprecated": True,
         "project_config_preserved": True,
-        "message": "Provider command만 갱신했으며 .sdlc/project.yaml은 다시 작성하지 않았습니다.",
+        "message": "--provider-command는 호환 경로입니다. 신규 자동화는 .sdlc/project.yaml의 agent.execution=HEADLESS를 사용하세요.",
     }
     return result
 
 
 def _run_setup(args: list[str]) -> int:
-    """Keep bootstrap safety semantics but expose a non-blocking first-use handoff."""
+    """Bootstrap project config. INTERACTIVE is ready without any Provider setup."""
     setup = _load("harness_setup", "bootstrap_project.py")
     captured = StringIO()
     with redirect_stdout(captured):
@@ -128,18 +152,33 @@ def _run_setup(args: list[str]) -> int:
         return code
     if isinstance(result, dict) and result.get("status") != "SETUP_FAILED":
         result = _connect_provider_from_setup_args(setup, args, result)
-        if result.get("status") == "CONFIGURED_PROVIDER_REQUIRED":
-            result["status"] = "SETUP_READY_PROVIDER_PENDING"
-            result["work_blocked_reason"] = "Agent Provider가 아직 연결되지 않았습니다. setup/intake는 계속 진행할 수 있고 work에서만 Provider가 필요합니다."
-            code = 0
-        elif result.get("status") == "READY_FOR_PLAN":
-            code = 0
+        root = _root_from_args(args)
+        config = _load("harness_setup_mode_config", "runtime_config.py")
+        try:
+            resolved = config.resolve_runtime_config(root)
+            provider_path = root / config.DEFAULT_PROVIDER_CONFIG_PATH
+            legacy = config.load_config(provider_path) if provider_path.is_file() else {}
+            execution = config.resolve_agent_runtime(resolved["project"], legacy_provider=legacy)
+            result["agent_execution"] = {key: value for key, value in execution.items() if key != "provider_config"}
+            if execution["execution_mode"] == "INTERACTIVE":
+                result["status"] = "READY_FOR_PLAN"
+                result["provider_ready"] = False
+                result["open_items"] = [x for x in result.get("open_items", []) if x != "실제 Agent Provider command"]
+                result["message"] = "현재 IDE/CLI Agent를 사용하는 INTERACTIVE 실행 준비가 완료되었습니다. 별도 Provider 설정은 필요하지 않습니다."
+                code = 0
+            elif execution.get("ready"):
+                result["status"] = "READY_FOR_PLAN"
+                code = 0
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            result["status"] = "SETUP_FAILED"
+            result["error"] = str(exc)
+            code = 2
 
         result["user_entrypoint"] = {
             "start_here": "docs/00_시작/START_HERE.md",
             "project_setup_guide": "docs/00_시작/프로젝트_설정_가이드.md",
             "zero_to_one_intake": "CONNECTED",
-            "message": "setup 확인 후 요구사항 원본을 intake하면 실제 RQ Target과 다음 work 명령을 받는다.",
+            "message": "setup 확인 후 요구사항 원본을 intake하고 현재 Agent에서 work를 진행한다.",
         }
         result["next_commands"] = [
             "python sdlc/scripts/harness.py check --setup",
@@ -147,7 +186,6 @@ def _run_setup(args: list[str]) -> int:
         ]
         result.pop("next_if_target_exists", None)
         result.pop("next_if_no_target", None)
-        root = _root_from_args(args)
         result_path = root / "sdlc/runtime/setup/setup-result.json"
         result_path.parent.mkdir(parents=True, exist_ok=True)
         result_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -158,7 +196,6 @@ def _run_setup(args: list[str]) -> int:
 
 
 def _run_check(args: list[str]) -> int:
-    """Show setup readiness without treating a not-yet-connected Provider as setup failure."""
     check = _load("harness_check", "run_check.py")
     captured = StringIO()
     with redirect_stdout(captured):
@@ -169,16 +206,6 @@ def _run_check(args: list[str]) -> int:
     except json.JSONDecodeError:
         print(raw)
         return code
-
-    if _has_flag(args, "--setup") and result.get("status") == "SETUP_OR_PROVIDER_REQUIRED":
-        setup = result.get("setup") or {}
-        provider = setup.get("provider") or {}
-        config_ready = bool(setup.get("project_config") and setup.get("canonical_store"))
-        if config_ready and not provider.get("enabled"):
-            result["status"] = "SETUP_READY_PROVIDER_PENDING"
-            result["message"] = "프로젝트 설정은 사용할 수 있습니다. 요구사항 intake는 진행할 수 있으며 Agent work 전에만 Provider 연결이 필요합니다."
-            result["work_blocked_reason"] = "AGENT_PROVIDER_PENDING"
-            code = 0
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return code
 
@@ -198,12 +225,17 @@ def main(argv: list[str] | None = None) -> int:
         return _load("harness_review", "review_work.py").main(args)
     if command in {"work", "change"}:
         try:
-            args, _ = _runtime_profile_args(args)
+            args, resolved = _runtime_profile_args(args)
         except (OSError, ValueError, json.JSONDecodeError) as exc:
             print(json.dumps({"status": "PROJECT_CONFIG_FAILED", "error": str(exc)}, ensure_ascii=False, indent=2))
             return 2
+        mode = str((resolved.get("agent_runtime") or {}).get("execution_mode") or "INTERACTIVE")
         if command == "work":
+            if mode == "INTERACTIVE":
+                return _load("harness_interactive_work", "interactive_work.py").main(_drop_option(args, "--provider-config"))
             return _load("harness_work_handoff", "work_handoff.py").main(args)
+        if mode == "INTERACTIVE":
+            return _load("harness_interactive_change", "interactive_change.py").main(_drop_option(args, "--provider-config"))
         return _load("harness_change", "run_change.py").main(args)
     if command == "check":
         return _run_check(args)

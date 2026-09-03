@@ -1,6 +1,7 @@
 # 작성 완료 예시입니다. 새 프로젝트에서는 이 파일 자체를 수정하지 말고
 # setup이 만든 .sdlc/project.yaml 한 파일만 유지합니다.
 # 모르는 값을 예시 값으로 복사하지 말고 unresolved에 남깁니다.
+# agent 항목은 생략하면 INTERACTIVE가 기본입니다.
 schema_version: 1
 project:
   name: "order-service"
@@ -8,6 +9,8 @@ project:
   description: "주문/결제/재고 연계 서비스를 유지보수하는 프로젝트"
 delivery:
   profile: "STANDARD"
+agent:
+  execution: "INTERACTIVE"
 technology:
   language: "Java"
   framework: "Spring Boot"
