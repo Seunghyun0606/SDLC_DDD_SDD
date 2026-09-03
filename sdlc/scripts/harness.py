@@ -232,16 +232,8 @@ def main(argv: list[str] | None = None) -> int:
             if mode == "INTERACTIVE":
                 return _load("harness_interactive_work", "interactive_work.py").main(_drop_option(args, "--provider-config"))
             return _load("harness_work_handoff", "work_handoff.py").main(args)
-        # /change remains on its guarded Provider executor until its interactive handoff adapter is
-        # added. Fail closed instead of silently invoking an unconfigured Provider in INTERACTIVE.
-        if mode == "INTERACTIVE" and not _has_flag(args, "--plan-only"):
-            print(json.dumps({
-                "status": "INTERACTIVE_CHANGE_ADAPTER_REQUIRED",
-                "execution_mode": "INTERACTIVE",
-                "message": "현재 변경은 plan-only까지 지원합니다. change interactive handoff adapter를 사용하기 전에는 Canonical 변경을 성공으로 기록하지 않습니다.",
-                "canonical_applied": False,
-            }, ensure_ascii=False, indent=2))
-            return 3
+        if mode == "INTERACTIVE":
+            return _load("harness_interactive_change", "interactive_change.py").main(_drop_option(args, "--provider-config"))
         return _load("harness_change", "run_change.py").main(args)
     if command == "check":
         return _run_check(args)
