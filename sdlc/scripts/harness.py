@@ -92,9 +92,11 @@ def _runtime_profile_args(args: list[str]) -> tuple[list[str], dict]:
     routed = _drop_option(routed, "--project-profile")
     routed = _drop_option(routed, "--source-profile")
     routed = _drop_option(routed, "--provider-config")
-    routed += ["--project-profile", str(paths["project_profile"]), "--source-profile", str(paths["source_profile"])]
-    if execution.get("execution_mode") == "HEADLESS":
-        routed += ["--provider-config", str(paths["provider_config"])]
+    routed += [
+        "--project-profile", str(paths["project_profile"]),
+        "--source-profile", str(paths["source_profile"]),
+        "--provider-config", str(paths["provider_config"]),
+    ]
     return routed, resolved
 
 
