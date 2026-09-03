@@ -26,20 +26,14 @@ WORK = _load("check_work", SCRIPT_DIR / "run_work.py")
 OPEN_WORDS = {"OPEN", "CHECK_REQUIRED", "CONFLICT", "PARTIAL", "CANDIDATE", "ASSUMED", "INFERRED"}
 
 
-def _provider(path: Path) -> dict[str, Any]:
+def _legacy_provider(path: Path) -> dict[str, Any]:
     if not path.is_file():
-        return {"configured": False, "enabled": False, "reason": "PROVIDER_CONFIG_MISSING"}
+        return {}
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return {"configured": False, "enabled": False, "reason": "PROVIDER_CONFIG_INVALID"}
-    command = data.get("command")
-    return {
-        "configured": True,
-        "enabled": bool(data.get("enabled") and isinstance(command, list) and command),
-        "provider_id": data.get("provider_id"),
-        "provider_class": data.get("provider_class"),
-    }
+        return {}
+    return data if isinstance(data, dict) else {}
 
 
 def _open_values(value: Any, prefix: str = "") -> list[dict[str, str]]:
@@ -72,30 +66,48 @@ def _latest_reverse(root: Path) -> dict[str, Any] | None:
 
 def check(root: Path, *, target_id: str | None = None, setup_only: bool = False) -> dict[str, Any]:
     root = root.resolve()
-    provider_path = root / "sdlc/config/agent-provider.json"
+    provider_path = root / CONFIG.DEFAULT_PROVIDER_CONFIG_PATH
     store_path = root / "sdlc/canonical/store.json"
     setup_result = root / "sdlc/runtime/setup/setup-result.json"
     resolved = CONFIG.resolve_runtime_config(root)
     project = resolved["project"]
     project_profile = resolved["project_profile"]
     source_profile = resolved["source_profile"]
-    provider = _provider(provider_path)
+    legacy_provider = _legacy_provider(provider_path)
+    agent_runtime = CONFIG.resolve_agent_runtime(project, legacy_provider=legacy_provider) if project else {
+        "execution_mode": "INTERACTIVE", "ready": False, "provider_required": False, "config_source": "UNCONFIGURED"
+    }
+    CONFIG.materialize_effective_profiles(root, resolved, provider_config_path=provider_path) if resolved["source_kind"] != "UNCONFIGURED" else None
     git = WORK.git_metadata(root)
     policy = CONFIG.delivery_policy(project_profile) if project_profile else None
     config_ok = resolved["source_kind"] != "UNCONFIGURED"
+    execution_ready = bool(config_ok and agent_runtime.get("ready"))
 
+    provider_view = agent_runtime.get("provider_config") or {}
     base = {
-        "schema_version": 2,
-        "status": "READY" if config_ok and provider["enabled"] else "SETUP_OR_PROVIDER_REQUIRED",
+        "schema_version": 3,
+        "status": "READY" if execution_ready else "SETUP_OR_AGENT_EXECUTION_REQUIRED",
         "setup": {
             "project_config": (root / CONFIG.PROJECT_ENTRY_PATH).is_file(),
             "config_source": resolved["source_kind"],
             "user_config": CONFIG.PROJECT_ENTRY_PATH,
-            # Compatibility visibility only; users do not edit these files.
             "project_profile": (root / CONFIG.LEGACY_PROJECT_PROFILE_PATH).is_file(),
             "source_profile": (root / CONFIG.LEGACY_SOURCE_PROFILE_PATH).is_file(),
             "legacy_profiles_role": "MACHINE_GENERATED_OR_LEGACY_FALLBACK",
-            "provider": provider,
+            "agent_execution": {
+                "mode": agent_runtime.get("execution_mode"),
+                "ready": agent_runtime.get("ready"),
+                "config_source": agent_runtime.get("config_source"),
+                "provider_required": agent_runtime.get("provider_required"),
+                "provider_id": agent_runtime.get("provider_id"),
+                "deprecation": agent_runtime.get("deprecation"),
+            },
+            "provider": {
+                "required": agent_runtime.get("provider_required"),
+                "enabled": bool(provider_view.get("enabled")),
+                "provider_id": provider_view.get("provider_id"),
+                "provider_class": provider_view.get("provider_class"),
+            },
             "canonical_store": store_path.is_file(),
             "last_setup_result": setup_result.relative_to(root).as_posix() if setup_result.is_file() else None,
         },
@@ -159,7 +171,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Show Harness/project/target status from .sdlc/project.yaml.")
     ap.add_argument("--root", default=".")
     ap.add_argument("--target")
-    ap.add_argument("--setup", action="store_true", help="Only check project/provider readiness")
+    ap.add_argument("--setup", action="store_true", help="Only check project/agent execution readiness")
     ap.add_argument("--out")
     args = ap.parse_args(argv)
     try:
@@ -172,7 +184,7 @@ def main(argv: list[str] | None = None) -> int:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
     print(text, end="")
-    return 0 if result.get("status") == "READY" else 4 if result.get("status") == "SETUP_OR_PROVIDER_REQUIRED" else 2
+    return 0 if result.get("status") == "READY" else 4 if result.get("status") == "SETUP_OR_AGENT_EXECUTION_REQUIRED" else 2
 
 
 if __name__ == "__main__":
