@@ -4,6 +4,9 @@
 New project users edit only ``.sdlc/project.yaml``. Legacy project/source profiles are derived
 machine snapshots for backward compatibility. Missing technical facts are recorded as
 ``unresolved``; setup never invents Business Truth.
+
+Agent execution defaults to INTERACTIVE. A Provider is required only when HEADLESS execution is
+selected explicitly or an enabled legacy Provider is connected for backward compatibility.
 """
 from __future__ import annotations
 
@@ -336,7 +339,11 @@ def bootstrap(
         )
         validation = {"exit_code": cp.returncode, "stdout": cp.stdout[-4000:], "stderr": cp.stderr[-4000:]}
     structure_ok = validation is None or validation["exit_code"] == 0
-    provider_ready = bool(provider.get("enabled") and provider.get("command"))
+
+    agent_runtime = CONFIG.resolve_agent_runtime(project, legacy_provider=provider)
+    execution_ready = bool(agent_runtime.get("ready"))
+    execution_mode = str(agent_runtime.get("execution_mode") or "INTERACTIVE")
+    provider_ready = bool(execution_mode == "HEADLESS" and execution_ready)
 
     adapter = "NONE"
     if resolved_mode in {"BROWNFIELD", "HYBRID"}:
@@ -350,17 +357,17 @@ def bootstrap(
             adapter = "PROJECT_ADAPTER_REQUIRED_OR_CORE_PARTIAL"
 
     opens = [str(x) for x in CONFIG.nested(project, "unresolved", default=[]) if str(x).strip()]
-    if not provider_ready:
+    if execution_mode == "HEADLESS" and not execution_ready:
         opens.append("실제 Agent Provider command")
     status = (
         "READY_FOR_PLAN"
-        if provider_ready and structure_ok
+        if execution_ready and structure_ok
         else "HARNESS_VALIDATION_FAILED"
         if not structure_ok
-        else "CONFIGURED_PROVIDER_REQUIRED"
+        else "AGENT_EXECUTION_CONFIG_REQUIRED"
     )
     report = {
-        "schema_version": 2,
+        "schema_version": 3,
         "status": status,
         "project_name": CONFIG.nested(project, "project", "name", default=name),
         "mode": resolved_mode,
@@ -368,6 +375,14 @@ def bootstrap(
         "user_config": CONFIG.PROJECT_ENTRY_PATH,
         "runtime_config_source": check["source_kind"],
         "config_usage": check["usage"],
+        "agent_execution": {
+            "mode": execution_mode,
+            "ready": execution_ready,
+            "provider_required": bool(agent_runtime.get("provider_required")),
+            "provider_id": agent_runtime.get("provider_id"),
+            "config_source": agent_runtime.get("config_source"),
+            "deprecation": agent_runtime.get("deprecation"),
+        },
         "legacy_profiles": {
             "role": "MACHINE_GENERATED_COMPATIBILITY_ONLY",
             "project": CONFIG.LEGACY_PROJECT_PROFILE_PATH,
