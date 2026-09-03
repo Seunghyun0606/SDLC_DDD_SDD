@@ -37,6 +37,7 @@ jobs:
           python -m unittest \
             tests.test_project_entry_config \
             tests.test_agent_neutral_execution \
+            tests.test_agent_core_reference_parity \
             tests.test_requirement_intake_runtime \
             tests.test_p0_p1_production_readiness -v
       - name: Existing core runtime regressions
