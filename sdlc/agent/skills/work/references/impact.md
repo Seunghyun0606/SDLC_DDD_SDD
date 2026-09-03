@@ -32,15 +32,26 @@ Technical relation과 Business impact를 분리하고 confidence/status/evidence
 ## Steps
 1. Technical Impact Seed와 현재 Source root를 정리한다.
 2. Brownfield이면 `sdlc/config/impact-adapter-profile.yaml` 또는 Project Profile에서 Adapter 설정을 확인한다.
-3. `adapter.enabled: true`이고 실제 `adapter_id`/implementation이 Project에서 선택된 경우에만 해당 Adapter를 실행한다.
-4. Adapter 결과의 `nodes / edges / coverage / coverage_gaps / unsupported_patterns / completion_status`를 먼저 읽는다.
-5. `completion_status = PARTIAL_COVERAGE_GAPS`이면 미지원 영역을 CHECK_REQUIRED로 유지한다.
-6. Adapter가 없거나 비활성화되어 있으면 Core Trace/Source Evidence로 가능한 범위만 분석하고 `PARTIAL_PROJECT_ADAPTER_REQUIRED`를 남긴다.
-7. Technical Impact를 정리한다.
-8. Functional Impact를 정리한다.
-9. Business Impact는 별도로 판단한다. Source/Adapter 관계만으로 Business Truth를 확정하지 않는다.
-10. 각 Candidate에 Evidence/Confidence/Status를 남긴다.
-11. Brownfield에서는 `sdlc/design/contracts/brownfield-impact-contract.json`의 모든 Coverage dimension을 평가한다.
+3. `adapter.enabled: true`이고 실제 `adapter_id`/implementation이 Project에서 선택된 경우에만 해당 Adapter를 실행한다. 예시 Profile의 `available_pilots`에 존재한다는 이유만으로 자동 실행하지 않는다.
+4. 현재 포함된 `JAVA_SPRING_MYBATIS_STATIC_PILOT_V0_1`을 Project가 명시적으로 선택한 경우 다음처럼 실행할 수 있다.
+   - `python sdlc/custom/project/adapters/impact/java_spring_mybatis.py --source-root <source-root> --out <impact-adapter-result.json>`
+5. Adapter 결과의 `nodes / edges / coverage / coverage_gaps / unsupported_patterns / completion_status`를 먼저 읽는다.
+6. `completion_status = PARTIAL_COVERAGE_GAPS`이면 미지원 영역을 CHECK_REQUIRED로 유지한다. 일부 CALLER/CALLEE/DATA 관계가 나왔다는 이유로 COMPLETE로 승격하지 않는다.
+7. Adapter가 없거나 비활성화되어 있으면 Core Trace/Source Evidence로 가능한 범위만 분석하고 `PARTIAL_PROJECT_ADAPTER_REQUIRED`를 남긴다.
+8. Technical Impact를 정리한다.
+9. Functional Impact를 정리한다.
+10. Business Impact는 별도로 판단한다. Source/Adapter 관계만으로 Business Truth를 확정하지 않는다.
+11. 각 Candidate에 Evidence/Confidence/Status를 남긴다.
+12. Brownfield에서는 `sdlc/design/contracts/brownfield-impact-contract.json`의 모든 Coverage dimension을 평가한다.
+
+## 현재 Java/Spring/MyBatis Pilot 해석 규칙
+- 명시적 Spring mapping annotation → `ENTRY_POINT / HIGH / OBSERVED`
+- `*Controller` naming만 존재 → `ENTRY_POINT / MEDIUM / CHECK_REQUIRED`
+- Java direct field-member call → 정적 CALLER/CALLEE Evidence
+- MyBatis SQL → READS/WRITES Data Evidence
+- `CREATE TABLE` schema → DATA_ASSET Evidence
+- Reflection/Proxy/Transaction/Event/External API/Config 등 미지원 영역 → Coverage Gap
+- Pilot fixture 검증 성공 → 실제 Production Repository COMPLETE 판정 근거가 아님
 
 ## Output
 - Business/Functional/Technical Impact
