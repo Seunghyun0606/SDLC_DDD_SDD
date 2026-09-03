@@ -22,7 +22,9 @@ jobs:
             sdlc/scripts/import_requirements.py \
             sdlc/scripts/intake_requirements.py \
             sdlc/scripts/run_work.py \
+            sdlc/scripts/interactive_work.py \
             sdlc/scripts/run_change.py \
+            sdlc/scripts/interactive_change.py \
             sdlc/scripts/run_check.py \
             sdlc/scripts/apply_canonical_delta.py \
             sdlc/scripts/extract_document_evidence.py \
@@ -34,6 +36,7 @@ jobs:
         run: |
           python -m unittest \
             tests.test_project_entry_config \
+            tests.test_agent_neutral_execution \
             tests.test_requirement_intake_runtime \
             tests.test_p0_p1_production_readiness -v
       - name: Existing core runtime regressions
