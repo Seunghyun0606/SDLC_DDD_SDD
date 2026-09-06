@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "policy_id": "CHANGE_EXECUTION_POLICY_V1_9_REDTEAM",
+  "principle": "Change Level -> Required Semantic Work -> Required Evidence -> Required Human Review -> Artifact Projection",
+  "levels": {
+    "L1": {
+      "name": "MICRO",
+      "default_entry_stage": "DEVELOPMENT",
+      "semantic_work": ["INTENT", "IMPACT_SANITY_CHECK", "IMPLEMENTATION", "TEST", "RECONCILE"],
+      "required_evidence": ["INTENT_EVIDENCE", "LOCAL_IMPACT_EVIDENCE", "SOURCE_DIFF", "TEST_RESULT"],
+      "required_human_review": ["INTENT_CONFIRM_IF_UNCERTAIN", "RELEASE_BLOCKER_ONLY"],
+      "stage_allowlist": ["DEVELOPMENT", "TEST", "VERIFY", "KNOWLEDGE_PROMOTION"],
+      "program_spec_mode": "CORE_ONLY",
+      "bpmn": "OFF"
+    },
+    "L2": {
+      "name": "LOCAL",
+      "default_entry_stage": "DEVELOPMENT",
+      "semantic_work": ["INTENT", "IMPACT", "IMPLEMENTATION_DELTA", "TEST", "RECONCILE"],
+      "required_evidence": ["INTENT_EVIDENCE", "LOCAL_IMPACT_EVIDENCE", "SOURCE_DIFF", "TEST_RESULT"],
+      "required_human_review": ["BUSINESS_RULE_IF_CHANGED", "RELEASE_BLOCKER_ONLY"],
+      "stage_allowlist": ["IMPACT", "DEVELOPMENT", "TEST", "VERIFY", "KNOWLEDGE_PROMOTION"],
+      "program_spec_mode": "CORE_PLUS_TRIGGERED",
+      "bpmn": "OFF"
+    },
+    "L3": {
+      "name": "FEATURE",
+      "default_entry_stage": "DESIGN",
+      "semantic_work": ["INTENT", "BUSINESS_FUNCTIONAL_DESIGN", "IMPACT", "PROGRAM_DELTA", "DEVELOPMENT", "REGRESSION", "RECONCILE"],
+      "required_evidence": ["INTENT_EVIDENCE", "IMPACT_EVIDENCE", "FUNCTIONAL_DESIGN", "SOURCE_DIFF", "REGRESSION_RESULT"],
+      "required_human_review": ["BUSINESS_DECISIONS", "FUNCTIONAL_DESIGN", "RELEASE_BLOCKERS"],
+      "stage_allowlist": ["CLARIFY", "DISCOVERY", "IMPACT", "DESIGN", "PROGRAM", "DEVELOPMENT", "TEST", "VERIFY", "KNOWLEDGE_PROMOTION"],
+      "program_spec_mode": "CORE_PLUS_TRIGGERED",
+      "bpmn": "CONDITIONAL"
+    },
+    "L4": {
+      "name": "PROCESS",
+      "default_entry_stage": "PROCESS",
+      "semantic_work": ["INTENT", "AS_IS_TO_BE_PROCESS", "IMPACT", "FULL_FUNCTIONAL_DESIGN", "DEVELOPMENT", "REGRESSION", "RECONCILE"],
+      "required_evidence": ["INTENT_EVIDENCE", "PROCESS_EVIDENCE", "FULL_IMPACT_EVIDENCE", "FUNCTIONAL_DESIGN", "SOURCE_DIFF", "REGRESSION_RESULT"],
+      "required_human_review": ["BUSINESS_POLICY", "PROCESS_DESIGN", "CROSS_SYSTEM_RISK", "RELEASE_DECISION"],
+      "stage_allowlist": ["CLARIFY", "PROCESS", "DISCOVERY", "IMPACT", "DESIGN", "PROGRAM", "DEVELOPMENT", "TEST", "VERIFY", "KNOWLEDGE_PROMOTION"],
+      "program_spec_mode": "CORE_PLUS_TRIGGERED",
+      "bpmn": "RECOMMENDED_FOR_COMPLEX_PROCESS"
+    },
+    "L5": {
+      "name": "ARCH",
+      "default_entry_stage": "IMPACT",
+      "semantic_work": ["INTENT", "ARCHITECTURE", "CROSS_DOMAIN_SECURITY_MIGRATION", "FULL_IMPACT", "FULL_GOVERNANCE", "DEVELOPMENT", "REGRESSION", "RECONCILE"],
+      "required_evidence": ["INTENT_EVIDENCE", "ARCHITECTURE_EVIDENCE", "FULL_IMPACT_EVIDENCE", "SECURITY_MIGRATION_EVIDENCE", "SOURCE_DIFF", "REGRESSION_RESULT"],
+      "required_human_review": ["ARCHITECTURE_DECISION", "SECURITY_OR_MIGRATION_DECISION", "CROSS_DOMAIN_GOVERNANCE", "RELEASE_DECISION"],
+      "stage_allowlist": ["CLARIFY", "PROCESS", "DISCOVERY", "IMPACT", "DESIGN", "PROGRAM", "DEVELOPMENT", "TEST", "VERIFY", "KNOWLEDGE_PROMOTION"],
+      "program_spec_mode": "CORE_PLUS_TRIGGERED",
+      "bpmn": "RECOMMENDED_WHEN_WORKFLOW_OR_EVENT_DRIVEN"
+    }
+  },
+  "bpmn_triggers": ["HUMAN_WORKFLOW", "APPROVAL", "TIMER_OR_BATCH", "CROSS_SYSTEM_MESSAGE", "EXCEPTION_HEAVY", "SAGA_OR_COMPLEX_STATE", "CROSS_DOMAIN_PROCESS"],
+  "guardrails": {
+    "explicit_stage_override_allowed_for_debug_or_reentry": true,
+    "automatic_downgrade_allowed": false,
+    "skipped_internal_stage_is_not_failed_stage": true,
+    "artifact_count_is_not_semantic_work_count": true,
+    "machine_evidence_is_not_human_maintenance": true
+  }
+}
