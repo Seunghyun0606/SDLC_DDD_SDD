@@ -11,20 +11,15 @@ Common path:
 require users to maintain Canonical/Trace/Provenance/Source Hash/Stage Result internals.
 """
 from __future__ import annotations
-
-import importlib.util
-import json
-import sys
+import importlib.util, json, sys
 from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
-
 def _load(name: str, filename: str):
     path = SCRIPT_DIR / filename; spec = importlib.util.spec_from_file_location(name, path); mod = importlib.util.module_from_spec(spec); assert spec and spec.loader; sys.modules[name] = mod; spec.loader.exec_module(mod); return mod
-
 
 def _root_from_args(args: list[str]) -> Path:
     for i, value in enumerate(args):
@@ -32,16 +27,14 @@ def _root_from_args(args: list[str]) -> Path:
         if value.startswith("--root="): return Path(value.split("=", 1)[1]).resolve()
     return Path(".").resolve()
 
-
 def _value_from_args(args: list[str], option: str, default: str) -> str:
     for i, value in enumerate(args):
         if value == option and i + 1 < len(args): return args[i + 1]
         if value.startswith(option + "="): return value.split("=", 1)[1]
     return default
 
-
 def _drop_option(args: list[str], option: str) -> list[str]:
-    out: list[str] = []; skip = False
+    out, skip = [], False
     for value in args:
         if skip: skip = False; continue
         if value == option: skip = True; continue
@@ -49,16 +42,14 @@ def _drop_option(args: list[str], option: str) -> list[str]:
         out.append(value)
     return out
 
-
 def _runtime_profile_args(args: list[str]) -> tuple[list[str], dict]:
     config = _load("harness_runtime_config", "runtime_config_v19.py"); root = _root_from_args(args); resolved = config.resolve_runtime_config(root)
     if resolved["source_kind"] == "UNCONFIGURED": raise ValueError(f"project configuration missing: {config.PROJECT_ENTRY_PATH}; run harness.py setup first")
     provider_raw = _value_from_args(args, "--provider-config", config.DEFAULT_PROVIDER_CONFIG_PATH); provider_path = Path(provider_raw); provider_path = provider_path if provider_path.is_absolute() else root / provider_path
-    paths = config.materialize_effective_profiles(root, resolved, provider_config_path=provider_path); execution = json.loads(paths["agent_execution"].read_text(encoding="utf-8")); resolved["agent_runtime"] = execution
+    paths = config.materialize_effective_profiles(root, resolved, provider_config_path=provider_path); resolved["agent_runtime"] = json.loads(paths["agent_execution"].read_text(encoding="utf-8"))
     routed = _drop_option(_drop_option(_drop_option(list(args), "--project-profile"), "--source-profile"), "--provider-config")
     routed += ["--project-profile", str(paths["project_profile"]), "--source-profile", str(paths["source_profile"]), "--provider-config", str(paths["provider_config"])]
     return routed, resolved
-
 
 def _connect_provider_from_setup_args(setup, args: list[str], result: dict) -> dict:
     provider_command = _value_from_args(args, "--provider-command", "").strip()
@@ -67,7 +58,6 @@ def _connect_provider_from_setup_args(setup, args: list[str], result: dict) -> d
     if resolved["source_kind"] == "UNCONFIGURED": return result
     protected = config.nested(resolved["project"], "git", "protected_branches", default=["main", "master"]); provider = setup._provider(provider_command, list(protected or ["main", "master"])); provider_path = root / config.DEFAULT_PROVIDER_CONFIG_PATH; provider_path.parent.mkdir(parents=True, exist_ok=True); provider_path.write_text(json.dumps(provider, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     effective = config.materialize_effective_profiles(root, resolved, provider_config_path=provider_path); execution = json.loads(effective["agent_execution"].read_text(encoding="utf-8")); result["agent_execution"] = execution; result["provider_ready"] = execution.get("execution_mode") == "HEADLESS" and bool(execution.get("ready")); result["status"] = "READY_FOR_PLAN"; result["open_items"] = [x for x in result.get("open_items", []) if x != "실제 Agent Provider command"]; result.setdefault("writes", {})[config.DEFAULT_PROVIDER_CONFIG_PATH] = "UPDATED_BY_LEGACY_SETUP_OPTION"; result["provider_connection"] = {"status": "CONNECTED_LEGACY_COMPATIBILITY", "deprecated": True, "project_config_preserved": True}; return result
-
 
 def _run_setup(args: list[str]) -> int:
     setup = _load("harness_setup", "bootstrap_project.py"); captured = StringIO()
@@ -87,7 +77,6 @@ def _run_setup(args: list[str]) -> int:
         result_path = root / "sdlc/runtime/setup/setup-result.json"; result_path.parent.mkdir(parents=True, exist_ok=True); result_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"); print(json.dumps(result, ensure_ascii=False, indent=2)); return code
     print(raw); return code
 
-
 def _run_check(args: list[str]) -> int:
     check = _load("harness_human_check", "tailored_check.py"); captured = StringIO()
     with redirect_stdout(captured): code = check.main(args)
@@ -96,11 +85,10 @@ def _run_check(args: list[str]) -> int:
     except json.JSONDecodeError: print(raw); return code
     print(json.dumps(result, ensure_ascii=False, indent=2)); return code
 
-
 def main(argv: list[str] | None = None) -> int:
     args = list(argv if argv is not None else sys.argv[1:])
     if not args or args[0] in {"-h", "--help", "help"}:
-        print(__doc__.strip()); print("\nCommands: setup | intake | work | review | change | check | execution-plan | discover-impact | impact-history | component | delivery | projection | arch-check | metrics"); return 0
+        print(__doc__.strip()); print("\nCommands: setup | intake | work | review | change | check | execution-plan | discover-impact | impact-history | component | delivery | customer-view | projection | arch-check | metrics"); return 0
     command = args.pop(0).lower()
     if command == "setup": return _run_setup(args)
     if command == "intake": return _load("harness_intake_explainable", "intake_explainable.py").main(args)
@@ -114,14 +102,14 @@ def main(argv: list[str] | None = None) -> int:
         return _load("harness_change", "run_change.py").main(args)
     if command == "check": return _run_check(args)
     if command == "execution-plan": return _load("harness_change_execution", "change_execution_runtime.py").main(["plan", *args])
-    if command == "discover-impact": return _load("harness_impact_learning", "impact_learning_runtime.py").main(["discover", *args])
+    if command == "discover-impact": return _load("harness_unexpected_discovery", "unexpected_discovery_runtime.py").main(args)
     if command == "impact-history": return _load("harness_impact_history", "impact_learning_runtime.py").main(args)
     if command == "component": return _load("harness_component_state", "component_state_runtime.py").main(args)
     if command == "delivery": return _load("harness_delivery_status", "delivery_status_runtime.py").main(args)
+    if command == "customer-view": return _load("harness_customer_projection", "customer_projection_runtime.py").main(args)
     if command == "projection": return _load("harness_projection_lifecycle", "projection_lifecycle_runtime.py").main(args)
     if command == "arch-check": return _load("harness_architecture_check", "architecture_check.py").main(args)
     if command == "metrics": return _load("harness_metrics", "sdlc_metrics_runtime.py").main(args)
     print(f"unknown command: {command}", file=sys.stderr); return 2
-
 
 if __name__ == "__main__": raise SystemExit(main())
