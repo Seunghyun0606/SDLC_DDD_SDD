@@ -15,6 +15,10 @@ Agent execution is project-configurable but vendor-neutral:
 When ``agent`` is omitted the default is INTERACTIVE. A previously configured legacy
 ``sdlc/config/agent-provider.json`` remains readable as a compatibility fallback so existing
 automation projects are not silently switched to interactive execution.
+
+v1.9 forward-compatible control keys for Change Level and Artifact Tailoring are registered here
+so the single project entry never becomes DEAD_CONFIG when read through a legacy core consumer.
+The richer resolver remains ``runtime_config_v19.py``.
 """
 from __future__ import annotations
 
@@ -79,6 +83,14 @@ RUNTIME_CONSUMED_PATHS = {
     "agent.provider.command",
     "agent.provider.timeout_seconds",
     "agent.provider.result_filename",
+    # v1.9 Human Control Plane / Tailoring switches. The v1.9 resolver is the rich consumer,
+    # but these keys are registered here so compatibility readers do not classify them as dead.
+    "change.level_policy",
+    "change.default_level",
+    "documents.internal.profile",
+    "documents.customer.profile",
+    "documents.pm.profile",
+    "documents.machine.visibility",
 }
 # These are passed to the Stage Agent as project context, but are not execution switches.
 DOCUMENT_CONTEXT_PREFIXES = (
@@ -93,6 +105,9 @@ DOCUMENT_ONLY_PATHS = {
     "git.branch_strategy",
     "documents.language",
     "documents.customer_language",
+    "documents.internal.output_root",
+    "documents.customer.output_root",
+    "documents.pm.output_root",
     "unresolved",
 }
 EXTENSION_PREFIXES = ("extensions.",)
@@ -417,6 +432,16 @@ def _validate_project_entry(project: dict[str, Any]) -> None:
     raw_delivery = str(nested(project, "delivery", "profile", default="STANDARD") or "STANDARD").upper()
     if raw_delivery not in DELIVERY_PROFILES:
         raise ValueError(f"unsupported delivery.profile: {raw_delivery}")
+    change = project.get("change")
+    if change is not None:
+        if not isinstance(change, dict):
+            raise ValueError("change must be a mapping")
+        level_policy = str(change.get("level_policy") or "AUTO").upper()
+        if level_policy not in {"AUTO", "MANUAL"}:
+            raise ValueError("change.level_policy must be AUTO or MANUAL")
+        default_level = change.get("default_level")
+        if default_level is not None and str(default_level).upper() not in {"L1", "L2", "L3", "L4", "L5"}:
+            raise ValueError("change.default_level must be one of L1..L5")
     for key in ["roots", "test_roots", "resource_roots", "excludes"]:
         value = nested(project, "source", key, default=[])
         if not isinstance(value, list) or not all(isinstance(x, str) for x in value):
@@ -424,6 +449,29 @@ def _validate_project_entry(project: dict[str, Any]) -> None:
     protected = nested(project, "git", "protected_branches", default=["main", "master"])
     if not isinstance(protected, list) or not all(isinstance(x, str) and x.strip() for x in protected):
         raise ValueError("git.protected_branches must be a list of non-empty strings")
+    documents = project.get("documents")
+    if documents is not None:
+        if not isinstance(documents, dict):
+            raise ValueError("documents must be a mapping")
+        for audience in ["internal", "customer", "pm"]:
+            section = documents.get(audience)
+            if section is None:
+                continue
+            if not isinstance(section, dict):
+                raise ValueError(f"documents.{audience} must be a mapping")
+            profile = section.get("profile")
+            if profile is not None and (not isinstance(profile, str) or not profile.strip()):
+                raise ValueError(f"documents.{audience}.profile must be a non-empty profile id")
+            output_root = section.get("output_root")
+            if output_root is not None and (not isinstance(output_root, str) or not output_root.strip()):
+                raise ValueError(f"documents.{audience}.output_root must be a non-empty string")
+        machine = documents.get("machine")
+        if machine is not None:
+            if not isinstance(machine, dict):
+                raise ValueError("documents.machine must be a mapping")
+            visibility = str(machine.get("visibility") or "HIDDEN").upper()
+            if visibility not in {"HIDDEN", "DEBUG"}:
+                raise ValueError("documents.machine.visibility must be HIDDEN or DEBUG")
     agent = project.get("agent")
     if agent is not None and not isinstance(agent, dict):
         raise ValueError("agent must be a mapping")
@@ -450,7 +498,7 @@ def ensure_no_dead_config(project: dict[str, Any]) -> None:
 def compact_project_context(project: dict[str, Any]) -> dict[str, Any]:
     keys = [
         "project", "technology", "source", "architecture", "git", "coding", "data",
-        "interface", "security", "deployment", "documents", "unresolved",
+        "interface", "security", "deployment", "documents", "change", "unresolved",
     ]
     return {key: project[key] for key in keys if key in project}
 
