@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "pilot_id": "PILOT-EXTERNAL-AGENT-TAILORING-001",
+  "pilot_type": "EXTERNAL_AGENT_TAILORING_SEMANTIC_EQUIVALENCE",
+  "execution_status": "NOT_RUN",
+  "observed_at": null,
+  "observer": null,
+  "provider": {
+    "provider_id": "EXTERNAL_AGENT_PROVIDER_REQUIRED",
+    "declared_class": "EXTERNAL_AGENT",
+    "identity_evidence": []
+  },
+  "canonical": {
+    "target_id": "RQ-COMP-001",
+    "revision": 7,
+    "fingerprint": "sha256:53f2b05fff4ca4b2e76c352bfce19cc167b9e1c45692fd340aabeef4059f1154"
+  },
+  "profile_runs": [
+    {
+      "profile_id": "STANDARD_3",
+      "artifact_paths": [],
+      "semantic_review": {
+        "reviewer": null,
+        "meaning_preserved": null,
+        "unsupported_business_fact_count": null,
+        "material_omission_count": null,
+        "notes": ""
+      }
+    },
+    {
+      "profile_id": "STANDARD_5",
+      "artifact_paths": [],
+      "semantic_review": {
+        "reviewer": null,
+        "meaning_preserved": null,
+        "unsupported_business_fact_count": null,
+        "material_omission_count": null,
+        "notes": ""
+      }
+    },
+    {
+      "profile_id": "STAGE_ORIENTED_FULL",
+      "artifact_paths": [],
+      "semantic_review": {
+        "reviewer": null,
+        "meaning_preserved": null,
+        "unsupported_business_fact_count": null,
+        "material_omission_count": null,
+        "notes": ""
+      }
+    }
+  ],
+  "claims": {
+    "external_agent_empirical_pass": false
+  },
+  "boundary": {
+    "fixture_or_ci_is_agent_identity_evidence": false,
+    "structural_profile_comparison_is_semantic_empirical_pass": false,
+    "production_ready_claimed": false
+  }
+}
