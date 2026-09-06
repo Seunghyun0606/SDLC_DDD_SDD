@@ -33,6 +33,7 @@ Target과 Stage/Artifact는 독립적이다. Harness 관리자 또는 명시적 
 
 ```bash
 python sdlc/scripts/harness.py work --target PGM-001 --stage PROGRAM
+python sdlc/scripts/harness.py work --target ANA001 --stage DESIGN
 python sdlc/scripts/harness.py work --target RQ-001 --stage DESIGN --artifact docs/10_산출물/RQ-001/custom.md
 ```
 
@@ -47,9 +48,11 @@ python sdlc/scripts/validate_agent_stage_result.py --result <stage-result.json> 
 python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --dry-run
 ```
 
-실제 `/work --finalize`는 이 검증을 Runtime Guard 안에서 수행한다. Validator가 실패하거나 Target Graph/Business Truth/Canonical revision Guard가 실패하면 적용하지 않는다.
+실제 `/work --finalize`는 이 검증을 Runtime Guard 안에서 수행한다. 성공 경계는 `validation.status = PASS` 및 `validation.executable = true`이며, Validator가 실패하거나 Target Graph/Business Truth/Canonical revision Guard가 실패하면 적용하지 않는다.
 
-OPEN은 대기표시가 아니라 해소할 설계 Backlog다. 업무권위가 필요한 OPEN은 사람의 결정으로, 기술적으로 조사 가능한 OPEN은 Source/설계 Evidence로 해소하며 Agent가 근거 없이 채우지 않는다.
+Canonical Delta의 지원 Operation은 `UPSERT_ENTITY`, `UPSERT_RELATION`, `ADD_PROVENANCE`다. Source 관찰을 값 변경 없이 연결할 때는 `ADD_PROVENANCE`를 우선하며, 이것이 Confirmed Business Truth 변경 권한을 만들지는 않는다.
+
+OPEN은 대기표시가 아니라 해소할 설계 Backlog다. 업무권위가 필요한 OPEN은 사람의 결정으로, 기술적으로 조사 가능한 OPEN은 Source/설계 Evidence로 해소하며 Agent가 근거 없이 채우지 않는다. OPEN 해소 절차가 필요하면 `.cursor/skills/open-resolve/SKILL.md`를 사용한다.
 
 ## v1.9 Tailoring 연결
 
