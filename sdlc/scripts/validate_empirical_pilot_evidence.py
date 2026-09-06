@@ -197,6 +197,10 @@ def validate(data: dict[str, Any]) -> dict[str, Any]:
     if errors:
         verdict = "FAIL_OVERCLAIMED_PASS" if claimed else "FAIL_INSUFFICIENT_EVIDENCE"
         empirical_pass = False
+    elif claimed and not criteria_pass:
+        errors.append("OBSERVED_RESULT_DOES_NOT_SUPPORT_PASS_CLAIM")
+        verdict = "FAIL_OVERCLAIMED_PASS"
+        empirical_pass = False
     elif criteria_pass:
         verdict = "PASS_OBSERVED_EMPIRICAL_PILOT"
         empirical_pass = True
