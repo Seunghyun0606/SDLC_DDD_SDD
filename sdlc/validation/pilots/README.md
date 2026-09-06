@@ -8,15 +8,65 @@
 2. `provider_class: EXTERNAL_AGENT` 같은 선언만으로 실제 Agent 실행을 증명하지 않는다.
 3. Public Source 분석만으로 고객의 Business Truth를 확인하거나 수정하지 않는다.
 
-## 1. 공통 실행 절차
+## 0. 가장 빠른 실행 경로
 
-각 Pilot은 `.example.json`을 복사해 실제 관찰 결과 파일을 만든다.
+일반 실행자는 `.example.json`을 직접 복사할 필요가 없다. 다음 Runtime을 사용한다.
+
+현재 전체 Pilot 상태 확인:
 
 ```bash
-cp sdlc/validation/pilots/external-agent-tailoring-pilot.example.json /tmp/external-agent-pilot.json
+python sdlc/scripts/empirical_pilot_runtime.py status
+```
+
+하나의 Pilot Evidence 초기화:
+
+```bash
+python sdlc/scripts/empirical_pilot_runtime.py init --pilot external-agent-tailoring
+python sdlc/scripts/empirical_pilot_runtime.py init --pilot human-first-use
+python sdlc/scripts/empirical_pilot_runtime.py init --pilot brownfield-reconciliation
+```
+
+기본 생성 위치:
+
+- `sdlc/runtime/pilots/external-agent-tailoring.json`
+- `sdlc/runtime/pilots/human-first-use.json`
+- `sdlc/runtime/pilots/brownfield-reconciliation.json`
+
+초기화 직후에는 세 파일 모두 반드시 `execution_status=NOT_RUN`, `empirical_pass=false` 상태다. `init`은 실증을 수행하거나 관찰한 것으로 간주하지 않는다.
+
+실제 관찰을 마친 뒤 하나의 Evidence 검증:
+
+```bash
+python sdlc/scripts/empirical_pilot_runtime.py validate \
+  --input sdlc/runtime/pilots/external-agent-tailoring.json
+```
+
+전체 상태를 Machine Summary로 저장:
+
+```bash
+python sdlc/scripts/empirical_pilot_runtime.py status \
+  --output sdlc/runtime/pilots/status.json
+```
+
+`status`는 Evidence 파일이 없거나 `NOT_RUN`이면 그대로 `NOT_RUN`으로 보고한다. CI/Fixture 결과를 대신 넣지 않는다.
+
+---
+
+## 1. 공통 실행 절차
+
+1. `empirical_pilot_runtime.py init`으로 대상 Pilot Evidence를 만든다.
+2. 실제 Agent/Human/Brownfield 관찰을 수행한다.
+3. 생성된 Runtime Evidence JSON에 관찰 결과만 기록한다.
+4. `validate`로 해당 Evidence를 검증한다.
+5. `status`로 세 Pilot 전체 상태를 확인한다.
+6. 실제 관찰 Evidence가 없는 항목은 계속 `NOT_RUN`으로 유지한다.
+
+직접 Validator를 호출해야 하는 Harness 관리자라면 다음 명령도 사용할 수 있다.
+
+```bash
 python sdlc/scripts/validate_empirical_pilot_evidence.py \
-  --input /tmp/external-agent-pilot.json \
-  --output /tmp/external-agent-pilot-result.json
+  --input <pilot-evidence.json> \
+  --output <pilot-result.json>
 ```
 
 실행 전 상태에서는 정상적으로 다음과 같이 판정되어야 한다.
@@ -34,7 +84,8 @@ empirical_pass = false
 
 대상 파일:
 
-- `external-agent-tailoring-pilot.example.json`
+- Template: `external-agent-tailoring-pilot.example.json`
+- Runtime Evidence: `sdlc/runtime/pilots/external-agent-tailoring.json`
 - 구조 비교 기준: `sdlc/samples/tailoring/PROFILE_COMPARISON_3_5_FULL.md`
 
 ### 목적
@@ -68,7 +119,8 @@ LLM 결정성, 모든 프로젝트에 대한 일반화, Production Ready를 의�
 
 대상 파일:
 
-- `human-first-use-pilot.example.json`
+- Template: `human-first-use-pilot.example.json`
+- Runtime Evidence: `sdlc/runtime/pilots/human-first-use.json`
 - 사용자 시작점: `docs/00_시작/START_HERE.md`
 
 ### 대상자
@@ -98,7 +150,8 @@ Review burden 값은 비교/개선 지표이며 단독 PASS 기준으로 사용�
 
 대상 파일:
 
-- `brownfield-reconciliation-pilot.example.json`
+- Template: `brownfield-reconciliation-pilot.example.json`
+- Runtime Evidence: `sdlc/runtime/pilots/brownfield-reconciliation.json`
 - 권위 기준: `sdlc/design/contracts/brownfield-authority-reconciliation-contract.json`
 
 ### 반드시 함께 존재해야 하는 Evidence
@@ -117,11 +170,7 @@ Conflict를 발견하고 사람이 결정을 내려 안전하게 Reconciliation�
 
 ---
 
-## 5. 검증 명령
-
-```bash
-python sdlc/scripts/validate_empirical_pilot_evidence.py --input <pilot-evidence.json>
-```
+## 5. Verdict 해석
 
 가능한 주요 Verdict:
 
@@ -130,6 +179,8 @@ python sdlc/scripts/validate_empirical_pilot_evidence.py --input <pilot-evidence
 - `FAIL_OBSERVED_EMPIRICAL_PILOT`: Evidence는 충분하지만 관찰 결과가 기준 미충족
 - `FAIL_INSUFFICIENT_EVIDENCE`: 관찰을 주장했으나 필수 Evidence 부족
 - `FAIL_OVERCLAIMED_PASS`: 필수 Evidence가 없는데 PASS Claim을 설정함
+
+Runtime 자체의 `status=EMPIRICAL_PILOT_STATUS`는 세 Pilot을 한 번에 요약한 Machine View다. `all_empirical_pass=true`가 되더라도 자동으로 Production Ready 또는 `main` merge를 의미하지 않는다.
 
 ## 6. Branch / Release 경계
 
