@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "pilot_id": "PILOT-HUMAN-FIRST-USE-001",
+  "pilot_type": "HUMAN_FIRST_USE",
+  "execution_status": "NOT_RUN",
+  "observed_at": null,
+  "observer": null,
+  "participants": [],
+  "claims": {
+    "human_first_use_pass": false
+  },
+  "boundary": {
+    "behavioral_fixture_is_human_observation": false,
+    "ci_is_human_usability_evidence": false,
+    "production_ready_claimed": false
+  }
+}
