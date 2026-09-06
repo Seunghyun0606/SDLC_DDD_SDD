@@ -1,51 +1,39 @@
 schema_version: 1
 session: SDLC_DESIGN_SESSION_FIRST
-branch: SDLC_DESIGN_SESSION_FIRST/validation/v1.7-first-use-evidence-v0.1
-parent_branch: SDLC_DESIGN_SESSION_FIRST/feature/v1.7-work-handoff-v0.1
-parent_commit: 41718128c1db4e94f81c1af9eba94d93015c5e41
-candidate: v1.7-wp5-first-use-evidence-v0.1
+branch: SDLC_DESIGN_SESSION_FIRST/tailoring-control-plane/v1.9.0
+parent_branch: SDLC_DESIGN_SESSION_FIRST/integration/v1.8.0-consolidated
+parent_commit: 3d2671c2e19d1faf340a2e5a28a5a79d7d4d58b0
+candidate: v1.9.0-tailoring-control-plane
 work_package:
-  session: 5
-  id: WP-5
-  objective: "실제 프로젝트 first-use 관점에서 setup→intake→work→review 경로를 검증하고, Config 라벨·Fixture·CI와 실제 Agent/Human 실증을 혼동하지 않도록 한다."
+  session: 9
+  id: WP-0-15
+  objective: "Stage와 Human Artifact를 분리하고 Change Level, Tailoring, Audience, Section Ownership, Brownfield Reconciliation, PM Human Control Plane을 실제 Config/Runtime/Test로 연결한다."
 scope:
-  - "공식 setup/check에서 Provider 미연결을 프로젝트 setup 실패와 구분"
-  - "기존 project.yaml을 덮어쓰지 않고 Provider command만 나중에 연결 가능하게 함"
-  - "provider_class=EXTERNAL_AGENT 자기선언만으로 actual Agent empirical PASS를 만들지 않음"
-  - "공식 harness CLI만 사용하는 black-box first-use Behavioral Pilot 추가"
-  - "사용자 문서와 Machine Runtime 분리, authority-only review 경로를 pilot에서 재검증"
+  - "Delivery Profile과 RQ Change Level 분리"
+  - "Stage/Canonical/Evidence -> Artifact Tailoring Mapping"
+  - "3종/5종/Full Project Artifact Profile"
+  - "MACHINE/INTERNAL_IT/PM_REVIEW/CUSTOMER Audience 분리"
+  - "Human/Machine Section Ownership 및 View Freshness"
+  - "Brownfield Authority Matrix와 Source Drift Reconciliation"
+  - "Project/RQ Human Control Plane과 Intake Explainability"
+  - "Standard/Custom Scaffold Guide와 실행 Sample"
 non_goals:
-  - "새 SDLC Stage 또는 Canonical entity 추가"
-  - "새 사용자 입력 Template 추가"
-  - "Fixture를 실제 External Agent 또는 Human 실증으로 승격"
-  - "Provider 제품/벤더 종속 기능 추가"
+  - "Core Stage 삭제 또는 고객사별 Core Stage 복제"
+  - "Customer Projection에서 신규 Business Truth 생성"
+  - "Source 관찰만으로 Business Truth 자동 수정"
   - "main merge 또는 직접 수정"
 evidence_status:
-  document: UPDATED
-  contract: REUSED_WITH_STRICTER_RUNTIME_INTERPRETATION
-  config: UPDATED
-  runtime: UPDATED
-  behavioral_test: CI_PASS_253_TESTS_BLACKBOX_FIRST_USE_OK
+  document: IN_PROGRESS
+  contract: IN_PROGRESS
+  config: IN_PROGRESS
+  runtime: IN_PROGRESS
+  behavioral_test: NOT_RUN
   external_agent_empirical: NOT_RUN
   human_first_use: NOT_RUN
-behavioral_observation:
-  unittest_count: 253
-  unittest_result: OK
-  blackbox_first_use_test_count: 1
-  blackbox_first_use_result: OK
-  mermaid_markdown_files_checked: 118
-  pr_workflows_success: 5
 validation_boundary:
-  provider_class_is_declaration_only: true
-  fixture_is_external_agent_evidence: false
-  ci_is_human_first_use_evidence: false
-  production_ready_claimed: false
-  rule: "실제 Agent/Human 관찰이 없으면 empirical status는 NOT_RUN/NOT_VERIFIED로 남긴다."
-inherited_validation_boundary:
-  note: "아래 status/verdict는 이전 기준선의 CI/Behavioral 검증 경계를 보존하기 위한 호환 marker이며 WP-5 자체 또는 실제 Agent/Human 실증 PASS를 뜻하지 않는다."
-  status: P0_P1_CI_BEHAVIORAL_AND_INTEGRATION_PASS_EXTERNAL_EMPIRICAL_PENDING
-  verdict: CONTROLLED_PILOT_READY_CI_PASS_EXTERNAL_AGENT_HUMAN_VALIDATION_PENDING
   self_assessment_is_not_validation: true
+  ci_is_human_first_use_evidence: false
+  external_agent_or_human_not_observed_means_not_run: true
   production_ready_claimed: false
-next_step: "실제 저수준 External Agent와 일반 프로젝트 참여자를 대상으로 관찰 Pilot을 수행하고 Agent 초안 정확성·Human 질문 비율·first-use 막힘 지점을 별도 Evidence로 기록한다."
+next_step: "Contract -> Runtime resolver -> Human Control Plane -> Guide/Sample -> Regression/CI 순으로 검증한다."
 merge_to_main: false

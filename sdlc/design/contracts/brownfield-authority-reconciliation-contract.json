@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "contract_id": "BROWNFIELD_AUTHORITY_RECONCILIATION_V1",
+  "candidate_design": "v1.9.0-tailoring-control-plane",
+  "purpose": "Brownfield에서 Business Truth, Current Source, Design, Test, Customer Projection의 권위를 항목별로 분리하고 Source Drift를 Reconciliation 대상으로 관리한다.",
+  "authority_matrix": [
+    {"subject": "CUSTOMER_REQUIREMENT_OR_BUSINESS_POLICY", "authority": "CONFIRMED_HUMAN_BUSINESS_TRUTH"},
+    {"subject": "CUSTOMER_DECISION", "authority": "CANONICAL_CONFIRMED_DECISION"},
+    {"subject": "AS_IS_TECHNICAL_BEHAVIOR", "authority": "CURRENT_SOURCE_DB_CONFIG_RUNTIME_EVIDENCE"},
+    {"subject": "TO_BE_FUNCTIONAL_MEANING", "authority": "ACCEPTED_FUNCTIONAL_DESIGN_OR_CANONICAL"},
+    {"subject": "IMPLEMENTATION_STATE", "authority": "CURRENT_MERGED_SOURCE"},
+    {"subject": "TEST_RESULT", "authority": "TEST_RUNTIME_EVIDENCE"},
+    {"subject": "PROGRAM_TECHNICAL_DESCRIPTION", "authority": "SOURCE_DERIVED_CURRENT_PROGRAM_VIEW"},
+    {"subject": "CUSTOMER_DOCUMENT", "authority": "PROJECTION_NOT_INDEPENDENT_SSOT"}
+  ],
+  "reconciliation_states": [
+    "ALIGNED",
+    "CONFLICT",
+    "STALE_DOCUMENT",
+    "STALE_SOURCE_EVIDENCE",
+    "NOT_IMPLEMENTED",
+    "PARTIAL",
+    "CHECK_REQUIRED"
+  ],
+  "rules": {
+    "source_can_auto_rewrite_business_truth": false,
+    "source_conflict_with_business_truth_state": "CONFLICT",
+    "customer_document_can_create_business_truth": false,
+    "program_view_can_be_regenerated_from_source": true,
+    "functional_design_drift_requires_review": true,
+    "business_truth_drift_requires_human_confirmation": true
+  },
+  "source_drift_propagation": {
+    "program_view": "STALE_DOCUMENT",
+    "functional_design": "CHECK_REQUIRED",
+    "business_truth": "CHECK_REQUIRED_ONLY_IF_OBSERVED_CONTRADICTION",
+    "customer_projection": "STALE_VIEW_IF_UPSTREAM_REVISION_CHANGED"
+  },
+  "reconciliation_row_fields": [
+    "subject",
+    "intended",
+    "observed",
+    "authority",
+    "status",
+    "evidence_refs",
+    "next_action",
+    "reviewer"
+  ],
+  "reverse_candidate_policy": {
+    "machine_may_propose": true,
+    "developer_or_designer_review_required": true,
+    "canonical_update_after_review_only": true
+  }
+}

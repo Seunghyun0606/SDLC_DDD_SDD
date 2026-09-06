@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "contract_id": "SECTION_OWNERSHIP_V1",
+  "candidate_design": "v1.9.0-tailoring-control-plane",
+  "purpose": "Human 판단과 Machine-derived 상태를 한 문서에서 구분하고 Generated View의 stale 상태를 검출한다.",
+  "ownership_types": [
+    "HUMAN_AUTHORITATIVE",
+    "HUMAN_REVIEWED",
+    "SHARED",
+    "MACHINE_DERIVED",
+    "GENERATED_VIEW"
+  ],
+  "default_examples": {
+    "requirement_purpose": "HUMAN_AUTHORITATIVE",
+    "business_rule": "HUMAN_AUTHORITATIVE",
+    "decision": "HUMAN_AUTHORITATIVE",
+    "functional_design": "HUMAN_REVIEWED",
+    "program_mapping": "SHARED",
+    "query_or_table": "MACHINE_DERIVED",
+    "source_hash": "MACHINE_DERIVED",
+    "traceability": "MACHINE_DERIVED",
+    "customer_expression": "GENERATED_VIEW"
+  },
+  "freshness_metadata": [
+    "canonical_revision",
+    "generated_from_revision",
+    "generated_at"
+  ],
+  "freshness_states": ["CURRENT", "STALE_VIEW", "CHECK_REQUIRED"],
+  "rules": {
+    "canonical_newer_than_generated_view_means_stale": true,
+    "stale_view_excluded_from_final_review_by_default": true,
+    "machine_derived_business_truth_confirmation_forbidden": true,
+    "generated_view_manual_business_truth_edit_forbidden": true,
+    "human_authoritative_content_must_not_be_silently_regenerated": true
+  },
+  "review_policy": {
+    "HUMAN_AUTHORITATIVE": "Human owns value; Agent may propose but cannot confirm.",
+    "HUMAN_REVIEWED": "Agent drafts; responsible reviewer accepts or changes.",
+    "SHARED": "Machine evidence plus accountable human review.",
+    "MACHINE_DERIVED": "Regenerated from current evidence; human may flag but should not overwrite source fact.",
+    "GENERATED_VIEW": "Projection only; regenerate from Canonical/Internal source."
+  }
+}

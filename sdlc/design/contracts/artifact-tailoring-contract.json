@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "contract_id": "ARTIFACT_TAILORING_V1",
+  "candidate_design": "v1.9.0-tailoring-control-plane",
+  "purpose": "Harness 내부 Stage/Canonical/Evidence와 사람이 사용하는 Artifact의 문서 체계를 분리한다.",
+  "principles": {
+    "stage_is_internal_execution_semantics": true,
+    "template_defines_expression_shape": true,
+    "tailoring_defines_projection_mapping": true,
+    "core_stage_contracts_must_not_be_duplicated_per_customer": true,
+    "custom_template_only_is_not_sufficient": true
+  },
+  "audiences": ["MACHINE", "INTERNAL_IT", "PM_REVIEW", "CUSTOMER"],
+  "mapping_cardinality": ["N_STAGE_TO_1_ARTIFACT", "1_STAGE_TO_N_ARTIFACT", "N_STAGE_TO_N_ARTIFACT"],
+  "artifact_fields": {
+    "required": ["id", "audience", "template", "sources", "visibility", "authoring"],
+    "optional": ["condition", "change_levels", "output_path", "sections", "freshness_policy"]
+  },
+  "source_selectors": {
+    "stages": "One or more internal Stage names",
+    "canonical": "Canonical entity/field selectors",
+    "evidence": "Machine evidence selectors",
+    "artifact": "Previously generated Internal IT artifact references"
+  },
+  "visibility": ["PRIMARY", "SECONDARY", "HIDDEN_MACHINE"],
+  "authoring": [
+    "AGENT_DRAFT_HUMAN_REVIEW",
+    "HUMAN_AUTHORITATIVE",
+    "GENERATED_VIEW",
+    "MACHINE_ONLY"
+  ],
+  "conditions": [
+    "ALWAYS",
+    "HAS_UI",
+    "HAS_INTERFACE",
+    "HAS_BATCH",
+    "HAS_DATA_CHANGE",
+    "HAS_SECURITY_IMPACT",
+    "CHANGE_LEVEL_AT_LEAST"
+  ],
+  "runtime_requirements": {
+    "profile_selected_from_project_config": true,
+    "profile_id_only_in_project_yaml": true,
+    "template_path_not_required_from_normal_user": true,
+    "stage_selection_not_required_from_normal_user": true,
+    "projection_must_not_create_new_business_truth": true,
+    "machine_evidence_default_hidden_from_primary_artifacts": true
+  },
+  "profile_resolution_order": [
+    "sdlc/custom/project/tailoring",
+    "sdlc/tailoring/standard",
+    "explicit_extension_registry"
+  ],
+  "validation": {
+    "unknown_stage_fails": true,
+    "unknown_audience_fails": true,
+    "missing_template_fails": true,
+    "duplicate_artifact_id_fails": true,
+    "customer_projection_without_canonical_or_internal_source_fails": true,
+    "stage_removal_by_tailoring_forbidden": true
+  }
+}
