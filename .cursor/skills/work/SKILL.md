@@ -29,9 +29,40 @@ INTERACTIVE 기본 흐름:
 5. 반환된 finalize command 또는 `python sdlc/scripts/harness.py work --target <TARGET> --finalize --run-dir <RUN-DIR>`를 실행한다.
 6. `APPLIED / IDEMPOTENT / NO_CHANGE / DRY_RUN_VALIDATED` 중 하나가 확인된 경우에만 완료로 보고한다.
 
+Target과 Stage/Artifact는 독립적이다. Harness 관리자 또는 명시적 재진입이 필요한 경우 다음 형태를 지원한다.
+
+```bash
+python sdlc/scripts/harness.py work --target PGM-001 --stage PROGRAM
+python sdlc/scripts/harness.py work --target RQ-001 --stage DESIGN --artifact docs/10_산출물/RQ-001/custom.md
+```
+
+일반 사용자는 v1.9 Tailoring이 Primary Artifact를 선택하므로 `--stage`/`--artifact`를 기본 사용법으로 쓰지 않는다.
+
+## Agent Stage Result 실행 경계
+
+Stage Agent가 문서를 작성했다는 사실만으로 완료가 아니다. `stage-result.json`은 반드시 Core Validator와 Canonical Apply 경계를 통과해야 한다.
+
+```bash
+python sdlc/scripts/validate_agent_stage_result.py --result <stage-result.json> --store sdlc/canonical/store.json
+python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --dry-run
+```
+
+실제 `/work --finalize`는 이 검증을 Runtime Guard 안에서 수행한다. Validator가 실패하거나 Target Graph/Business Truth/Canonical revision Guard가 실패하면 적용하지 않는다.
+
+OPEN은 대기표시가 아니라 해소할 설계 Backlog다. 업무권위가 필요한 OPEN은 사람의 결정으로, 기술적으로 조사 가능한 OPEN은 Source/설계 Evidence로 해소하며 Agent가 근거 없이 채우지 않는다.
+
+## v1.9 Tailoring 연결
+
+내부 Stage는 계속 실행 의미를 보존한다. 다만 일반 사용자가 검토할 문서는 `.sdlc/project.yaml`의 Artifact Profile이 결정한다.
+
+`Stage / Canonical / Evidence → Tailoring Profile → Human Artifact`
+
+따라서 Cursor Adapter가 Stage 이름과 고객사 문서 이름을 1:1로 재정의하지 않는다.
+
 ## 금지
 
 - Cursor 자체 동작을 Business Truth 근거로 사용하지 않는다.
 - Provider가 없다는 이유로 INTERACTIVE 실행을 실패 처리하지 않는다.
 - `INTERACTIVE_HANDOFF_READY`를 Canonical 적용 성공으로 표현하지 않는다.
 - Core Skill/Contract/Validator를 Cursor 전용 규칙으로 재정의하지 않는다.
+- OPEN을 근거 없는 추정으로 닫지 않는다.
