@@ -1,13 +1,14 @@
 {
-  "schema_version": 2,
-  "candidate_design": "v1.6.0-rc.1",
-  "purpose": "기능 설계의 업무/기능 의미를 Program Spec에서 반복하지 않고, Program Spec은 실제 구현 Target과 구현 차이만 추가하도록 책임을 분리하는 개발 상세 명세 공통계약",
+  "schema_version": 3,
+  "candidate_design": "v1.9-redteam-semantic-fast-path",
+  "purpose": "Functional Design은 업무/기능 의미를 유지하고 Program Spec은 최소 구현 Delta + Risk-triggered 기술 항목만 기록한다.",
   "scope": "CORE_COMMON_CONTRACT",
   "status_values": ["RESOLVED", "OPEN", "NOT_APPLICABLE"],
   "ownership_model": {
     "functional_design": "SEMANTIC_SOURCE_OF_TRUTH",
     "program_spec": "IMPLEMENTATION_DELTA_AND_EXECUTION_READINESS",
-    "rule": "Program Spec은 Functional Design의 6W/화면 의미/Field 의미/CRUD 의미/Business Rule/논리 Data 요구/업무 예외를 재작성하지 않고 참조한다. 실제 구현에서 추가되거나 달라지는 항목만 Delta로 기록한다."
+    "machine_derived": "SOURCE_REGENERATABLE_TECHNICAL_VIEW",
+    "rule": "Program Spec은 Functional Design 의미를 반복하지 않는다. Source에서 재생성 가능한 Query/Table/Symbol/Mapping은 Machine-derived이고, 사람은 Intent/선택/예외/위험 승인만 유지한다."
   },
   "rules": {
     "not_applicable_requires_reason": true,
@@ -15,55 +16,51 @@
     "screen_sections_are_not_applicable_only_for_non_ui_entry_points_with_reason": true,
     "actual_table_query_and_common_code_require_real_source_or_authoritative_project_evidence_in_brownfield": true,
     "candidate_architecture_must_be_labeled_candidate": true,
-    "business_scenario_trace_required": true,
+    "business_scenario_trace_required_from_change_level": "L3",
     "functional_design_semantics_must_not_be_duplicated_in_program_spec": true,
-    "program_spec_records_only_implementation_mapping_and_delta": true
+    "program_spec_records_only_implementation_mapping_and_delta": true,
+    "all_program_delta_dimensions_are_not_unconditionally_required": true,
+    "machine_derived_fields_are_not_human_maintenance": true
   },
   "functional_design_dimensions": [
-    {"id": "business_scenario", "label": "업무 시나리오(6하원칙)", "required": true},
-    {"id": "entry_surface", "label": "화면·메뉴·API·배치·이벤트 진입점", "required": true},
-    {"id": "ui_layout", "label": "화면 구성과 사용자 동선", "required_if": "entry_point_kind == UI"},
-    {"id": "field_catalog", "label": "업무 기준 필드 의미·검증·표시 조건", "required": true},
-    {"id": "crud_matrix", "label": "CRUD 및 사용자/시스템 행위", "required": true},
-    {"id": "core_logic", "label": "핵심 업무 규칙·판단·계산", "required": true},
-    {"id": "logical_data", "label": "논리 데이터 조회·저장 요구", "required": true},
-    {"id": "common_code", "label": "공통코드·기준정보 요구", "required": true},
-    {"id": "integration", "label": "연계 프로그램·외부 시스템 요구", "required": true},
-    {"id": "security", "label": "역할·프로파일·권한·데이터 접근 제어", "required": true},
-    {"id": "error_test", "label": "업무 오류·예외·검증·AC", "required": true}
+    {"id": "business_scenario", "label": "업무 시나리오(6하원칙)", "required_from_change_level": "L3"},
+    {"id": "entry_surface", "label": "화면·메뉴·API·배치·이벤트 진입점", "required_from_change_level": "L3"},
+    {"id": "ui_layout", "label": "화면 구성과 사용자 동선", "trigger": "HAS_UI"},
+    {"id": "field_catalog", "label": "업무 기준 필드 의미·검증·표시 조건", "required_from_change_level": "L3"},
+    {"id": "crud_matrix", "label": "CRUD 및 사용자/시스템 행위", "required_from_change_level": "L3"},
+    {"id": "core_logic", "label": "핵심 업무 규칙·판단·계산", "required_from_change_level": "L3"},
+    {"id": "logical_data", "label": "논리 데이터 조회·저장 요구", "trigger": "DATA_IMPACT"},
+    {"id": "common_code", "label": "공통코드·기준정보 요구", "trigger": "COMMON_CODE_IMPACT"},
+    {"id": "integration", "label": "연계 프로그램·외부 시스템 요구", "trigger": "HAS_INTERFACE"},
+    {"id": "security", "label": "역할·프로파일·권한·데이터 접근 제어", "trigger": "SECURITY_IMPACT"},
+    {"id": "error_test", "label": "업무 오류·예외·검증·AC", "required_from_change_level": "L3"}
   ],
-  "program_delta_dimensions": [
-    {"id": "functional_design_ref", "label": "기능 설계 기준점", "required": true},
-    {"id": "implementation_target", "label": "PGM·Entry Point·실제 Source Symbol", "required": true},
-    {"id": "field_mapping_delta", "label": "Field→UI/DTO/API/DB 구현 매핑 또는 차이", "required": true},
-    {"id": "source_data_mapping", "label": "실제 Query·Table·Column·Mapper/Repository", "required": true},
-    {"id": "transaction_runtime", "label": "Transaction·Concurrency·Idempotency·Retry", "required": true},
-    {"id": "integration_contract", "label": "실제 연계 Protocol/Payload/Timeout/Retry", "required": true},
-    {"id": "technical_controls", "label": "Error·Security·Audit·Observability·NFR 구현", "required": true},
-    {"id": "delivery_trace", "label": "TASK·AC·TC·Source 변경 대상", "required": true},
-    {"id": "readiness", "label": "구현 준비도와 남은 OPEN", "required": true}
+  "program_core_dimensions": [
+    {"id": "functional_intent", "label": "Functional Intent", "human_required": true},
+    {"id": "implementation_target", "label": "실제 구현 Target", "human_required": true},
+    {"id": "source_evidence", "label": "Source Evidence", "machine_derived": true},
+    {"id": "development_delta", "label": "Development Delta", "human_reviewed": true},
+    {"id": "ac_test", "label": "AC/Test", "human_reviewed": true},
+    {"id": "open_guard", "label": "Open/Guard", "human_required": true}
   ],
+  "program_conditional_dimensions": [
+    {"id": "data", "trigger": "DATA_ACCESS_OR_SCHEMA_IMPACT", "machine_derived_when_source_available": true},
+    {"id": "transaction", "trigger": "TRANSACTION_IMPACT"},
+    {"id": "concurrency", "trigger": "CONCURRENCY_RISK"},
+    {"id": "interface", "trigger": "HAS_INTERFACE"},
+    {"id": "security", "trigger": "SECURITY_IMPACT"},
+    {"id": "observability", "trigger": "OBSERVABILITY_IMPACT"},
+    {"id": "migration", "trigger": "MIGRATION_IMPACT"},
+    {"id": "architecture", "trigger": "ARCHITECTURE_OR_STANDARD_IMPACT"}
+  ],
+  "legacy_compatibility": {
+    "full_program_delta_dimensions_preserved": true,
+    "purpose": "기존 고객/계약 문서 mapping용. 신규 Standard의 필수 작업량 기준이 아니다."
+  },
   "functional_design_required_markers": [
-    "### 업무 정의(6하원칙)",
-    "### 화면·채널 및 사용자 동선",
-    "### 화면·입력·출력 필드 명세",
-    "### CRUD 및 사용자/시스템 행위",
-    "### 핵심 업무 로직과 판단 규칙",
-    "### 데이터 조회·저장 설계",
-    "### 공통코드·기준정보",
-    "### 연계 프로그램·외부 시스템",
-    "### 권한·상태·예외",
-    "### 인수 조건(AC) 연결"
+    "### 업무 정의(6하원칙)", "### 화면·채널 및 사용자 동선", "### 화면·입력·출력 필드 명세", "### CRUD 및 사용자/시스템 행위", "### 핵심 업무 로직과 판단 규칙", "### 데이터 조회·저장 설계", "### 공통코드·기준정보", "### 연계 프로그램·외부 시스템", "### 권한·상태·예외", "### 인수 조건(AC) 연결"
   ],
   "program_spec_required_markers": [
-    "### 기능 설계 기준점",
-    "### 실제 구현 Target",
-    "### 구현 매핑과 차이",
-    "### Query·Table·Source 구현 근거",
-    "### 트랜잭션·실행 제어",
-    "### 연계 구현 계약",
-    "### 기술 제어와 운영 조건",
-    "### TASK·AC·TC·Source 연결",
-    "### 구현 준비도"
+    "### 기능 설계 기준점", "### 실제 구현 Target", "### 구현 매핑과 차이", "### Query·Table·Source 구현 근거", "### 트랜잭션·실행 제어", "### 연계 구현 계약", "### 기술 제어와 운영 조건", "### TASK·AC·TC·Source 연결", "### 구현 준비도"
   ]
 }
