@@ -63,7 +63,7 @@ class BootstrapAndProfileTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             result = SETUP.bootstrap(root, name="green", mode="GREENFIELD", delivery="FAST", validate=False)
-            self.assertEqual("CONFIGURED_PROVIDER_REQUIRED", result["status"])
+            self.assertEqual("READY_FOR_PLAN", result["status"])
             project = CONFIG.load_config(root / "sdlc/config/project-profile.yaml")
             source = CONFIG.load_config(root / "sdlc/config/source-profile.yaml")
             self.assertEqual("GREENFIELD", CONFIG.project_mode(project))
@@ -71,6 +71,8 @@ class BootstrapAndProfileTest(unittest.TestCase):
             self.assertEqual([], CONFIG.source_roots(source))
             provider = json.loads((root / "sdlc/config/agent-provider.json").read_text(encoding="utf-8"))
             self.assertFalse(provider["enabled"])
+            # Provider disabled is expected for the default INTERACTIVE execution mode.
+            self.assertFalse(result["provider_ready"])
 
     def test_fast_standard_full_are_runtime_policies(self):
         project = {"project": {"mode": "BROWNFIELD"}, "delivery": {"profile": "FAST"}}
@@ -141,12 +143,15 @@ class WorkRuntimeSafetyTest(unittest.TestCase):
             result = WORK.execute_plan(root, plan, provider_config=provider, run_dir=root / "sdlc/runtime/run", store_path=store_path)
             self.assertEqual("FAIL_PROTECTED_BRANCH_WRITE", result["status"])
 
-    def test_check_reports_unconfigured_provider(self):
+    def test_check_reports_interactive_ready_without_provider(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             SETUP.bootstrap(root, name="g", mode="GREENFIELD", validate=False)
             result = CHECK.check(root, setup_only=True)
-            self.assertEqual("SETUP_OR_PROVIDER_REQUIRED", result["status"])
+            self.assertEqual("READY", result["status"])
+            self.assertEqual("INTERACTIVE", result["setup"]["agent_execution"]["mode"])
+            self.assertTrue(result["setup"]["agent_execution"]["ready"])
+            self.assertFalse(result["setup"]["agent_execution"]["provider_required"])
             self.assertFalse(result["setup"]["provider"]["enabled"])
 
 
