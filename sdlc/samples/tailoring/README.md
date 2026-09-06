@@ -5,11 +5,11 @@
 ## 핵심 확인점
 
 ```text
-같은 RQ / 같은 DESIGN Stage / 같은 Canonical 의미
+같은 RQ / 같은 Runtime Stage / 같은 Canonical snapshot
         ↓ documents.internal.profile만 변경
 STANDARD_3          → 3종 통합 산출물
 STANDARD_5          → 5종 역할 분리 산출물
-STAGE_ORIENTED_FULL → 기존 Stage-oriented 전체 산출물
+STAGE_ORIENTED_FULL → 기존 Stage-oriented 10종 산출물
 CUSTOMER_A_INTERNAL_3 → 고객사 Custom 3종 산출물
 ```
 
@@ -21,10 +21,13 @@ Stage를 3개/5개로 합치는 예제가 아니다. `DECOMPOSE → ... → DESI
 - `project-standard-5.example.yaml`: 내부 5종 + 고객 3종 + PM View
 - `project-full.example.yaml`: 기존 Stage-oriented Full 호환
 - `CUSTOMER_A_INTERNAL_3.yaml`: 고객사 Custom 3종 Profile 예시
+- `comparison-canonical.example.json`: 3/5/Full 비교 전용 합성 Canonical fixture. 실제 고객 사실을 표현하지 않는다.
+- `PROFILE_COMPARISON_3_5_FULL.md`: 동일 Canonical/RQ/L3/Stage sequence의 구조 비교 결과
+- `sdlc/scripts/generate_tailoring_profile_comparison.py`: 위 비교를 재생성하는 실행 도구
 
-## 비교 방법
+## Profile 기본 검증
 
-샘플 파일을 프로젝트의 `.sdlc/project.yaml`로 복사해서 사용하지 말고, 필요한 설정을 실제 프로젝트 사실에 맞춰 반영한다.
+샘플 파일을 프로젝트의 `.sdlc/project.yaml`로 그대로 복사해서 사용하지 말고, 필요한 설정을 실제 프로젝트 사실에 맞춰 반영한다.
 
 ```bash
 python sdlc/scripts/tailoring_runtime.py validate-profile --profile STANDARD_3
@@ -39,6 +42,32 @@ python sdlc/scripts/harness.py work --target RQ-001 --stage DESIGN --plan-only
 ```
 
 Profile을 바꾸더라도 `selection.stage`는 DESIGN으로 유지되고, `selection.artifact_path`/`template_path`만 Profile에 따라 달라져야 한다.
+
+## 동일 Canonical 3/5/Full 구조 비교
+
+재현 가능한 비교는 실제 프로젝트 Canonical을 변경하지 않고 전용 fixture를 입력으로 사용한다.
+
+```bash
+python sdlc/scripts/generate_tailoring_profile_comparison.py \
+  --root . \
+  --store sdlc/samples/tailoring/comparison-canonical.example.json \
+  --target RQ-COMP-001 \
+  --change-level L3 \
+  --out-json sdlc/runtime/tailoring-comparison.json \
+  --out-md sdlc/runtime/tailoring-comparison.md
+```
+
+기대 결과는 다음과 같다.
+
+- `STANDARD_3`: 고유 Human Artifact 3종
+- `STANDARD_5`: 고유 Human Artifact 5종
+- `STAGE_ORIENTED_FULL`: 고유 Human Artifact 10종
+- 세 Profile 모두 동일 Canonical fingerprint 사용
+- 세 Profile 모두 동일 Runtime Stage sequence 유지
+- `stage_preserved = true`
+- `projection_creates_business_truth = false`
+
+이 비교는 구조 검증이다. Agent가 각 Profile의 실제 문서 본문을 작성했을 때 의미가 동일한지, 사용자가 어느 Profile을 더 쉽게 검토하는지는 External Agent/Human first-use Pilot에서 별도로 검증한다.
 
 ## Custom Profile 적용
 
