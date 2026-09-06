@@ -20,6 +20,7 @@ scope:
   - "v1.9 공식 Entrypoint 의존성을 포함한 Minimum Executable Core 배포계약"
   - "동일 Canonical snapshot 기반 Standard 3/5/Full 구조 비교 Sample"
   - "External Agent/Human/Brownfield 실제 관찰 Pilot의 fail-closed Evidence Contract와 실행 Kit"
+  - "Empirical Pilot init/validate/status Runtime과 Machine Status Summary"
 non_goals:
   - "Core Stage 삭제 또는 고객사별 Core Stage 복제"
   - "Customer Projection에서 신규 Business Truth 생성"
@@ -27,44 +28,46 @@ non_goals:
   - "선택형 Customer Renderer/Brownfield 분석 Runtime의 무조건 Core 편입"
   - "구조 비교만으로 실제 Agent 작성본문 의미동등성 또는 Human Usability PASS 주장"
   - "Public Source Impact PASS를 Brownfield Reconciliation empirical PASS로 확대 해석"
+  - "Pilot Runtime init/status를 실제 관찰 Evidence로 간주"
   - "main merge 또는 직접 수정"
 evidence_status:
   document: IMPLEMENTED
   contract: IMPLEMENTED_V19_PACKAGE_AND_EMPIRICAL_EVIDENCE_GATE
   config: IMPLEMENTED
   runtime: IMPLEMENTED_REGRESSION_PASS
-  behavioral_test: FULL_REGRESSION_286_PASS_PACKAGE_PROFILE_AND_EMPIRICAL_BOUNDARY
+  behavioral_test: FULL_REGRESSION_291_PASS_PACKAGE_PROFILE_EMPIRICAL_GATE_AND_RUNTIME
   minimum_executable_package: COPIED_PACKAGE_SETUP_CHECK_TAILORING_DESIGN_PLAN_SMOKE_PASS
   tailoring_profile_structural_comparison: SAME_CANONICAL_STANDARD_3_5_FULL_PASS
   empirical_pilot_evidence_gate: IMPLEMENTED_FAIL_CLOSED_REGRESSION_PASS
+  empirical_pilot_runtime: IMPLEMENTED_INIT_VALIDATE_STATUS_REGRESSION_PASS
   external_agent_tailoring_semantic_equivalence: NOT_RUN
   external_agent_empirical: NOT_RUN
   human_first_use: NOT_RUN
   brownfield_reconciliation_empirical: NOT_RUN_WAITING_BUSINESS_AUTHORITY
 ci_evidence:
-  verified_head: 5787eb7f776edca93e5f3fb1e085507069bb7f42
+  verified_head: 5706711e4d6d94c6ec2e041b41417415b7cfa752
   worklist_sync_quality:
-    run_id: 34051260831
-    run_number: 755
+    run_id: 34051783776
+    run_number: 767
     result: PASS
-    detail: "python -m unittest discover -s tests -v: Ran 286 tests, OK; empirical pilot fail-closed tests and Public Brownfield reconciliation-boundary test PASS; Mermaid labels OK (151 Markdown files checked)"
+    detail: "python -m unittest discover -s tests -v: Ran 291 tests, OK; empirical pilot runtime init/validate/status 5 tests PASS; existing fail-closed empirical evidence and Public Brownfield reconciliation-boundary tests PASS; Mermaid labels OK (151 Markdown files checked)"
   production_readiness:
-    run_id: 34051260875
-    run_number: 94
+    run_id: 34051783749
+    run_number: 100
     result: PASS
   docs_quality:
-    run_id: 34051260874
-    run_number: 258
+    run_id: 34051783784
+    run_number: 264
     result: PASS
   greenfield_work_executor_e2e:
-    run_id: 34051260878
-    run_number: 104
+    run_id: 34051783797
+    run_number: 110
     result: PASS
   public_brownfield_pilot:
-    run_id: 34051260889
-    run_number: 117
+    run_id: 34051783771
+    run_number: 123
     result: PASS
-    detail: "macrozheng/mall pinned real repository: PASS_REAL_REPOSITORY_PARTIAL_COVERAGE; nodes 570, edges 271, required checks 6/6; reconciliation.execution_status=NOT_RUN, readiness=WAITING_BUSINESS_AUTHORITY, empirical_reconciliation_pass=false"
+    detail: "macrozheng/mall pinned real repository Impact integration PASS; Reconciliation remains NOT_RUN / WAITING_BUSINESS_AUTHORITY / empirical=false"
 package_evidence:
   contract_schema_version: 17
   contract_candidate_design: v1.9.0-tailoring-control-plane
@@ -93,10 +96,20 @@ tailoring_comparison_evidence:
 empirical_pilot_evidence:
   contract: sdlc/design/contracts/empirical-pilot-evidence-contract.json
   validator: sdlc/scripts/validate_empirical_pilot_evidence.py
+  runtime: sdlc/scripts/empirical_pilot_runtime.py
   execution_guide: sdlc/validation/pilots/README.md
   external_agent_template: sdlc/validation/pilots/external-agent-tailoring-pilot.example.json
   human_first_use_template: sdlc/validation/pilots/human-first-use-pilot.example.json
   brownfield_reconciliation_template: sdlc/validation/pilots/brownfield-reconciliation-pilot.example.json
+  default_runtime_root: sdlc/runtime/pilots
+  runtime_commands:
+    - init
+    - validate
+    - status
+  runtime_status_missing_evidence: NOT_RUN
+  runtime_init_creates_observation: false
+  runtime_status_can_substitute_ci_or_fixture: false
+  runtime_path_traversal_blocked: true
   templates_default_execution_status: NOT_RUN
   unobserved_pass_claim_fails_closed: true
   provider_class_label_is_identity_evidence: false
@@ -124,6 +137,7 @@ validation_boundary:
   structural_profile_comparison_is_not_agent_document_semantic_equivalence: true
   public_source_impact_is_not_brownfield_reconciliation_empirical_evidence: true
   provider_class_label_is_not_agent_identity_evidence: true
+  pilot_runtime_init_or_status_is_not_observed_empirical_evidence: true
   external_agent_or_human_not_observed_means_not_run: true
   production_ready_claimed: false
 inherited_validation_boundary:
@@ -132,5 +146,5 @@ inherited_validation_boundary:
   verdict: CONTROLLED_PILOT_READY_CI_PASS_EXTERNAL_AGENT_HUMAN_VALIDATION_PENDING
   self_assessment_is_not_validation: true
   production_ready_claimed: false
-next_step: "실증 Evidence Contract/Validator/Template는 준비되었고 286 regression에서 fail-closed 경계가 통과했다. 다음은 준비된 Kit를 사용해 실제 External Agent 3/5/Full 관찰 Pilot, 일반 SI/SM 참여자 Human first-use Pilot, Confirmed Human Business Truth가 있는 Brownfield Reconciliation Pilot을 수행하고 관찰 결과만 Evidence로 승격한다."
+next_step: "Empirical Pilot Runtime까지 구현되어 init/validate/status가 291 regression에서 검증되었다. 다음은 Runtime으로 실제 External Agent 3/5/Full 관찰 Pilot, 일반 SI/SM 참여자 Human first-use Pilot, Confirmed Human Business Truth가 있는 Brownfield Reconciliation Pilot을 수행하고 관찰 결과만 Evidence로 승격한다."
 merge_to_main: false
