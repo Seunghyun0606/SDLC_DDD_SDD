@@ -1,0 +1,38 @@
+schema_version: 1
+profile_id: CUSTOMER_STANDARD_3
+name: "고객 커뮤니케이션 3종 Projection"
+output_root: "docs/20_고객"
+artifacts:
+  solution_agreement:
+    audience: CUSTOMER
+    template: "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md"
+    output_path: "docs/20_고객/{target}/A01_요구_업무_기능_합의서.md"
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 10
+    sources:
+      stages: [DECOMPOSE, CLARIFY, PROCESS, DESIGN]
+      canonical: [RQ, FR, BR, PROC, AC]
+      artifacts: [business_definition, functional_design]
+  delivery_scope:
+    audience: CUSTOMER
+    template: "sdlc/templates/customer/standard/A02_영향_개발범위_공유서.md"
+    output_path: "docs/20_고객/{target}/A02_영향_개발범위_공유서.md"
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 20
+    sources:
+      stages: [DISCOVERY, IMPACT, PROGRAM, DEVELOPMENT]
+      canonical: [RQ, PGM, DATA]
+      artifacts: [detail_design, program_design]
+  acceptance_handover:
+    audience: CUSTOMER
+    template: "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md"
+    output_path: "docs/20_고객/{target}/A03_테스트_인수_운영_결과서.md"
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 30
+    sources:
+      stages: [TEST, VERIFY, KNOWLEDGE_PROMOTION]
+      canonical: [RQ, AC, TC]
+      artifacts: [test_acceptance]

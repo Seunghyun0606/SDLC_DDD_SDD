@@ -5,12 +5,14 @@ Examples:
   python sdlc/scripts/harness.py setup --name my-project --mode AUTO
   python sdlc/scripts/harness.py intake requirements.xlsx
   python sdlc/scripts/harness.py check --setup
+  python sdlc/scripts/harness.py check project
   python sdlc/scripts/harness.py work --target RQ-001
   python sdlc/scripts/harness.py review --target RQ-001 --by 홍길동 --answer "승인 주체는 팀장"
   python sdlc/scripts/harness.py change --target RQ-001 --change "환불 상태 조회 추가"
 
 Project users maintain one setting file: .sdlc/project.yaml.
 Agent execution is vendor-neutral: INTERACTIVE is the default; HEADLESS is opt-in.
+v1.9 keeps internal Stage execution but selects Human Artifacts through Project Tailoring Profiles.
 """
 from __future__ import annotations
 
@@ -74,8 +76,8 @@ def _drop_option(args: list[str], option: str) -> list[str]:
 
 
 def _runtime_profile_args(args: list[str]) -> tuple[list[str], dict]:
-    """Resolve project entry and append machine-only effective artifacts plus Agent runtime."""
-    config = _load("harness_runtime_config", "runtime_config.py")
+    """Resolve project entry and append machine-only effective artifacts plus v1.9 control config."""
+    config = _load("harness_runtime_config", "runtime_config_v19.py")
     root = _root_from_args(args)
     resolved = config.resolve_runtime_config(root)
     if resolved["source_kind"] == "UNCONFIGURED":
@@ -101,17 +103,13 @@ def _runtime_profile_args(args: list[str]) -> tuple[list[str], dict]:
 
 
 def _connect_provider_from_setup_args(setup, args: list[str], result: dict) -> dict:
-    """Backward-compatible ``--provider-command`` bridge for existing automation users.
-
-    New projects should configure HEADLESS under ``.sdlc/project.yaml``. This bridge deliberately
-    keeps the old provider JSON only as a legacy fallback and marks it deprecated.
-    """
+    """Backward-compatible ``--provider-command`` bridge for existing automation users."""
     provider_command = _value_from_args(args, "--provider-command", "").strip()
     if not provider_command:
         return result
 
     root = _root_from_args(args)
-    config = _load("harness_setup_runtime_config", "runtime_config.py")
+    config = _load("harness_setup_runtime_config", "runtime_config_v19.py")
     resolved = config.resolve_runtime_config(root)
     if resolved["source_kind"] == "UNCONFIGURED":
         return result
@@ -153,7 +151,7 @@ def _run_setup(args: list[str]) -> int:
     if isinstance(result, dict) and result.get("status") != "SETUP_FAILED":
         result = _connect_provider_from_setup_args(setup, args, result)
         root = _root_from_args(args)
-        config = _load("harness_setup_mode_config", "runtime_config.py")
+        config = _load("harness_setup_mode_config", "runtime_config_v19.py")
         try:
             resolved = config.resolve_runtime_config(root)
             provider_path = root / config.DEFAULT_PROVIDER_CONFIG_PATH
@@ -176,7 +174,8 @@ def _run_setup(args: list[str]) -> int:
 
         result["user_entrypoint"] = {
             "start_here": "docs/00_시작/START_HERE.md",
-            "project_setup_guide": "docs/00_시작/프로젝트_설정_가이드.md",
+            "project_setup_guide": "docs/00_시작/02_PROJECT_설정가이드.md",
+            "tailoring_guide": "docs/00_시작/03_TAILORING_설정가이드.md",
             "zero_to_one_intake": "CONNECTED",
             "message": "setup 확인 후 요구사항 원본을 intake하고 현재 Agent에서 work를 진행한다.",
         }
@@ -196,7 +195,7 @@ def _run_setup(args: list[str]) -> int:
 
 
 def _run_check(args: list[str]) -> int:
-    check = _load("harness_check", "run_check.py")
+    check = _load("harness_human_check", "tailored_check.py")
     captured = StringIO()
     with redirect_stdout(captured):
         code = check.main(args)
@@ -231,9 +230,7 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         mode = str((resolved.get("agent_runtime") or {}).get("execution_mode") or "INTERACTIVE")
         if command == "work":
-            if mode == "INTERACTIVE":
-                return _load("harness_interactive_work", "interactive_work.py").main(_drop_option(args, "--provider-config"))
-            return _load("harness_work_handoff", "work_handoff.py").main(args)
+            return _load("harness_tailored_work", "tailored_work.py").main(args)
         if mode == "INTERACTIVE":
             return _load("harness_interactive_change", "interactive_change.py").main(_drop_option(args, "--provider-config"))
         return _load("harness_change", "run_change.py").main(args)
