@@ -4,6 +4,10 @@
 INTERACTIVE prepare delegates to the existing guarded runtime, then rewrites only the planned
 Human Artifact/template according to the selected Project Tailoring Profile. Finalize reuses the
 unchanged v1.8 semantic guards. HEADLESS builds the same plan and executes it through run_work.
+
+Compatibility rule: a legacy/minimum deployment that does not contain the v1.9 profile package
+must keep the v1.8 Core Stage Artifact instead of failing before the existing guarded runtime can
+run. An explicitly configured profile that exists but is invalid still fails closed.
 """
 from __future__ import annotations
 
@@ -65,20 +69,46 @@ def _safe_path(root: Path, raw: str) -> tuple[Path, str]:
     return WORK.safe_repo_path(root, raw)
 
 
+def _legacy_tailoring_fallback(project: dict[str, Any], target: str, stage: str, effective: str, error: str) -> dict[str, Any]:
+    """Represent a missing optional v1.9 profile package without changing v1.8 Stage semantics."""
+    return {
+        "schema_version": 1,
+        "target_id": target,
+        "stage": stage,
+        "change_level": effective,
+        "profiles": TAILOR.project_profile_ids(project),
+        "profile_paths": {},
+        "primary_work_artifact": None,
+        "affected_artifacts": {"internal": [], "customer": [], "pm": []},
+        "machine_evidence_visibility": str(CONFIG.nested(project, "documents", "machine", "visibility", default="HIDDEN") or "HIDDEN").upper(),
+        "stage_preserved": True,
+        "projection_creates_business_truth": False,
+        "compatibility_fallback": "PROFILE_PACKAGE_MISSING_KEEP_CORE_STAGE_ARTIFACT",
+        "fallback_reason": error,
+    }
+
+
 def _profile_plan(root: Path, target: str, stage: str) -> tuple[dict[str, Any], dict[str, Any]]:
     resolved = CONFIG.resolve_runtime_config(root)
     project = resolved.get("project") or {}
     store = TAILOR.load_store(root)
     change = TAILOR.resolve_change_level(root, target, stage, store, project)
     effective = str(change.get("effective_change_level") or change.get("provisional_change_level") or "L3")
-    tailoring = TAILOR.resolve_artifacts(
-        root,
-        project=project,
-        target=target,
-        stage=stage,
-        change_level=effective,
-        store=store,
-    )
+    try:
+        tailoring = TAILOR.resolve_artifacts(
+            root,
+            project=project,
+            target=target,
+            stage=stage,
+            change_level=effective,
+            store=store,
+        )
+    except ValueError as exc:
+        # Standard v1.9 deployments carry sdlc/tailoring/standard. Legacy/minimum executable
+        # deployments may only carry Core Stage templates. Preserve that valid v1.8 behavior.
+        if "tailoring profile not found:" not in str(exc):
+            raise
+        tailoring = _legacy_tailoring_fallback(project, target, stage, effective, str(exc))
     return change, tailoring
 
 
@@ -100,7 +130,7 @@ def _apply_plan_tailoring(root: Path, plan: dict[str, Any], *, explicit_artifact
 
     primary = tailoring.get("primary_work_artifact")
     if not isinstance(primary, dict):
-        plan["tailoring"]["fallback"] = "NO_PRIMARY_MAPPING_KEEP_CORE_STAGE_ARTIFACT"
+        plan["tailoring"].setdefault("fallback", "NO_PRIMARY_MAPPING_KEEP_CORE_STAGE_ARTIFACT")
         return plan
     artifact_raw = str(primary.get("output_path") or "")
     template_raw = str(primary.get("template") or "")
