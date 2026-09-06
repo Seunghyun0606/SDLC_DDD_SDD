@@ -33,7 +33,7 @@
 5. 업무정책·범위·승인·기술 선택처럼 사람의 판단권한이 필요한 것만 확인한다.
 6. Source Evidence를 Business Truth로 자동 승격하지 않는다.
 7. Dead Config와 잘못된 schema/mode/delivery/agent execution은 조용히 무시하지 않고 fail-closed 한다.
-8. 내부 Machine taxonomy나 Agent 제품명을 사용자 업무 설정으로 요구하지 않는다.
+8. 내부 Machine taxonomy를 사용자 입력 양식으로 요구하지 않는다. Agent 제품명도 프로젝트 업무 설정으로 강제하지 않는다.
 
 ## Agent 실행모드
 
@@ -80,11 +80,11 @@ Agent Provider 선택은 기본 setup 질문이 아니다.
 Harness 내부 Starter ID는 다음과 같이 Mode별로 분리한다.
 
 - GREENFIELD → `greenfield-default` → `sdlc/starter-kits/greenfield/`
-- BROWNFIELD → `brownfield-default` → `sdlc/starter-kits/brownfield/`
+- BROWNFIELD → `brownfield-auto` → `sdlc/starter-kits/brownfield/`
 - HYBRID → Brownfield Source 기준과 Greenfield 신규 영역을 함께 사용
 - AUTO → Repository Evidence로 Mode를 판정한 뒤 위 Starter 정책으로 연결
 
-Starter Manifest를 사용자가 직접 편집하는 것은 기본 절차가 아니다.
+`brownfield-auto`는 기존 Starter Contract의 호환 ID다. v1.9 Tailoring Profile ID와 혼동하지 않는다. Starter Manifest를 사용자가 직접 편집하는 것은 기본 절차가 아니다.
 
 ## 실제 첫 실행
 
