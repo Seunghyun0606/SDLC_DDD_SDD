@@ -152,6 +152,14 @@ Stage까지 필요한 Harness 관리자 디버그:
 python sdlc/scripts/tailored_check.py project --debug-stage
 ```
 
+Harness 자체의 External Agent/Human/Brownfield **실제 관찰 Pilot** 상태는 CI 결과와 분리해서 확인한다.
+
+```bash
+python sdlc/scripts/empirical_pilot_runtime.py status
+```
+
+여기서 `NOT_RUN`은 실패가 아니라 아직 실제 관찰 Evidence가 없다는 뜻이다. CI/Fixture PASS를 이 값 대신 사용하지 않는다.
+
 ## 10. 다음에 읽을 문서
 
 - 표준 프로젝트 시작: `01_STANDARD_SCAFFOLD_사용가이드.md`
@@ -161,3 +169,4 @@ python sdlc/scripts/tailored_check.py project --debug-stage
 - 역할별 업무: `05_이해관계자별_작업가이드.md`
 - 고객사 Custom: `06_CUSTOM_SCAFFOLD_적용가이드.md`
 - Brownfield SSOT/Drift: `07_BROWNFIELD_SSOT_현행화가이드.md`
+- Harness 실제 실증 Pilot: `sdlc/validation/pilots/README.md`
