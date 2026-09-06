@@ -61,7 +61,7 @@ class HarnessStructureTest(unittest.TestCase):
             self.assertEqual(0,setup.returncode,setup.stderr+'\n'+setup.stdout)
             setup_result=json.loads(setup.stdout)
             self.assertEqual('READY_FOR_PLAN',setup_result['status'])
-            self.assertEqual('INTERACTIVE',setup_result['agent_execution']['mode'])
+            self.assertEqual('INTERACTIVE',setup_result['agent_execution']['execution_mode'])
             for rel in [
                 'docs/00_시작/START_HERE.md',
                 'docs/00_시작/02_PROJECT_설정가이드.md',
