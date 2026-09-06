@@ -16,6 +16,21 @@
     "observed_at",
     "observer"
   ],
+  "runtime": {
+    "entrypoint": "sdlc/scripts/empirical_pilot_runtime.py",
+    "commands": ["init", "validate", "status"],
+    "default_evidence_root": "sdlc/runtime/pilots",
+    "default_evidence_files": {
+      "EXTERNAL_AGENT_TAILORING_SEMANTIC_EQUIVALENCE": "sdlc/runtime/pilots/external-agent-tailoring.json",
+      "HUMAN_FIRST_USE": "sdlc/runtime/pilots/human-first-use.json",
+      "BROWNFIELD_RECONCILIATION": "sdlc/runtime/pilots/brownfield-reconciliation.json"
+    },
+    "init_creates_observation": false,
+    "init_default_execution_status": "NOT_RUN",
+    "missing_evidence_status": "NOT_RUN",
+    "status_can_substitute_ci_or_fixture_for_observation": false,
+    "runtime_path_must_remain_under_project_root": true
+  },
   "rules": {
     "ci_or_fixture_can_claim_empirical_pass": false,
     "provider_class_label_can_prove_agent_identity": false,
