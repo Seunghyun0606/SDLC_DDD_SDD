@@ -133,7 +133,7 @@ def write_review_fixture_provider(path: Path) -> None:
 
 
 class WP5FirstUseEvidenceTest(unittest.TestCase):
-    def test_public_cli_first_use_flow_is_nonblocking_until_work_and_provider_can_be_connected_without_force(self):
+    def test_public_cli_first_use_flow_is_nonblocking_and_legacy_headless_can_be_connected_without_force(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             xlsx = root / "요구사항목록.xlsx"
@@ -144,8 +144,11 @@ class WP5FirstUseEvidenceTest(unittest.TestCase):
                 "--mode", "GREENFIELD", "--delivery", "STANDARD",
             )
             self.assertEqual(0, rc, setup)
-            self.assertEqual("SETUP_READY_PROVIDER_PENDING", setup["status"])
+            self.assertEqual("READY_FOR_PLAN", setup["status"])
             self.assertFalse(setup["provider_ready"])
+            self.assertEqual("INTERACTIVE", setup["agent_execution"]["execution_mode"])
+            self.assertTrue(setup["agent_execution"]["ready"])
+            self.assertFalse(setup["agent_execution"]["provider_required"])
             self.assertIn("intake", " ".join(setup["next_commands"]))
 
             project_entry = root / ".sdlc/project.yaml"
@@ -153,13 +156,16 @@ class WP5FirstUseEvidenceTest(unittest.TestCase):
 
             rc, checked = run_cli("check", "--root", str(root), "--setup")
             self.assertEqual(0, rc, checked)
-            self.assertEqual("SETUP_READY_PROVIDER_PENDING", checked["status"])
-            self.assertEqual("AGENT_PROVIDER_PENDING", checked["work_blocked_reason"])
+            self.assertEqual("READY", checked["status"])
+            self.assertEqual("INTERACTIVE", checked["setup"]["agent_execution"]["mode"])
+            self.assertTrue(checked["setup"]["agent_execution"]["ready"])
+            self.assertFalse(checked["setup"]["agent_execution"]["provider_required"])
 
             rc, intake = run_cli("intake", str(xlsx), "--root", str(root))
             self.assertEqual(0, rc, intake)
             self.assertEqual("INTAKE_READY_FOR_WORK", intake["status"])
             self.assertEqual("RQ-001", intake["first_target"])
+            self.assertTrue((root / intake["rq_extraction_manifest"]).is_file())
 
             provider = root / "wp5_provider.py"
             write_review_fixture_provider(provider)
