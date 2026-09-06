@@ -23,11 +23,11 @@ non_goals:
   - "Source 관찰만으로 Business Truth 자동 수정"
   - "main merge 또는 직접 수정"
 evidence_status:
-  document: IN_PROGRESS
-  contract: IN_PROGRESS
-  config: IN_PROGRESS
-  runtime: IN_PROGRESS
-  behavioral_test: NOT_RUN
+  document: IMPLEMENTED_GUIDES_PENDING_SAMPLE_VALIDATION
+  contract: IMPLEMENTED
+  config: IMPLEMENTED
+  runtime: IMPLEMENTED_WITH_REGRESSION_FIX_IN_PROGRESS
+  behavioral_test: V19_13_PASS_FULL_REGRESSION_FIX_IN_PROGRESS
   external_agent_empirical: NOT_RUN
   human_first_use: NOT_RUN
 validation_boundary:
@@ -35,5 +35,10 @@ validation_boundary:
   ci_is_human_first_use_evidence: false
   external_agent_or_human_not_observed_means_not_run: true
   production_ready_claimed: false
-next_step: "Contract -> Runtime resolver -> Human Control Plane -> Guide/Sample -> Regression/CI 순으로 검증한다."
+inherited_validation_boundary:
+  note: "아래 marker는 v1.8 이전 CI/Behavioral 검증 경계를 보존하기 위한 호환성 표기이며 v1.9 전체 PASS를 의미하지 않는다."
+  status: P0_P1_CI_BEHAVIORAL_AND_INTEGRATION_PASS_EXTERNAL_EMPIRICAL_PENDING
+  self_assessment_is_not_validation: true
+  production_ready_claimed: false
+next_step: "Full regression 회귀 수정 -> Guide/Sample -> CI 재검증 -> External Agent/Human Pilot 순으로 진행한다."
 merge_to_main: false

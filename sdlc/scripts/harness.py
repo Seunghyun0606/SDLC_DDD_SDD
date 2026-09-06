@@ -176,7 +176,7 @@ def _run_setup(args: list[str]) -> int:
             "start_here": "docs/00_시작/START_HERE.md",
             "project_setup_guide": "docs/00_시작/02_PROJECT_설정가이드.md",
             "tailoring_guide": "docs/00_시작/03_TAILORING_설정가이드.md",
-            "zero_to_one_intake": "CONNECTED",
+            "zero_to_one_intake": "CONNECTED_WITH_RQ_EXTRACTION_MANIFEST",
             "message": "setup 확인 후 요구사항 원본을 intake하고 현재 Agent에서 work를 진행한다.",
         }
         result["next_commands"] = [
@@ -219,7 +219,7 @@ def main(argv: list[str] | None = None) -> int:
     if command == "setup":
         return _run_setup(args)
     if command == "intake":
-        return _load("harness_intake", "intake_requirements.py").main(args)
+        return _load("harness_intake_explainable", "intake_explainable.py").main(args)
     if command == "review":
         return _load("harness_review", "review_work.py").main(args)
     if command in {"work", "change"}:
@@ -230,7 +230,8 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         mode = str((resolved.get("agent_runtime") or {}).get("execution_mode") or "INTERACTIVE")
         if command == "work":
-            return _load("harness_tailored_work", "tailored_work.py").main(args)
+            routed = _drop_option(args, "--provider-config") if mode == "INTERACTIVE" else args
+            return _load("harness_tailored_work", "tailored_work.py").main(routed)
         if mode == "INTERACTIVE":
             return _load("harness_interactive_change", "interactive_change.py").main(_drop_option(args, "--provider-config"))
         return _load("harness_change", "run_change.py").main(args)
