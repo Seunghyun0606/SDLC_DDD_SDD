@@ -85,11 +85,16 @@ class WP4WorkHandoffTest(unittest.TestCase):
             self.assertEqual(code, 0)
             result = json.loads(out.getvalue())
             self.assertEqual(result["status"], "PLAN_READY")
+            self.assertEqual("INTERACTIVE", result["execution_mode"])
             artifact = result["plan"]["selection"]["artifact_path"]
             self.assertTrue(artifact.startswith("docs/10_산출물/"), artifact)
             self.assertNotIn("sdlc/runtime/work/", artifact)
             self.assertIn("BUSINESS_POLICY", result["plan"]["human_handoff_policy"]["human_decision_categories"])
-            self.assertIn("Provider 연결 시 Agent", result["user_handoff"]["message"])
+            # v1.9 plan-only is an INTERACTIVE prepare boundary. A completed user_handoff is
+            # created only after Agent work/finalize, not before execution.
+            self.assertNotIn("user_handoff", result)
+            self.assertTrue(result["plan"]["tailoring"]["stage_preserved"])
+            self.assertIn("Tailoring", result["instruction"])
 
     def test_execution_separates_human_document_from_machine_runtime(self):
         with tempfile.TemporaryDirectory() as td:
