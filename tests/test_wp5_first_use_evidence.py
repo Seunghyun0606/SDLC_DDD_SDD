@@ -157,7 +157,7 @@ class WP5FirstUseEvidenceTest(unittest.TestCase):
             rc, checked = run_cli("check", "--root", str(root), "--setup")
             self.assertEqual(0, rc, checked)
             self.assertEqual("READY", checked["status"])
-            self.assertEqual("INTERACTIVE", checked["setup"]["agent_execution"]["mode"])
+            self.assertEqual("INTERACTIVE", checked["setup"]["agent_execution"]["execution_mode"])
             self.assertTrue(checked["setup"]["agent_execution"]["ready"])
             self.assertFalse(checked["setup"]["agent_execution"]["provider_required"])
 
