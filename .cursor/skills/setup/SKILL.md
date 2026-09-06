@@ -21,6 +21,7 @@
 .sdlc/runtime/effective/agent-provider.json    # Compatibility/provider runtime input
 .sdlc/runtime/effective/project-context.json   # Agent project context
 .sdlc/runtime/effective/config-usage.json      # Config 소비 판정
+.sdlc/runtime/effective/tailoring-config.json  # Change/Tailoring effective view
 ```
 
 ## 기본 원칙
@@ -62,9 +63,9 @@ agent:
 
 `HEADLESS`에서는 `agent.provider.command`가 필수다. 기존 `--provider-command`와 `sdlc/config/agent-provider.json`은 Legacy automation 호환용이며 신규 프로젝트 기본 설정으로 안내하지 않는다.
 
-## Fast Path — 최초 질문
+## Fast Path — 최초 5개 질문
 
-기본 setup에서는 프로젝트명, 프로젝트 유형, 진행 수준(Delivery Profile)을 확인한다. 나머지는 실제 자료/Repository를 우선 조사한다.
+기본 setup에서는 5개 질문만 우선 확인하고 나머지는 실제 자료/Repository를 먼저 조사한다.
 
 1. 프로젝트 유형 — `GREENFIELD / BROWNFIELD / HYBRID / AUTO`, 모르면 AUTO
 2. 요구사항 또는 변경요청 위치 — XLSX/문서/Issue 등 실제 원본 위치
@@ -73,6 +74,17 @@ agent:
 5. 고객용 문서 필요 여부 — 프로젝트 커뮤니케이션 범위 확인
 
 Agent Provider 선택은 기본 setup 질문이 아니다.
+
+## Mode별 Starter Kit
+
+Harness 내부 Starter ID는 다음과 같이 Mode별로 분리한다.
+
+- GREENFIELD → `greenfield-default` → `sdlc/starter-kits/greenfield/`
+- BROWNFIELD → `brownfield-default` → `sdlc/starter-kits/brownfield/`
+- HYBRID → Brownfield Source 기준과 Greenfield 신규 영역을 함께 사용
+- AUTO → Repository Evidence로 Mode를 판정한 뒤 위 Starter 정책으로 연결
+
+Starter Manifest를 사용자가 직접 편집하는 것은 기본 절차가 아니다.
 
 ## 실제 첫 실행
 
@@ -85,7 +97,32 @@ python sdlc/scripts/harness.py setup \
 python sdlc/scripts/harness.py check --setup
 ```
 
-INTERACTIVE이면 Provider 없이 `READY`가 정상이다.
+INTERACTIVE이면 Provider 없이 `READY`/`READY_FOR_PLAN` 계열 상태가 정상이다. Provider 미연결은 HEADLESS에서만 실행 준비 실패 사유다.
+
+## v1.9 Artifact Tailoring
+
+Setup 후 프로젝트별 문서 수를 Stage 개수로 결정하지 않는다. `.sdlc/project.yaml`에서 Profile ID만 선택한다.
+
+```yaml
+change:
+  level_policy: AUTO
+
+documents:
+  internal:
+    profile: STANDARD_5
+  customer:
+    profile: CUSTOMER_STANDARD_3
+  pm:
+    profile: PM_STANDARD
+  machine:
+    visibility: HIDDEN
+```
+
+- Delivery Profile: 실행 깊이
+- Change Level: RQ별 변경 영향 크기
+- Artifact Profile: 사람이 보는 문서 구성
+
+세 개념을 서로 대체하지 않는다.
 
 ## Zero-to-One Requirement 인입
 
@@ -103,6 +140,7 @@ Runtime은 다음을 수행한다.
 → RQ/FR Candidate 생성
 → 유사 그룹은 Review로 분리하고 자동 병합하지 않음
 → Canonical에 CANDIDATE/OPEN 등록
+→ RQ Extraction Manifest 생성
 → 실제 RQ-001 같은 Target 반환
 → 다음 work 명령 안내
 ```
@@ -118,13 +156,6 @@ Runtime은 다음을 수행한다.
 Host가 Slash Command를 지원하지 않으면 `RQ-001 다음 단계 작업해줘` 같은 자연어 요청을 Core Work Skill로 연결한다.
 
 INTERACTIVE Runtime은 먼저 `INTERACTIVE_HANDOFF_READY`를 반환한다. 현재 Agent가 Artifact + `stage-result.json`을 만든 뒤 finalize하여 Validator가 성공한 경우에만 Stage 완료다.
-
-## Mode별 시작 자료
-
-- GREENFIELD → `sdlc/starter-kits/greenfield/`
-- BROWNFIELD → `sdlc/starter-kits/brownfield/`
-- HYBRID → Brownfield Source 기준과 Greenfield 신규 영역을 함께 사용
-- AUTO → Repository Evidence로 Mode를 판정한 뒤 위 안내로 연결
 
 ## `.sdlc/project.yaml` 작성 원칙
 
