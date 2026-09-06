@@ -280,6 +280,9 @@ def _headless(args: list[str], root: Path) -> int:
             project_profile=project_profile,
             source_profile=source_profile,
         )
+        # Handoff and Stage Result loading must stay anchored to the actual project root.
+        # Without this marker HEADLESS execution can succeed but lose human-decision uncertainty.
+        plan["_root"] = str(root)
         plan = _apply_plan_tailoring(root, plan, explicit_artifact=bool(ns.artifact))
         if ns.plan_out:
             out = Path(ns.plan_out)
