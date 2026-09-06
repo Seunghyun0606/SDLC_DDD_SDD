@@ -10,8 +10,25 @@ def validate(root: Path) -> list[str]:
     if not contract_path.exists():
         return ['missing contract: sdlc/design/contracts/harness-package-contract.json']
     c=json.loads(contract_path.read_text(encoding='utf-8'))
+    core_required=set(c['core_required_files'])
     for rel in c['core_required_files']:
         if not (root/rel).is_file(): errors.append(f'missing core file: {rel}')
+
+    # v1.9 package completeness: the official user entrypoint must never be shipped
+    # without its wrappers, Agent-neutral skills, default Tailoring assets, or guides.
+    if c.get('candidate_design') != 'v1.9.0-tailoring-control-plane':
+        errors.append('active package contract must identify v1.9.0-tailoring-control-plane')
+    for group in ['official_entrypoint_required_files','default_tailoring_assets','default_user_guides']:
+        required=c.get(group, [])
+        if not isinstance(required, list) or not required:
+            errors.append(f'package contract missing non-empty {group}')
+            continue
+        for rel in required:
+            if rel not in core_required:
+                errors.append(f'{group} item not in core_required_files: {rel}')
+            if not (root/rel).is_file():
+                errors.append(f'{group} file missing: {rel}')
+
     for d in c['customization_roots']:
         if not (root/d).is_dir(): errors.append(f'missing customization root: {d}')
     profile=(root/'sdlc/config/project-profile.example.yaml').read_text(encoding='utf-8')
