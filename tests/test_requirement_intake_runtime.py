@@ -92,15 +92,17 @@ class RequirementIntakeRuntimeTest(unittest.TestCase):
                 ])
             self.assertEqual(0, code, out.getvalue())
             result = json.loads(out.getvalue())
-            self.assertEqual("SETUP_READY_PROVIDER_PENDING", result["status"])
+            self.assertEqual("READY_FOR_PLAN", result["status"])
             self.assertFalse(result["provider_ready"])
+            self.assertEqual("INTERACTIVE", result["agent_execution"]["execution_mode"])
+            self.assertTrue(result["agent_execution"]["ready"])
             self.assertEqual("docs/00_시작/START_HERE.md", result["user_entrypoint"]["start_here"])
-            self.assertEqual("CONNECTED", result["user_entrypoint"]["zero_to_one_intake"])
+            self.assertEqual("CONNECTED_WITH_RQ_EXTRACTION_MANIFEST", result["user_entrypoint"]["zero_to_one_intake"])
             self.assertIn("python sdlc/scripts/harness.py intake <requirement-file.xlsx>", result["next_commands"])
             self.assertFalse(any("<RQ-ID>" in command for command in result["next_commands"]))
             persisted = json.loads((root / "sdlc/runtime/setup/setup-result.json").read_text(encoding="utf-8"))
             self.assertEqual(result["next_commands"], persisted["next_commands"])
-            self.assertEqual("SETUP_READY_PROVIDER_PENDING", persisted["status"])
+            self.assertEqual("READY_FOR_PLAN", persisted["status"])
 
     def test_official_harness_intake_registers_targets_and_work_resolves_decompose(self):
         with tempfile.TemporaryDirectory() as td:
@@ -115,6 +117,10 @@ class RequirementIntakeRuntimeTest(unittest.TestCase):
             self.assertEqual(result["status"], "INTAKE_READY_FOR_WORK")
             self.assertEqual(result["first_target"], "RQ-001")
             self.assertEqual(result["next_command"], "python sdlc/scripts/harness.py work --target RQ-001")
+            self.assertEqual("sdlc/runtime/intake/rq-extraction-manifest.json", result["rq_extraction_manifest"])
+            self.assertEqual("docs/00_관리/RQ_생성근거.md", result["human_manifest_report"])
+            self.assertTrue((root / result["rq_extraction_manifest"]).is_file())
+            self.assertTrue((root / result["human_manifest_report"]).is_file())
 
             store_path = root / "sdlc/canonical/store.json"
             store = json.loads(store_path.read_text(encoding="utf-8"))
