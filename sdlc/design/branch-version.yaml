@@ -36,8 +36,9 @@ validation_boundary:
   external_agent_or_human_not_observed_means_not_run: true
   production_ready_claimed: false
 inherited_validation_boundary:
-  note: "아래 marker는 v1.8 이전 CI/Behavioral 검증 경계를 보존하기 위한 호환성 표기이며 v1.9 전체 PASS를 의미하지 않는다."
+  note: "아래 status/verdict는 v1.8 이전 CI/Behavioral 검증 경계를 보존하기 위한 호환 marker이며 v1.9 전체 PASS 또는 실제 Agent/Human 실증 PASS를 뜻하지 않는다."
   status: P0_P1_CI_BEHAVIORAL_AND_INTEGRATION_PASS_EXTERNAL_EMPIRICAL_PENDING
+  verdict: CONTROLLED_PILOT_READY_CI_PASS_EXTERNAL_AGENT_HUMAN_VALIDATION_PENDING
   self_assessment_is_not_validation: true
   production_ready_claimed: false
 next_step: "Full regression 회귀 수정 -> Guide/Sample -> CI 재검증 -> External Agent/Human Pilot 순으로 진행한다."
