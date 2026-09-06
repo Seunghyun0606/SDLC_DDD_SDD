@@ -50,9 +50,15 @@ python sdlc/scripts/apply_canonical_delta.py --delta <delta.json> --dry-run
 
 실제 `/work --finalize`는 이 검증을 Runtime Guard 안에서 수행한다. 성공 경계는 `validation.status = PASS` 및 `validation.executable = true`이며, Validator가 실패하거나 Target Graph/Business Truth/Canonical revision Guard가 실패하면 적용하지 않는다.
 
+동일 입력에 대한 반복 실행의 의미 차이를 확인할 때는 Validator의 `--compare` 경로와 semantic fingerprint를 사용할 수 있다. 이 비교는 **Agent/LLM 자체가 결정론적임을 증명하는 기능이 아니다**. Timestamp 같은 비의미 필드를 제외하고 실제 생성 결과의 semantic drift를 찾는 검증 보조수단이다.
+
 Canonical Delta의 지원 Operation은 `UPSERT_ENTITY`, `UPSERT_RELATION`, `ADD_PROVENANCE`다. Source 관찰을 값 변경 없이 연결할 때는 `ADD_PROVENANCE`를 우선하며, 이것이 Confirmed Business Truth 변경 권한을 만들지는 않는다.
 
 OPEN은 대기표시가 아니라 해소할 설계 Backlog다. 업무권위가 필요한 OPEN은 사람의 결정으로, 기술적으로 조사 가능한 OPEN은 Source/설계 Evidence로 해소하며 Agent가 근거 없이 채우지 않는다. OPEN 해소 절차가 필요하면 `.cursor/skills/open-resolve/SKILL.md`를 사용한다.
+
+## Canonical 실행 경로
+
+`/work --finalize`가 Stage Result Validator를 통과한 뒤에만 `sdlc/scripts/apply_canonical_delta.py`의 locked/atomic apply 경계를 사용한다. 문서가 작성됐다는 사실이나 Provider command 성공만으로 Canonical 적용 성공을 주장하지 않는다.
 
 ## v1.9 Tailoring 연결
 
