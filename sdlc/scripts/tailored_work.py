@@ -131,6 +131,21 @@ def _apply_plan_tailoring(root: Path, plan: dict[str, Any], *, explicit_artifact
     primary = tailoring.get("primary_work_artifact")
     if not isinstance(primary, dict):
         plan["tailoring"].setdefault("fallback", "NO_PRIMARY_MAPPING_KEEP_CORE_STAGE_ARTIFACT")
+        current = str((plan.get("selection") or {}).get("artifact_path") or "")
+        reason = str((plan.get("selection") or {}).get("artifact_reason") or "")
+        # Legacy/minimum deployments may not carry the v1.9 profile package. Preserve the
+        # pre-v1.9 human-document boundary instead of exposing sdlc/runtime/work as a user artifact.
+        if reason == "NEW_STAGE_ARTIFACT" or current.startswith("sdlc/runtime/work/"):
+            artifact_rel = HANDOFF.default_document_path(plan)
+            artifact_abs, artifact_rel = _safe_path(root, artifact_rel)
+            artifact_abs.parent.mkdir(parents=True, exist_ok=True)
+            plan["selection"].update({
+                "artifact_path": artifact_rel,
+                "artifact_reason": "USER_DOCUMENT_DEFAULT_COMPATIBILITY_FALLBACK",
+                "artifact_override": False,
+                "artifact_existed_at_plan_time": artifact_abs.is_file(),
+                "artifact_hash_at_plan_time": WORK._hash_file(artifact_abs),
+            })
         return plan
     artifact_raw = str(primary.get("output_path") or "")
     template_raw = str(primary.get("template") or "")
