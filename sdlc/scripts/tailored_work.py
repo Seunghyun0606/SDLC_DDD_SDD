@@ -34,6 +34,7 @@ EXEC = _load("tailored_work_change_execution", "change_execution_runtime.py")
 WORK = _load("tailored_work_core", "run_work.py")
 INTERACTIVE = _load("tailored_work_interactive", "interactive_work.py")
 HANDOFF = _load("tailored_work_handoff", "work_handoff.py")
+LIFE = _load("tailored_work_projection_lifecycle", "projection_lifecycle_runtime.py")
 SUCCESS = {"APPLIED", "IDEMPOTENT", "NO_CHANGE", "DRY_RUN_VALIDATED"}
 
 
@@ -182,39 +183,36 @@ def _apply_plan_tailoring(root: Path, plan: dict[str, Any], *, explicit_artifact
     return plan
 
 
-def _projection_metadata_path(root: Path, target: str, artifact_id: str) -> Path:
-    safe_target = TAILOR._safe_target(target)
-    safe_artifact = TAILOR._safe_target(artifact_id)
-    return root / TAILOR.PROJECTION_RUNTIME_ROOT / f"{safe_target}-{safe_artifact}.json"
-
-
 def _record_projection(root: Path, plan: dict[str, Any]) -> str | None:
+    """Register Engineering/PM projection through the shared lifecycle runtime.
+
+    No second metadata schema is written here. Hash/manual-edit/staleness semantics therefore stay
+    identical to Customer projections and are owned by ``projection_lifecycle_runtime.py``.
+    """
     primary = (plan.get("tailoring") or {}).get("primary_work_artifact")
     if not isinstance(primary, dict):
         return None
     artifact_path = str((plan.get("selection") or {}).get("artifact_path") or "")
     if not artifact_path or not (root / artifact_path).is_file():
         return None
-    store = TAILOR.load_store(root)
     target = str((plan.get("target") or {}).get("id") or "")
-    path = _projection_metadata_path(root, target, str(primary.get("id") or "artifact"))
-    path.parent.mkdir(parents=True, exist_ok=True)
-    audience = primary.get("audience")
-    payload = {
-        "schema_version": 2,
-        "target_id": target,
-        "artifact_id": primary.get("id"),
-        "artifact_path": artifact_path,
-        "audience": audience,
-        "profile_id": primary.get("profile_id"),
-        "generated_from_revision": int(store.get("revision") or 0),
-        "generated_at": TAILOR.now(),
-        "ownership": "HUMAN_REVIEWED" if audience == "INTERNAL_IT" else "GENERATED_VIEW",
-        "lifecycle": "PENDING_REVIEW" if audience in {"CUSTOMER", "PM_REVIEW"} else "CURRENT",
-        "reviewed_revision": None if audience in {"CUSTOMER", "PM_REVIEW"} else int(store.get("revision") or 0),
-        "business_truth_authority": False if audience == "CUSTOMER" else None,
-    }
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    artifact_id = str(primary.get("id") or "artifact")
+    resolved = CONFIG.resolve_runtime_config(root)
+    project = resolved.get("project") or {}
+    profile_policy = primary.get("manual_edit_policy")
+    configured_policy = CONFIG.nested(project, "documents", "engineering", "manual_edit_policy", default="TYPO_ONLY")
+    row = LIFE.register_generated(
+        root,
+        target=target,
+        artifact_id=artifact_id,
+        artifact_path=artifact_path,
+        audience=str(primary.get("audience") or "INTERNAL_IT"),
+        profile_id=str(primary.get("profile_id") or "") or None,
+        manual_edit_policy=str(profile_policy or configured_policy or "TYPO_ONLY"),
+    )
+    path = LIFE.metadata_path(root, target, artifact_id)
+    if not row.get("generated_content_hash"):
+        raise ValueError(f"projection content hash was not recorded: {artifact_path}")
     return path.relative_to(root).as_posix()
 
 
