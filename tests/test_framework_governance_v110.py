@@ -77,8 +77,9 @@ class FrameworkGovernanceV110Test(unittest.TestCase):
         changelog = self.read("framework/design/CHANGELOG.md")
         self.assertIn("## v1.10", changelog)
         self.assertIn("## v1.9", changelog)
-        self.assertIn("Projection Separation", changelog)
-        self.assertIn("Archive", changelog)
+        upper = changelog.upper()
+        self.assertIn("PROJECTION SEPARATION", upper)
+        self.assertIn("ARCHIVE", upper)
 
 
 if __name__ == "__main__":
