@@ -1,9 +1,6 @@
-schema_version: 1
+schema_version: 2
 session_id: SDLC_DESIGN_SESSION_FIRST
 status: ACTIVE
-started_from:
-  branch: main
-  commit: bd14bf588efb95371e7c8f5f5a1515536b8cadf8
 namespace_prefix: SDLC_DESIGN_SESSION_FIRST/
 base_ref: SDLC_DESIGN_SESSION_FIRST/base
 policies:
@@ -13,7 +10,9 @@ policies:
   merge_to_main: false
   preserve_legacy_session_branches_as_history: true
   validation_branch_version_required: true
-  branch_metadata_file: sdlc/design/branch-version.yaml
+  branch_metadata_file: framework/design/branch-version.yaml
+  current_design_file: framework/design/current/V110_PROJECTION_SEPARATION_DESIGN.md
+  archive_index: framework/archive/INDEX.md
   draft_pr_between_session_branches: true
 branch_naming:
   pattern: SDLC_DESIGN_SESSION_FIRST/<type>/<name>
@@ -24,18 +23,34 @@ branch_naming:
     - review
     - poc
     - task
+    - integration
+    - remediation
+    - tailoring-control-plane
+    - projection-separation
 current_lineage:
   - SDLC_DESIGN_SESSION_FIRST/base
   - SDLC_DESIGN_SESSION_FIRST/design/v1.5-usability-generalization
   - SDLC_DESIGN_SESSION_FIRST/feature/phase-0.5-worklist-sync
   - SDLC_DESIGN_SESSION_FIRST/validation/v1.5.1-requirements-pilot-v0.1
   - SDLC_DESIGN_SESSION_FIRST/validation/v1.5.2-requirement-intake-poc-v0.2
-legacy_aliases:
-  design/v1.5-usability-generalization: SDLC_DESIGN_SESSION_FIRST/design/v1.5-usability-generalization
-  feature/phase-0.5-worklist-sync: SDLC_DESIGN_SESSION_FIRST/feature/phase-0.5-worklist-sync
-  validation/v1.5.1-requirements-pilot-v0.1: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.1-requirements-pilot-v0.1
-  validation/v1.5.2-requirement-intake-poc-v0.2: SDLC_DESIGN_SESSION_FIRST/validation/v1.5.2-requirement-intake-poc-v0.2
+  - SDLC_DESIGN_SESSION_FIRST/integration/v1.8.0-consolidated
+  - SDLC_DESIGN_SESSION_FIRST/tailoring-control-plane/v1.9.0
+  - SDLC_DESIGN_SESSION_FIRST/projection-separation/v1.10.0
+current_branch: SDLC_DESIGN_SESSION_FIRST/projection-separation/v1.10.0
+current_version: 1.10.0
+current_status: ACTIVE_CANONICAL_SOURCE
+design_governance:
+  current_metadata: framework/design/branch-version.yaml
+  current_summary: framework/design/current/V110_PROJECTION_SEPARATION_DESIGN.md
+  historical_design_roots:
+    - framework/design/baselines
+    - framework/design/candidates
+    - framework/design/reviews
+    - framework/design/validations
+  superseded_metadata_archive: framework/archive
 notes:
-  - Git does not provide true parent-child branch objects; namespace and base commit lineage define this session hierarchy.
-  - Branches outside this namespace are treated as external to this project session unless explicitly imported later.
-updated_at: 2026-09-01T17:43:00+09:00
+  - Git does not provide true parent-child branch objects; namespace and merge-base lineage define this session hierarchy.
+  - Branches outside this namespace are external to this project session unless explicitly imported.
+  - Historical design documents are context, not current v1.10 runtime truth.
+  - Runtime contracts remain under sdlc/design/contracts because they are project execution dependencies.
+updated_at: 2026-09-08

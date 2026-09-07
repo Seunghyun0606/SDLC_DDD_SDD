@@ -1,5 +1,37 @@
 # Design Changelog
 
+## v1.10 — 2026-09-08
+
+### PROJECTION SEPARATION / ASSET BOUNDARY
+
+- Canonical Spec을 Business/Project 의미의 SSOT로 유지하고 Engineering Projection과 Customer Projection의 문서 토폴로지를 분리
+- 기본 Engineering Profile을 `ENGINEERING_SDD_COMPACT`로 전환하고 Work Map + Work Unit SDD + 조건부 Program Spec 구조 채택
+- 기본 Customer Profile을 `CUSTOMER_STANDARD_3`, Full 선택을 `CUSTOMER_WATERFALL_FULL`로 분리
+- `.sdlc/project.yaml`을 Human-maintained Project Config의 단일 기준으로 정리하고 `documents.internal.profile`은 migration input으로 축소
+- Stage Semantic Template 원본을 `sdlc/templates/semantic/`으로 통합하고 구 Stage Template alias/symlink/fallback 제거
+- `sdlc/templates/tailoring/standard/`는 `STANDARD_3/5/STAGE_ORIENTED_FULL`용 Legacy/Formal Projection Template으로 역할 명확화
+- Framework-only Design/Pilot/Sample/Validation/Management 자산을 `framework/` 경계로 분리하고 Project Scaffold에서 제외
+- 사용자 Guide SoT를 `docs/00_시작/`으로 통합하고 Project Config/Template/Tailoring/Brownfield Guide 현행화
+- Customer Projection 기본 Config를 `sdlc/config/customer-document-profile.json`으로 명확화
+- `framework/design` current/history 역할과 `framework/archive` superseded metadata/inventory 보관 정책을 명문화
+
+### VALIDATION BOUNDARY
+
+- Repository/Runtime/Contract/Guide/Template/Scaffold 자동 회귀는 PASS Evidence로 사용
+- External Agent 반복 실행, Human first-use, production deployment는 별도 관찰 Evidence 없이는 완료로 주장하지 않음
+- `main` merge 금지 유지
+
+## v1.9 — 2026-09-07
+
+### TAILORING CONTROL PLANE
+
+- Delivery Profile과 Change Level 분리
+- Stage/Canonical/Evidence → Human Artifact Tailoring Mapping 구현
+- `STANDARD_3`, `STANDARD_5`, `STAGE_ORIENTED_FULL`, Customer/PM Projection 및 View Freshness 계약 연결
+- Brownfield Authority Matrix, Source Drift/Reconciliation, Project/RQ Human Control Plane 강화
+- External Agent/Human/Brownfield empirical evidence를 fail-closed로 판정하는 Contract/Runtime 추가
+- v1.9 active metadata는 v1.10 전환 시 `framework/archive/design-metadata/branch-version-v1.9.0.yaml`로 보존
+
 ## v1.5.1 — 2026-09-01
 
 ### HOTFIX / ENHANCED

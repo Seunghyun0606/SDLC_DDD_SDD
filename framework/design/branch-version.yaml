@@ -1,150 +1,87 @@
-schema_version: 1
+schema_version: 2
 session: SDLC_DESIGN_SESSION_FIRST
-branch: SDLC_DESIGN_SESSION_FIRST/tailoring-control-plane/v1.9.0
-parent_branch: SDLC_DESIGN_SESSION_FIRST/integration/v1.8.0-consolidated
-parent_commit: 3d2671c2e19d1faf340a2e5a28a5a79d7d4d58b0
-candidate: v1.9.0-tailoring-control-plane
+version: 1.10.0
+status: ACTIVE_CANONICAL_SOURCE
+branch: SDLC_DESIGN_SESSION_FIRST/projection-separation/v1.10.0
+base_branch: SDLC_DESIGN_SESSION_FIRST/tailoring-control-plane/v1.9.0
+base_commit: 1559504f6471f87439a1c22b8100af50ca7cc213
+candidate: v1.10.0-projection-separation
 work_package:
-  session: 9
-  id: WP-0-15
-  objective: "Stage와 Human Artifact를 분리하고 Change Level, Tailoring, Audience, Section Ownership, Brownfield Reconciliation, PM Human Control Plane을 실제 Config/Runtime/Test로 연결한다."
+  id: V110-PROJECTION-SEPARATION
+  objective: "Canonical 의미와 Engineering/Customer Projection을 분리하고 Template/Guide/Framework asset boundary를 v1.10 기준으로 통합한다."
+current_design:
+  governance: framework/design/README.md
+  design_summary: framework/design/current/V110_PROJECTION_SEPARATION_DESIGN.md
+  changelog: framework/design/CHANGELOG.md
+  asset_inventory: framework/ASSET_INVENTORY_V110.md
+  runtime_contract_root: sdlc/design/contracts
+  archive_index: framework/archive/INDEX.md
+validation_reports:
+  - framework/validation/PROJECTION_SEPARATION_V110_VALIDATION.md
+  - framework/validation/TEMPLATE_ROLE_BOUNDARY_V110.md
+  - framework/validation/GUIDE_CONSISTENCY_V110.md
+  - framework/validation/FRAMEWORK_GOVERNANCE_V110.md
 scope:
-  - "Delivery Profile과 RQ Change Level 분리"
-  - "Stage/Canonical/Evidence -> Artifact Tailoring Mapping"
-  - "3종/5종/Full Project Artifact Profile"
-  - "MACHINE/INTERNAL_IT/PM_REVIEW/CUSTOMER Audience 분리"
-  - "Human/Machine Section Ownership 및 View Freshness"
-  - "Brownfield Authority Matrix와 Source Drift Reconciliation"
-  - "Project/RQ Human Control Plane과 Intake Explainability"
-  - "Standard/Custom Scaffold Guide와 실행 Sample"
-  - "v1.9 공식 Entrypoint 의존성을 포함한 Minimum Executable Core 배포계약"
-  - "동일 Canonical snapshot 기반 Standard 3/5/Full 구조 비교 Sample"
-  - "External Agent/Human/Brownfield 실제 관찰 Pilot의 fail-closed Evidence Contract와 실행 Kit"
-  - "Empirical Pilot init/validate/status Runtime과 Machine Status Summary"
-non_goals:
-  - "Core Stage 삭제 또는 고객사별 Core Stage 복제"
-  - "Customer Projection에서 신규 Business Truth 생성"
-  - "Source 관찰만으로 Business Truth 자동 수정"
-  - "선택형 Customer Renderer/Brownfield 분석 Runtime의 무조건 Core 편입"
-  - "구조 비교만으로 실제 Agent 작성본문 의미동등성 또는 Human Usability PASS 주장"
-  - "Public Source Impact PASS를 Brownfield Reconciliation empirical PASS로 확대 해석"
-  - "Pilot Runtime init/status를 실제 관찰 Evidence로 간주"
-  - "main merge 또는 직접 수정"
-evidence_status:
-  document: IMPLEMENTED
-  contract: IMPLEMENTED_V19_PACKAGE_AND_EMPIRICAL_EVIDENCE_GATE
-  config: IMPLEMENTED
-  runtime: IMPLEMENTED_REGRESSION_PASS
-  behavioral_test: FULL_REGRESSION_291_PASS_PACKAGE_PROFILE_EMPIRICAL_GATE_AND_RUNTIME
-  minimum_executable_package: COPIED_PACKAGE_SETUP_CHECK_TAILORING_DESIGN_PLAN_SMOKE_PASS
-  tailoring_profile_structural_comparison: SAME_CANONICAL_STANDARD_3_5_FULL_PASS
-  empirical_pilot_evidence_gate: IMPLEMENTED_FAIL_CLOSED_REGRESSION_PASS
-  empirical_pilot_runtime: IMPLEMENTED_INIT_VALIDATE_STATUS_REGRESSION_PASS
-  external_agent_tailoring_semantic_equivalence: NOT_RUN
-  external_agent_empirical: NOT_RUN
-  human_first_use: NOT_RUN
-  brownfield_reconciliation_empirical: NOT_RUN_WAITING_BUSINESS_AUTHORITY
+  - "Canonical Business/Project 의미와 Human Projection topology 분리"
+  - "ENGINEERING_SDD_COMPACT 기본 Engineering Living Spec"
+  - "CUSTOMER_STANDARD_3 / CUSTOMER_WATERFALL_FULL 독립 Customer Projection"
+  - ".sdlc/project.yaml 단일 Human-maintained Project Config"
+  - "Stage Semantic Template 원본을 sdlc/templates/semantic로 통합"
+  - "구 Stage Template alias/symlink/fallback 제거"
+  - "Legacy STANDARD_3/5/STAGE_ORIENTED_FULL을 Formal Projection compatibility로 분리"
+  - "Framework/Test/Pilot/Sample/Design History와 Project 배포 Asset 경계 분리"
+  - "docs/00_시작 Guide SoT 현행화"
+  - "Framework Design current/history와 Archive governance 정리"
+compatibility:
+  v19_fully_contained: true
+  v19_is_current_source: false
+  documents_internal_profile: MIGRATION_INPUT_ONLY
+  runtime_config_v19: THIN_COMPATIBILITY_WRAPPER
+  legacy_formal_profiles:
+    - STANDARD_3
+    - STANDARD_5
+    - STAGE_ORIENTED_FULL
+  template_stage_path_alias: REMOVED
+projection_model:
+  semantic_owner: CANONICAL
+  engineering_default: ENGINEERING_SDD_COMPACT
+  customer_default: CUSTOMER_STANDARD_3
+  pm_default: PM_STANDARD
+  engineering_customer_topology_independent: true
+  customer_business_truth_authority: false
+asset_boundary:
+  framework_root: FRAMEWORK_ONLY
+  project_guide_source: docs/00_시작
+  project_config_source: .sdlc/project.yaml
+  runtime_contract_root: sdlc/design/contracts
+  stage_template_root: sdlc/templates/semantic
+  generated_management_root: docs/00_관리
+  framework_archive_root: framework/archive
+framework_governance:
+  active_design_metadata: framework/design/branch-version.yaml
+  active_design_summary: framework/design/current/V110_PROJECTION_SEPARATION_DESIGN.md
+  design_history_roots:
+    - framework/design/baselines
+    - framework/design/candidates
+    - framework/design/reviews
+    - framework/design/validations
+  archive_policy: "Superseded active metadata/inventory/migration snapshots only; not current SoT"
+  archived_v19_metadata: framework/archive/design-metadata/branch-version-v1.9.0.yaml
 ci_evidence:
-  verified_head: 5706711e4d6d94c6ec2e041b41417415b7cfa752
-  worklist_sync_quality:
-    run_id: 34051783776
-    run_number: 767
-    result: PASS
-    detail: "python -m unittest discover -s tests -v: Ran 291 tests, OK; empirical pilot runtime init/validate/status 5 tests PASS; existing fail-closed empirical evidence and Public Brownfield reconciliation-boundary tests PASS; Mermaid labels OK (151 Markdown files checked)"
-  production_readiness:
-    run_id: 34051783749
-    run_number: 100
-    result: PASS
-  docs_quality:
-    run_id: 34051783784
-    run_number: 264
-    result: PASS
-  greenfield_work_executor_e2e:
-    run_id: 34051783797
-    run_number: 110
-    result: PASS
-  public_brownfield_pilot:
-    run_id: 34051783771
-    run_number: 123
-    result: PASS
-    detail: "macrozheng/mall pinned real repository Impact integration PASS; Reconciliation remains NOT_RUN / WAITING_BUSINESS_AUTHORITY / empirical=false"
-package_evidence:
-  contract_schema_version: 17
-  contract_candidate_design: v1.9.0-tailoring-control-plane
-  official_entrypoint_dependencies_declared: true
-  default_tailoring_assets_declared: true
-  default_user_guides_declared: true
-  optional_customer_renderer_remains_extension: true
-  optional_brownfield_analysis_runtime_remains_extension: true
-  copied_minimum_package_smoke: PASS
-tailoring_comparison_evidence:
-  tool: sdlc/scripts/generate_tailoring_profile_comparison.py
-  fixture: sdlc/samples/tailoring/comparison-canonical.example.json
-  human_sample: sdlc/samples/tailoring/PROFILE_COMPARISON_3_5_FULL.md
-  target: RQ-COMP-001
-  canonical_revision: 7
-  canonical_fingerprint: sha256:53f2b05fff4ca4b2e76c352bfce19cc167b9e1c45692fd340aabeef4059f1154
-  change_level: L3
-  standard_3_unique_artifacts: 3
-  standard_5_unique_artifacts: 5
-  stage_oriented_full_unique_artifacts: 10
-  same_stage_sequence: true
-  stage_preserved: true
-  projection_creates_business_truth: false
-  structural_invariant: PASS
-  actual_agent_document_semantic_equivalence: NOT_RUN
-empirical_pilot_evidence:
-  contract: sdlc/design/contracts/empirical-pilot-evidence-contract.json
-  validator: sdlc/scripts/validate_empirical_pilot_evidence.py
-  runtime: sdlc/scripts/empirical_pilot_runtime.py
-  execution_guide: sdlc/validation/pilots/README.md
-  external_agent_template: sdlc/validation/pilots/external-agent-tailoring-pilot.example.json
-  human_first_use_template: sdlc/validation/pilots/human-first-use-pilot.example.json
-  brownfield_reconciliation_template: sdlc/validation/pilots/brownfield-reconciliation-pilot.example.json
-  default_runtime_root: sdlc/runtime/pilots
-  runtime_commands:
-    - init
-    - validate
-    - status
-  runtime_status_missing_evidence: NOT_RUN
-  runtime_init_creates_observation: false
-  runtime_status_can_substitute_ci_or_fixture: false
-  runtime_path_traversal_blocked: true
-  templates_default_execution_status: NOT_RUN
-  unobserved_pass_claim_fails_closed: true
-  provider_class_label_is_identity_evidence: false
-  ci_or_fixture_is_empirical_pass: false
-  external_agent_observed_pilot: NOT_RUN
-  human_first_use_observed_pilot: NOT_RUN
-  brownfield_reconciliation_observed_pilot: NOT_RUN
-public_brownfield_reconciliation_boundary:
-  impact_integration: PASS_REAL_REPOSITORY_PARTIAL_COVERAGE
-  source_evidence_observed: true
-  source_evidence_class: CURRENT_SOURCE_DB_CONFIG_RUNTIME_EVIDENCE
-  confirmed_human_business_truth_present: false
-  reviewer_decision_present: false
-  business_truth_auto_rewritten: false
-  reconciliation_execution_status: NOT_RUN
-  reconciliation_readiness: WAITING_BUSINESS_AUTHORITY
-  empirical_reconciliation_pass: false
-  required_next_evidence:
-    - CONFIRMED_HUMAN_BUSINESS_TRUTH
-    - REVIEWER_DECISION
+  last_verified_head_before_framework_governance_refresh: 06bba47918983ee1f94f3ac9050ea30617d9ee5b
+  full_unittest_count: 344
+  production_readiness: PASS
+  worklist_sync_quality: PASS
+  docs_quality: PASS
+  greenfield_work_executor_e2e: PASS
+  public_brownfield_pilot: PASS
+  note: "Framework governance refresh is documentation/metadata/test hardening; current-head CI is recorded in PR #67 and FRAMEWORK_GOVERNANCE_V110.md after execution."
 validation_boundary:
   self_assessment_is_not_validation: true
   ci_is_human_first_use_evidence: false
-  copied_package_smoke_is_not_human_usability_evidence: true
-  structural_profile_comparison_is_not_agent_document_semantic_equivalence: true
-  public_source_impact_is_not_brownfield_reconciliation_empirical_evidence: true
-  provider_class_label_is_not_agent_identity_evidence: true
-  pilot_runtime_init_or_status_is_not_observed_empirical_evidence: true
-  external_agent_or_human_not_observed_means_not_run: true
+  ci_is_external_agent_empirical_evidence: false
+  public_source_impact_is_not_confirmed_business_reconciliation: true
   production_ready_claimed: false
-inherited_validation_boundary:
-  note: "아래 status/verdict는 v1.8 이전 CI/Behavioral 검증 경계를 보존하기 위한 호환 marker이며 v1.9 전체 PASS 또는 실제 Agent/Human 실증 PASS를 뜻하지 않는다."
-  status: P0_P1_CI_BEHAVIORAL_AND_INTEGRATION_PASS_EXTERNAL_EMPIRICAL_PENDING
-  verdict: CONTROLLED_PILOT_READY_CI_PASS_EXTERNAL_AGENT_HUMAN_VALIDATION_PENDING
-  self_assessment_is_not_validation: true
-  production_ready_claimed: false
-next_step: "Empirical Pilot Runtime까지 구현되어 init/validate/status가 291 regression에서 검증되었다. 다음은 Runtime으로 실제 External Agent 3/5/Full 관찰 Pilot, 일반 SI/SM 참여자 Human first-use Pilot, Confirmed Human Business Truth가 있는 Brownfield Reconciliation Pilot을 수행하고 관찰 결과만 Evidence로 승격한다."
-merge_to_main: false
+merge_policy:
+  main_merge_allowed: false
+  draft_pr_validation_only: true
