@@ -17,14 +17,14 @@ class DocumentExperienceTest(unittest.TestCase):
     def test_document_experience_validator_passes(self):
         self.assertEqual(v.validate(ROOT),[])
 
-    def test_all_core_templates_use_korean_visible_sections(self):
-        for p in (ROOT/'sdlc/templates/core').glob('*.md'):
+    def test_all_semantic_templates_use_korean_visible_sections(self):
+        for p in (ROOT/'sdlc/templates/semantic').glob('*.md'):
             txt=p.read_text(encoding='utf-8')
             for sec in v.KOREAN_SECTIONS:
                 self.assertIn(sec,txt,p.name)
 
     def test_internal_machine_keys_can_remain_stable(self):
-        txt=(ROOT/'sdlc/templates/core/program-spec.md').read_text(encoding='utf-8')
+        txt=(ROOT/'sdlc/templates/semantic/program-spec.md').read_text(encoding='utf-8')
         self.assertIn('document_type: program_spec',txt)
         self.assertIn('stage: PROGRAM',txt)
         self.assertIn('프로그램 구현 명세',txt)
