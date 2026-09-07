@@ -24,12 +24,13 @@ Runtime/Template/Guide는 v1.10으로 현행화되었지만 Framework 내부 설
 - `framework/design/branch-version.yaml`을 v1.10 active metadata로 교체
 - `framework/design/CHANGELOG.md`에 v1.9/v1.10 변화 추가
 - Session metadata의 branch metadata 경로/current lineage/current version을 v1.10으로 갱신
+- 기존 v1.6/v1.9 회귀가 요구하는 validation boundary marker는 `inherited_validation_boundary`에 보존하고, top-level active status는 `ACTIVE_CANONICAL_SOURCE`로 분리
 
 ### Archive
 
 - `framework/archive/README.md` 추가
 - `framework/archive/INDEX.md` 추가
-- 기존 v1.9 active branch metadata를 `framework/archive/design-metadata/branch-version-v1.9.0.yaml`로 원본 보존
+- 기존 v1.9 active branch metadata를 `framework/archive/design-metadata/branch-version-v1.9.0.yaml`로 보존
 - Archive를 superseded active metadata/inventory/migration snapshot 보관소로 정의
 
 ### Framework top-level
@@ -55,7 +56,7 @@ Archive는 current SoT가 아니며 `INDEX.md`에 대체 경로가 반드시 있
 
 ## 4. 자동 회귀
 
-`tests/test_framework_governance_v110.py`에서 최소 다음을 검증한다.
+`tests/test_framework_governance_v110.py`에서 다음을 검증한다.
 
 - active branch metadata가 v1.10 Branch를 가리키는지
 - active design summary가 존재하는지
@@ -63,16 +64,37 @@ Archive는 current SoT가 아니며 `INDEX.md`에 대체 경로가 반드시 있
 - Archive README/INDEX/v1.9 metadata snapshot이 존재하는지
 - Asset Inventory가 Design/Archive 현재 구조를 설명하는지
 - Framework active docs가 구 Stage Template 경로를 다시 사용하지 않는지
-- 과거 candidate가 current design SoT로 취급되지 않도록 governance marker가 있는지
+- Changelog가 v1.9와 v1.10 설계 변화를 기록하는지
+
+기존 회귀와 함께 전체 unittest에서 검증되므로 Framework governance가 과거 Validation Boundary 계약을 깨뜨리는 경우에도 실패한다.
 
 ## 5. CI Evidence
 
-Framework governance 정리 직전 Head `06bba47918983ee1f94f3ac9050ea30617d9ee5b`의 5개 Workflow는 모두 SUCCESS이며 전체 unittest는 344 tests PASS였다.
+Framework governance 보정이 반영된 Head `93ee8b6574538f10e8b4a7f03a2957211a5c355c`에서 다음 PR Workflow가 모두 성공했다.
 
-본 governance 변경이 포함된 current-head CI 결과는 이 문서의 후속 Evidence section과 PR #67에서 최종 확인한다.
+- P0 P1 Production Readiness #325 — SUCCESS
+- Worklist sync quality #1243 — SUCCESS
+- Docs quality #489 — SUCCESS
+- Greenfield Work Executor E2E #335 — SUCCESS
+- Public Brownfield Pilot #348 — SUCCESS
+
+`Worklist sync quality`의 full unittest discovery는 **351 tests PASS**이며, 신규 Framework Governance 7개 테스트와 기존 v1.6/v1.9/v1.10 회귀를 함께 포함한다.
+
+이 보고서 파일 자체가 추가된 최종 Branch Head에서도 동일 Workflow를 다시 실행해 PR #67의 current-head evidence로 확인한다.
 
 ## 6. 판정 경계
 
 이 검증은 Framework repository governance와 자동 회귀 범위다. 실제 외부 Agent/Human/Production 실증을 의미하지 않는다.
 
-현재 구조 판정: `FRAMEWORK_GOVERNANCE_REMEDIATED_PENDING_CURRENT_HEAD_CI`
+다음은 별도 Evidence가 필요하다.
+
+- External Agent 반복 실행의 의미 동등성
+- 일반 프로젝트 참여자의 first-use usability
+- 실제 고객 프로젝트 production deployment
+- Confirmed Business Authority가 포함된 Brownfield reconciliation empirical validation
+
+## 7. 판정
+
+**FRAMEWORK_GOVERNANCE_PASS_WITH_AUTOMATED_REGRESSION**
+
+현재 `framework/`는 v1.10 Project/Runtime 변경과 연결된 Framework 문서, active design metadata, current design summary, asset inventory, validation report를 갖는다. `framework/design`은 current design과 historical design evolution을 구분하고, `framework/archive`는 superseded active metadata/inventory snapshot만 보존하도록 역할이 분리되었다.
