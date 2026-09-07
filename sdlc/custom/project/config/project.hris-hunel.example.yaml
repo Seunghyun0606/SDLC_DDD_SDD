@@ -13,6 +13,13 @@ delivery:
 
 change:
   level_policy: "AUTO"
+  minimum_level: "L1"
+  # 특정 RQ를 사전에 L3/L4 등으로 고정할 때 아래 형식을 사용합니다.
+  # target_levels:
+  #   RQ-HRIS-001:
+  #     level: "L3"
+  #     reason: "업무 규칙과 영향 범위를 업무정의서 수준으로 검토해야 함"
+  # Level을 바꾸더라도 CUSTOM_HRIS_HUNEL_ENGINEERING의 2종 문서는 유지되고 작성 깊이만 달라집니다.
 
 agent:
   execution: "INTERACTIVE"
