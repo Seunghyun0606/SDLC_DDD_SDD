@@ -1,8 +1,8 @@
 {
-  "schema_version": 1,
-  "contract_id": "CHANGE_LEVEL_V1",
-  "candidate_design": "v1.9.0-tailoring-control-plane",
-  "purpose": "Project Delivery Profile과 개별 RQ/CR Change Level을 분리하고, Evidence 기반 잠정 판정·확정·Escalation을 추적한다.",
+  "schema_version": 2,
+  "contract_id": "CHANGE_LEVEL_V2",
+  "candidate_design": "v1.10.1-change-level-control-plane",
+  "purpose": "Project Delivery Profile과 개별 RQ/CR Change Level을 분리하고 Evidence 기반 자동 판정, 사전 Target 지정, Human Override, 승격/강등 이력을 추적한다.",
   "delivery_profiles": ["FAST", "STANDARD", "FULL"],
   "change_levels": {
     "L1": {"name": "MICRO", "intent": "단일 Local Change, 제한된 구현/운영 위험"},
@@ -14,34 +14,49 @@
   "decision_points": [
     {"phase": "DECOMPOSE_TRIAGE", "result": "provisional_change_level", "required": true},
     {"phase": "DISCOVERY_IMPACT", "result": "effective_change_level", "required": true},
-    {"phase": "DEVELOPMENT_DISCOVERY", "result": "escalation_if_required", "required": false}
+    {"phase": "DEVELOPMENT_DISCOVERY", "result": "automatic_escalation_if_required", "required": false},
+    {"phase": "ANY_WORK", "result": "human_or_project_override_if_explicit", "required": false}
   ],
   "classification_factors": [
-    "changed_component_count",
-    "business_rule_impact",
-    "data_or_schema_change",
-    "external_interface",
-    "batch",
-    "transaction",
-    "security_or_privacy",
-    "cross_domain",
-    "operational_risk",
+    "changed_component_count", "business_rule_impact", "data_or_schema_change", "external_interface",
+    "batch", "transaction", "security_or_privacy", "cross_domain", "operational_risk",
     "brownfield_impact_coverage_uncertainty"
   ],
-  "runtime_fields": [
-    "provisional_change_level",
-    "effective_change_level",
-    "classification_reason",
-    "evidence_refs",
-    "escalation_history"
+  "selection_precedence": [
+    "HUMAN_OVERRIDE",
+    "PROJECT_TARGET_OVERRIDE",
+    "PROJECT_MANUAL_DEFAULT",
+    "PROJECT_MINIMUM_LEVEL_OR_AUTO_CLASSIFICATION"
   ],
+  "project_config": {
+    "policy": "change.level_policy = AUTO | MANUAL",
+    "project_default": "change.default_level = L1..L5",
+    "auto_floor": "change.minimum_level = L1..L5",
+    "target_override": "change.target_levels.<TARGET>.level = L1..L5",
+    "target_reason": "change.target_levels.<TARGET>.reason",
+    "below_safety_floor": "change.target_levels.<TARGET>.accept_below_safety_floor = true only with explicit risk acceptance"
+  },
+  "runtime_fields": [
+    "provisional_change_level", "observed_change_level", "effective_change_level", "level_source",
+    "safety_floor", "classification_reason", "evidence_refs", "escalation_history", "level_history", "human_override"
+  ],
+  "runtime_state_path": "sdlc/runtime/change-level/<TARGET>.json",
   "policy": {
     "automatic_escalation": true,
     "automatic_downgrade": false,
-    "downgrade_requires_human_review": true,
+    "explicit_human_downgrade": true,
+    "downgrade_requires_reason": true,
+    "below_safety_floor_requires_explicit_risk_acceptance": true,
     "change_level_equals_document_count": false,
+    "change_level_owns_projection_topology": false,
     "source_observation_can_confirm_business_truth": false,
     "unknown_or_missing_evidence_behavior": "CONSERVATIVE_ESCALATE_OR_CHECK_REQUIRED"
+  },
+  "history": {
+    "append_on_effective_level_or_source_change": true,
+    "sources": ["AUTO_CLASSIFICATION", "PROJECT_MINIMUM_LEVEL", "PROJECT_TARGET_OVERRIDE", "PROJECT_MANUAL_DEFAULT", "HUMAN_OVERRIDE", "HUMAN_OVERRIDE_CLEARED"],
+    "required_fields": ["at", "from", "to", "source", "reason", "safety_floor", "risk_accepted"],
+    "duplicate_consecutive_decision_suppressed": true
   },
   "minimum_evidence": {
     "provisional": ["requirement_scope_or_intake", "known_target_or_component_candidates"],
@@ -52,6 +67,8 @@
     "required_per_rq": true,
     "must_show_factor_scores": true,
     "must_show_evidence_refs": true,
-    "must_show_history": true
+    "must_show_history": true,
+    "must_show_level_source": true,
+    "must_show_safety_floor": true
   }
 }
