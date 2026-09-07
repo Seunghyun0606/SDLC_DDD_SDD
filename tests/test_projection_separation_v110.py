@@ -87,7 +87,7 @@ documents:
             copies = [
                 "sdlc/tailoring/standard/CUSTOMER_STANDARD_3.yaml",
                 "sdlc/design/contracts/customer-document-contract.json",
-                "sdlc/config/customer-document-profile.example.json",
+                "sdlc/config/customer-document-profile.json",
                 "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md",
                 "sdlc/templates/customer/standard/A02_영향_개발범위_공유서.md",
                 "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md",
