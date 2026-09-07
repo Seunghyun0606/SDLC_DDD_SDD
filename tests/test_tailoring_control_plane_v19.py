@@ -103,7 +103,7 @@ class TailoringControlPlaneV19Test(unittest.TestCase):
         })
         self.assertEqual("L4", result["level"])
 
-    def test_development_discovery_escalates_and_never_auto_downgrades(self):
+    def test_unknown_impact_gets_l2_safety_floor_then_discovery_escalates_without_auto_downgrade(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             project = {"change": {"level_policy": "AUTO"}}
@@ -113,13 +113,16 @@ class TailoringControlPlaneV19Test(unittest.TestCase):
                 "relations": [],
             }
             first = TAILOR.resolve_change_level(root, "RQ-001", "DECOMPOSE", store, project)
-            self.assertEqual("L1", first["provisional_change_level"])
+            self.assertEqual("L2", first["provisional_change_level"])
+            self.assertTrue(any("L2_SAFETY_FLOOR" in reason for reason in first["classification_reason"]))
+
             evidence_path = root / "sdlc/runtime/change-level/RQ-001-evidence.json"
             evidence_path.parent.mkdir(parents=True, exist_ok=True)
             evidence_path.write_text(json.dumps({"architecture_change": True, "evidence_refs": ["legacy-discovery"]}), encoding="utf-8")
             escalated = TAILOR.resolve_change_level(root, "RQ-001", "DEVELOPMENT", store, project)
             self.assertEqual("L5", escalated["effective_change_level"])
             self.assertEqual(1, len(escalated["escalation_history"]))
+
             evidence_path.write_text(json.dumps({"changed_component_count": 1, "architecture_change": False}), encoding="utf-8")
             retained = TAILOR.resolve_change_level(root, "RQ-001", "DEVELOPMENT", store, project)
             self.assertEqual("L5", retained["effective_change_level"])
@@ -163,7 +166,7 @@ class TailoringControlPlaneV19Test(unittest.TestCase):
             self.assertEqual(1, result["stale_count"])
             self.assertEqual("STALE_VIEW", result["views"][0]["freshness"])
 
-    def test_human_check_hides_internal_stage_by_default(self):
+    def test_human_check_hides_internal_stage_and_uses_working_software_state(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             self.minimal_project(root)
@@ -186,8 +189,12 @@ class TailoringControlPlaneV19Test(unittest.TestCase):
             result = CHECK.check(root, target="RQ-001", setup_only=False, debug_stage=False)
             review = result["rq_review"]
             self.assertTrue(review["internal_stage_hidden"])
-            self.assertNotIn("internal_stage", review["summary"])
-            self.assertEqual("상세 설계", review["summary"]["user_state"])
+            self.assertNotIn("internal_stage_debug", review["summary"])
+            self.assertNotIn("user_state", review["summary"])
+            self.assertIn("working_state", review["summary"])
+            self.assertIn("what_blocks_release", review["summary"])
+            self.assertIn("evidence_passed", review["summary"])
+            self.assertIn("next", review["summary"])
 
     def test_brownfield_contract_forbids_source_business_truth_rewrite(self):
         contract = json.loads((ROOT / "sdlc/design/contracts/brownfield-authority-reconciliation-contract.json").read_text(encoding="utf-8"))
