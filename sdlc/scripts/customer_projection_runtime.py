@@ -464,8 +464,7 @@ def generate(
         "source_count": projection.get("_source_count", 0),
         "source_stages": projection.get("_source_stages", []),
         "semantic_input_priority": [
-            "CANONICAL_SPEC",
-            "CANONICAL_RELATION",
+            "CANONICAL_ALLOWLIST_FIELDS",
             "SEMANTIC_TAGGED_ENGINEERING",
             "VERIFIED_SOURCE_EVIDENCE",
             "TEST_VERIFICATION",
