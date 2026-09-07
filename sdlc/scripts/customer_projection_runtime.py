@@ -197,6 +197,24 @@ def _contract_for_artifact(
     return local
 
 
+def _annotate_unclassified_inputs(row: dict[str, Any], artifacts: list[dict[str, Any]]) -> None:
+    """Give legacy/unclassified inputs a semantic stage using the Customer artifact itself.
+
+    This fallback is intentionally local to the selected Customer artifact. It never looks up an
+    Engineering profile, expected filename, artifact order, or document count. Explicit input stage
+    metadata always wins; only unclassified legacy inputs receive the latest allowed Customer stage.
+    """
+    sources = row.get("sources") or {}
+    stages = [str(x).upper() for x in sources.get("stages", [])] if isinstance(sources, dict) else []
+    if not stages:
+        return
+    fallback_stage = stages[-1]
+    for artifact in artifacts:
+        if not artifact.get("stage"):
+            artifact["stage"] = fallback_stage
+            artifact["stage_inference"] = "CUSTOMER_PROFILE_SEMANTIC_FALLBACK"
+
+
 def _canonical_artifact(root: Path, target: str, row: dict[str, Any]) -> list[dict[str, Any]]:
     """Expose direct Canonical meaning as a semantic input without changing the Canonical store."""
     store = TAILOR.load_store(root)
@@ -267,10 +285,13 @@ def generate(
 
     artifacts: list[dict[str, Any]] = []
     artifacts.extend(_canonical_artifact(root, target, selected))
+    external_artifacts: list[dict[str, Any]] = []
     for raw in inputs:
         path = Path(raw)
         path = path if path.is_absolute() else root / path
-        artifacts.extend(RENDER.load_artifact_input(path, local_contract))
+        external_artifacts.extend(RENDER.load_artifact_input(path, local_contract))
+    _annotate_unclassified_inputs(selected, external_artifacts)
+    artifacts.extend(external_artifacts)
 
     projection = RENDER.project(
         semantic_type,
@@ -310,8 +331,6 @@ def generate(
         "status": "CUSTOMER_VIEW_GENERATED",
         "target_id": target,
         "document_type": semantic_type,
-        # artifact_id is retained as the stable public/runtime compatibility key. The explicit
-        # customer_artifact_id alias makes clear that this ID belongs only to Customer topology.
         "artifact_id": artifact_id,
         "customer_artifact_id": artifact_id,
         "artifact_path": output_rel,
