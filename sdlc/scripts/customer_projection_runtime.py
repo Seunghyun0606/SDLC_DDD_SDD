@@ -51,6 +51,7 @@ DEFAULT_CUSTOMER_PROFILE = "CUSTOMER_STANDARD_3"
 CUSTOMER_CANONICAL_SAFE_FIELDS = {
     "title", "name", "short_name", "summary", "description", "statement",
     "request", "request_text", "request_summary", "request_background", "background",
+    "original_requirement", "desired_outcome", "channel",
     "intent", "purpose", "reason", "problem", "business_goal", "expected_result",
     "expected_outcome", "scope", "in_scope", "out_of_scope", "business_impact",
     "functional_impact", "as_is", "to_be", "current_state", "target_state",
@@ -59,18 +60,18 @@ CUSTOMER_CANONICAL_SAFE_FIELDS = {
     "customer_questions", "confirmed_items", "agreed_items", "open_items",
     "next_step", "next_steps", "risk", "risks", "operations", "handover",
     "업무명", "요약", "설명", "요청", "요청내용", "요청배경", "변경배경", "현재문제",
-    "기대결과", "기대효과", "업무목표", "목적", "범위", "포함범위", "제외범위",
-    "업무영향", "기능영향", "현재업무방식", "개선후업무방식", "현재상태", "목표상태",
-    "업무규칙", "업무규칙들", "프로세스", "업무흐름", "시나리오", "인수기준",
-    "고객과함께확인할내용", "합의된내용", "확정된내용", "미확정사항", "다음단계",
-    "위험과대응", "운영인수", "운영절차",
+    "원본요구사항", "원본요구", "기대결과", "기대효과", "업무목표", "목적", "범위",
+    "포함범위", "제외범위", "업무영향", "기능영향", "현재업무방식", "개선후업무방식",
+    "현재상태", "목표상태", "업무규칙", "업무규칙들", "프로세스", "업무흐름", "시나리오",
+    "인수기준", "고객과함께확인할내용", "합의된내용", "확정된내용", "미확정사항",
+    "다음단계", "위험과대응", "운영인수", "운영절차", "채널",
 }
 
 CUSTOMER_CANONICAL_DENIED_FIELDS = {
     "id", "entity_id", "entity_type", "type", "revision", "canonical_revision",
     "relation", "relations", "relation_type", "provenance", "provenances",
     "evidence", "evidence_class", "evidence_refs", "confidence", "confidence_score",
-    "stage", "stage_status", "change_level", "status", "resolution_status",
+    "stage", "stage_status", "change_level", "status", "truth_status", "resolution_status",
     "queue_id", "block_id", "guard", "guard_code", "hash", "source_hash", "locator",
     "generated_by", "generated_at", "created_at", "updated_at", "schema_version",
 }
@@ -282,6 +283,31 @@ def _contract_customer_field_allowlist(contract: dict[str, Any] | None) -> set[s
     return {x for x in allowed if x}
 
 
+def _customer_safe_entity_fields(entity: dict[str, Any], allowed: set[str], denied: set[str]) -> dict[str, str]:
+    """Flatten only the Canonical semantic ``fields`` payload plus explicitly safe top-level values."""
+    candidates: list[tuple[str, Any]] = []
+    semantic_fields = entity.get("fields")
+    if isinstance(semantic_fields, dict):
+        candidates.extend((str(key), value) for key, value in semantic_fields.items())
+
+    # Some legacy stores keep semantic values directly on the entity. Preserve only exact allowlisted
+    # values and never flatten arbitrary nested top-level metadata.
+    for key, value in entity.items():
+        if key == "fields" or isinstance(value, (dict, list)):
+            continue
+        candidates.append((str(key), value))
+
+    fields: dict[str, str] = {}
+    for key, value in candidates:
+        normalized = _visibility_key(key)
+        if not normalized or normalized in denied or normalized not in allowed:
+            continue
+        text = RENDER._to_text(value)
+        if text:
+            fields[key] = text
+    return fields
+
+
 def _canonical_artifact(
     root: Path,
     target: str,
@@ -305,17 +331,16 @@ def _canonical_artifact(
     stage = stages[-1] if stages else None
     allowed = _contract_customer_field_allowlist(contract)
     denied = {_visibility_key(x) for x in CUSTOMER_CANONICAL_DENIED_FIELDS}
+    fields = _customer_safe_entity_fields(entity, allowed, denied)
 
-    fields: dict[str, str] = {}
-    for key, value in entity.items():
-        normalized = _visibility_key(key)
-        if not normalized or normalized in denied or normalized not in allowed:
-            continue
-        text = RENDER._to_text(value)
-        if text:
-            fields[str(key)] = text
-
-    title = entity.get("title") or entity.get("name") or "프로젝트 변경"
+    semantic_fields = entity.get("fields") if isinstance(entity.get("fields"), dict) else {}
+    title = (
+        semantic_fields.get("title")
+        or semantic_fields.get("name")
+        or entity.get("title")
+        or entity.get("name")
+        or "프로젝트 변경"
+    )
     return [{
         "source": "sdlc/canonical/store.json#" + target,
         "artifact_type": "CANONICAL_JSON_BUNDLE",
