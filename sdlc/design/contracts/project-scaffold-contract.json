@@ -1,10 +1,11 @@
 {
-  "schema_version": 1,
-  "contract_id": "PROJECT_SCAFFOLD_V19_REDTEAM",
+  "schema_version": 2,
+  "contract_id": "PROJECT_SCAFFOLD_V110_PROJECTION_SEPARATION",
   "source_package_contract": "sdlc/design/contracts/harness-package-contract.json",
-  "purpose": "Framework 개발/검증 이력을 실제 프로젝트 배포 Scaffold에서 제외하고 Runtime/Template/Config/Guide만 배포한다.",
+  "purpose": "Framework 개발/검증 자산을 제외하고 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide만 기존 Scaffold 경로로 배포한다.",
   "base_file_set": "core_required_files",
   "add_required_files": [
+    "sdlc/scripts/project_config.py",
     "sdlc/config/change-execution-policy.json",
     "sdlc/scripts/change_execution_runtime.py",
     "sdlc/scripts/delivery_status_runtime.py",
@@ -16,6 +17,11 @@
     "sdlc/scripts/render_customer_document.py",
     "sdlc/design/contracts/customer-document-contract.json",
     "sdlc/config/customer-document-profile.example.json",
+    "sdlc/tailoring/standard/ENGINEERING_SDD_COMPACT.yaml",
+    "sdlc/templates/engineering/standard/00_work-map.md",
+    "sdlc/templates/engineering/standard/work-unit-sdd.md",
+    "sdlc/templates/engineering/standard/program-spec.md",
+    "sdlc/tailoring/standard/CUSTOMER_WATERFALL_FULL.yaml",
     "sdlc/scripts/architecture_check.py",
     "sdlc/config/architecture-rules.json",
     "sdlc/scripts/sdlc_metrics_runtime.py",
@@ -24,16 +30,40 @@
   ],
   "exclude_exact": ["sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml"],
   "exclude_prefixes": [
-    "docs/99_파일럿/", "sdlc/design/baselines/", "sdlc/design/candidates/", "sdlc/design/reviews/", "sdlc/design/validations/", "sdlc/validation/", "sdlc/samples/", "tests/", ".github/"
+    "docs/00_관리/",
+    "docs/99_파일럿/",
+    "sdlc/design/baselines/",
+    "sdlc/design/candidates/",
+    "sdlc/design/reviews/",
+    "sdlc/design/validations/",
+    "sdlc/validation/",
+    "sdlc/samples/",
+    "tests/",
+    ".github/"
   ],
-  "default_internal_profile": "STANDARD_5",
+  "default_engineering_profile": "ENGINEERING_SDD_COMPACT",
+  "default_internal_profile": "ENGINEERING_SDD_COMPACT",
   "default_customer_profile": "CUSTOMER_STANDARD_3",
-  "legacy_compatibility_package": ["sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml"],
+  "legacy_compatibility_package": [
+    "sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml",
+    "sdlc/tailoring/standard/STANDARD_5.yaml"
+  ],
   "legacy_policy": {
+    "STANDARD_5_new_project_default": false,
     "STAGE_ORIENTED_FULL_new_project_default": false,
+    "documents_internal_profile_is_compatibility_alias": true,
     "legacy_customer_01_08_in_new_scaffold": false,
-    "A01_A02_A03_active_customer_views": true
+    "CUSTOMER_STANDARD_3_active": true,
+    "CUSTOMER_WATERFALL_FULL_active": true
   },
+  "distribution_boundary": {
+    "FRAMEWORK_ONLY": ["docs/00_관리/", "docs/99_파일럿/", "tests/", "sdlc/samples/", "sdlc/design/baselines/", "sdlc/design/validations/", ".github/"],
+    "PROJECT_REQUIRED": [".sdlc/project.yaml", "Harness runtime", "selected standard profiles/templates", "runtime contracts", "user skills"],
+    "PROJECT_OPTIONAL": ["legacy compatibility profiles", "project custom profiles/templates", "brownfield adapters/extensions"],
+    "GENERATED": ["sdlc/runtime/", "sdlc/canonical/store.json", "docs/10_engineering/", "docs/20_customer/"]
+  },
+  "framework_source_is_single_source_of_truth": true,
+  "project_kit_is_distribution_selection_not_source_copy": true,
   "framework_dev_assets_remain_in_framework_repository": true,
   "project_scaffold_must_exclude_framework_dev_assets": true,
   "all_default_harness_commands_have_declared_runtime_dependencies": true
