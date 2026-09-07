@@ -38,7 +38,7 @@ CONFIG = _load("customer_projection_config", "project_config.py")
 TAILOR = _load("customer_projection_tailoring", "tailoring_runtime.py")
 
 DEFAULT_CONTRACT = "sdlc/design/contracts/customer-document-contract.json"
-DEFAULT_PROJECTION_CONFIG = "sdlc/config/customer-document-profile.example.json"
+DEFAULT_PROJECTION_CONFIG = "sdlc/config/customer-document-profile.json"
 DEFAULT_CUSTOMER_PROFILE = "CUSTOMER_STANDARD_3"
 
 
