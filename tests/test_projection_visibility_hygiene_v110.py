@@ -189,6 +189,45 @@ class ProjectionVisibilityHygieneV110Test(unittest.TestCase):
         self.assertNotIn("HAS_RULE", serialized)
         self.assertNotIn("internal-secret", serialized)
 
+    def test_direct_canonical_structured_values_fail_closed(self):
+        runtime = load_customer_runtime()
+        contract = json.loads(read("sdlc/design/contracts/customer-document-contract.json"))
+        row = {"sources": {"stages": ["DESIGN"]}}
+        fake_store = {
+            "entities": {
+                "RQ-STRUCT": {
+                    "id": "RQ-STRUCT",
+                    "entity_type": "RQ",
+                    "fields": {
+                        "title": "구조화 값 누출 방지",
+                        "business_rule": {
+                            "id": "BR-SECRET",
+                            "statement": "내부 객체 규칙",
+                            "confidence": "HIGH",
+                        },
+                        "business_rules": [
+                            {"id": "BR-ALSO-SECRET", "statement": "객체 목록 규칙"},
+                            "문자열 규칙은 고객에게 표시 가능",
+                        ],
+                    },
+                }
+            },
+            "relations": [],
+        }
+        original = runtime.TAILOR.load_store
+        runtime.TAILOR.load_store = lambda _root: fake_store
+        try:
+            artifact = runtime._canonical_artifact(ROOT, "RQ-STRUCT", row, contract)[0]
+        finally:
+            runtime.TAILOR.load_store = original
+
+        self.assertNotIn("business_rule", artifact["fields"])
+        self.assertEqual(artifact["fields"]["business_rules"], "- 문자열 규칙은 고객에게 표시 가능")
+        serialized = json.dumps(artifact, ensure_ascii=False)
+        self.assertNotIn("BR-SECRET", serialized)
+        self.assertNotIn("BR-ALSO-SECRET", serialized)
+        self.assertNotIn("confidence", serialized.lower())
+
     def test_safe_nested_canonical_values_land_in_customer_sections(self):
         runtime = load_customer_runtime()
         contract = json.loads(read("sdlc/design/contracts/customer-document-contract.json"))
