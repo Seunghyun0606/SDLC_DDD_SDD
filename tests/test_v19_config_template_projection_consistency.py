@@ -106,7 +106,7 @@ class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
     def test_program_readiness_config_template_contract_and_guide_match(self):
         readiness = self.json("sdlc/config/program-spec-readiness.json")
         package = self.json("sdlc/design/contracts/harness-package-contract.json")
-        template = self.read("sdlc/templates/core/program-spec.md")
+        template = self.read("sdlc/templates/semantic/program-spec.md")
         guide = self.read("docs/00_시작/04_TEMPLATE_및_산출물_가이드.md")
 
         self.assertEqual("CORE_PLUS_RISK_TRIGGERED_CONDITIONAL", readiness["representation"])
