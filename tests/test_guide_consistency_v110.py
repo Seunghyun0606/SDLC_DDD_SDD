@@ -38,9 +38,10 @@ class GuideConsistencyV110Test(unittest.TestCase):
             "07_BROWNFIELD_SSOT_현행화가이드.md",
             "11_INPUT_자료_준비가이드.md",
         ]
+        removed_stage_template_path = "sdlc/templates/" + "core"
         for name in active:
             text = (GUIDE_ROOT / name).read_text(encoding="utf-8")
-            self.assertNotIn("sdlc/templates/core", text, name)
+            self.assertNotIn(removed_stage_template_path, text, name)
             self.assertNotIn("sdlc/guides/", text, name)
 
         stakeholder = (GUIDE_ROOT / "05_이해관계자별_작업가이드.md").read_text(encoding="utf-8")
