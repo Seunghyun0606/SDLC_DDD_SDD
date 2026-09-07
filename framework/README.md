@@ -6,12 +6,20 @@
 
 - 사용자 진입점: `docs/00_시작/START_HERE.md`
 - Human-maintained Project Config: `.sdlc/project.yaml`
-- 프로젝트 실행 Runtime: `sdlc/scripts/`의 Project Runtime/선택 Extension
+- 프로젝트 실행 Runtime: `sdlc/scripts/`의 Project Runtime + 기본 동봉 선택형 command support + 별도 선택 Extension
 - Runtime Contract: `sdlc/design/contracts/`
 - Stage Semantic Template: `sdlc/templates/semantic/`
 - Engineering/Customer/PM Projection: 선택된 Profile/Template
 
 `framework/` 아래 자산은 모두 `FRAMEWORK_ONLY`이며 Project Scaffold에 배포하지 않는다.
+
+### Project Runtime 자산의 세 가지 배포 의미
+
+- `PROJECT_REQUIRED`: 기본 실행 경로에 필요하며 Standard Scaffold에 포함한다.
+- `PROJECT_BUNDLED_OPTIONAL`: Standard Scaffold에 파일은 동봉하지만 해당 command/Profile을 선택할 때만 사용한다. 예: `CUSTOMER_WATERFALL_FULL`, `component`, `discover-impact`, `arch-check`, `metrics` 지원 자산.
+- `PROJECT_OPTIONAL`: Brownfield reverse, Document ingest, 외부도구처럼 별도 선택 시 추가하는 Extension이다.
+
+동봉 여부와 기능 활성화 여부를 같은 의미로 취급하지 않는다.
 
 ## 2. Framework 구조
 
@@ -59,6 +67,9 @@ sdlc/design/contracts/      # Runtime dependency, Project 배포 대상
 - v1.10이 현재 Framework source이며 v1.9 변경을 모두 포함한다.
 - Stage Template은 `sdlc/templates/semantic/`이 유일한 원본이며 별도 Stage Template alias/symlink는 없다.
 - `sdlc/templates/tailoring/standard/`는 `STANDARD_3/5/STAGE_ORIENTED_FULL`용 Legacy/Formal Projection Template이다.
+- Engineering 기본값은 모든 Runtime 진입 경로에서 `ENGINEERING_SDD_COMPACT`를 사용한다. `STANDARD_5`는 신규 기본 fallback이 아니다.
+- `CUSTOMER_WATERFALL_FULL`과 경량 Enhancement command support는 Standard Scaffold에 동봉되지만 선택 전에는 활성 기능으로 간주하지 않는다.
+- Brownfield reverse/Document ingest/External tool Extension은 동봉 선택형과 구분하여 별도 선택 자산으로 유지한다.
 - Guide SoT는 `docs/00_시작/`이다. `sdlc/guides`는 제거됐다.
 - `docs/00_관리/`는 Framework 보고서 보관소가 아니라 프로젝트 실행 중 생성되는 PM/사용자 View 위치다.
 - `framework/validation/`은 Framework 검증 보고서와 fixture/provider를 보관한다.
@@ -75,4 +86,4 @@ sdlc/design/contracts/      # Runtime dependency, Project 배포 대상
 
 이 항목들은 Stage Template terminology와는 별개이며 신규 Runtime/Guide는 정식 경로를 사용한다.
 
-세부 파일별 분류와 residual debt는 `framework/ASSET_INVENTORY_V110.md`를 따른다.
+세부 파일별 분류와 residual debt는 `framework/ASSET_INVENTORY_V110.md`를 따른다. 최신 커밋 단위 리뷰와 current-head CI 근거는 `framework/validation/LATEST_COMMIT_REVIEW_V110.md`와 PR #67에서 확인한다.

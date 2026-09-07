@@ -30,7 +30,7 @@ Human-maintained 설정의 기준은 `.sdlc/project.yaml` 하나다.
 - PM: `PM_STANDARD`
 - Customer Full 선택: `CUSTOMER_WATERFALL_FULL`
 
-`documents.internal.profile`은 기존 입력을 읽기 위한 migration compatibility이며 신규 작성 기준이 아니다.
+`documents.internal.profile`은 기존 입력을 읽기 위한 migration compatibility이며 신규 작성 기준이 아니다. `tailoring_runtime.py`를 직접 사용하는 경로도 `project_config.py`가 공개하는 현재 기본 Profile 상수를 사용하므로 누락된 Engineering 설정이 `STANDARD_5`로 되돌아가지 않는다.
 
 ## 3. Template 역할
 
@@ -70,6 +70,8 @@ Customer Projection은 Engineering Profile ID, Engineering 문서 수/순번/파
 
 기본 `CUSTOMER_STANDARD_3`은 3종, `CUSTOMER_WATERFALL_FULL`은 8종이며 프로젝트 Custom Profile로 N종을 정의할 수 있다.
 
+`CUSTOMER_WATERFALL_FULL`은 표준 Config 선택만으로 사용할 수 있게 Standard Project Scaffold에 동봉하지만 기본 Customer Profile은 아니다.
+
 Customer Final Review에서 사람이 표현을 다듬을 수 있지만 업무 의미 변경은 `/change`로 Canonical에 Round-trip한다.
 
 ## 6. Asset Boundary
@@ -80,7 +82,9 @@ Project-facing:
 
 - `docs/00_시작/`
 - `.sdlc/project.yaml`
-- `sdlc/scripts/`의 Project Runtime/선택 Extension
+- `sdlc/scripts/`의 Project Runtime
+- Standard Scaffold에 동봉된 선택형 command/Profile support
+- 별도 선택 Extension
 - `sdlc/design/contracts/`
 - 선택된 Profile/Template/Agent Skill
 
@@ -92,6 +96,16 @@ Framework-only:
 
 `docs/00_관리/`는 실제 Project가 실행 중 생성하는 PM/사용자 View 위치이며 Framework 검증보고서 보관소로 사용하지 않는다.
 
+### 배포와 활성화의 구분
+
+Project 자산은 세 가지 의미로 구분한다.
+
+1. `PROJECT_REQUIRED`: 기본 실행에 필요하고 Standard Scaffold에 포함한다.
+2. `PROJECT_BUNDLED_OPTIONAL`: Standard Scaffold에 파일은 포함하지만 선택한 command/Profile에서만 사용한다. 현재 `CUSTOMER_WATERFALL_FULL`, `component`, `impact-history`, `discover-impact`, `arch-check`, `metrics` 지원 자산이 해당한다.
+3. `PROJECT_OPTIONAL`: Brownfield reverse, Document ingest, External tool처럼 별도 Extension 선택 시 추가한다.
+
+이 구분은 `framework/ASSET_INVENTORY_V110.md`와 `project-scaffold-contract.json`이 함께 정의한다. 별도의 동적 Package Installer를 추가하지 않는다.
+
 ## 7. Framework 내부 Governance
 
 현재 설계 metadata는 `framework/design/branch-version.yaml`, 현재 설계 설명은 본 문서가 담당한다.
@@ -99,6 +113,8 @@ Framework-only:
 과거 Baseline/Candidate/Review는 `framework/design/`의 역사 영역에 남긴다. 과거 active metadata나 폐기 inventory는 `framework/archive/`에 보존한다.
 
 Framework Validation은 `framework/validation/`에 두며 Project Scaffold에는 배포하지 않는다.
+
+정확한 최신 CI run id/test count 같은 휘발성 Evidence는 `branch-version.yaml`에 중복 고정하지 않는다. 최신 Review Evidence 문서와 PR current-head CI를 외부 검증 근거로 사용한다.
 
 ## 8. v1.9 관계
 

@@ -6,12 +6,15 @@
 
 ## 1. 분류값
 
-- `PROJECT_REQUIRED`: 기본 Project Scaffold에 포함
-- `PROJECT_OPTIONAL`: 선택 기능/고객/Brownfield/Extension 사용 시 포함
+- `PROJECT_REQUIRED`: 기본 Project Scaffold에 포함되고 기본 실행 경로에 필요한 자산
+- `PROJECT_BUNDLED_OPTIONAL`: 기본 Scaffold에 동봉되지만 해당 기능/Profile을 선택할 때만 사용하는 자산
+- `PROJECT_OPTIONAL`: 별도 Extension/고객/프로젝트 선택 시에만 배포하거나 추가하는 자산
 - `FRAMEWORK_ONLY`: Framework 개발, Test, Pilot, Validation, Sample, Design History
 - `COMPATIBILITY_ONLY`: 신규 기준은 아니지만 기존 참조 때문에 남은 호환 자산
 - `GENERATED`: 프로젝트 실행 중 생성되는 상태/문서
 - `ARCHIVED`: 현재 SoT가 아닌 과거 metadata/inventory snapshot
+
+`PROJECT_BUNDLED_OPTIONAL`은 “기본 기능으로 반드시 실행한다”는 뜻이 아니다. Public Harness command와 표준 선택 Profile을 별도 설치 절차 없이 사용할 수 있도록 파일만 기본 Scaffold에 동봉한다.
 
 ## 2. 최상위 경계
 
@@ -20,15 +23,15 @@
 | `.cursor/rules/` | PROJECT_REQUIRED(Cursor) | Cursor host rule adapter |
 | `.cursor/skills/` | PROJECT_REQUIRED(Cursor) | Cursor host skill adapter |
 | `sdlc/agent/skills/` | PROJECT_REQUIRED | Vendor-neutral Agent Core skill |
-| `sdlc/config/` | MIXED | Runtime policy + optional config + compatibility debt |
+| `sdlc/config/` | MIXED | Runtime policy + bundled/optional config + compatibility debt |
 | `sdlc/custom/` | PROJECT_OPTIONAL | Project/Domain customization |
 | `sdlc/design/contracts/` | PROJECT_REQUIRED + OPTIONAL | Runtime/validator executable contract |
-| `sdlc/scripts/` | MIXED | Project Runtime + Extension + Framework utility |
+| `sdlc/scripts/` | MIXED | Project Runtime + bundled optional command support + Extension + Framework utility |
 | `sdlc/starter-kits/` | PROJECT_REQUIRED | Greenfield/Brownfield starter assets |
-| `sdlc/tailoring/standard/` | PROJECT_REQUIRED + COMPATIBILITY | 신규 기본 Profile + Legacy/Formal Profile |
+| `sdlc/tailoring/standard/` | PROJECT_REQUIRED + BUNDLED_OPTIONAL + COMPATIBILITY | 신규 기본 Profile + 선택 표준 Profile + Legacy/Formal Profile |
 | `sdlc/templates/semantic/` | PROJECT_REQUIRED | Stage Semantic Template 유일 원본 |
 | `sdlc/templates/engineering/` | PROJECT_REQUIRED | Engineering Projection Template |
-| `sdlc/templates/customer/` | PROJECT_REQUIRED/OPTIONAL | Customer Projection Template |
+| `sdlc/templates/customer/` | PROJECT_REQUIRED/BUNDLED_OPTIONAL | Customer Projection Template |
 | `sdlc/templates/management/` | PROJECT_REQUIRED | PM/관리 View Template |
 | `sdlc/templates/tailoring/standard/` | COMPATIBILITY_ONLY | Legacy/Formal 3/5/Full Projection Template |
 | `sdlc/runtime/` | GENERATED | 실행 중 Machine State |
@@ -119,9 +122,12 @@ Stage Semantic Template에는 compatibility alias가 없다.
 - `program-spec-readiness.json`
 - `customer-document-profile.json`
 
+### PROJECT_BUNDLED_OPTIONAL
+
+- `architecture-rules.json`: `arch-check`를 선택할 때 사용하는 기본 규칙. Standard Scaffold에는 동봉되지만 일반 `/work`의 필수 입력은 아니다.
+
 ### PROJECT_OPTIONAL
 
-- `architecture-rules.json`
 - `impact-adapter-profile.example.yaml`
 - `requirement-intake-columns.example.yaml`
 - `open-resolution-profile.example.yaml`
@@ -141,9 +147,21 @@ Stage Semantic Template에는 compatibility alias가 없다.
 
 `harness.py`, `bootstrap_project.py`, `project_config.py`, `runtime_config.py`, `intake_explainable.py`, `intake_requirements.py`, `import_requirements.py`, `tailored_work.py`, `interactive_work.py`, `work_handoff.py`, `run_work.py`, `review_work.py`, `interactive_change.py`, `run_change.py`, `change_execution_runtime.py`, `tailored_check.py`, `run_check.py`, `tailoring_runtime.py`, `apply_canonical_delta.py`, `projection_lifecycle_runtime.py`, `validate_agent_stage_result.py`, `validate_program_spec.py`, `delivery_status_runtime.py`, `capture_customer_decision.py`, `customer_projection_runtime.py`, `render_customer_document.py`.
 
+### PROJECT_BUNDLED_OPTIONAL
+
+Standard Scaffold의 Public Harness command를 별도 설치 없이 사용할 수 있도록 동봉하지만 실행은 선택 사항이다.
+
+- `component_state_runtime.py` — `component`
+- `impact_learning_runtime.py` — `impact-history`
+- `unexpected_discovery_runtime.py` — `discover-impact`
+- `architecture_check.py` — `arch-check`
+- `sdlc_metrics_runtime.py` — `metrics`
+
 ### PROJECT_OPTIONAL
 
-`architecture_check.py`, `component_state_runtime.py`, `impact_learning_runtime.py`, `unexpected_discovery_runtime.py`, `sdlc_metrics_runtime.py`, `build_reverse_inputs.py`, `detect_source_drift.py`, `run_source_reverse_check.py`, `generate_program_spec_reverse_candidate.py`, `extract_document_evidence.py`, `normalize_external_evidence.py`, `resolve_overlay.py`, `run_knowledge_promotion.py`.
+별도 Brownfield/Document ingest/외부도구/Promotion 기능을 사용할 때 추가하는 자산이다.
+
+`build_reverse_inputs.py`, `detect_source_drift.py`, `run_source_reverse_check.py`, `generate_program_spec_reverse_candidate.py`, `extract_document_evidence.py`, `normalize_external_evidence.py`, `resolve_overlay.py`, `run_knowledge_promotion.py`.
 
 ### FRAMEWORK_ONLY
 
@@ -159,8 +177,11 @@ Stage Semantic Template에는 compatibility alias가 없다.
 
 - Engineering: `ENGINEERING_SDD_COMPACT`
 - Customer: `CUSTOMER_STANDARD_3`
-- Customer Full: `CUSTOMER_WATERFALL_FULL`
 - PM: `PM_STANDARD`
+
+기본 Scaffold 동봉 선택형:
+
+- Customer Full: `CUSTOMER_WATERFALL_FULL` — Config로 선택할 수 있도록 동봉하지만 기본 Profile은 아니다.
 
 Legacy/Formal:
 
@@ -185,7 +206,9 @@ Stage Semantic Template과 Legacy/Formal Projection Template을 같은 것으로
 
 `01_STANDARD_SCAFFOLD_사용가이드.md`, `06_CUSTOM_SCAFFOLD_적용가이드.md`는 Framework compatibility notice이며 신규 Project Scaffold에서 제외한다.
 
-## 11. Project Scaffold 제외 규칙
+## 11. Project Scaffold 배포 규칙
+
+기본 Project Scaffold에는 `PROJECT_REQUIRED`와 `PROJECT_BUNDLED_OPTIONAL`을 포함한다. `PROJECT_BUNDLED_OPTIONAL`은 파일이 동봉될 뿐 기능 활성화를 강제하지 않는다.
 
 기본 Project Scaffold에는 다음을 넣지 않는다.
 
@@ -199,6 +222,7 @@ sdlc/guides removed path
 Legacy STANDARD_3/STANDARD_5/STAGE_ORIENTED_FULL
 Legacy tailoring templates
 Framework distribution tool 자체
+별도 Brownfield/Document-ingest/External-tool Extension
 ```
 
 ## 12. Generated 경계
@@ -220,5 +244,6 @@ docs/20_customer/** 또는 Customer Profile output root
 - Design current/history 역할 문서화: 완료
 - v1.9 active metadata Archive 보존: 완료
 - Archive index/governance 추가: 완료
+- Standard Scaffold의 동봉 선택형 기능과 별도 Extension 분류 명시: 완료
 - 남은 compatibility debt는 별도 기능 영역의 명시적 항목으로 제한
-- 최종 자동 회귀 결과는 `framework/validation/FRAMEWORK_GOVERNANCE_V110.md`와 PR #67 current-head CI를 근거로 판정
+- 최신 자동 회귀 결과는 `framework/validation/LATEST_COMMIT_REVIEW_V110.md`와 PR #67 current-head CI를 근거로 판정

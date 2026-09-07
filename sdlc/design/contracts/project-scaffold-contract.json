@@ -1,8 +1,8 @@
 {
-  "schema_version": 6,
+  "schema_version": 7,
   "contract_id": "PROJECT_SCAFFOLD_V110_ASSET_BOUNDARY",
   "source_package_contract": "sdlc/design/contracts/harness-package-contract.json",
-  "purpose": "v1.10 Framework에서 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide만 배포하고 Framework 개발/검증 자산은 제외한다.",
+  "purpose": "v1.10 Framework에서 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide와 기본 동봉 선택 기능만 배포하고 Framework 개발/검증 자산은 제외한다.",
   "base_file_set": "core_required_files",
   "add_required_files": [
     "sdlc/scripts/project_config.py",
@@ -95,6 +95,12 @@
     "old_scaffold_guides_are_framework_compatibility_notices": true,
     "templates_semantic_is_primary_stage_template_root": true
   },
+  "bundled_optional_policy": {
+    "included_in_default_scaffold": true,
+    "activation_optional": true,
+    "runtime_self_installation_required": false,
+    "reason": "Public harness commands and config-selectable standard profiles stay immediately usable without adding a second package installer. Bundling does not make the feature mandatory in project execution."
+  },
   "distribution_boundary": {
     "FRAMEWORK_ONLY": [
       "framework/",
@@ -109,7 +115,7 @@
     ],
     "PROJECT_REQUIRED": [
       ".sdlc/project.yaml",
-      "Harness runtime",
+      "Harness core runtime",
       "sdlc/templates/semantic",
       "ENGINEERING_SDD_COMPACT",
       "CUSTOMER_STANDARD_3",
@@ -118,11 +124,20 @@
       "user skills",
       "active docs/00_시작 guides"
     ],
-    "PROJECT_OPTIONAL": [
+    "PROJECT_BUNDLED_OPTIONAL": [
       "CUSTOMER_WATERFALL_FULL",
+      "sdlc/scripts/component_state_runtime.py",
+      "sdlc/scripts/impact_learning_runtime.py",
+      "sdlc/scripts/unexpected_discovery_runtime.py",
+      "sdlc/scripts/architecture_check.py",
+      "sdlc/config/architecture-rules.json",
+      "sdlc/scripts/sdlc_metrics_runtime.py"
+    ],
+    "PROJECT_OPTIONAL": [
       "project custom profiles/templates",
       "brownfield adapters/extensions",
-      "enhancement extensions"
+      "document ingest extensions",
+      "external tool extensions"
     ],
     "COMPATIBILITY_ONLY": [
       "STANDARD_3",

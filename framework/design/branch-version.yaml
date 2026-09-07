@@ -21,6 +21,7 @@ validation_reports:
   - framework/validation/TEMPLATE_ROLE_BOUNDARY_V110.md
   - framework/validation/GUIDE_CONSISTENCY_V110.md
   - framework/validation/FRAMEWORK_GOVERNANCE_V110.md
+  - framework/validation/LATEST_COMMIT_REVIEW_V110.md
 scope:
   - "Canonical Business/Project 의미와 Human Projection topology 분리"
   - "ENGINEERING_SDD_COMPACT 기본 Engineering Living Spec"
@@ -32,6 +33,7 @@ scope:
   - "Framework/Test/Pilot/Sample/Design History와 Project 배포 Asset 경계 분리"
   - "docs/00_시작 Guide SoT 현행화"
   - "Framework Design current/history와 Archive governance 정리"
+  - "Standard Scaffold의 bundled optional과 별도 Extension 경계 명시"
 compatibility:
   v19_fully_contained: true
   v19_is_current_source: false
@@ -57,6 +59,7 @@ asset_boundary:
   stage_template_root: sdlc/templates/semantic
   generated_management_root: docs/00_관리
   framework_archive_root: framework/archive
+  bundled_optional_policy: STANDARD_SCAFFOLD_INCLUDED_ACTIVATION_OPTIONAL
 framework_governance:
   active_design_metadata: framework/design/branch-version.yaml
   active_design_summary: framework/design/current/V110_PROJECTION_SEPARATION_DESIGN.md
@@ -68,14 +71,12 @@ framework_governance:
   archive_policy: "Superseded active metadata/inventory/migration snapshots only; not current SoT"
   archived_v19_metadata: framework/archive/design-metadata/branch-version-v1.9.0.yaml
 ci_evidence:
-  last_verified_head_before_framework_governance_refresh: 06bba47918983ee1f94f3ac9050ea30617d9ee5b
-  full_unittest_count: 344
-  production_readiness: PASS
-  worklist_sync_quality: PASS
-  docs_quality: PASS
-  greenfield_work_executor_e2e: PASS
-  public_brownfield_pilot: PASS
-  note: "Framework governance refresh is documentation/metadata/test hardening; current-head CI is recorded in PR #67 and FRAMEWORK_GOVERNANCE_V110.md after execution."
+  authoritative_review: framework/validation/LATEST_COMMIT_REVIEW_V110.md
+  live_pr_number: 67
+  current_head_ci_required: true
+  exact_run_ids_and_test_count_are_external_evidence: true
+  embedded_commit_sha_is_not_current_head_authority: true
+  note: "Commit SHA가 파일 내용에 포함되면 자기참조가 되므로 active metadata에는 휘발성 current-head SHA/test count를 중복 고정하지 않는다. 검증 대상 commit과 run id는 Review Evidence 문서에 snapshot으로 기록하고 최종 current-head 상태는 PR CI에서 확인한다."
 validation_boundary:
   self_assessment_is_not_validation: true
   ci_is_human_first_use_evidence: false
