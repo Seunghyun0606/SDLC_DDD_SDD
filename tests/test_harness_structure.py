@@ -120,7 +120,7 @@ class HarnessStructureTest(unittest.TestCase):
         stages=[k for k,x in self.contract['stage_contracts'].items() if x.get('source_evidence')]
         self.assertEqual(stages,['DISCOVERY','IMPACT','DESIGN','PROGRAM','DEVELOPMENT','TEST','VERIFY'])
         for stage in stages:
-            txt=(ROOT/'sdlc/templates/core'/self.contract['stage_contracts'][stage]['template']).read_text(encoding='utf-8')
+            txt=(ROOT/'sdlc/templates/semantic'/self.contract['stage_contracts'][stage]['template']).read_text(encoding='utf-8')
             for marker in ['Locator','Source Hash','Confidence','Status']:
                 self.assertIn(marker,txt)
 
@@ -131,7 +131,7 @@ class HarnessStructureTest(unittest.TestCase):
                 self.assertIn(sec,txt)
 
     def test_templates_keep_traceability_and_uncertainty_sections(self):
-        for p in (ROOT/'sdlc/templates/core').glob('*.md'):
+        for p in (ROOT/'sdlc/templates/semantic').glob('*.md'):
             txt=p.read_text(encoding='utf-8')
             self.assertIn('## 미확정 사항·주의·가정',txt,p.name)
             self.assertIn('## 관련 ID 및 추적성',txt,p.name)
