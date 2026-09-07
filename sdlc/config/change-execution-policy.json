@@ -1,32 +1,14 @@
 {
-  "schema_version": 2,
-  "policy_id": "CHANGE_EXECUTION_POLICY_V1_9_REDTEAM",
-  "principle": "Change Level -> Required Semantic Work -> Required Evidence -> Required Human Review -> Artifact Projection",
+  "schema_version": 3,
+  "policy_id": "CHANGE_EXECUTION_POLICY_V1_10_CONTROL_PLANE",
+  "principle": "Change Level -> Required Semantic Work -> Required Evidence -> Required Human Review. Human Artifact topology is owned independently by the selected Projection Profile.",
   "levels": {
     "L1": {
       "name": "MICRO",
       "default_entry_stage": "DEVELOPMENT",
-      "semantic_work": [
-        "INTENT_DECOMPOSITION",
-        "AS_IS_SOURCE_ANALYSIS",
-        "IMPACT_SANITY_CHECK",
-        "IMPLEMENTATION_DELTA",
-        "SOURCE_CHANGE",
-        "TEST",
-        "RECONCILE"
-      ],
-      "required_evidence": [
-        "INTENT_EVIDENCE",
-        "AS_IS_SOURCE_EVIDENCE",
-        "LOCAL_IMPACT_EVIDENCE",
-        "SOURCE_DIFF",
-        "TEST_RESULT"
-      ],
-      "source_write_preconditions": [
-        "INTENT_DECOMPOSED",
-        "AS_IS_SOURCE_ANALYZED",
-        "IMPACT_CHECKED"
-      ],
+      "semantic_work": ["INTENT_DECOMPOSITION", "AS_IS_SOURCE_ANALYSIS", "IMPACT_SANITY_CHECK", "IMPLEMENTATION_DELTA", "SOURCE_CHANGE", "TEST", "RECONCILE"],
+      "required_evidence": ["INTENT_EVIDENCE", "AS_IS_SOURCE_EVIDENCE", "LOCAL_IMPACT_EVIDENCE", "SOURCE_DIFF", "TEST_RESULT"],
+      "source_write_preconditions": ["INTENT_DECOMPOSED", "AS_IS_SOURCE_ANALYZED", "IMPACT_CHECKED"],
       "required_human_review": ["INTENT_CONFIRM_IF_UNCERTAIN", "RELEASE_BLOCKER_ONLY"],
       "stage_allowlist": ["DEVELOPMENT", "TEST", "VERIFY", "KNOWLEDGE_PROMOTION"],
       "program_spec_mode": "CORE_ONLY",
@@ -35,27 +17,9 @@
     "L2": {
       "name": "LOCAL",
       "default_entry_stage": "DEVELOPMENT",
-      "semantic_work": [
-        "INTENT_DECOMPOSITION",
-        "AS_IS_SOURCE_ANALYSIS",
-        "IMPACT",
-        "IMPLEMENTATION_DELTA",
-        "SOURCE_CHANGE",
-        "TEST",
-        "RECONCILE"
-      ],
-      "required_evidence": [
-        "INTENT_EVIDENCE",
-        "AS_IS_SOURCE_EVIDENCE",
-        "LOCAL_IMPACT_EVIDENCE",
-        "SOURCE_DIFF",
-        "TEST_RESULT"
-      ],
-      "source_write_preconditions": [
-        "INTENT_DECOMPOSED",
-        "AS_IS_SOURCE_ANALYZED",
-        "IMPACT_CHECKED"
-      ],
+      "semantic_work": ["INTENT_DECOMPOSITION", "AS_IS_SOURCE_ANALYSIS", "IMPACT", "IMPLEMENTATION_DELTA", "SOURCE_CHANGE", "TEST", "RECONCILE"],
+      "required_evidence": ["INTENT_EVIDENCE", "AS_IS_SOURCE_EVIDENCE", "LOCAL_IMPACT_EVIDENCE", "SOURCE_DIFF", "TEST_RESULT"],
+      "source_write_preconditions": ["INTENT_DECOMPOSED", "AS_IS_SOURCE_ANALYZED", "IMPACT_CHECKED"],
       "required_human_review": ["BUSINESS_RULE_IF_CHANGED", "RELEASE_BLOCKER_ONLY"],
       "stage_allowlist": ["IMPACT", "DEVELOPMENT", "TEST", "VERIFY", "KNOWLEDGE_PROMOTION"],
       "program_spec_mode": "CORE_PLUS_TRIGGERED",
@@ -96,8 +60,14 @@
   "guardrails": {
     "explicit_stage_override_allowed_for_debug_or_reentry": true,
     "automatic_downgrade_allowed": false,
+    "explicit_human_downgrade_allowed": true,
+    "human_downgrade_reason_required": true,
+    "below_safety_floor_requires_explicit_risk_acceptance": true,
     "skipped_internal_stage_is_not_failed_stage": true,
     "artifact_count_is_not_semantic_work_count": true,
+    "change_level_does_not_own_profile_primary_artifact_existence": true,
+    "profile_primary_set_survives_entry_stage_change": true,
+    "level_change_requires_projection_refresh": true,
     "machine_evidence_is_not_human_maintenance": true,
     "fast_path_skips_stage_documents_not_semantic_analysis": true,
     "source_write_requires_fast_path_preconditions_when_source_changes": true
