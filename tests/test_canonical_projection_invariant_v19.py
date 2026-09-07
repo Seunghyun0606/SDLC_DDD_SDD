@@ -17,8 +17,8 @@ sys.modules[spec.name] = validator
 spec.loader.exec_module(validator)
 
 
-class CanonicalProjectionInvariantV19Test(unittest.TestCase):
-    def test_l1_to_l5_keep_one_canonical_identity_and_two_projection_layers(self):
+class CanonicalProjectionInvariantV110Test(unittest.TestCase):
+    def test_change_level_keeps_canonical_and_audience_topologies_are_independent(self):
         store = json.loads(FIXTURE.read_text(encoding="utf-8"))
         before = json.dumps(store, ensure_ascii=False, sort_keys=True)
         result = validator.validate(ROOT, store=store, target="RQ-COMP-001")
@@ -26,56 +26,39 @@ class CanonicalProjectionInvariantV19Test(unittest.TestCase):
         self.assertTrue(result["invariant_pass"])
         self.assertTrue(result["canonical_change_level_invariant"])
         self.assertTrue(result["canonical_store_unchanged_by_projection_resolution"])
-        self.assertTrue(result["developer_projection_topology_invariant"])
-        self.assertTrue(result["customer_projection_topology_invariant"])
+        self.assertTrue(result["engineering_topology_independent_from_customer"])
+        self.assertTrue(result["customer_topology_independent_from_engineering"])
+        self.assertTrue(result["fixed_artifact_count_is_not_an_invariant"])
+        self.assertFalse(result["customer_business_truth_authority"])
         self.assertEqual(["L1", "L2", "L3", "L4", "L5"], result["change_levels"])
-        self.assertEqual(
-            "sha256:53f2b05fff4ca4b2e76c352bfce19cc167b9e1c45692fd340aabeef4059f1154",
-            result["canonical_fingerprint"],
-        )
         self.assertEqual(before, json.dumps(store, ensure_ascii=False, sort_keys=True))
 
-        developer = result["developer_layer"]
-        self.assertEqual("INTERNAL_IT", developer["audience"])
-        self.assertEqual(5, developer["artifact_count"])
-        self.assertEqual(
-            {
-                "requirement_definition",
-                "process_design",
-                "functional_screen_design",
-                "program_design",
-                "test_acceptance",
-            },
-            set(developer["artifact_ids"]),
-        )
-        self.assertEqual(["AGENT_DRAFT_HUMAN_REVIEW"], developer["authoring_modes"])
+        engineering_counts = {
+            row["engineering_layer"]["artifact_count"] for row in result["profile_matrix"]
+        }
+        customer_counts = {
+            row["customer_layer"]["artifact_count"] for row in result["profile_matrix"]
+        }
+        self.assertGreater(len(engineering_counts), 1)
+        self.assertGreater(len(customer_counts), 1)
+        self.assertIn(3, customer_counts)
+        self.assertIn(8, customer_counts)
 
-        customer = result["customer_layer"]
-        self.assertEqual("CUSTOMER", customer["audience"])
-        self.assertEqual(3, customer["artifact_count"])
-        self.assertEqual(
-            {"solution_agreement", "delivery_scope", "acceptance_handover"},
-            set(customer["artifact_ids"]),
-        )
-        self.assertEqual(["GENERATED_VIEW"], customer["authoring_modes"])
-        self.assertFalse(customer["business_truth_authority"])
-        self.assertEqual(
-            {"RQ", "FR", "BR", "PROC", "AC", "PGM", "DATA", "TC"},
-            set(customer["canonical_selectors"]),
-        )
+        customer_standard_sets = {
+            tuple(row["customer_layer"]["artifact_ids"])
+            for row in result["profile_matrix"]
+            if row["customer_profile"] == "CUSTOMER_STANDARD_3"
+        }
+        self.assertEqual(1, len(customer_standard_sets))
 
-        fingerprints = {row["canonical_fingerprint"] for row in result["levels"]}
-        self.assertEqual({result["canonical_fingerprint"]}, fingerprints)
-        self.assertEqual(
-            {tuple(row["developer_layer"]["artifact_ids"]) for row in result["levels"]},
-            {tuple(developer["artifact_ids"])},
-        )
-        self.assertEqual(
-            {tuple(row["customer_layer"]["artifact_ids"]) for row in result["levels"]},
-            {tuple(customer["artifact_ids"])},
-        )
+        engineering_compact_sets = {
+            tuple(row["engineering_layer"]["artifact_ids"])
+            for row in result["profile_matrix"]
+            if row["engineering_profile"] == "ENGINEERING_SDD_COMPACT"
+        }
+        self.assertEqual(1, len(engineering_compact_sets))
 
-    def test_cli_materializes_human_readable_layer_report(self):
+    def test_cli_materializes_independence_report(self):
         with tempfile.TemporaryDirectory() as td:
             out_json = Path(td) / "canonical-projection-invariant.json"
             out_md = Path(td) / "canonical-projection-invariant.md"
@@ -96,16 +79,14 @@ class CanonicalProjectionInvariantV19Test(unittest.TestCase):
             self.assertEqual(0, cp.returncode, cp.stderr + "\n" + cp.stdout)
             summary = json.loads(cp.stdout)
             self.assertEqual("PASS", summary["status"])
-            self.assertEqual(5, summary["developer_artifact_count"])
-            self.assertEqual(3, summary["customer_artifact_count"])
+            self.assertTrue(summary["engineering_customer_independent"])
+            self.assertTrue(summary["customer_engineering_independent"])
 
             machine = json.loads(out_json.read_text(encoding="utf-8"))
             self.assertTrue(machine["invariant_pass"])
             human = out_md.read_text(encoding="utf-8")
-            self.assertIn("Canonical Change Level / Projection 불변성 검증", human)
-            self.assertIn("INTERNAL_IT", human)
-            self.assertIn("CUSTOMER", human)
-            self.assertIn("L1~L5 invariant: `PASS`", human)
+            self.assertIn("Engineering / Customer Projection 불변성", human)
+            self.assertIn("Fixed document count is NOT invariant", human)
             self.assertIn("Business Truth 권위를 갖지 않는다", human)
 
 
