@@ -1,6 +1,9 @@
 name: P0 P1 Production Readiness
 
 on:
+  push:
+    branches:
+      - 'SDLC_DESIGN_SESSION_FIRST/**'
   pull_request:
   workflow_dispatch:
 
