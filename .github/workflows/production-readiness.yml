@@ -19,6 +19,7 @@ jobs:
             sdlc/scripts/runtime_config.py \
             sdlc/scripts/project_config.py \
             sdlc/scripts/runtime_config_v19.py \
+            sdlc/scripts/change_execution_runtime.py \
             sdlc/scripts/tailoring_runtime.py \
             sdlc/scripts/tailored_work.py \
             sdlc/scripts/tailored_check.py \
@@ -41,6 +42,12 @@ jobs:
             sdlc/scripts/capture_customer_decision.py \
             sdlc/scripts/run_knowledge_promotion.py \
             sdlc/custom/project/adapters/impact/java_spring_enterprise.py
+      - name: v1.10 change-level, HRIS and HITL regression
+        run: |
+          python -m unittest \
+            tests.test_change_level_control_plane_v110 \
+            tests.test_hris_hunel_custom_engineering_profile \
+            tests.test_hitl_block_edit_ux -v
       - name: v1.10 projection separation regression
         run: |
           python -m unittest \
