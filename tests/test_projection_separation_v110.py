@@ -23,6 +23,7 @@ CONFIG = load_module("projection_v110_config", "project_config.py")
 CUSTOMER = load_module("projection_v110_customer", "customer_projection_runtime.py")
 LIFE = load_module("projection_v110_lifecycle", "projection_lifecycle_runtime.py")
 SCAFFOLD = load_module("projection_v110_scaffold", "build_project_scaffold.py")
+TAILORED = load_module("projection_v110_tailored_work", "tailored_work.py")
 
 
 class ProjectionSeparationV110Test(unittest.TestCase):
@@ -145,6 +146,56 @@ documents:
             self.assertEqual("MANUAL_EDIT_DETECTED", LIFE.state(root, row))
             self.assertEqual(canonical, json.loads(store.read_text(encoding="utf-8")))
 
+    def test_tailored_work_registers_engineering_projection_through_shared_lifecycle(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / ".sdlc").mkdir(parents=True)
+            (root / ".sdlc/project.yaml").write_text(
+                """schema_version: 1
+project:
+  name: lifecycle-test
+  mode: GREENFIELD
+delivery:
+  profile: STANDARD
+documents:
+  engineering:
+    profile: ENGINEERING_SDD_COMPACT
+    manual_edit_policy: TYPO_ONLY
+  customer:
+    profile: CUSTOMER_STANDARD_3
+""",
+                encoding="utf-8",
+            )
+            store = root / "sdlc/canonical/store.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(json.dumps({"revision": 3, "entities": {}, "relations": []}), encoding="utf-8")
+            artifact_rel = "docs/10_engineering/RQ-1/specs/RQ-1.md"
+            artifact = root / artifact_rel
+            artifact.parent.mkdir(parents=True)
+            artifact.write_text("agent generated engineering view\n", encoding="utf-8")
+            plan = {
+                "target": {"id": "RQ-1"},
+                "selection": {"artifact_path": artifact_rel},
+                "tailoring": {
+                    "primary_work_artifact": {
+                        "id": "work_unit_sdd",
+                        "audience": "INTERNAL_IT",
+                        "profile_id": "ENGINEERING_SDD_COMPACT",
+                        "manual_edit_policy": "TYPO_ONLY",
+                    }
+                },
+            }
+
+            metadata_rel = TAILORED._record_projection(root, plan)
+            self.assertEqual("sdlc/runtime/projections/RQ-1-work_unit_sdd.json", metadata_rel)
+            metadata = json.loads((root / metadata_rel).read_text(encoding="utf-8"))
+            self.assertEqual(3, metadata["schema_version"])
+            self.assertEqual("CANONICAL", metadata["semantic_owner"])
+            self.assertEqual("AGENT", metadata["projection_owner"])
+            self.assertEqual("TYPO_ONLY", metadata["manual_edit_policy"])
+            self.assertTrue(metadata["generated_content_hash"])
+            self.assertFalse(metadata["business_truth_authority"])
+
     def test_customer_final_review_is_preserved_when_canonical_changes(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -205,6 +256,18 @@ documents:
         self.assertNotIn("sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml", selected)
         self.assertFalse(any(path.startswith("tests/") for path in selected))
         self.assertFalse(any(path.startswith("docs/00_관리/") for path in selected))
+
+    def test_project_scaffold_build_materializes_clean_project_distribution(self):
+        with tempfile.TemporaryDirectory() as td:
+            output = Path(td) / "project-scaffold"
+            result = SCAFFOLD.build(ROOT, output)
+            self.assertEqual("PROJECT_SCAFFOLD_BUILT", result["status"])
+            self.assertFalse(result["forbidden_framework_dev_assets_present"])
+            self.assertTrue((output / "sdlc/scripts/project_config.py").is_file())
+            self.assertTrue((output / "sdlc/tailoring/standard/ENGINEERING_SDD_COMPACT.yaml").is_file())
+            self.assertTrue((output / "docs/00_시작/START_HERE.md").is_file())
+            self.assertFalse((output / "tests").exists())
+            self.assertFalse((output / "docs/00_관리").exists())
 
 
 if __name__ == "__main__":
