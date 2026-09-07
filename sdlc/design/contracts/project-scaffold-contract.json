@@ -16,6 +16,7 @@
     "sdlc/scripts/customer_projection_runtime.py",
     "sdlc/scripts/render_customer_document.py",
     "sdlc/design/contracts/customer-document-contract.json",
+    "sdlc/design/contracts/projection-visibility-contract.json",
     "sdlc/config/customer-document-profile.json",
     "sdlc/tailoring/standard/ENGINEERING_SDD_COMPACT.yaml",
     "sdlc/templates/engineering/standard/00_work-map.md",
@@ -114,7 +115,7 @@
       "ENGINEERING_SDD_COMPACT",
       "CUSTOMER_STANDARD_3",
       "selected active templates",
-      "runtime contracts",
+      "runtime contracts including projection visibility",
       "user skills",
       "active docs/00_시작 guides"
     ],
