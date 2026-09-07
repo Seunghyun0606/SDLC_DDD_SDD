@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Artifact Tailoring + typed Change Level runtime.
 
-Stage remains an internal compatibility taxonomy. Change Level classification is delegated to the
-typed execution runtime; free text may create candidate hints but never directly raises a level.
+Stage is an execution semantic. Change Level controls work/evidence/review depth. A Profile may opt
+into PROFILE_PRIMARY_SET so its PRIMARY Engineering documents remain required projections even when
+the current internal entry Stage maps primarily to another document.
 """
 from __future__ import annotations
 
@@ -37,6 +38,8 @@ DEFAULT_PROFILES = {"internal": "STANDARD_5", "customer": "CUSTOMER_STANDARD_3",
 PROFILE_ROOTS = ["sdlc/custom/project/tailoring", "sdlc/tailoring/standard"]
 CHANGE_RUNTIME_ROOT = "sdlc/runtime/change-level"
 PROJECTION_RUNTIME_ROOT = "sdlc/runtime/projections"
+PROJECTION_TOPOLOGIES = {"STAGE_MATCHED", "PROFILE_PRIMARY_SET"}
+PROJECTION_DETAIL = {"CONCISE", "STANDARD", "FULL"}
 
 
 def now() -> str:
@@ -45,17 +48,14 @@ def now() -> str:
 
 def load_json(path: Path) -> dict[str, Any]:
     data = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
-        raise ValueError(f"JSON object required: {path}")
+    if not isinstance(data, dict): raise ValueError(f"JSON object required: {path}")
     return data
 
 
 def load_store(root: Path) -> dict[str, Any]:
     path = root / "sdlc/canonical/store.json"
-    if not path.is_file():
-        return {"revision": 0, "entities": {}, "relations": []}
-    data = load_json(path)
-    data.setdefault("revision", 0); data.setdefault("entities", {}); data.setdefault("relations", [])
+    if not path.is_file(): return {"revision": 0, "entities": {}, "relations": []}
+    data = load_json(path); data.setdefault("revision", 0); data.setdefault("entities", {}); data.setdefault("relations", [])
     return data
 
 
@@ -84,9 +84,22 @@ def _artifact_rows(profile: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
+def _projection_detail(profile: dict[str, Any], level: str) -> str:
+    mapping = profile.get("level_projection_detail") or {}
+    raw = str(mapping.get(level) or "STANDARD").upper() if isinstance(mapping, dict) else "STANDARD"
+    return raw if raw in PROJECTION_DETAIL else "STANDARD"
+
+
 def validate_profile(profile: dict[str, Any], *, root: Path | None = None, source_path: Path | None = None) -> None:
     if int(profile.get("schema_version", 0) or 0) != 1: raise ValueError(f"tailoring profile schema_version must be 1: {source_path or '<memory>'}")
     if not str(profile.get("profile_id") or "").strip(): raise ValueError("tailoring profile_id is required")
+    topology = str(profile.get("projection_topology") or "STAGE_MATCHED").upper()
+    if topology not in PROJECTION_TOPOLOGIES: raise ValueError(f"unsupported projection_topology: {topology}")
+    detail = profile.get("level_projection_detail") or {}
+    if detail and not isinstance(detail, dict): raise ValueError("level_projection_detail must be a mapping")
+    for level, value in detail.items():
+        if str(level).upper() not in LEVELS or str(value).upper() not in PROJECTION_DETAIL:
+            raise ValueError(f"invalid level_projection_detail: {level}={value}")
     seen: set[str] = set()
     for row in _artifact_rows(profile):
         artifact_id = row["id"]
@@ -116,16 +129,9 @@ def project_profile_ids(project: dict[str, Any]) -> dict[str, str]:
     return {audience: str(CONFIG.nested(project, "documents", audience, "profile", default=default) or default) for audience, default in DEFAULT_PROFILES.items()}
 
 
-def _relation_distances(store: dict[str, Any], target: str, max_hops: int = 4) -> dict[str, int]:
-    return EXEC._distances(store, target, max_hops)
-
-
-def _text(value: Any) -> str:
-    return EXEC._text(value)
-
-
-def derive_change_evidence(store: dict[str, Any], target: str, extra: dict[str, Any] | None = None) -> dict[str, Any]:
-    return EXEC.derive_typed_facts(store, target, extra)
+def _relation_distances(store: dict[str, Any], target: str, max_hops: int = 4) -> dict[str, int]: return EXEC._distances(store, target, max_hops)
+def _text(value: Any) -> str: return EXEC._text(value)
+def derive_change_evidence(store: dict[str, Any], target: str, extra: dict[str, Any] | None = None) -> dict[str, Any]: return EXEC.derive_typed_facts(store, target, extra)
 
 
 def _legacy_evidence_to_typed(evidence: dict[str, Any]) -> dict[str, Any]:
@@ -147,16 +153,10 @@ def _legacy_evidence_to_typed(evidence: dict[str, Any]) -> dict[str, Any]:
 
 
 def classify_change_level(evidence: dict[str, Any]) -> dict[str, Any]:
-    result = EXEC.classify_typed_facts(_legacy_evidence_to_typed(evidence))
-    result["name"] = LEVEL_NAMES[result["level"]]
-    result["factor_snapshot"] = result.get("typed_facts", {})
-    return result
+    result = EXEC.classify_typed_facts(_legacy_evidence_to_typed(evidence)); result["name"] = LEVEL_NAMES[result["level"]]; result["factor_snapshot"] = result.get("typed_facts", {}); return result
 
 
-def _change_state_path(root: Path, target: str) -> Path:
-    return root / CHANGE_RUNTIME_ROOT / f"{_safe_target(target)}.json"
-
-
+def _change_state_path(root: Path, target: str) -> Path: return root / CHANGE_RUNTIME_ROOT / f"{_safe_target(target)}.json"
 def load_change_state(root: Path, target: str) -> dict[str, Any]:
     path = _change_state_path(root, target); return load_json(path) if path.is_file() else {}
 
@@ -185,26 +185,79 @@ def _render_output_path(row: dict[str, Any], target: str, profile: dict[str, Any
     return pattern.replace("{target}", _safe_target(target)).replace("{artifact_id}", row["id"])
 
 
+def _row_passes_level_and_condition(row: dict[str, Any], *, change_level: str, typed: dict[str, Any], context_text: str) -> bool:
+    row_levels = [str(x).upper() for x in (row.get("change_levels") or [])]
+    if row_levels and change_level not in row_levels: return False
+    min_level = str(row.get("min_change_level") or "").upper()
+    if min_level in LEVELS and LEVELS.index(change_level) < LEVELS.index(min_level): return False
+    return _condition_matches(row.get("condition"), typed, context_text, change_level)
+
+
 def resolve_artifacts(root: Path, *, project: dict[str, Any], target: str, stage: str, change_level: str, store: dict[str, Any] | None = None) -> dict[str, Any]:
     store = store or load_store(root)
     distances = _relation_distances(store, target)
     context_text = (_text((store.get("entities") or {}).get(target, {})) + " " + " ".join(_text((store.get("entities") or {}).get(entity_id, {})) for entity_id in distances)).lower()
     typed = derive_change_evidence(store, target, {}).get("facts") or {}
     profile_ids = project_profile_ids(project)
-    resolved: dict[str, list[dict[str, Any]]] = {"internal": [], "customer": [], "pm": []}; profile_paths: dict[str, str] = {}
+    resolved: dict[str, list[dict[str, Any]]] = {"internal": [], "customer": [], "pm": []}
+    profile_paths: dict[str, str] = {}
+    profile_topologies: dict[str, str] = {}
+
     for audience_key in ["internal", "customer", "pm"]:
-        profile_id = profile_ids[audience_key]; profile, path = load_profile(root, profile_id); profile_paths[audience_key] = path.relative_to(root).as_posix()
+        profile_id = profile_ids[audience_key]
+        profile, path = load_profile(root, profile_id)
+        profile_paths[audience_key] = path.relative_to(root).as_posix()
+        topology = str(profile.get("projection_topology") or "STAGE_MATCHED").upper()
+        profile_topologies[audience_key] = topology
+        detail = _projection_detail(profile, change_level)
         for row in _artifact_rows(profile):
             stages = [str(x).upper() for x in (row.get("sources") or {}).get("stages", [])]
-            if stage not in stages: continue
-            row_levels = [str(x).upper() for x in (row.get("change_levels") or [])]
-            if row_levels and change_level not in row_levels: continue
-            min_level = str(row.get("min_change_level") or "").upper()
-            if min_level in LEVELS and LEVELS.index(change_level) < LEVELS.index(min_level): continue
-            if not _condition_matches(row.get("condition"), typed, context_text, change_level): continue
-            resolved[audience_key].append({**row, "audience": str(row.get("audience") or "").upper(), "profile_id": profile_id, "profile_path": profile_paths[audience_key], "output_path": _render_output_path(row, target, profile, audience_key)})
-    internal_primary = sorted([x for x in resolved["internal"] if str(x.get("visibility") or "PRIMARY").upper() == "PRIMARY"], key=lambda x: (int(x.get("order") or 999), x["id"]))
-    return {"schema_version": 2, "target_id": target, "stage": stage, "change_level": change_level, "profiles": profile_ids, "profile_paths": profile_paths, "primary_work_artifact": internal_primary[0] if internal_primary else None, "affected_artifacts": resolved, "machine_evidence_visibility": str(CONFIG.nested(project, "documents", "machine", "visibility", default="HIDDEN") or "HIDDEN").upper(), "stage_preserved": True, "projection_creates_business_truth": False}
+            stage_match = stage in stages
+            is_primary = str(row.get("visibility") or "PRIMARY").upper() == "PRIMARY"
+            topology_required = audience_key == "internal" and topology == "PROFILE_PRIMARY_SET" and is_primary
+            if not stage_match and not topology_required:
+                continue
+            if not _row_passes_level_and_condition(row, change_level=change_level, typed=typed, context_text=context_text):
+                continue
+            resolved[audience_key].append({
+                **row,
+                "audience": str(row.get("audience") or "").upper(),
+                "profile_id": profile_id,
+                "profile_path": profile_paths[audience_key],
+                "output_path": _render_output_path(row, target, profile, audience_key),
+                "stage_match": stage_match,
+                "projection_required": bool(topology_required),
+                "projection_detail": detail,
+            })
+
+    internal_primary = sorted(
+        [x for x in resolved["internal"] if str(x.get("visibility") or "PRIMARY").upper() == "PRIMARY"],
+        key=lambda x: (0 if x.get("stage_match") else 1, int(x.get("order") or 999), x["id"]),
+    )
+    required_engineering = sorted(
+        [x for x in resolved["internal"] if x.get("projection_required")],
+        key=lambda x: (int(x.get("order") or 999), x["id"]),
+    )
+    if profile_topologies.get("internal") != "PROFILE_PRIMARY_SET":
+        required_engineering = list(internal_primary[:1]) if internal_primary else []
+
+    return {
+        "schema_version": 3,
+        "target_id": target,
+        "stage": stage,
+        "change_level": change_level,
+        "profiles": profile_ids,
+        "profile_paths": profile_paths,
+        "projection_topologies": profile_topologies,
+        "primary_work_artifact": internal_primary[0] if internal_primary else None,
+        "required_engineering_artifacts": required_engineering,
+        "projection_update_set": required_engineering,
+        "affected_artifacts": resolved,
+        "machine_evidence_visibility": str(CONFIG.nested(project, "documents", "machine", "visibility", default="HIDDEN") or "HIDDEN").upper(),
+        "stage_preserved": True,
+        "projection_creates_business_truth": False,
+        "change_level_controls_projection_detail_not_profile_primary_existence": profile_topologies.get("internal") == "PROFILE_PRIMARY_SET",
+    }
 
 
 def projection_freshness(root: Path, canonical_revision: int) -> dict[str, Any]:
@@ -213,8 +266,7 @@ def projection_freshness(root: Path, canonical_revision: int) -> dict[str, Any]:
         for path in sorted(base.glob("*.json")):
             try: data = load_json(path)
             except (OSError, json.JSONDecodeError, ValueError): continue
-            generated = int(data.get("generated_from_revision") or 0)
-            lifecycle = str(data.get("lifecycle") or "CURRENT").upper()
+            generated = int(data.get("generated_from_revision") or 0); lifecycle = str(data.get("lifecycle") or "CURRENT").upper()
             if canonical_revision > generated: state = "STALE_VIEW"
             elif lifecycle == "PENDING_REVIEW": state = "PENDING_REVIEW"
             else: state = "CURRENT"
@@ -224,7 +276,8 @@ def projection_freshness(root: Path, canonical_revision: int) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Resolve typed Change Level and Artifact Tailoring.")
-    ap.add_argument("command", choices=["validate-profile", "classify", "resolve"]); ap.add_argument("--root", default="."); ap.add_argument("--profile"); ap.add_argument("--target"); ap.add_argument("--stage")
+    ap.add_argument("command", choices=["validate-profile", "classify", "resolve"])
+    ap.add_argument("--root", default="."); ap.add_argument("--profile"); ap.add_argument("--target"); ap.add_argument("--stage")
     args = ap.parse_args(argv); root = Path(args.root).resolve()
     try:
         if args.command == "validate-profile":
@@ -234,8 +287,10 @@ def main(argv: list[str] | None = None) -> int:
             if not args.target or not args.stage: raise ValueError("--target and --stage are required")
             stage = args.stage.upper()
             if stage not in STAGES: raise ValueError(f"unsupported stage: {stage}")
-            project = CONFIG.resolve_runtime_config(root).get("project") or {}; store = load_store(root); level = resolve_change_level(root, args.target, stage, store, project)
-            if args.command == "classify": result = {"status": "CLASSIFIED", "change_level": level}
+            project = CONFIG.resolve_runtime_config(root).get("project") or {}; store = load_store(root)
+            level = resolve_change_level(root, args.target, stage, store, project)
+            if args.command == "classify":
+                result = {"status": "CLASSIFIED", "change_level": level}
             else:
                 effective = str(level.get("effective_change_level") or level.get("provisional_change_level") or "L3")
                 result = {"status": "RESOLVED", "change_level": level, "execution_policy": EXEC.resolve_execution_plan(root, level), "tailoring": resolve_artifacts(root, project=project, target=args.target, stage=stage, change_level=effective, store=store)}
