@@ -53,15 +53,18 @@ class DeveloperSpecificationTest(unittest.TestCase):
             self.assertNotIn(old_duplicate, text)
 
     def test_functional_design_is_semantic_source_of_truth(self):
-        ownership=DEV["ownership_model"]
-        self.assertEqual("SEMANTIC_SOURCE_OF_TRUTH",ownership["functional_design"])
-        self.assertEqual("IMPLEMENTATION_DELTA_AND_EXECUTION_READINESS",ownership["program_spec"])
+        ownership = DEV["ownership_model"]
+        self.assertEqual("SEMANTIC_SOURCE_OF_TRUTH", ownership["functional_design"])
+        self.assertEqual("IMPLEMENTATION_DELTA_AND_EXECUTION_READINESS", ownership["program_spec"])
         self.assertTrue(DEV["rules"]["functional_design_semantics_must_not_be_duplicated_in_program_spec"])
         self.assertTrue(DEV["rules"]["program_spec_records_only_implementation_mapping_and_delta"])
 
-    def test_program_dor_remains_17_items_but_one_table(self):
-        self.assertEqual(17, len(READINESS["required_fields"]))
-        self.assertEqual("SINGLE_READINESS_TABLE",READINESS["representation"])
+    def test_program_readiness_is_core_plus_conditional_not_legacy_full_by_default(self):
+        self.assertEqual("CORE_PLUS_RISK_TRIGGERED_CONDITIONAL", READINESS["representation"])
+        self.assertEqual(6, len(READINESS["core_required_field_ids"]))
+        self.assertEqual(17, len(READINESS["legacy_compatibility"]["required_field_ids"]))
+        self.assertTrue(DEV["rules"]["all_program_delta_dimensions_are_not_unconditionally_required"])
+        self.assertTrue(DEV["rules"]["machine_derived_fields_are_not_human_maintenance"])
 
     def test_na_requires_reason(self):
         self.assertTrue(DEV["rules"]["not_applicable_requires_reason"])
