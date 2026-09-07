@@ -16,13 +16,13 @@ class OverlayResolutionTest(unittest.TestCase):
         self.root = Path(self.tmp.name)
         (self.root / '.cursor/rules').mkdir(parents=True)
         (self.root / '.cursor/skills/work/references').mkdir(parents=True)
-        (self.root / 'sdlc/templates/core').mkdir(parents=True)
+        (self.root / 'sdlc/templates/semantic').mkdir(parents=True)
         (self.root / 'sdlc/config').mkdir(parents=True)
         (self.root / 'sdlc/custom/project/rules').mkdir(parents=True)
         (self.root / 'sdlc/custom/domain/time').mkdir(parents=True)
         (self.root / '.cursor/rules/00-core.mdc').write_text('CORE\n', encoding='utf-8')
         (self.root / '.cursor/skills/work/references/program.md').write_text('## Purpose\nCore purpose\n\n## Quality Check\nCore QC\n', encoding='utf-8')
-        (self.root / 'sdlc/templates/core/program-spec.md').write_text('## 본문\nCore body {{term}}\n\n## 다음 작업\nCore next\n', encoding='utf-8')
+        (self.root / 'sdlc/templates/semantic/program-spec.md').write_text('## 본문\nCore body {{term}}\n\n## 다음 작업\nCore next\n', encoding='utf-8')
         (self.root / 'sdlc/custom/project/rules/time.mdc').write_text('PROJECT RULE\n', encoding='utf-8')
         (self.root / 'sdlc/custom/project/overlay.json').write_text(json.dumps({
             'schema_version': 1,
