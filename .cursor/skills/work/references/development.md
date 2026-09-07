@@ -35,7 +35,7 @@
 
 ## Output
 - Source change + implementation result
-- Template: `sdlc/templates/core/implementation-result.md`
+- Template: `sdlc/templates/semantic/implementation-result.md`
 
 ## Quality Check
 - 변경 범위가 TASK/PGM에 한정되는가

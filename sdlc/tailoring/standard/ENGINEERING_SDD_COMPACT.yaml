@@ -1,0 +1,49 @@
+schema_version: 1
+profile_id: ENGINEERING_SDD_COMPACT
+name: "Engineering Work-unit / SDD Compact"
+projection_role: ENGINEERING
+output_root: "docs/10_engineering"
+artifacts:
+  work_map:
+    audience: INTERNAL_IT
+    projection_role: ENGINEERING
+    template: "sdlc/templates/engineering/standard/00_work-map.md"
+    output_path: "docs/10_engineering/{target}/00_work-map.md"
+    visibility: PRIMARY
+    authoring: AGENT_MANAGED
+    semantic_owner: CANONICAL
+    projection_owner: AGENT
+    manual_edit_policy: TYPO_ONLY
+    order: 10
+    sources:
+      stages: [DECOMPOSE, CLARIFY, PROCESS, DISCOVERY, IMPACT]
+      canonical: [RQ, FR, FTR, WP, TASK, PGM, ART, AC, TC]
+  work_unit_sdd:
+    audience: INTERNAL_IT
+    projection_role: ENGINEERING
+    template: "sdlc/templates/engineering/standard/work-unit-sdd.md"
+    output_path: "docs/10_engineering/{target}/specs/{target}.md"
+    visibility: PRIMARY
+    authoring: AGENT_MANAGED
+    semantic_owner: CANONICAL
+    projection_owner: AGENT
+    manual_edit_policy: TYPO_ONLY
+    order: 20
+    sources:
+      stages: [DESIGN, PROGRAM, DEVELOPMENT, TEST, VERIFY]
+      canonical: [RQ, FR, BR, PROC, FTR, WP, TASK, PGM, ART, DATA, AC, TC]
+  program_spec:
+    audience: INTERNAL_IT
+    projection_role: ENGINEERING
+    template: "sdlc/templates/engineering/standard/program-spec.md"
+    output_path: "docs/10_engineering/{target}/programs/{target}.md"
+    visibility: SECONDARY
+    authoring: AGENT_MANAGED
+    semantic_owner: CANONICAL
+    projection_owner: AGENT
+    manual_edit_policy: TYPO_ONLY
+    min_change_level: L3
+    order: 30
+    sources:
+      stages: [PROGRAM, DEVELOPMENT]
+      canonical: [FTR, WP, TASK, PGM, ART, DATA, AC, TC]

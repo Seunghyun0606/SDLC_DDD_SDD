@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
-"""Generate Customer Views from the project-selected Tailoring Profile and template.
+"""Generate Customer Projection independently from Engineering document topology.
 
-The renderer keeps one Canonical/Internal evidence projection path, but the final Markdown layout
-comes from ``documents.customer.profile``. Customer views remain GENERATED_VIEW, become
-PENDING_REVIEW/STALE_VIEW through the normal lifecycle, and never directly mutate Business Truth.
+Customer assembly is driven by the selected Customer Profile plus semantic artifact metadata.
+It never resolves an Engineering/Internal profile, expected Engineering filename, artifact order, or
+Engineering document count. Legacy Stage inference remains available inside the renderer only as a
+compatibility fallback for old inputs that do not yet carry semantic metadata.
+
+Business Truth authority remains Canonical. Source/Engineering/Test evidence may enrich a Customer
+view but can never overwrite Confirmed Business Truth through this runtime.
 """
 from __future__ import annotations
 
 import argparse
+import copy
 import importlib.util
 import json
 import re
@@ -29,22 +34,12 @@ def _load(name: str, filename: str):
 
 RENDER = _load("customer_projection_renderer", "render_customer_document.py")
 LIFE = _load("customer_projection_lifecycle", "projection_lifecycle_runtime.py")
-CONFIG = _load("customer_projection_config", "runtime_config_v19.py")
+CONFIG = _load("customer_projection_config", "project_config.py")
 TAILOR = _load("customer_projection_tailoring", "tailoring_runtime.py")
 
 DEFAULT_CONTRACT = "sdlc/design/contracts/customer-document-contract.json"
-DEFAULT_PROJECTION_CONFIG = "sdlc/config/customer-document-profile.example.json"
+DEFAULT_PROJECTION_CONFIG = "sdlc/config/customer-document-profile.json"
 DEFAULT_CUSTOMER_PROFILE = "CUSTOMER_STANDARD_3"
-DEFAULT_INTERNAL_PROFILE = "STANDARD_5"
-
-TYPE_TO_ID = {
-    "solution_agreement": "A01",
-    "delivery_scope": "A02",
-    "acceptance_handover": "A03",
-    "A01": "A01",
-    "A02": "A02",
-    "A03": "A03",
-}
 
 
 def _repo_file(root: Path, raw: str) -> tuple[Path, str]:
@@ -73,10 +68,6 @@ def _project_settings(
         CONFIG.nested(project, "documents", "customer", "profile", default=DEFAULT_CUSTOMER_PROFILE)
         or DEFAULT_CUSTOMER_PROFILE
     )
-    internal_profile_id = str(
-        CONFIG.nested(project, "documents", "internal", "profile", default=DEFAULT_INTERNAL_PROFILE)
-        or DEFAULT_INTERNAL_PROFILE
-    )
     contract_raw = contract_path or str(
         CONFIG.nested(project, "documents", "customer", "projection_contract", default=DEFAULT_CONTRACT)
         or DEFAULT_CONTRACT
@@ -88,15 +79,11 @@ def _project_settings(
     contract_file, contract_rel = _repo_file(root, contract_raw)
     projection_file, projection_rel = _repo_file(root, projection_raw)
     customer_profile, customer_profile_path = TAILOR.load_profile(root, customer_profile_id)
-    internal_profile, internal_profile_path = TAILOR.load_profile(root, internal_profile_id)
     return {
         "project": project,
         "customer_profile_id": customer_profile_id,
         "customer_profile": customer_profile,
         "customer_profile_path": customer_profile_path.relative_to(root).as_posix(),
-        "internal_profile_id": internal_profile_id,
-        "internal_profile": internal_profile,
-        "internal_profile_path": internal_profile_path.relative_to(root).as_posix(),
         "contract": RENDER.load(contract_file),
         "contract_path": contract_rel,
         "projection_config": RENDER.load(projection_file),
@@ -104,61 +91,53 @@ def _project_settings(
     }
 
 
-def _render_output_path(row: dict[str, Any], target: str) -> str:
-    raw = str(row.get("output_path") or "").strip()
-    if not raw:
-        raise ValueError(f"customer artifact {row.get('id') or '<unknown>'} output_path is required")
-    safe_target = TAILOR._safe_target(target)
-    return raw.replace("{target}", safe_target).replace("{artifact_id}", str(row.get("id") or "artifact"))
+def _profile_artifact(
+    profile: dict[str, Any], requested: str, contract: dict[str, Any]
+) -> tuple[str, dict[str, Any], str]:
+    """Resolve a Customer-profile-local artifact and its semantic projection type.
 
+    ``projection_type`` lets one semantic Customer contract be split into multiple submission
+    artifacts without introducing any dependency on Engineering topology.
+    """
+    rows = profile.get("artifacts") or {}
+    if not isinstance(rows, dict):
+        raise ValueError("customer tailoring artifacts must be a mapping")
 
-def _internal_expected_paths(root: Path, target: str, profile: dict[str, Any]) -> dict[Path, dict[str, Any]]:
-    rows: dict[Path, dict[str, Any]] = {}
-    for artifact_id, value in (profile.get("artifacts") or {}).items():
+    direct = rows.get(requested)
+    if isinstance(direct, dict):
+        semantic = str(direct.get("projection_type") or requested)
+        return requested, dict(direct), RENDER.resolve_document_type(semantic, contract)
+
+    resolved_request = RENDER.resolve_document_type(requested, contract)
+    candidates: list[tuple[str, dict[str, Any], str]] = []
+    for artifact_id, value in rows.items():
         if not isinstance(value, dict):
             continue
-        row = dict(value)
-        row["id"] = str(artifact_id)
-        raw = str(row.get("output_path") or "").strip()
-        if not raw:
+        semantic_raw = str(value.get("projection_type") or artifact_id)
+        try:
+            semantic = RENDER.resolve_document_type(semantic_raw, contract)
+        except KeyError:
             continue
-        rel = raw.replace("{target}", TAILOR._safe_target(target)).replace("{artifact_id}", str(artifact_id))
-        rows[(root / rel).resolve()] = row
-    return rows
+        if semantic == resolved_request:
+            candidates.append((str(artifact_id), dict(value), semantic))
+    if len(candidates) == 1:
+        return candidates[0]
+    if len(candidates) > 1:
+        choices = ", ".join(x[0] for x in candidates)
+        raise ValueError(
+            f"customer profile splits semantic type {resolved_request}; choose an artifact id: {choices}"
+        )
+    raise ValueError(
+        f"customer tailoring profile {profile.get('profile_id')} has no artifact for {requested}"
+    )
 
 
-def _annotate_profile_stages(
-    root: Path,
-    *,
-    target: str,
-    document_type: str,
-    contract: dict[str, Any],
-    internal_profile: dict[str, Any],
-    artifacts: list[dict[str, Any]],
-) -> None:
-    """Annotate Tailored Internal documents without forcing Stage names into human filenames.
-
-    The selected Internal Profile already knows which compatibility stages feed each human document.
-    For a requested Customer View we choose the latest stage that is valid for both profiles. This
-    keeps customer projection profile-neutral and avoids making users rename documents with Stage IDs.
-    """
-    resolved = RENDER.resolve_document_type(document_type, contract)
-    allowed = set(str(x).upper() for x in contract["document_types"][resolved].get("stages", []))
-    expected = _internal_expected_paths(root, target, internal_profile)
-    for artifact in artifacts:
-        if artifact.get("stage"):
-            continue
-        source = str(artifact.get("source") or "").split("#", 1)[0]
-        if not source:
-            continue
-        row = expected.get(Path(source).resolve())
-        if not row:
-            continue
-        stages = [str(x).upper() for x in (row.get("sources") or {}).get("stages", [])]
-        matches = [stage for stage in stages if stage in allowed]
-        if matches:
-            artifact["stage"] = max(matches, key=lambda stage: RENDER.STAGE_ORDER.get(stage, -1))
-            artifact["tailoring_artifact_id"] = row["id"]
+def _render_output_path(row: dict[str, Any], target: str, artifact_id: str) -> str:
+    raw = str(row.get("output_path") or "").strip()
+    if not raw:
+        raise ValueError(f"customer artifact {artifact_id} output_path is required")
+    safe_target = TAILOR._safe_target(target)
+    return raw.replace("{target}", safe_target).replace("{artifact_id}", artifact_id)
 
 
 def _placeholder_name(section: str) -> str:
@@ -206,18 +185,86 @@ def _render_selected_template(
     return text.rstrip() + "\n"
 
 
+def _contract_for_artifact(
+    contract: dict[str, Any], semantic_type: str, row: dict[str, Any]
+) -> dict[str, Any]:
+    """Apply only this Customer artifact's semantic source selector to a contract copy."""
+    local = copy.deepcopy(contract)
+    sources = row.get("sources") or {}
+    profile_stages = [str(x).upper() for x in sources.get("stages", [])] if isinstance(sources, dict) else []
+    if profile_stages:
+        local["document_types"][semantic_type]["stages"] = profile_stages
+    return local
+
+
+def _annotate_unclassified_inputs(row: dict[str, Any], artifacts: list[dict[str, Any]]) -> None:
+    """Give legacy/unclassified inputs a semantic stage using the Customer artifact itself.
+
+    This fallback is intentionally local to the selected Customer artifact. It never looks up an
+    Engineering profile, expected filename, artifact order, or document count. Explicit input stage
+    metadata always wins; only unclassified legacy inputs receive the latest allowed Customer stage.
+    """
+    sources = row.get("sources") or {}
+    stages = [str(x).upper() for x in sources.get("stages", [])] if isinstance(sources, dict) else []
+    if not stages:
+        return
+    fallback_stage = stages[-1]
+    for artifact in artifacts:
+        if not artifact.get("stage"):
+            artifact["stage"] = fallback_stage
+            artifact["stage_inference"] = "CUSTOMER_PROFILE_SEMANTIC_FALLBACK"
+
+
+def _canonical_artifact(root: Path, target: str, row: dict[str, Any]) -> list[dict[str, Any]]:
+    """Expose direct Canonical meaning as a semantic input without changing the Canonical store."""
+    store = TAILOR.load_store(root)
+    entities = store.get("entities") or {}
+    entity = entities.get(target)
+    if not isinstance(entity, dict):
+        return []
+    sources = row.get("sources") or {}
+    stages = [str(x).upper() for x in sources.get("stages", [])] if isinstance(sources, dict) else []
+    stage = stages[-1] if stages else None
+    fields: dict[str, str] = {}
+    for key, value in entity.items():
+        text = RENDER._to_text(value)
+        if text:
+            fields[str(key)] = text
+    related: list[str] = []
+    for rel in store.get("relations") or []:
+        if not isinstance(rel, dict):
+            continue
+        source = str(rel.get("source") or rel.get("from") or "")
+        destination = str(rel.get("target") or rel.get("to") or "")
+        if target in {source, destination}:
+            other = destination if source == target else source
+            relation_type = str(rel.get("type") or rel.get("relation") or "RELATED")
+            related.append(f"{target} -[{relation_type}]- {other}")
+    if related:
+        fields["관련 ID 및 추적성"] = "\n".join(f"- {x}" for x in sorted(set(related)))
+    return [{
+        "source": "sdlc/canonical/store.json#" + target,
+        "artifact_type": "CANONICAL_JSON_BUNDLE",
+        "stage": stage,
+        "title": str(entity.get("title") or entity.get("name") or target),
+        "sections": {},
+        "fields": fields,
+        "semantic_source": "CANONICAL",
+    }]
+
+
 def generate(
     root: Path,
     *,
     target: str,
     document_type: str,
     inputs: list[str],
-    out: str,
+    out: str | None = None,
     short_name: str | None = None,
     contract_path: str | None = None,
     profile_path: str | None = None,
     tailoring_profile_id: str | None = None,
-) -> dict:
+) -> dict[str, Any]:
     root = root.resolve()
     settings = _project_settings(
         root,
@@ -225,44 +272,44 @@ def generate(
         projection_config_path=profile_path,
         tailoring_profile_id=tailoring_profile_id,
     )
-    contract = settings["contract"]
-    profile = settings["projection_config"]
-    resolved_type = RENDER.resolve_document_type(document_type, contract)
-    customer_rows = settings["customer_profile"].get("artifacts") or {}
-    selected = customer_rows.get(resolved_type)
-    if not isinstance(selected, dict):
-        raise ValueError(
-            f"customer tailoring profile {settings['customer_profile_id']} has no artifact for {resolved_type}"
-        )
+    artifact_id, selected, semantic_type = _profile_artifact(
+        settings["customer_profile"], document_type, settings["contract"]
+    )
     if str(selected.get("audience") or "").upper() != "CUSTOMER":
-        raise ValueError(f"customer artifact {resolved_type} audience must be CUSTOMER")
+        raise ValueError(f"customer artifact {artifact_id} audience must be CUSTOMER")
     if str(selected.get("authoring") or "").upper() != "GENERATED_VIEW":
-        raise ValueError(f"customer artifact {resolved_type} authoring must be GENERATED_VIEW")
+        raise ValueError(f"customer artifact {artifact_id} authoring must be GENERATED_VIEW")
+
     template_file, template_rel = _repo_file(root, str(selected.get("template") or ""))
+    local_contract = _contract_for_artifact(settings["contract"], semantic_type, selected)
 
     artifacts: list[dict[str, Any]] = []
+    artifacts.extend(_canonical_artifact(root, target, selected))
+    external_artifacts: list[dict[str, Any]] = []
     for raw in inputs:
         path = Path(raw)
         path = path if path.is_absolute() else root / path
-        artifacts.extend(RENDER.load_artifact_input(path, contract))
-    _annotate_profile_stages(
-        root,
-        target=target,
-        document_type=resolved_type,
-        contract=contract,
-        internal_profile=settings["internal_profile"],
-        artifacts=artifacts,
+        external_artifacts.extend(RENDER.load_artifact_input(path, local_contract))
+    _annotate_unclassified_inputs(selected, external_artifacts)
+    artifacts.extend(external_artifacts)
+
+    projection = RENDER.project(
+        semantic_type,
+        local_contract,
+        settings["projection_config"],
+        artifacts,
+        short_name,
     )
-    projection = RENDER.project(resolved_type, contract, profile, artifacts, short_name)
     text = _render_selected_template(
         template_file.read_text(encoding="utf-8"),
-        document_type=resolved_type,
-        contract=contract,
-        profile=profile,
+        document_type=semantic_type,
+        contract=local_contract,
+        profile=settings["projection_config"],
         projection=projection,
     )
 
-    output = Path(out)
+    output_raw = out or _render_output_path(selected, target, artifact_id)
+    output = Path(output_raw)
     output = output if output.is_absolute() else root / output
     output = output.resolve()
     try:
@@ -272,7 +319,6 @@ def generate(
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(text, encoding="utf-8")
 
-    artifact_id = TYPE_TO_ID.get(document_type, TYPE_TO_ID.get(resolved_type, resolved_type))
     metadata = LIFE.register_generated(
         root,
         target=target,
@@ -284,17 +330,27 @@ def generate(
     return {
         "status": "CUSTOMER_VIEW_GENERATED",
         "target_id": target,
-        "document_type": resolved_type,
+        "document_type": semantic_type,
         "artifact_id": artifact_id,
+        "customer_artifact_id": artifact_id,
         "artifact_path": output_rel,
         "template_path": template_rel,
         "customer_tailoring_profile": settings["customer_profile_id"],
         "customer_tailoring_profile_path": settings["customer_profile_path"],
-        "internal_tailoring_profile": settings["internal_profile_id"],
         "projection_contract": settings["contract_path"],
         "projection_config": settings["projection_config_path"],
         "source_count": projection.get("_source_count", 0),
         "source_stages": projection.get("_source_stages", []),
+        "semantic_input_priority": [
+            "CANONICAL_SPEC",
+            "CANONICAL_RELATION",
+            "SEMANTIC_TAGGED_ENGINEERING",
+            "VERIFIED_SOURCE_EVIDENCE",
+            "TEST_VERIFICATION",
+            "OPERATIONS_KNOWLEDGE",
+        ],
+        "engineering_profile_dependency": False,
+        "customer_topology_source": "CUSTOMER_PROFILE_ONLY",
         "lifecycle": metadata["lifecycle"],
         "generated_from_revision": metadata["generated_from_revision"],
         "business_truth_authority": False,
@@ -303,12 +359,12 @@ def generate(
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Generate a customer view using the selected Tailoring Profile template.")
+    ap = argparse.ArgumentParser(description="Generate a Customer view from Canonical/semantic evidence and a Customer-only profile.")
     ap.add_argument("--root", default=".")
     ap.add_argument("--target", required=True)
-    ap.add_argument("--type", required=True)
+    ap.add_argument("--type", required=True, help="Customer artifact id or semantic document type")
     ap.add_argument("--input", action="append", default=[])
-    ap.add_argument("--out", required=True)
+    ap.add_argument("--out", help="Override the selected Customer artifact output_path")
     ap.add_argument("--short-name")
     ap.add_argument("--contract", help="Override documents.customer.projection_contract")
     ap.add_argument("--profile", help="Override documents.customer.projection_config")

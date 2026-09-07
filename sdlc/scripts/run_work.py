@@ -393,6 +393,7 @@ def build_plan(
 
     reference = None
     template = None
+    semantic_root = "sdlc/templates/semantic"
     harness_path = root / "sdlc/design/contracts/harness-package-contract.json"
     if harness_path.is_file():
         harness = load_json(harness_path)
@@ -400,8 +401,8 @@ def build_plan(
         if stage_contract.get("reference"):
             reference = f".cursor/skills/work/references/{stage_contract['reference']}"
         if stage_contract.get("template"):
-            template = f"sdlc/templates/core/{stage_contract['template']}"
-    template = template or f"sdlc/templates/core/{STAGE_ARTIFACT_NAMES[selected_stage]}"
+            template = f"{semantic_root}/{stage_contract['template']}"
+    template = template or f"{semantic_root}/{STAGE_ARTIFACT_NAMES[selected_stage]}"
 
     related = []
     for entity_id, distance in sorted(distances.items(), key=lambda item: (item[1], item[0])):

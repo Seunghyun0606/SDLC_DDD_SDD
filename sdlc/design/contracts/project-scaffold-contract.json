@@ -1,10 +1,11 @@
 {
-  "schema_version": 1,
-  "contract_id": "PROJECT_SCAFFOLD_V19_REDTEAM",
+  "schema_version": 7,
+  "contract_id": "PROJECT_SCAFFOLD_V110_ASSET_BOUNDARY",
   "source_package_contract": "sdlc/design/contracts/harness-package-contract.json",
-  "purpose": "Framework 개발/검증 이력을 실제 프로젝트 배포 Scaffold에서 제외하고 Runtime/Template/Config/Guide만 배포한다.",
+  "purpose": "v1.10 Framework에서 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide와 기본 동봉 선택 기능만 배포하고 Framework 개발/검증 자산은 제외한다.",
   "base_file_set": "core_required_files",
   "add_required_files": [
+    "sdlc/scripts/project_config.py",
     "sdlc/config/change-execution-policy.json",
     "sdlc/scripts/change_execution_runtime.py",
     "sdlc/scripts/delivery_status_runtime.py",
@@ -15,26 +16,148 @@
     "sdlc/scripts/customer_projection_runtime.py",
     "sdlc/scripts/render_customer_document.py",
     "sdlc/design/contracts/customer-document-contract.json",
-    "sdlc/config/customer-document-profile.example.json",
+    "sdlc/config/customer-document-profile.json",
+    "sdlc/tailoring/standard/ENGINEERING_SDD_COMPACT.yaml",
+    "sdlc/templates/engineering/standard/00_work-map.md",
+    "sdlc/templates/engineering/standard/work-unit-sdd.md",
+    "sdlc/templates/engineering/standard/program-spec.md",
+    "sdlc/tailoring/standard/CUSTOMER_WATERFALL_FULL.yaml",
     "sdlc/scripts/architecture_check.py",
     "sdlc/config/architecture-rules.json",
     "sdlc/scripts/sdlc_metrics_runtime.py",
-    "sdlc/design/contracts/project-scaffold-contract.json",
-    "sdlc/scripts/build_project_scaffold.py"
+    "docs/00_시작/11_INPUT_자료_준비가이드.md",
+    "sdlc/templates/README.md",
+    "sdlc/templates/semantic/requirement.md",
+    "sdlc/templates/semantic/requirement-analysis.md",
+    "sdlc/templates/semantic/interview-questions.md",
+    "sdlc/templates/semantic/process-analysis.md",
+    "sdlc/templates/semantic/impact-analysis.md",
+    "sdlc/templates/semantic/functional-design.md",
+    "sdlc/templates/semantic/program-spec.md",
+    "sdlc/templates/semantic/implementation-result.md",
+    "sdlc/templates/semantic/test-scenario.md",
+    "sdlc/templates/semantic/verification-result.md",
+    "sdlc/templates/semantic/operations-knowledge.md",
+    "sdlc/templates/semantic/open-resolution-workbook.md",
+    "sdlc/templates/semantic/sop-extraction-result.md"
   ],
-  "exclude_exact": ["sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml"],
+  "exclude_exact": [
+    "sdlc/tailoring/standard/STANDARD_3.yaml",
+    "sdlc/tailoring/standard/STANDARD_5.yaml",
+    "sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml",
+    "docs/00_시작/01_STANDARD_SCAFFOLD_사용가이드.md",
+    "docs/00_시작/06_CUSTOM_SCAFFOLD_적용가이드.md"
+  ],
   "exclude_prefixes": [
-    "docs/99_파일럿/", "sdlc/design/baselines/", "sdlc/design/candidates/", "sdlc/design/reviews/", "sdlc/design/validations/", "sdlc/validation/", "sdlc/samples/", "tests/", ".github/"
+    "framework/",
+    "docs/00_관리/",
+    "docs/99_파일럿/",
+    "sdlc/design/baselines/",
+    "sdlc/design/candidates/",
+    "sdlc/design/reviews/",
+    "sdlc/design/session/",
+    "sdlc/design/validations/",
+    "sdlc/validation/",
+    "sdlc/samples/",
+    "sdlc/guides/",
+    "sdlc/templates/tailoring/standard/",
+    "tests/",
+    ".github/"
   ],
-  "default_internal_profile": "STANDARD_5",
+  "default_engineering_profile": "ENGINEERING_SDD_COMPACT",
+  "default_internal_profile": "ENGINEERING_SDD_COMPACT",
   "default_customer_profile": "CUSTOMER_STANDARD_3",
-  "legacy_compatibility_package": ["sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml"],
+  "legacy_compatibility_package": [
+    "sdlc/tailoring/standard/STANDARD_3.yaml",
+    "sdlc/tailoring/standard/STANDARD_5.yaml",
+    "sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml",
+    "sdlc/templates/tailoring/standard/01_업무정의서.md",
+    "sdlc/templates/tailoring/standard/02_상세설계서.md",
+    "sdlc/templates/tailoring/standard/03_화면설계서.md",
+    "sdlc/templates/tailoring/standard/11_요구사항정의서.md",
+    "sdlc/templates/tailoring/standard/12_업무프로세스설계서.md",
+    "sdlc/templates/tailoring/standard/13_기능화면설계서.md",
+    "sdlc/templates/tailoring/standard/14_프로그램설계서.md",
+    "sdlc/templates/tailoring/standard/15_테스트인수결과서.md"
+  ],
+  "framework_distribution_tools": [
+    "sdlc/scripts/build_project_scaffold.py",
+    "sdlc/design/contracts/project-scaffold-contract.json"
+  ],
   "legacy_policy": {
+    "STANDARD_3_new_project_default": false,
+    "STANDARD_5_new_project_default": false,
     "STAGE_ORIENTED_FULL_new_project_default": false,
+    "documents_internal_profile_is_compatibility_alias": true,
     "legacy_customer_01_08_in_new_scaffold": false,
-    "A01_A02_A03_active_customer_views": true
+    "CUSTOMER_STANDARD_3_active": true,
+    "CUSTOMER_WATERFALL_FULL_active": true,
+    "old_scaffold_guides_are_framework_compatibility_notices": true,
+    "templates_semantic_is_primary_stage_template_root": true
   },
+  "bundled_optional_policy": {
+    "included_in_default_scaffold": true,
+    "activation_optional": true,
+    "runtime_self_installation_required": false,
+    "reason": "Public harness commands and config-selectable standard profiles stay immediately usable without adding a second package installer. Bundling does not make the feature mandatory in project execution."
+  },
+  "distribution_boundary": {
+    "FRAMEWORK_ONLY": [
+      "framework/",
+      "docs/00_관리/ committed framework contents",
+      "docs/99_파일럿/",
+      "tests/",
+      "sdlc/samples/",
+      "sdlc/guides/",
+      "sdlc/design history except contracts",
+      ".github/",
+      "framework distribution tools"
+    ],
+    "PROJECT_REQUIRED": [
+      ".sdlc/project.yaml",
+      "Harness core runtime",
+      "sdlc/templates/semantic",
+      "ENGINEERING_SDD_COMPACT",
+      "CUSTOMER_STANDARD_3",
+      "selected active templates",
+      "runtime contracts",
+      "user skills",
+      "active docs/00_시작 guides"
+    ],
+    "PROJECT_BUNDLED_OPTIONAL": [
+      "CUSTOMER_WATERFALL_FULL",
+      "sdlc/scripts/component_state_runtime.py",
+      "sdlc/scripts/impact_learning_runtime.py",
+      "sdlc/scripts/unexpected_discovery_runtime.py",
+      "sdlc/scripts/architecture_check.py",
+      "sdlc/config/architecture-rules.json",
+      "sdlc/scripts/sdlc_metrics_runtime.py"
+    ],
+    "PROJECT_OPTIONAL": [
+      "project custom profiles/templates",
+      "brownfield adapters/extensions",
+      "document ingest extensions",
+      "external tool extensions"
+    ],
+    "COMPATIBILITY_ONLY": [
+      "STANDARD_3",
+      "STANDARD_5",
+      "STAGE_ORIENTED_FULL",
+      "legacy tailoring templates",
+      "old scaffold guide path notices"
+    ],
+    "GENERATED": [
+      "sdlc/runtime/",
+      "sdlc/canonical/store.json",
+      "docs/00_관리/",
+      "docs/10_engineering/",
+      "docs/20_customer/"
+    ]
+  },
+  "framework_source_is_single_source_of_truth": true,
+  "project_kit_is_distribution_selection_not_source_copy": true,
   "framework_dev_assets_remain_in_framework_repository": true,
   "project_scaffold_must_exclude_framework_dev_assets": true,
+  "project_scaffold_does_not_self_distribute": true,
   "all_default_harness_commands_have_declared_runtime_dependencies": true
 }

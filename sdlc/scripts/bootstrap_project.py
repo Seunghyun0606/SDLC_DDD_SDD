@@ -32,7 +32,7 @@ def _load(name: str, path: Path):
 
 
 APPLY = _load("setup_apply", SCRIPT_DIR / "apply_canonical_delta.py")
-CONFIG = _load("setup_config", SCRIPT_DIR / "runtime_config.py")
+CONFIG = _load("setup_config", SCRIPT_DIR / "project_config.py")
 
 
 def _read(path: Path) -> str:
@@ -172,6 +172,7 @@ def _new_project_model(name: str, mode: str, delivery: str, detected: dict[str, 
         "schema_version": 1,
         "project": {"name": name, "mode": mode},
         "delivery": {"profile": delivery},
+        "change": {"level_policy": "AUTO"},
         "technology": {
             "language": detected["language"],
             "framework": detected["framework"],
@@ -186,7 +187,22 @@ def _new_project_model(name: str, mode: str, delivery: str, detected: dict[str, 
         },
         "data": {"database": detected["database"]},
         "git": {"branch_strategy": "PROJECT_DEFINED", "protected_branches": ["main", "master"]},
-        "documents": {"language": "ko-KR"},
+        "documents": {
+            "language": "ko-KR",
+            "engineering": {
+                "profile": "ENGINEERING_SDD_COMPACT",
+                "manual_edit_policy": "TYPO_ONLY",
+                "freshness": "CANONICAL_REVISION",
+            },
+            "customer": {
+                "profile": "CUSTOMER_STANDARD_3",
+                "scope": "RQ",
+                "freshness": "CANONICAL_AND_AS_BUILT",
+                "final_review": {"human_editable": True},
+            },
+            "pm": {"profile": "PM_STANDARD"},
+            "machine": {"visibility": "HIDDEN"},
+        },
         "unresolved": unresolved,
     }
 
@@ -367,7 +383,7 @@ def bootstrap(
         else "AGENT_EXECUTION_CONFIG_REQUIRED"
     )
     report = {
-        "schema_version": 3,
+        "schema_version": 4,
         "status": status,
         "project_name": CONFIG.nested(project, "project", "name", default=name),
         "mode": resolved_mode,
@@ -375,6 +391,7 @@ def bootstrap(
         "user_config": CONFIG.PROJECT_ENTRY_PATH,
         "runtime_config_source": check["source_kind"],
         "config_usage": check["usage"],
+        "document_profiles": check.get("document_profile_resolution", {}),
         "agent_execution": {
             "mode": execution_mode,
             "ready": execution_ready,

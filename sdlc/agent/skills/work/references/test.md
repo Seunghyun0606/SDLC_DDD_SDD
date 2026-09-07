@@ -35,7 +35,7 @@ AC→TC Coverage를 유지하고 기존 테스트 관례를 우선 재사용한�
 
 ## Output
 - TC + Test evidence
-- Template: `sdlc/templates/core/test-scenario.md`
+- Template: `sdlc/templates/semantic/test-scenario.md`
 
 ## Quality Check
 - 모든 핵심 AC가 TC로 커버되는가

@@ -89,7 +89,7 @@ SOP는 유용한 Evidence이지만 필수 입력이 아니다.
 Project Standard/권한에 따라 기술안은 내부적으로 `ACCEPTED_DESIGN`까지 갈 수 있다.
 
 ## Output
-- Template: `sdlc/templates/core/open-resolution-workbook.md`
+- Template: `sdlc/templates/semantic/open-resolution-workbook.md`
 - `interview-questions.md`는 동일 OPEN 정보에서 필요한 고객 질문만 파생하는 View로 사용한다.
 
 ## Quality Check

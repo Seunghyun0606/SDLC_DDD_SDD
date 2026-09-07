@@ -1,155 +1,203 @@
-# 프로젝트 설정 가이드 — `.sdlc/project.yaml`
+# Project 설정 가이드
 
-## 1. 문서 목적
+## 1. 사용자가 관리하는 설정은 하나
 
-프로젝트 사용자가 관리하는 유일한 Harness 설정인 `.sdlc/project.yaml`을 설명한다. 사용자는 Stage/Template 경로나 Machine Runtime JSON을 설정하지 않는다.
+프로젝트 참여자가 직접 관리하는 기준 Config는 `.sdlc/project.yaml`이다. Runtime에서 만들어지는 effective config나 legacy snapshot을 직접 편집하지 않는다.
 
-## 2. 설정 원칙
+기본 실행:
 
-Config 책임은 세 층으로 나눈다.
-
-1. **Delivery Profile** — 프로젝트 공통 기본 정책/호환 경계
-2. **Change Level Policy** — RQ별 실제 Semantic Work/Evidence/Review 깊이
-3. **Artifact Profile** — 사람이 보는 Internal/Customer/PM 문서 구성
-
-Delivery Profile이 L1~L5를 대신하지 않으며, Artifact Profile도 Semantic Work를 줄이지 않는다.
-
-```mermaid
-flowchart LR
-    P["Project Config"] --> D["Delivery 기본정책"]
-    P --> C["RQ별 Change Level"]
-    P --> A["Artifact Profile"]
-    C --> W["Semantic Work/Evidence/Review"]
-    A --> V["Human/Customer Projection"]
+```bash
+python sdlc/scripts/harness.py setup --name <project-name> --mode AUTO --delivery STANDARD
+python sdlc/scripts/harness.py check --setup
 ```
 
-## 3. 실제 Config 예제
+`setup`은 Repository에서 확인 가능한 Source root, Build/Test, Language/Framework/DB 후보를 먼저 탐색하고 확인할 수 없는 값은 `unresolved`로 남긴다.
+
+## 2. Agent 실행 방식
+
+Project Config에는 특정 Agent 제품명을 고정하지 않는다. 같은 Repository를 Cursor, Codex, Claude Code 등 서로 다른 Host에서 사용할 수 있기 때문이다.
+
+기본값은 `INTERACTIVE`다.
 
 ```yaml
-schema_version: 1
-project:
-  name: "hris-enhancement"
-  mode: "BROWNFIELD"
-
-delivery:
-  profile: "STANDARD"
-
-change:
-  level_policy: "AUTO"
-
 agent:
-  execution: "INTERACTIVE"
-
-technology:
-  language: "Java"
-  framework: "Spring"
-  build:
-    - "./mvnw -q -DskipTests package"
-  test:
-    - "./mvnw test"
-
-source:
-  roots:
-    - "src/main/java"
-  test_roots:
-    - "src/test/java"
-  resource_roots:
-    - "src/main/resources"
-  excludes:
-    - "target/**"
-
-documents:
-  language: "ko-KR"
-  internal:
-    profile: "STANDARD_5"
-  customer:
-    profile: "CUSTOMER_STANDARD_3"
-  pm:
-    profile: "PM_STANDARD"
-  machine:
-    visibility: "HIDDEN"
-
-unresolved:
-  - "운영 Batch 실행주기 확인 필요"
+  execution: INTERACTIVE
 ```
 
-## 4. Project Mode
+의미:
 
-- `GREENFIELD`: Source가 없는 구간을 기존 Source처럼 가정하지 않는다.
-- `BROWNFIELD`: Current Source/DB/Config/Runtime을 AS-IS 기술 Evidence로 사용한다.
-- `HYBRID`: 신규와 기존 영역이 섞여 있다.
-- `AUTO`: 최초 탐색용이며 가능한 빨리 실제 Mode로 확정한다.
+- 현재 대화/IDE/CLI 세션의 Agent가 Stage Agent다.
+- Harness가 별도 LLM subprocess를 다시 실행하지 않는다.
+- `/work`는 Work Context와 finalize 경계를 준비한다.
+- Agent가 Artifact와 `stage-result.json`을 작성한 뒤 Validator/Canonical Guard를 통과해야 완료다.
 
-Brownfield Source Observation은 Business Truth가 아니다.
+CI/Batch처럼 Harness가 외부 Agent를 직접 호출해야 할 때만 `HEADLESS`를 사용한다.
 
-## 5. Delivery Profile
+```yaml
+agent:
+  execution: HEADLESS
+  provider:
+    id: PROJECT_AGENT_PROVIDER
+    timeout_seconds: 180
+    command:
+      - python
+      - path/to/provider_adapter.py
+      - --context
+      - "{context_path}"
+      - --result
+      - "{result_path}"
+```
 
-- `FAST`: 프로젝트 공통 운영 제약이 가벼운 경우의 기본 정책
-- `STANDARD`: 일반 SI/SM 기본
-- `FULL`: 대형/고위험 프로젝트에서 강한 검증/호환 정책
+`HEADLESS`인데 provider command가 없으면 Config 오류다. 기존 `sdlc/config/agent-provider.json`과 `--provider-command`는 Legacy compatibility 경로다.
 
-**Delivery Profile만 보고 Stage 수나 문서 수를 결정하지 않는다.** 실제 RQ의 작업량은 Change Level과 Typed Evidence가 결정한다.
+## 3. 문서 Projection 설정
 
-## 6. Change Level Policy
+권장 기본값:
 
-`AUTO`는 RQ마다 Typed/Structural Evidence로 L1~L5를 판정한다. 자유문자 keyword는 후보 탐색에만 사용한다.
+```yaml
+documents:
+  engineering:
+    profile: ENGINEERING_SDD_COMPACT
+    manual_edit_policy: TYPO_ONLY
+    freshness: CANONICAL_REVISION
 
-- `L1 MICRO`
-- `L2 LOCAL`
-- `L3 FEATURE`
-- `L4 PROCESS`
-- `L5 ARCH`
+  customer:
+    profile: CUSTOMER_STANDARD_3
+    scope: RQ
+    freshness: CANONICAL_AND_AS_BUILT
+    final_review:
+      human_editable: true
 
-L1/L2도 Source를 실제 수정하기 전에 다음은 필수다.
+  pm:
+    profile: PM_STANDARD
+
+  machine:
+    visibility: HIDDEN
+```
+
+### Engineering
+
+개발/설계/Agent가 구현을 수행하기 위한 Living Spec이다. 신규 기본값은 `ENGINEERING_SDD_COMPACT`다.
+
+### Customer
+
+협의/합의/검수/제출/인수용 문서다. 기본은 `CUSTOMER_STANDARD_3`, Full Waterfall이 필요하면 `CUSTOMER_WATERFALL_FULL`을 선택한다.
+
+Engineering Profile과 Customer Profile은 독립이다.
+
+```text
+Engineering 2 / Customer 3
+Engineering 3 / Customer 5
+Engineering 5 / Customer 3
+Custom Engineering N / Custom Customer M
+```
+
+## 4. Legacy 설정은 신규 작성에 사용하지 않는다
+
+v1.10 신규 프로젝트에서는 `documents.engineering.profile`만 사용한다.
+
+기존 v1.9 프로젝트에 남아 있는 `documents.internal.profile`은 Runtime이 Migration 호환 입력으로 읽을 수 있지만, 신규 `.sdlc/project.yaml` 예제나 프로젝트 Custom Config에는 다시 작성하지 않는다.
+
+Runtime 호환 Resolution은 기존 프로젝트를 깨뜨리지 않기 위한 내부 동작이며, 사용자 개념 모델과 문서 용어는 `engineering`으로 통일한다.
+
+`STANDARD_3`, `STANDARD_5`, `STAGE_ORIENTED_FULL`은 기존 Formal 문서 체계를 유지해야 할 때 사용하는 Legacy compatibility Profile이며 신규 프로젝트 기본값이 아니다.
+
+## 5. Change Level과 문서 Profile을 섞지 않는다
+
+```text
+Change Level = 실행 깊이 / Evidence / Review 필요성
+Stage        = 내부 Execution Semantic
+Profile      = Human Artifact topology
+```
+
+Change Level만 보고 Customer 문서 수를 결정하지 않는다. 문서 수는 Project Config의 Profile이 결정한다.
+
+L1/L2처럼 문서가 적은 Fast Path에서도 실제 Source 변경 전 다음 의미 검증은 생략하지 않는다.
 
 - Requirement Intent Decomposition
 - AS-IS Source Analysis
 - Impact Check
 
-별도 Stage 문서를 생략할 수 있을 뿐 분석 자체를 생략할 수 없다. 자동 Downgrade는 하지 않으며 개발 중 예상 밖 영향이 발견되면 Level을 상향할 수 있다.
+즉, 문서 수를 줄이는 것과 분석을 줄이는 것은 다른 문제다.
 
-## 7. Artifact Profile
+## 6. Customer Scope
 
-기본값은 다음과 같다.
+```yaml
+documents:
+  customer:
+    scope: RQ  # RQ | MILESTONE | PROJECT
+```
 
-- `documents.internal.profile: STANDARD_5`
-- `documents.customer.profile: CUSTOMER_STANDARD_3`
-- `documents.pm.profile: PM_STANDARD`
-- `documents.machine.visibility: HIDDEN`
+- `RQ`: 요구사항 단위 협의
+- `MILESTONE`: Release/Milestone 제출
+- `PROJECT`: 최종 프로젝트 제출
 
-`STAGE_ORIENTED_FULL`은 Legacy/Formal Contract/기존 고객 양식 호환용이며 신규 프로젝트 기본값이 아니다.
+Profile이 여러 RQ를 하나의 고객 문서로 합칠 수 있지만 새로운 Reporting Engine을 따로 만들지 않는다.
 
-## 8. Program Spec와 Source 검증
+## 7. 직접 수정 정책
 
-신규 Standard의 Program readiness는 `Core Required 6 + Risk-triggered Conditional`이다. 17개 전체 필드는 `LEGACY_FULL_17`에서만 요구한다.
+Engineering:
 
-Source에서 재생성 가능한 Query/Table/Symbol/Hash는 Machine-derived로 관리한다. 실제 Source가 변경된 DEVELOPMENT run에만 Build/Test를 필수 검증하며, Source가 변경되지 않은 문서/분석-only run 때문에 불필요하게 Build/Test를 요구하지 않는다.
+```text
+오탈자 → 직접 수정 가능
+설계/Evidence/Source Mapping 보완 → /work
+Requirement/Business Rule/TO-BE 변경 → /change
+```
 
-## 9. 생성되는 Machine Config
+Customer:
 
-다음은 사람이 직접 수정하지 않는다.
+```text
+진행 중 → Generated View
+최종 제출 전 → FINAL_REVIEW에서 표현/레이아웃 수정 가능
+Business Rule 변경 → /change
+```
 
-- `.sdlc/runtime/effective/project-profile.json`
-- `.sdlc/runtime/effective/source-profile.json`
-- `.sdlc/runtime/effective/project-context.json`
-- `.sdlc/runtime/effective/config-usage.json`
-- `.sdlc/runtime/effective/tailoring-config.json`
-- `sdlc/runtime/change-level/*.json`
+Projection 직접 수정은 Canonical을 자동 변경하지 않는다.
 
-## 10. 자주 틀리는 부분
+## 8. Custom Profile 위치
 
-- `.sdlc/project.yaml`과 legacy project/source profile을 이중 관리하지 않는다.
-- `documents.internal.profile`에 Template 경로를 쓰지 않는다.
-- L1을 “분석 생략”으로 설정하지 않는다.
-- Source root가 불명확하다고 Repository 전체를 임의로 `.`로 지정하지 않는다.
-- 관련 없는 Program Spec 조건부 항목을 N/A로 채우지 않는다.
-- `extensions.*` 외 임의 Config key는 `DEAD_CONFIG`로 실패한다.
+프로젝트별 Custom은 한 곳을 우선 사용한다.
 
-## 11. Validation
+```text
+sdlc/custom/project/
+├─ tailoring/
+└─ templates/
+   ├─ engineering/
+   └─ customer/
+```
+
+Framework 표준(`sdlc/tailoring/standard`, `sdlc/templates/...`)을 고객 프로젝트에서 직접 고치지 않는다.
+
+자세한 Custom Profile/Template 규칙은 `03_TAILORING_설정가이드.md`, `04_TEMPLATE_및_산출물_가이드.md`를 따른다.
+
+## 9. 사람이 직접 관리하지 않는 파일
+
+다음은 Runtime이 생성하거나 Legacy 호환을 위해 유지하는 Machine artifact다.
+
+```text
+.sdlc/runtime/effective/project-profile.json
+.sdlc/runtime/effective/source-profile.json
+.sdlc/runtime/effective/agent-execution.json
+.sdlc/runtime/effective/agent-provider.json
+.sdlc/runtime/effective/project-context.json
+.sdlc/runtime/effective/config-usage.json
+```
+
+새 프로젝트에서 위 파일을 여러 개 나눠 수정해 설정을 바꾸지 않는다.
+
+## 10. 설정 검증
+
+일반 사용자는 다음만 사용한다.
 
 ```bash
 python sdlc/scripts/harness.py check --setup
-python sdlc/scripts/tailoring_runtime.py validate-profile --profile STANDARD_5
 ```
 
-완료 기준은 Config가 존재하는 것이 아니라 **Config의 값이 Runtime Consumer, Guide, Template, Projection Profile과 같은 의미를 가지는 것**이다.
+Framework 관리자가 Profile을 검증할 때만 직접 Tailoring validator를 사용한다.
+
+```bash
+python sdlc/scripts/tailoring_runtime.py validate-profile --profile ENGINEERING_SDD_COMPACT
+python sdlc/scripts/tailoring_runtime.py validate-profile --profile CUSTOMER_STANDARD_3
+```
+
+`INTERACTIVE_HANDOFF_READY`나 `PLAN_READY`는 완료가 아니다. Artifact와 Stage Result를 만든 뒤 동일한 Validator/Target Graph/Business Truth/Canonical Guard를 통과해야 완료다.

@@ -33,7 +33,13 @@ STAGES = ["INTAKE", "DECOMPOSE", "CLARIFY", "PROCESS", "DISCOVERY", "IMPACT", "D
 LEVELS = ["L1", "L2", "L3", "L4", "L5"]
 LEVEL_NAMES = {"L1": "MICRO", "L2": "LOCAL", "L3": "FEATURE", "L4": "PROCESS", "L5": "ARCH"}
 AUDIENCES = {"MACHINE", "INTERNAL_IT", "PM_REVIEW", "CUSTOMER"}
-DEFAULT_PROFILES = {"internal": "STANDARD_5", "customer": "CUSTOMER_STANDARD_3", "pm": "PM_STANDARD"}
+# Keep direct Tailoring Runtime use aligned with the canonical project-config resolver.
+# `internal` remains the compatibility audience key, but its default is the current Engineering profile.
+DEFAULT_PROFILES = {
+    "internal": CONFIG.DEFAULT_ENGINEERING_PROFILE,
+    "customer": CONFIG.DEFAULT_CUSTOMER_PROFILE,
+    "pm": CONFIG.DEFAULT_PM_PROFILE,
+}
 PROFILE_ROOTS = ["sdlc/custom/project/tailoring", "sdlc/tailoring/standard"]
 CHANGE_RUNTIME_ROOT = "sdlc/runtime/change-level"
 PROJECTION_RUNTIME_ROOT = "sdlc/runtime/projections"

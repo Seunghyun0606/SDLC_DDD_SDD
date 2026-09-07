@@ -19,7 +19,7 @@ def load(name, rel):
     return mod
 
 
-CONFIG = load("wp02_config", "sdlc/scripts/runtime_config.py")
+CONFIG = load("wp02_config", "sdlc/scripts/project_config.py")
 BOOT = load("wp02_boot", "sdlc/scripts/bootstrap_project.py")
 HARNESS = load("wp02_harness", "sdlc/scripts/harness.py")
 CHECK = load("wp02_check", "sdlc/scripts/run_check.py")
@@ -90,6 +90,10 @@ class ProjectEntryConfigTest(unittest.TestCase):
             self.assertEqual([], report["config_usage"]["dead"])
             self.assertNotIn("{{", entry.read_text(encoding="utf-8"))
 
+            resolved = CONFIG.resolve_runtime_config(root)
+            self.assertEqual("ENGINEERING_SDD_COMPACT", resolved["document_profile_resolution"]["engineering"])
+            self.assertEqual("CUSTOMER_STANDARD_3", resolved["document_profile_resolution"]["customer"])
+
             for rel in ["sdlc/config/project-profile.yaml", "sdlc/config/source-profile.yaml"]:
                 text = (root / rel).read_text(encoding="utf-8")
                 self.assertIn("MACHINE-GENERATED COMPATIBILITY SNAPSHOT", text)
@@ -102,6 +106,7 @@ class ProjectEntryConfigTest(unittest.TestCase):
                 ".sdlc/runtime/effective/agent-provider.json",
                 ".sdlc/runtime/effective/project-context.json",
                 ".sdlc/runtime/effective/config-usage.json",
+                ".sdlc/runtime/effective/tailoring-config.json",
             ]:
                 self.assertTrue((root / rel).is_file(), rel)
 
@@ -262,6 +267,8 @@ class ProjectEntryConfigTest(unittest.TestCase):
             self.assertFalse(result["setup"]["project_profile"])
             self.assertFalse(result["setup"]["source_profile"])
             self.assertEqual("STANDARD", result["project"]["delivery_profile"])
+            self.assertEqual("ENGINEERING_SDD_COMPACT", result["project"]["engineering_profile"])
+            self.assertEqual("CUSTOMER_STANDARD_3", result["project"]["customer_profile"])
 
     def test_legacy_profiles_remain_a_fallback_only_when_project_entry_is_absent(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -289,6 +296,8 @@ class ProjectEntryConfigTest(unittest.TestCase):
         self.assertIn("source.excludes", classified["document"])
         self.assertIn("technology.build", classified["runtime"])
         self.assertIn("git.protected_branches", classified["runtime"])
+        self.assertIn("documents.engineering.profile", classified["runtime"])
+        self.assertIn("documents.customer.profile", classified["runtime"])
 
 
 if __name__ == "__main__":

@@ -1,0 +1,94 @@
+schema_version: 2
+session: SDLC_DESIGN_SESSION_FIRST
+version: 1.10.0
+status: ACTIVE_CANONICAL_SOURCE
+branch: SDLC_DESIGN_SESSION_FIRST/projection-separation/v1.10.0
+base_branch: SDLC_DESIGN_SESSION_FIRST/tailoring-control-plane/v1.9.0
+base_commit: 1559504f6471f87439a1c22b8100af50ca7cc213
+candidate: v1.10.0-projection-separation
+work_package:
+  id: V110-PROJECTION-SEPARATION
+  objective: "Canonical 의미와 Engineering/Customer Projection을 분리하고 Template/Guide/Framework asset boundary를 v1.10 기준으로 통합한다."
+current_design:
+  governance: framework/design/README.md
+  design_summary: framework/design/current/V110_PROJECTION_SEPARATION_DESIGN.md
+  changelog: framework/design/CHANGELOG.md
+  asset_inventory: framework/ASSET_INVENTORY_V110.md
+  runtime_contract_root: sdlc/design/contracts
+  archive_index: framework/archive/INDEX.md
+validation_reports:
+  - framework/validation/PROJECTION_SEPARATION_V110_VALIDATION.md
+  - framework/validation/TEMPLATE_ROLE_BOUNDARY_V110.md
+  - framework/validation/GUIDE_CONSISTENCY_V110.md
+  - framework/validation/FRAMEWORK_GOVERNANCE_V110.md
+  - framework/validation/LATEST_COMMIT_REVIEW_V110.md
+scope:
+  - "Canonical Business/Project 의미와 Human Projection topology 분리"
+  - "ENGINEERING_SDD_COMPACT 기본 Engineering Living Spec"
+  - "CUSTOMER_STANDARD_3 / CUSTOMER_WATERFALL_FULL 독립 Customer Projection"
+  - ".sdlc/project.yaml 단일 Human-maintained Project Config"
+  - "Stage Semantic Template 원본을 sdlc/templates/semantic로 통합"
+  - "구 Stage Template alias/symlink/fallback 제거"
+  - "Legacy STANDARD_3/5/STAGE_ORIENTED_FULL을 Formal Projection compatibility로 분리"
+  - "Framework/Test/Pilot/Sample/Design History와 Project 배포 Asset 경계 분리"
+  - "docs/00_시작 Guide SoT 현행화"
+  - "Framework Design current/history와 Archive governance 정리"
+  - "Standard Scaffold의 bundled optional과 별도 Extension 경계 명시"
+compatibility:
+  v19_fully_contained: true
+  v19_is_current_source: false
+  documents_internal_profile: MIGRATION_INPUT_ONLY
+  runtime_config_v19: THIN_COMPATIBILITY_WRAPPER
+  legacy_formal_profiles:
+    - STANDARD_3
+    - STANDARD_5
+    - STAGE_ORIENTED_FULL
+  template_stage_path_alias: REMOVED
+projection_model:
+  semantic_owner: CANONICAL
+  engineering_default: ENGINEERING_SDD_COMPACT
+  customer_default: CUSTOMER_STANDARD_3
+  pm_default: PM_STANDARD
+  engineering_customer_topology_independent: true
+  customer_business_truth_authority: false
+asset_boundary:
+  framework_root: FRAMEWORK_ONLY
+  project_guide_source: docs/00_시작
+  project_config_source: .sdlc/project.yaml
+  runtime_contract_root: sdlc/design/contracts
+  stage_template_root: sdlc/templates/semantic
+  generated_management_root: docs/00_관리
+  framework_archive_root: framework/archive
+  bundled_optional_policy: STANDARD_SCAFFOLD_INCLUDED_ACTIVATION_OPTIONAL
+framework_governance:
+  active_design_metadata: framework/design/branch-version.yaml
+  active_design_summary: framework/design/current/V110_PROJECTION_SEPARATION_DESIGN.md
+  design_history_roots:
+    - framework/design/baselines
+    - framework/design/candidates
+    - framework/design/reviews
+    - framework/design/validations
+  archive_policy: "Superseded active metadata/inventory/migration snapshots only; not current SoT"
+  archived_v19_metadata: framework/archive/design-metadata/branch-version-v1.9.0.yaml
+ci_evidence:
+  authoritative_review: framework/validation/LATEST_COMMIT_REVIEW_V110.md
+  live_pr_number: 67
+  current_head_ci_required: true
+  exact_run_ids_and_test_count_are_external_evidence: true
+  embedded_commit_sha_is_not_current_head_authority: true
+  note: "Commit SHA가 파일 내용에 포함되면 자기참조가 되므로 active metadata에는 휘발성 current-head SHA/test count를 중복 고정하지 않는다. 검증 대상 commit과 run id는 Review Evidence 문서에 snapshot으로 기록하고 최종 current-head 상태는 PR CI에서 확인한다."
+validation_boundary:
+  self_assessment_is_not_validation: true
+  ci_is_human_first_use_evidence: false
+  ci_is_external_agent_empirical_evidence: false
+  public_source_impact_is_not_confirmed_business_reconciliation: true
+  production_ready_claimed: false
+inherited_validation_boundary:
+  note: "v1.8/v1.9 regression compatibility marker. 현재 v1.10 active source 상태와 별개이며 External Agent/Human empirical validation은 여전히 별도 Evidence가 필요하다."
+  status: P0_P1_CI_BEHAVIORAL_AND_INTEGRATION_PASS_EXTERNAL_EMPIRICAL_PENDING
+  verdict: CONTROLLED_PILOT_READY_CI_PASS_EXTERNAL_AGENT_HUMAN_VALIDATION_PENDING
+  self_assessment_is_not_validation: true
+  production_ready_claimed: false
+merge_policy:
+  main_merge_allowed: false
+  draft_pr_validation_only: true

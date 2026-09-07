@@ -11,20 +11,20 @@ import render_customer_document as r
 class DocumentExperienceTest(unittest.TestCase):
     def contract_profile(self):
         c=json.loads((ROOT/'sdlc/design/contracts/customer-document-contract.json').read_text(encoding='utf-8'))
-        p=json.loads((ROOT/'sdlc/config/customer-document-profile.example.json').read_text(encoding='utf-8'))
+        p=json.loads((ROOT/'sdlc/config/customer-document-profile.json').read_text(encoding='utf-8'))
         return c,p
 
     def test_document_experience_validator_passes(self):
         self.assertEqual(v.validate(ROOT),[])
 
-    def test_all_core_templates_use_korean_visible_sections(self):
-        for p in (ROOT/'sdlc/templates/core').glob('*.md'):
+    def test_all_semantic_templates_use_korean_visible_sections(self):
+        for p in (ROOT/'sdlc/templates/semantic').glob('*.md'):
             txt=p.read_text(encoding='utf-8')
             for sec in v.KOREAN_SECTIONS:
                 self.assertIn(sec,txt,p.name)
 
     def test_internal_machine_keys_can_remain_stable(self):
-        txt=(ROOT/'sdlc/templates/core/program-spec.md').read_text(encoding='utf-8')
+        txt=(ROOT/'sdlc/templates/semantic/program-spec.md').read_text(encoding='utf-8')
         self.assertIn('document_type: program_spec',txt)
         self.assertIn('stage: PROGRAM',txt)
         self.assertIn('프로그램 구현 명세',txt)
@@ -73,7 +73,7 @@ class DocumentExperienceTest(unittest.TestCase):
         self.assertEqual(set(ev['items']['required']),{'document_id','locator','source_hash','confidence'})
 
     def test_br_conflicts_are_not_auto_resolved(self):
-        guide=(ROOT/'sdlc/guides/09_비정형_고객문서_BR_Intake_가이드.md').read_text(encoding='utf-8')
+        guide=(ROOT/'docs/00_시작/11_INPUT_자료_준비가이드.md').read_text(encoding='utf-8')
         self.assertIn('자동으로',guide)
         self.assertIn('BR_CONFLICT',guide)
 

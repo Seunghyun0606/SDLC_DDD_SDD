@@ -30,6 +30,7 @@ def _load(name: str, filename: str):
 
 WORK = _load("interactive_guarded_work", "run_work.py")
 HANDOFF = _load("interactive_work_handoff", "work_handoff.py")
+PROJECT_CONFIG = _load("interactive_project_config", "project_config.py")
 SUCCESS = {"APPLIED", "IDEMPOTENT", "NO_CHANGE", "DRY_RUN_VALIDATED"}
 
 
@@ -75,10 +76,11 @@ def _run_dir(root: Path, target: str, stage: str, raw: str | None) -> Path:
 
 
 def _agent_runtime(root: Path) -> dict[str, Any]:
-    resolved = WORK.CONFIG.resolve_runtime_config(root)
-    legacy_path = root / WORK.CONFIG.DEFAULT_PROVIDER_CONFIG_PATH
-    legacy = WORK.CONFIG.load_config(legacy_path) if legacy_path.is_file() else {}
-    runtime = WORK.CONFIG.resolve_agent_runtime(resolved["project"], legacy_provider=legacy)
+    """Resolve the human-maintained project entry through the canonical control-plane resolver."""
+    resolved = PROJECT_CONFIG.resolve_runtime_config(root)
+    legacy_path = root / PROJECT_CONFIG.DEFAULT_PROVIDER_CONFIG_PATH
+    legacy = PROJECT_CONFIG.load_config(legacy_path) if legacy_path.is_file() else {}
+    runtime = PROJECT_CONFIG.resolve_agent_runtime(resolved["project"], legacy_provider=legacy)
     if runtime["execution_mode"] != "INTERACTIVE":
         raise ValueError(
             f"interactive_work.py requires agent.execution INTERACTIVE; resolved {runtime['execution_mode']}"

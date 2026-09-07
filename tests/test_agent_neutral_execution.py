@@ -18,7 +18,7 @@ def load(name, rel):
     return mod
 
 
-CONFIG = load("agent_neutral_config", "sdlc/scripts/runtime_config.py")
+CONFIG = load("agent_neutral_config", "sdlc/scripts/project_config.py")
 BOOT = load("agent_neutral_boot", "sdlc/scripts/bootstrap_project.py")
 HARNESS = load("agent_neutral_harness", "sdlc/scripts/harness.py")
 CHECK = load("agent_neutral_check", "sdlc/scripts/run_check.py")
@@ -56,7 +56,6 @@ class AgentNeutralExecutionTest(unittest.TestCase):
             root = Path(tmp)
             self._bootstrap(root)
             resolved = CONFIG.resolve_runtime_config(root)
-            self.assertEqual("INTERACTIVE", resolved["agent_execution_mode"])
             runtime = CONFIG.resolve_agent_runtime(
                 resolved["project"],
                 legacy_provider=CONFIG.load_config(root / CONFIG.DEFAULT_PROVIDER_CONFIG_PATH),

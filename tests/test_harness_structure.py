@@ -26,16 +26,19 @@ class HarnessStructureTest(unittest.TestCase):
             self.assertTrue((ROOT/rel).is_file(), rel)
         for rel in [
             'sdlc/scripts/runtime_config_v19.py',
+            'sdlc/scripts/project_config.py',
             'sdlc/scripts/intake_explainable.py',
             'sdlc/scripts/tailored_work.py',
             'sdlc/scripts/tailored_check.py',
             'sdlc/scripts/tailoring_runtime.py',
             'sdlc/scripts/change_execution_runtime.py',
+            'sdlc/scripts/projection_lifecycle_runtime.py',
             'sdlc/config/change-execution-policy.json',
             'sdlc/scripts/interactive_work.py',
             'sdlc/scripts/interactive_change.py',
             'sdlc/agent/skills/work/SKILL.md',
             'sdlc/agent/skills/change/SKILL.md',
+            'sdlc/tailoring/standard/ENGINEERING_SDD_COMPACT.yaml',
             'sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml',
             'sdlc/tailoring/standard/STANDARD_3.yaml',
             'sdlc/tailoring/standard/STANDARD_5.yaml',
@@ -45,10 +48,11 @@ class HarnessStructureTest(unittest.TestCase):
             self.assertIn(rel, core)
         self.assertNotIn('sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml', set(self.contract['default_tailoring_assets']))
         self.assertIn('sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml', set(self.contract['compatibility_tailoring_assets']))
+        self.assertIn('sdlc/tailoring/standard/ENGINEERING_SDD_COMPACT.yaml', set(self.contract['default_tailoring_assets']))
         self.assertNotIn('sdlc/scripts/render_customer_document.py', core)
         self.assertNotIn('sdlc/scripts/detect_source_drift.py', core)
 
-    def test_minimum_executable_core_runs_v19_setup_check_and_tailored_plan(self):
+    def test_minimum_executable_core_runs_v110_setup_check_and_tailored_plan(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td)
             for rel in self.contract['core_required_files']:
@@ -81,9 +85,11 @@ class HarnessStructureTest(unittest.TestCase):
             check_result=json.loads(check.stdout)
             self.assertEqual('READY',check_result['status'])
             self.assertEqual('INTERACTIVE',check_result['setup']['agent_execution']['execution_mode'])
+            self.assertEqual('ENGINEERING_SDD_COMPACT', check_result['setup']['engineering_profile'])
+            self.assertEqual('ENGINEERING_SDD_COMPACT', check_result['setup']['tailoring_profiles']['internal'])
 
             tailoring=root/'sdlc/scripts/tailoring_runtime.py'
-            for profile in ['STANDARD_3','STANDARD_5','STAGE_ORIENTED_FULL','CUSTOMER_STANDARD_3','PM_STANDARD']:
+            for profile in ['ENGINEERING_SDD_COMPACT','STANDARD_3','STANDARD_5','STAGE_ORIENTED_FULL','CUSTOMER_STANDARD_3','PM_STANDARD']:
                 cp=subprocess.run(
                     [sys.executable,str(tailoring),'validate-profile','--root',str(root),'--profile',profile],
                     cwd=root,text=True,capture_output=True,check=False,
@@ -106,15 +112,15 @@ class HarnessStructureTest(unittest.TestCase):
             work_result=json.loads(work.stdout)
             self.assertEqual('PLAN_READY',work_result['status'])
             self.assertEqual('DESIGN',work_result['plan']['selection']['stage'])
-            self.assertTrue(work_result['plan']['selection']['artifact_path'].startswith('docs/10_산출물/'))
-            self.assertEqual('STANDARD_5',work_result['plan']['tailoring']['profiles']['internal'])
+            self.assertTrue(work_result['plan']['selection']['artifact_path'].startswith('docs/10_engineering/'))
+            self.assertEqual('ENGINEERING_SDD_COMPACT',work_result['plan']['tailoring']['profiles']['internal'])
             self.assertIn('execution_policy', work_result['plan'])
 
     def test_all_source_enabled_stages_have_evidence_templates(self):
         stages=[k for k,x in self.contract['stage_contracts'].items() if x.get('source_evidence')]
         self.assertEqual(stages,['DISCOVERY','IMPACT','DESIGN','PROGRAM','DEVELOPMENT','TEST','VERIFY'])
         for stage in stages:
-            txt=(ROOT/'sdlc/templates/core'/self.contract['stage_contracts'][stage]['template']).read_text(encoding='utf-8')
+            txt=(ROOT/'sdlc/templates/semantic'/self.contract['stage_contracts'][stage]['template']).read_text(encoding='utf-8')
             for marker in ['Locator','Source Hash','Confidence','Status']:
                 self.assertIn(marker,txt)
 
@@ -125,7 +131,7 @@ class HarnessStructureTest(unittest.TestCase):
                 self.assertIn(sec,txt)
 
     def test_templates_keep_traceability_and_uncertainty_sections(self):
-        for p in (ROOT/'sdlc/templates/core').glob('*.md'):
+        for p in (ROOT/'sdlc/templates/semantic').glob('*.md'):
             txt=p.read_text(encoding='utf-8')
             self.assertIn('## 미확정 사항·주의·가정',txt,p.name)
             self.assertIn('## 관련 ID 및 추적성',txt,p.name)

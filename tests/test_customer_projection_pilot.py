@@ -13,7 +13,7 @@ class CustomerProjectionPilotTest(unittest.TestCase):
     def setUpClass(cls):
         cls.contract=json.loads((ROOT/'sdlc/design/contracts/customer-document-contract.json').read_text(encoding='utf-8'))
         cls.profile=json.loads((ROOT/'sdlc/config/customer-document-profile.example.json').read_text(encoding='utf-8'))
-        cls.pilot_root=ROOT/'docs/99_파일럿/RQ-CAND-0001'
+        cls.pilot_root=ROOT/'framework/pilots/history/RQ-CAND-0001'
         cls.artifacts=r.load_artifact_input(cls.pilot_root,cls.contract)
 
     def test_legacy_pilot_filenames_infer_workflow_stages(self):

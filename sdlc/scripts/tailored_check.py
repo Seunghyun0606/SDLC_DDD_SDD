@@ -38,6 +38,30 @@ def _open_items(entity: dict[str, Any]) -> list[dict[str, str]]: return BASE_CHE
 def _provenance_artifacts(entity: dict[str, Any]) -> list[str]: return sorted({str(x.get("source_artifact")) for x in entity.get("provenance", []) if str(x.get("source_artifact") or "").strip()})
 
 
+def _profile_ids(project: dict[str, Any]) -> dict[str, str]:
+    """Expose v1.10 Engineering naming while preserving the legacy internal alias."""
+    profiles = dict(TAILOR.project_profile_ids(project))
+    engineering = str(
+        CONFIG.nested(
+            project,
+            "documents",
+            "engineering",
+            "profile",
+            default=CONFIG.nested(
+                project,
+                "documents",
+                "internal",
+                "profile",
+                default=CONFIG.DEFAULT_ENGINEERING_PROFILE,
+            ),
+        )
+        or CONFIG.DEFAULT_ENGINEERING_PROFILE
+    )
+    profiles["engineering"] = engineering
+    profiles["internal"] = engineering
+    return profiles
+
+
 def _change_state(root: Path, rq_id: str) -> dict[str, Any]:
     state = TAILOR.load_change_state(root, rq_id)
     return {
@@ -144,10 +168,11 @@ def _rq_view(root: Path, rq_id: str, entity: dict[str, Any], store: dict[str, An
 def check(root: Path, *, target: str | None, setup_only: bool, debug_stage: bool) -> dict[str, Any]:
     root = root.resolve(); resolved = CONFIG.resolve_runtime_config(root); project = resolved.get("project") or {}; legacy_path = root / CONFIG.DEFAULT_PROVIDER_CONFIG_PATH; legacy = CONFIG.load_config(legacy_path) if legacy_path.is_file() else {}; runtime = CONFIG.resolve_agent_runtime(project, legacy_provider=legacy) if project else {"ready": False, "execution_mode": "INTERACTIVE"}
     ready = resolved.get("source_kind") != "UNCONFIGURED" and runtime.get("ready")
+    profiles = _profile_ids(project) if project else {}
     if setup_only:
-        return {"schema_version": 5, "status": "READY" if ready else "SETUP_OR_AGENT_EXECUTION_REQUIRED", "setup": {"project_config": (root / CONFIG.PROJECT_ENTRY_PATH).is_file(), "config_source": resolved.get("source_kind"), "agent_execution": {k: runtime.get(k) for k in ["execution_mode", "ready", "provider_required", "provider_id", "config_source"]}, "config_usage": resolved.get("usage"), "tailoring_profiles": TAILOR.project_profile_ids(project) if project else {}, "change_level_policy": CONFIG.nested(project, "change", "level_policy", default="AUTO") if project else None}}
+        return {"schema_version": 5, "status": "READY" if ready else "SETUP_OR_AGENT_EXECUTION_REQUIRED", "setup": {"project_config": (root / CONFIG.PROJECT_ENTRY_PATH).is_file(), "config_source": resolved.get("source_kind"), "agent_execution": {k: runtime.get(k) for k in ["execution_mode", "ready", "provider_required", "provider_id", "config_source"]}, "config_usage": resolved.get("usage"), "tailoring_profiles": profiles, "engineering_profile": profiles.get("engineering"), "change_level_policy": CONFIG.nested(project, "change", "level_policy", default="AUTO") if project else None}}
     store = TAILOR.load_store(root)
-    base: dict[str, Any] = {"schema_version": 5, "status": "READY" if ready else "SETUP_OR_AGENT_EXECUTION_REQUIRED", "project": {"name": CONFIG.nested(project, "project", "name", default=None), "mode": CONFIG.project_mode(project), "delivery_profile": CONFIG.delivery_profile(project), "change_level_policy": CONFIG.nested(project, "change", "level_policy", default="AUTO"), "artifact_profiles": TAILOR.project_profile_ids(project)}, "canonical_revision": int(store.get("revision") or 0)}
+    base: dict[str, Any] = {"schema_version": 5, "status": "READY" if ready else "SETUP_OR_AGENT_EXECUTION_REQUIRED", "project": {"name": CONFIG.nested(project, "project", "name", default=None), "mode": CONFIG.project_mode(project), "delivery_profile": CONFIG.delivery_profile(project), "change_level_policy": CONFIG.nested(project, "change", "level_policy", default="AUTO"), "artifact_profiles": profiles, "engineering_profile": profiles.get("engineering")}, "canonical_revision": int(store.get("revision") or 0)}
     if target and target.lower() not in {"project", "all"}:
         entity = (store.get("entities") or {}).get(target); base["rq_review"] = _rq_view(root, target, entity, store, debug_stage=debug_stage) if entity else {"rq_id": target, "found": False}
     else: base["project_view"] = _project_view(root, store, debug_stage=debug_stage)

@@ -1,0 +1,55 @@
+{
+  "schema_version": 3,
+  "candidate_design": "v1.9.0-tailoring-control-plane",
+  "archive_notice": "Historical v1.9 inventory. Do not use as the v1.10 runtime/asset source of truth. Current asset classification is framework/ASSET_INVENTORY_V110.md.",
+  "human_entrypoint": ".sdlc/project.yaml",
+  "policy": {
+    "human_maintained_config_count": 1,
+    "unknown_leaf_behavior": "FAIL_DEAD_CONFIG",
+    "legacy_profiles_are_source_of_truth": false,
+    "machine_effective_directory": ".sdlc/runtime/effective",
+    "stage_or_template_path_required_from_normal_user": false
+  },
+  "categories": {
+    "runtime_consumed": [
+      "schema_version", "project.mode", "delivery.profile", "change.level_policy", "change.default_level",
+      "documents.internal.profile", "documents.customer.profile", "documents.pm.profile", "documents.machine.visibility",
+      "technology.build", "technology.test", "source.roots", "source.test_roots", "source.resource_roots",
+      "git.protected_branches", "agent.execution", "agent.provider.id", "agent.provider.command",
+      "agent.provider.timeout_seconds", "agent.provider.result_filename"
+    ],
+    "agent_or_document_context": [
+      "project.name", "project.description", "technology.language", "technology.framework", "source.excludes",
+      "architecture.*", "git.branch_strategy", "coding.*", "data.*", "interface.*", "security.*", "deployment.*",
+      "documents.language", "documents.customer_language", "documents.internal.output_root",
+      "documents.customer.output_root", "documents.pm.output_root", "unresolved"
+    ],
+    "document_projection": [
+      "documents.internal.profile", "documents.customer.profile", "documents.pm.profile", "documents.machine.visibility"
+    ],
+    "extension_namespace": ["extensions.*"],
+    "legacy": [
+      "sdlc/config/project-profile.yaml", "sdlc/config/source-profile.yaml", "sdlc/config/agent-provider.json"
+    ],
+    "dead_config": "Any leaf not registered by the v1.9 resolver/base runtime is rejected instead of silently ignored."
+  },
+  "actual_consumers": {
+    "project_entry_resolution": "Historical: runtime_config_v19.py -> v1.8 runtime_config.py",
+    "delivery_and_stage_policy": "run_work.py and run_change.py via effective project-profile.json",
+    "change_level": "tailoring_runtime.py resolve_change_level",
+    "artifact_profile": "tailoring_runtime.py resolve_artifacts -> tailored_work.py",
+    "work_control_plane": "harness.py work -> tailored_work.py",
+    "project_and_rq_view": "harness.py check -> tailored_check.py",
+    "view_freshness": "sdlc/runtime/projections/*.json compared with Canonical revision"
+  },
+  "machine_artifacts": {
+    ".sdlc/runtime/effective/project-profile.json": "DERIVED_RUNTIME_INPUT",
+    ".sdlc/runtime/effective/source-profile.json": "DERIVED_RUNTIME_INPUT",
+    ".sdlc/runtime/effective/agent-provider.json": "DERIVED_RUNTIME_INPUT_WITH_PROJECT_GIT_GUARD",
+    ".sdlc/runtime/effective/project-context.json": "DERIVED_AGENT_CONTEXT_VIEW",
+    ".sdlc/runtime/effective/config-usage.json": "DERIVED_USAGE_CLASSIFICATION",
+    ".sdlc/runtime/effective/tailoring-config.json": "DERIVED_TAILORING_SELECTION",
+    "sdlc/runtime/change-level/<RQ>.json": "RQ_CHANGE_LEVEL_EXPLAINABILITY_STATE",
+    "sdlc/runtime/projections/*.json": "HUMAN_VIEW_FRESHNESS_METADATA"
+  }
+}

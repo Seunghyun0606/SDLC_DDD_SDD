@@ -10,8 +10,8 @@ ACTIVE_CUSTOMER_TYPES=['solution_agreement','delivery_scope','acceptance_handove
 
 def validate(root: Path) -> list[str]:
     errors=[]
-    core=root/'sdlc/templates/core'
-    for p in core.glob('*.md'):
+    semantic=root/'sdlc/templates/semantic'
+    for p in semantic.glob('*.md'):
         txt=p.read_text(encoding='utf-8')
         for sec in KOREAN_SECTIONS:
             if sec not in txt: errors.append(f'{p.name}: missing Korean section {sec}')
@@ -19,7 +19,7 @@ def validate(root: Path) -> list[str]:
             if sec in txt: errors.append(f'{p.name}: old mixed-language section remains {sec}')
     term=root/'sdlc/config/terminology-profile.example.json'
     cdoc=root/'sdlc/design/contracts/customer-document-contract.json'
-    cprofile=root/'sdlc/config/customer-document-profile.example.json'
+    cprofile=root/'sdlc/config/customer-document-profile.json'
     brp=root/'sdlc/config/br-intake-profile.example.json'
     brs=root/'sdlc/design/contracts/br-candidate.schema.json'
     bre=root/'sdlc/design/contracts/br-document-extraction-contract.json'

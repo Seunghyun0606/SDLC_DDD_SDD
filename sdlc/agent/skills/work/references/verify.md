@@ -35,7 +35,7 @@ Requirement→Source→Test evidence chain을 확인하고 미검증 항목을 �
 
 ## Output
 - Verification Result + Knowledge candidates
-- Template: `sdlc/templates/core/verification-result.md`
+- Template: `sdlc/templates/semantic/verification-result.md`
 
 ## Quality Check
 - Evidence chain이 끊기지 않는가

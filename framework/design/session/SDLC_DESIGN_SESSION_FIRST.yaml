@@ -1,0 +1,56 @@
+schema_version: 2
+session_id: SDLC_DESIGN_SESSION_FIRST
+status: ACTIVE
+namespace_prefix: SDLC_DESIGN_SESSION_FIRST/
+base_ref: SDLC_DESIGN_SESSION_FIRST/base
+policies:
+  create_branch_only_under_namespace: true
+  commit_only_to_namespace_branches: true
+  direct_commit_to_main: false
+  merge_to_main: false
+  preserve_legacy_session_branches_as_history: true
+  validation_branch_version_required: true
+  branch_metadata_file: framework/design/branch-version.yaml
+  current_design_file: framework/design/current/V110_PROJECTION_SEPARATION_DESIGN.md
+  archive_index: framework/archive/INDEX.md
+  draft_pr_between_session_branches: true
+branch_naming:
+  pattern: SDLC_DESIGN_SESSION_FIRST/<type>/<name>
+  allowed_types:
+    - design
+    - feature
+    - validation
+    - review
+    - poc
+    - task
+    - integration
+    - remediation
+    - tailoring-control-plane
+    - projection-separation
+current_lineage:
+  - SDLC_DESIGN_SESSION_FIRST/base
+  - SDLC_DESIGN_SESSION_FIRST/design/v1.5-usability-generalization
+  - SDLC_DESIGN_SESSION_FIRST/feature/phase-0.5-worklist-sync
+  - SDLC_DESIGN_SESSION_FIRST/validation/v1.5.1-requirements-pilot-v0.1
+  - SDLC_DESIGN_SESSION_FIRST/validation/v1.5.2-requirement-intake-poc-v0.2
+  - SDLC_DESIGN_SESSION_FIRST/integration/v1.8.0-consolidated
+  - SDLC_DESIGN_SESSION_FIRST/tailoring-control-plane/v1.9.0
+  - SDLC_DESIGN_SESSION_FIRST/projection-separation/v1.10.0
+current_branch: SDLC_DESIGN_SESSION_FIRST/projection-separation/v1.10.0
+current_version: 1.10.0
+current_status: ACTIVE_CANONICAL_SOURCE
+design_governance:
+  current_metadata: framework/design/branch-version.yaml
+  current_summary: framework/design/current/V110_PROJECTION_SEPARATION_DESIGN.md
+  historical_design_roots:
+    - framework/design/baselines
+    - framework/design/candidates
+    - framework/design/reviews
+    - framework/design/validations
+  superseded_metadata_archive: framework/archive
+notes:
+  - Git does not provide true parent-child branch objects; namespace and merge-base lineage define this session hierarchy.
+  - Branches outside this namespace are external to this project session unless explicitly imported.
+  - Historical design documents are context, not current v1.10 runtime truth.
+  - Runtime contracts remain under sdlc/design/contracts because they are project execution dependencies.
+updated_at: 2026-09-08

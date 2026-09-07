@@ -38,7 +38,7 @@ Static Analysis First로 관련 Source/Symbol/Data 후보와 Evidence locator를
 ## Output
 - Trace/Program/Data candidates
 - Coverage Gap
-- Template: `sdlc/templates/core/impact-analysis.md`
+- Template: `sdlc/templates/semantic/impact-analysis.md`
 
 ## Quality Check
 - Source Evidence locator가 있는가

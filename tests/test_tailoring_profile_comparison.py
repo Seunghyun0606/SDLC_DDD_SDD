@@ -8,8 +8,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
 SCRIPT = ROOT / "sdlc/scripts/generate_tailoring_profile_comparison.py"
-FIXTURE = ROOT / "sdlc/samples/tailoring/comparison-canonical.example.json"
-SAMPLE = ROOT / "sdlc/samples/tailoring/PROFILE_COMPARISON_3_5_FULL.md"
+FIXTURE = ROOT / "framework/samples/tailoring/comparison-canonical.example.json"
+SAMPLE = ROOT / "framework/samples/tailoring/PROFILE_COMPARISON_3_5_FULL.md"
 
 spec = importlib.util.spec_from_file_location("tailoring_profile_comparison_tested", SCRIPT)
 comparison = importlib.util.module_from_spec(spec)
@@ -26,7 +26,7 @@ class TailoringProfileComparisonTest(unittest.TestCase):
         self.assertTrue(result["structural_invariant_pass"])
         self.assertEqual(7, result["canonical_revision"])
         self.assertEqual(
-            "sha256:53f2b05fff4ca4b2e76c352bfce19cc167b9e1c45692fd340aabeef4059f1154",
+            "sha256:7a119831c7e436eba7fdcf7992488bc485f32577493ee9770e0158d6e7ede7bf",
             result["canonical_fingerprint"],
         )
         counts = {key: row["unique_artifact_count"] for key, row in result["profiles"].items()}

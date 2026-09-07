@@ -51,7 +51,7 @@ br_intake:
 open_resolution:
   profile: sdlc/config/open-resolution-profile.yaml
   sop_required: false
-  workbook_template: sdlc/templates/core/open-resolution-workbook.md
+  workbook_template: sdlc/templates/semantic/open-resolution-workbook.md
   allow_designer_proposal: true
   allow_developer_proposal: true
   allow_existing_system_analysis: true

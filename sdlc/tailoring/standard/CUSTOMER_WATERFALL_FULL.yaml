@@ -1,0 +1,94 @@
+schema_version: 1
+profile_id: CUSTOMER_WATERFALL_FULL
+name: "Customer Full Waterfall 8종 Projection"
+projection_role: CUSTOMER
+output_root: "docs/20_customer"
+artifacts:
+  requirements_agreement:
+    projection_type: solution_agreement
+    audience: CUSTOMER
+    template: "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md"
+    output_path: "docs/20_customer/{target}/01_요구사항_합의서.md"
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 10
+    sources:
+      stages: [INTAKE, DECOMPOSE, CLARIFY]
+      canonical: [RQ, FR, BR, AC]
+  business_analysis:
+    projection_type: solution_agreement
+    audience: CUSTOMER
+    template: "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md"
+    output_path: "docs/20_customer/{target}/02_업무분석서.md"
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 20
+    sources:
+      stages: [CLARIFY, PROCESS]
+      canonical: [RQ, FR, BR, PROC]
+  process_design:
+    projection_type: solution_agreement
+    audience: CUSTOMER
+    template: "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md"
+    output_path: "docs/20_customer/{target}/03_업무프로세스설계서.md"
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 30
+    sources:
+      stages: [PROCESS]
+      canonical: [PROC, BR, FTR]
+  functional_design:
+    projection_type: solution_agreement
+    audience: CUSTOMER
+    template: "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md"
+    output_path: "docs/20_customer/{target}/04_기능설계서.md"
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 40
+    sources:
+      stages: [DESIGN]
+      canonical: [FR, BR, FTR, AC]
+  development_scope:
+    projection_type: delivery_scope
+    audience: CUSTOMER
+    template: "sdlc/templates/customer/standard/A02_영향_개발범위_공유서.md"
+    output_path: "docs/20_customer/{target}/05_개발범위서.md"
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 50
+    sources:
+      stages: [DISCOVERY, IMPACT, PROGRAM, DEVELOPMENT]
+      canonical: [RQ, FTR, WP, TASK, PGM, ART, DATA]
+  test_result:
+    projection_type: acceptance_handover
+    audience: CUSTOMER
+    template: "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md"
+    output_path: "docs/20_customer/{target}/06_테스트결과서.md"
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 60
+    sources:
+      stages: [TEST]
+      canonical: [AC, TC]
+  acceptance_result:
+    projection_type: acceptance_handover
+    audience: CUSTOMER
+    template: "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md"
+    output_path: "docs/20_customer/{target}/07_인수결과서.md"
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 70
+    sources:
+      stages: [VERIFY]
+      canonical: [RQ, AC, TC]
+  handover:
+    projection_type: acceptance_handover
+    audience: CUSTOMER
+    template: "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md"
+    output_path: "docs/20_customer/{target}/08_운영인계서.md"
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 80
+    sources:
+      stages: [KNOWLEDGE_PROMOTION]
+      canonical: [BR, PROC, PGM, DATA]

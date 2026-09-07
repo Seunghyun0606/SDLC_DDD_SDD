@@ -56,7 +56,7 @@ class OpenResolutionContractTest(unittest.TestCase):
             self.assertIn(marker,txt)
 
     def test_workbook_uses_human_first_sections(self):
-        txt=(ROOT/'sdlc/templates/core/open-resolution-workbook.md').read_text(encoding='utf-8')
+        txt=(ROOT/'sdlc/templates/semantic/open-resolution-workbook.md').read_text(encoding='utf-8')
         for marker in ['### OPEN 해소 목록','### 업무 시나리오 확인','### 설계 확인 항목','### 결정 기록','### 내부 자동 관리 정보']:
             self.assertIn(marker,txt)
         header='| OPEN ID | 관련 항목 | 무엇을 확인하거나 결정해야 하는가 | 어떻게 확인할 것인가 | 현재 확인된 내용 또는 제안 | 누가 확인하거나 결정하는가 | 진행 상태 |'

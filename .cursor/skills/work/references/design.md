@@ -43,7 +43,7 @@
 
 ## Output
 - Functional Design
-- Template: `sdlc/templates/core/functional-design.md`
+- Template: `sdlc/templates/semantic/functional-design.md`
 - Completeness Contract: `sdlc/design/contracts/developer-spec-contract.json`
 
 ## Quality Check

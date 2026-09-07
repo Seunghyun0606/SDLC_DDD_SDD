@@ -20,7 +20,7 @@ def _load(name: str, path: Path):
 
 
 APPLY = _load("check_apply", SCRIPT_DIR / "apply_canonical_delta.py")
-CONFIG = _load("check_config", SCRIPT_DIR / "runtime_config.py")
+CONFIG = _load("check_config", SCRIPT_DIR / "project_config.py")
 WORK = _load("check_work", SCRIPT_DIR / "run_work.py")
 
 OPEN_WORDS = {"OPEN", "CHECK_REQUIRED", "CONFLICT", "PARTIAL", "CANDIDATE", "ASSUMED", "INFERRED"}
@@ -85,7 +85,7 @@ def check(root: Path, *, target_id: str | None = None, setup_only: bool = False)
 
     provider_view = agent_runtime.get("provider_config") or {}
     base = {
-        "schema_version": 3,
+        "schema_version": 4,
         "status": "READY" if execution_ready else "SETUP_OR_AGENT_EXECUTION_REQUIRED",
         "setup": {
             "project_config": (root / CONFIG.PROJECT_ENTRY_PATH).is_file(),
@@ -123,8 +123,12 @@ def check(root: Path, *, target_id: str | None = None, setup_only: bool = False)
             "framework": CONFIG.nested(project, "technology", "framework", default=None),
             "database": CONFIG.nested(project, "data", "database", default=None),
             "document_language": CONFIG.nested(project, "documents", "language", default=None),
+            "engineering_profile": CONFIG.nested(project, "documents", "engineering", "profile", default=CONFIG.DEFAULT_ENGINEERING_PROFILE),
+            "customer_profile": CONFIG.nested(project, "documents", "customer", "profile", default=CONFIG.DEFAULT_CUSTOMER_PROFILE),
+            "pm_profile": CONFIG.nested(project, "documents", "pm", "profile", default=CONFIG.DEFAULT_PM_PROFILE),
             "unresolved": CONFIG.nested(project, "unresolved", default=[]),
         },
+        "document_profile_resolution": resolved.get("document_profile_resolution", {}),
         "config_usage": resolved["usage"],
         "git": {**git, "dirty_paths": sorted(WORK.git_changed_paths(root)) if git.get("available") else []},
     }

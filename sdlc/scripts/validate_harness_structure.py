@@ -14,8 +14,8 @@ def validate(root: Path) -> list[str]:
     for rel in c['core_required_files']:
         if not (root/rel).is_file(): errors.append(f'missing core file: {rel}')
 
-    if c.get('candidate_design') != 'v1.9.0-redteam-simplified':
-        errors.append('active package contract must identify v1.9.0-redteam-simplified')
+    if c.get('candidate_design') != 'v1.10.0-projection-separation':
+        errors.append('active package contract must identify v1.10.0-projection-separation')
     for rel in ['sdlc/scripts/change_execution_runtime.py','sdlc/config/change-execution-policy.json']:
         if rel not in core_required:
             errors.append(f'change execution core dependency missing from package: {rel}')
@@ -65,7 +65,7 @@ def validate(root: Path) -> list[str]:
     execution_markers=agent_contract.get('execution_contract_required_markers', [])
 
     refs=root/'.cursor/skills/work/references'
-    templates=root/'sdlc/templates/core'
+    templates=root/'sdlc/templates/semantic'
     for stage,spec in c['stage_contracts'].items():
         rp=refs/spec['reference']; tp=templates/spec['template']
         if not rp.is_file(): errors.append(f'{stage}: missing reference {spec["reference"]}')

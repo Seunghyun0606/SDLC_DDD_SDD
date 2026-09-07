@@ -57,7 +57,7 @@ Technical relation과 Business impact를 분리하고 confidence/status/evidence
 - Business/Functional/Technical Impact
 - Impact graph + Coverage/Coverage Gap
 - Project Adapter result reference(사용한 경우)
-- Template: `sdlc/templates/core/impact-analysis.md`
+- Template: `sdlc/templates/semantic/impact-analysis.md`
 
 ## Quality Check
 - 세 Impact 층이 분리되는가

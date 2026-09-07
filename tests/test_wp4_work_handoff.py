@@ -182,7 +182,7 @@ class WP4WorkHandoffTest(unittest.TestCase):
             self.assertIn("harness.py work --target RQ-001", result["next_command"])
 
     def test_completed_requirement_example_is_not_placeholder_form(self):
-        text = (ROOT / "sdlc/guides/요구사항_정의_완성예시.md").read_text(encoding="utf-8")
+        text = (ROOT / "docs/00_시작/examples/요구사항_정의_완성예시.md").read_text(encoding="utf-8")
         self.assertNotIn("{{", text)
         self.assertIn("REQ_TM_FL001", text)
         self.assertIn("탄력근로제 근무계획 저장", text)

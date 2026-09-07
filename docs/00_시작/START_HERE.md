@@ -1,155 +1,179 @@
-# SDLC Harness 시작하기 — v1.9
+# SDLC Harness 시작하기 — v1.10 Projection Separation
 
-## 1. 문서 목적
+## 1. 3가지만 먼저 이해한다
 
-이 문서는 PM, BA, 설계자, 개발자, 테스트 담당자가 내부 Stage/Canonical JSON을 직접 관리하지 않고 Harness를 사용하는 첫 진입점이다.
+- **Canonical Spec**: 프로젝트 의미와 관계의 원장(Source of Truth)
+- **Engineering Projection**: 개발자/Agent가 구현하기 위해 보는 Living Spec
+- **Customer Projection**: 고객과 협의·제출·인수하기 위한 Human-oriented View
 
-v1.9에서 반드시 구분한다.
-
-- **Change Level**: RQ별 실제 Semantic Work와 Evidence/Review 깊이를 정한다.
-- **Stage**: 내부 taxonomy/debug/re-entry 단위다. 일반 사용자가 모든 Stage를 순서대로 실행하지 않는다.
-- **Template**: 사람에게 보여 줄 문서 구조다.
-- **Tailoring Profile**: 같은 내부 의미를 프로젝트에 맞는 Human Artifact로 Projection한다.
-- **Delivery Profile**: 프로젝트 공통 실행 기본값/호환 정책이다. 개별 RQ의 Semantic Work를 대신 결정하지 않는다.
-
-## 2. 기본 원칙
-
-**문서를 줄이는 것과 분석을 줄이는 것은 다르다.**
-
-L1/L2는 별도 DECOMPOSE/DISCOVERY/IMPACT 문서를 차례로 만들지 않을 수 있지만 Source를 실제로 바꾸기 전 다음 세 가지는 반드시 수행한다.
-
-1. Requirement Intent Decomposition
-2. AS-IS Source Analysis
-3. Impact Check
-
-이 결과는 별도 사람이 작성하는 문서가 아니라 Work Context/Stage Result의 Machine Evidence로 남는다. 실제 Source가 바뀌는 경우에만 이 Gate와 Build/Test 검증이 강제된다.
+Engineering과 Customer는 같은 Canonical을 보지만 **문서 수, 순번, Template, Lifecycle이 서로 독립**이다.
 
 ```mermaid
 flowchart LR
-    R["RQ"] --> I["Intent 분해"] --> S["AS-IS Source 분석"] --> P["Impact 확인"]
-    P --> D["Implementation Delta"] --> C["Source Change"] --> T["Test"] --> X["Reconcile"]
+  R["Requirement / Change"] --> C["Canonical Spec"]
+  C --> E["Engineering Projection\nWork Map / SDD"]
+  C --> U["Customer Projection\nWaterfall Deliverables"]
+  E --> S["Source"] --> T["Test / Verify"]
+  S --> C
+  T --> C
+  C --> U
 ```
 
-## 3. 사용자 기본 흐름
+## 2. 일반 사용자가 하는 일
 
 ```bash
-python sdlc/scripts/harness.py setup --name <project> --mode <GREENFIELD|BROWNFIELD|HYBRID|AUTO>
-python sdlc/scripts/harness.py check --setup
+python sdlc/scripts/harness.py setup --name <project> --mode <AUTO|GREENFIELD|BROWNFIELD|HYBRID>
 python sdlc/scripts/harness.py intake <requirements.xlsx>
-python sdlc/scripts/harness.py check project
 python sdlc/scripts/harness.py work --target RQ-001
 python sdlc/scripts/harness.py check RQ-001
 ```
 
-일반 개발자는 `--stage`, Template 경로, Canonical JSON, Trace/Provenance JSON, Source Hash를 직접 유지하지 않는다.
+설계/Evidence/Program Mapping을 보완할 때는 `/work` 흐름을 사용한다. Requirement, Business Rule, Scope, TO-BE Behavior가 바뀌면 `/change` 흐름을 사용한다.
 
-## 4. 기본 Config
+L1/L2 Fast Path에서 Source를 수정하기 전에도 최소 분석은 생략하지 않는다. Agent는 **Requirement Intent Decomposition → AS-IS Source Analysis → Impact Check** 순서로 의도, 현행 근거, 영향 범위를 확인한 뒤 Source 변경으로 진행한다.
 
-`.sdlc/project.yaml`이 유일한 Human-maintained Config다.
+일반 사용자는 내부 Stage 전체 taxonomy, Canonical JSON Schema, Runtime Python 호출 관계를 배울 필요가 없다.
+
+## 3. 신규 Project Config 기본값
+
+`.sdlc/project.yaml`이 Human-maintained 설정의 기준이다.
 
 ```yaml
-schema_version: 1
-project:
-  name: HRIS
-  mode: BROWNFIELD
-
-delivery:
-  profile: STANDARD
-
-change:
-  level_policy: AUTO
-
 documents:
-  language: ko-KR
-  internal:
-    profile: STANDARD_5
+  engineering:
+    profile: ENGINEERING_SDD_COMPACT
+    manual_edit_policy: TYPO_ONLY
+    freshness: CANONICAL_REVISION
+
   customer:
     profile: CUSTOMER_STANDARD_3
+    scope: RQ
+    freshness: CANONICAL_AND_AS_BUILT
+    final_review:
+      human_editable: true
+
   pm:
     profile: PM_STANDARD
+
   machine:
     visibility: HIDDEN
 ```
 
-신규 프로젝트 기본 문서 Profile은 `STANDARD_5 / CUSTOMER_STANDARD_3 / PM_STANDARD`다. `STAGE_ORIENTED_FULL`은 Legacy/Formal Contract/기존 고객 문서 호환용이지 신규 기본값이 아니다.
+신규 프로젝트에서는 `documents.engineering.profile`을 사용한다. `STANDARD_3`, `STANDARD_5`, `STAGE_ORIENTED_FULL`은 기존 Formal 문서 체계를 유지해야 할 때만 사용하는 Legacy Profile이며 신규 기본값이 아니다.
 
-## 5. L1/L2가 가벼운 이유
+## 4. Engineering 기본 문서
 
-L1/L2는 **분석을 생략해서** 가벼운 것이 아니다. 한 Work Run 안에서 필수 분석을 수행하고 불필요한 사람 문서/검토를 만들지 않기 때문에 가볍다.
+`ENGINEERING_SDD_COMPACT`의 기본 구조는 다음과 같다.
 
-- L1: Intent + AS-IS Source + Impact sanity + Implementation Delta + Test + Reconcile
-- L2: Intent + AS-IS Source + Impact + Implementation Delta + Test + Reconcile
-- 실제 Source가 바뀌지 않은 문서/분석-only DEVELOPMENT run에는 Build/Test를 강제하지 않는다.
-- 실제 Source가 바뀌면 Intent/AS-IS/Impact 근거가 없을 경우 fail-closed 한다.
-- Change Level이 불확실하면 L1로 낙관적으로 낮추지 않고 최소 L2 safety floor를 사용한다.
-
-## 6. Program Spec 정책
-
-신규 Standard는 `17개 항목 전체 필수`가 아니다.
-
-**Core Required 6개 + Risk-triggered Conditional**을 사용한다.
-
-Core:
-
-- 기능/요구 설계 기준
-- 실제 구현 대상
-- Source Evidence
-- 개발 Delta·변경 Source
-- AC/Test
-- OPEN/Guard
-
-Conditional은 Data, Transaction, Concurrency, Interface, Security, Observability, Migration, Architecture 등 실제 Typed Risk가 있을 때만 추가한다. Source에서 재생성 가능한 Query/Table/Symbol Mapping은 Machine-derived가 기본이다.
-
-`LEGACY_FULL_17`만 기존 17개 전체 확인을 유지한다.
-
-## 7. 문서와 Projection
-
-- Internal Artifact는 설계/개발 Review용이다.
-- Customer Artifact는 `A01 요구·업무·기능 합의 / A02 영향·개발범위 / A03 테스트·인수·운영 결과` 3종이 표준이다.
-- Customer 문서는 Canonical/Internal에서 생성되는 View이며 독립 Business Truth가 아니다.
-- Canonical/Internal이 바뀌면 관련 View는 `STALE_VIEW → Regeneration → Human/Customer Review → CURRENT` lifecycle을 따른다.
-- Customer 문서에서 사람이 정책을 바꿔도 Canonical을 자동 overwrite하지 않는다. Decision/Review가 필요하다.
-
-## 8. 역할별 최소 행동
-
-| 역할 | 기본 행동 |
-|---|---|
-| PM | `/check project`에서 blocker/decision/release/stale 상태 확인 |
-| BA/설계자 | Agent가 정리한 업무 의미와 Human Decision만 검토 |
-| 개발자 | `work --target RQ-xxx`; 예상 밖 영향 발견 시 해당 RQ와 Component만 보고 |
-| Tester | AC/Test 결과 검증 |
-| Customer | A01/A02/A03 검토/합의/인수 |
-| Harness 관리자 | Config/Profile/Contract/Runtime 정합성과 예외 관리 |
-
-## 9. 하지 말아야 할 것
-
-- L1이므로 Source 분석을 건너뛰지 않는다.
-- 문서 수 감소를 Semantic Work 감소와 동일시하지 않는다.
-- `STAGE_ORIENTED_FULL`을 신규 프로젝트 기본값으로 쓰지 않는다.
-- 관련 없는 Program Spec Conditional 항목을 N/A로 채우기 위해 작업하지 않는다.
-- Source Observation을 Business Truth로 자동 승격하지 않는다.
-- Customer Projection에서 새로운 업무 사실을 만들지 않는다.
-- CI PASS를 External Agent/Human empirical PASS로 해석하지 않는다.
-
-## 10. Validation
-
-```bash
-python sdlc/scripts/harness.py check --setup
-python sdlc/scripts/harness.py check project
+```text
+docs/10_engineering/<TARGET>/
+├─ 00_work-map.md
+├─ specs/<TARGET>.md
+└─ programs/<TARGET>.md   # 필요할 때만
 ```
 
-Harness 관리자가 Profile을 직접 검증할 때만 실행한다.
+- `00_work-map.md`: RQ → Work → TASK → PGM → Source → AC/TC 연결판
+- `specs/...`: 기능/업무 단위 Living SDD
+- `programs/...`: 실제 Source 구현 Delta가 별도로 필요한 경우만 생성
+
+Engineering Projection은 `semantic_owner: CANONICAL`, `projection_owner: AGENT`, 기본 `manual_edit_policy: TYPO_ONLY`다. 오탈자 외 직접 수정은 Canonical을 자동 변경하지 않으며 Projection 상태에서 경고 대상으로 취급한다.
+
+## 5. Customer 기본 문서
+
+기본 `CUSTOMER_STANDARD_3`:
+
+- A01 요구·업무·기능 합의서
+- A02 영향·개발범위 공유서
+- A03 테스트·인수·운영 결과서
+
+필요하면 `CUSTOMER_WATERFALL_FULL` 8종을 선택할 수 있고, 프로젝트 Custom Profile로 1/3/5/8/13/N종을 정의할 수 있다.
+
+Customer Runtime은 Engineering Profile ID, Engineering 문서 수/순번, expected path를 사용하지 않는다. Customer Profile + Canonical/Semantic metadata/Evidence를 사용한다.
+
+## 6. Semantic Template과 Human Projection은 다르다
+
+```text
+sdlc/templates/semantic/
+= Agent가 Stage에서 어떤 의미와 Evidence를 작성할지 정의
+
+sdlc/templates/engineering/
+= 개발자/설계자용 최종 Projection Template
+
+sdlc/templates/customer/
+= 고객용 Projection Template
+
+sdlc/tailoring/standard/*.yaml
+= 어떤 Template을 어떤 조합으로 사용할지 정하는 Profile
+```
+
+Semantic Template 자체를 고객 제출 문서나 개발자용 최종 문서로 해석하지 않는다.
+
+## 7. `/work`와 `/change` 경계
+
+### `/work`
+
+Canonical Business 의미는 유지하면서 다음을 보완한다.
+
+- AS-IS Source Evidence
+- 상세 설계
+- Program/Source Mapping
+- Development Task
+- AS-BUILT
+- Test/Verification
+
+### `/change`
+
+Canonical 의미가 바뀌는 경우다.
+
+- Requirement 변경
+- Business Rule 변경
+- TO-BE Behavior 변경
+- Scope/정책 변경
+
+`/change` 후 영향 Engineering/Customer Projection은 `STALE_VIEW`가 되고 재생성/재검수가 필요하다.
+
+## 8. Customer Final Review
+
+Customer Projection은 진행 중 `PENDING_REVIEW → CURRENT`로 관리할 수 있다. 최종 제출 직전에는 `FINAL_REVIEW`에서 사람이 문구/표현을 수정할 수 있다.
+
+Final Review 이후 Canonical이 바뀌면 자동 overwrite하지 않는다.
+
+```text
+FINAL_REVIEW + Canonical Change
+→ STALE_VIEW
+→ Human Edit 존재 표시
+→ Regenerate / Re-review 필요
+```
+
+업무 정책 자체를 바꾼 Human Edit은 `/change`로 되돌린다.
+
+## 9. Change Level / Stage / Document는 다르다
+
+- Change Level = 실행 깊이 / Evidence / Review 필요성
+- Stage = 내부 Execution Semantic
+- Projection Profile = 사람에게 어떤 Artifact를 보여줄지
+
+따라서 `Stage = Document`, `Change Level = Document Count`로 해석하지 않는다.
+
+## 10. Framework와 배포 Project의 경계
+
+실제 프로젝트에는 Runtime/Profile/Template/User Guide 등 필요한 자산만 배포하고 Framework Test/Pilot/Design History는 제외한다.
+
+Framework 관리자가 다른 Repository용 Project Scaffold를 만들 때는 **Framework Repository에서만** 다음 도구를 사용한다.
 
 ```bash
-python sdlc/scripts/tailoring_runtime.py validate-profile --profile STANDARD_5
+python sdlc/scripts/build_project_scaffold.py --root . --output <outside-target-directory>
 ```
+
+`build_project_scaffold.py`와 `project-scaffold-contract.json`은 Framework distribution tool이므로 생성된 Project Scaffold 안에는 포함되지 않는다. 배포받은 프로젝트 참여자가 자기 프로젝트 안에서 다시 Scaffold를 생성하는 흐름이 아니다.
 
 ## 11. 다음 문서
 
-- `01_STANDARD_SCAFFOLD_사용가이드.md`
-- `02_PROJECT_설정가이드.md`
-- `03_TAILORING_설정가이드.md`
-- `04_TEMPLATE_및_산출물_가이드.md`
-- `05_이해관계자별_작업가이드.md`
-- `06_CUSTOM_SCAFFOLD_적용가이드.md`
-- `07_BROWNFIELD_SSOT_현행화가이드.md`
+- Input 자료 준비: `11_INPUT_자료_준비가이드.md`
+- 프로젝트 설정: `02_PROJECT_설정가이드.md`
+- Profile/Customizing: `03_TAILORING_설정가이드.md`
+- Semantic/Engineering/Customer Template: `04_TEMPLATE_및_산출물_가이드.md`
+- 이해관계자별 사용: `05_이해관계자별_작업가이드.md`
+- Brownfield SSOT/Source Drift: `07_BROWNFIELD_SSOT_현행화가이드.md`
+
+`01_STANDARD_SCAFFOLD_사용가이드.md`와 `06_CUSTOM_SCAFFOLD_적용가이드.md`는 Framework Repository에 남아 있는 과거 경로 Compatibility Notice이며 신규 Project Scaffold에는 배포되지 않는다.

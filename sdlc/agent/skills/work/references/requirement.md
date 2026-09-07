@@ -41,8 +41,8 @@ Requirement 원문과 External ID를 보존하고 FR을 테스트 가능한 행�
 
 ## Output
 - Canonical RQ/FR/BR Candidate/AC
-- Single Artifact Template: `sdlc/templates/core/requirement.md`
-- `sdlc/templates/core/requirement-analysis.md`는 기존 링크 호환용 Legacy View이며 신규 Workflow에서는 생성하지 않는다.
+- Single Artifact Template: `sdlc/templates/semantic/requirement.md`
+- `sdlc/templates/semantic/requirement-analysis.md`는 기존 링크 호환용 Legacy View이며 신규 Workflow에서는 생성하지 않는다.
 
 ## Quality Check
 - 요구 원문과 External ID가 보존되었는가

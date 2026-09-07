@@ -9,14 +9,14 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
         harness=json.loads((ROOT/'sdlc/design/contracts/harness-package-contract.json').read_text(encoding='utf-8'))
         self.assertTrue(harness['stage_contracts']['DECOMPOSE']['single_requirement_artifact'])
         self.assertEqual('requirement.md',harness['stage_contracts']['DECOMPOSE']['template'])
-        legacy=(ROOT/'sdlc/templates/core/requirement-analysis.md').read_text(encoding='utf-8')
+        legacy=(ROOT/'sdlc/templates/semantic/requirement-analysis.md').read_text(encoding='utf-8')
         self.assertIn('DEPRECATED_COMPATIBILITY_VIEW',legacy)
 
     def test_program_spec_does_not_duplicate_functional_design_semantics(self):
         harness=json.loads((ROOT/'sdlc/design/contracts/harness-package-contract.json').read_text(encoding='utf-8'))
         self.assertTrue(harness['developer_specification']['functional_design_is_semantic_source_of_truth'])
         self.assertTrue(harness['developer_specification']['program_spec_is_implementation_delta'])
-        program=(ROOT/'sdlc/templates/core/program-spec.md').read_text(encoding='utf-8')
+        program=(ROOT/'sdlc/templates/semantic/program-spec.md').read_text(encoding='utf-8')
         self.assertIn('기능 설계 기준점',program)
         self.assertIn('구현 매핑과 차이',program)
         self.assertNotIn('### 업무 정의(6하원칙)',program)
@@ -32,7 +32,7 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
         self.assertEqual(17,rules['legacy_full_item_count'])
         self.assertTrue(rules['change_level_aware'])
         self.assertTrue(rules['machine_derived_fields_are_not_human_maintenance'])
-        program=(ROOT/'sdlc/templates/core/program-spec.md').read_text(encoding='utf-8')
+        program=(ROOT/'sdlc/templates/semantic/program-spec.md').read_text(encoding='utf-8')
         self.assertEqual(1,program.count('### 구현 준비도'))
         self.assertIn('LEGACY_FULL_17',program)
 
@@ -40,7 +40,7 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
         harness=json.loads((ROOT/'sdlc/design/contracts/harness-package-contract.json').read_text(encoding='utf-8'))
         self.assertTrue(harness['open_resolution']['human_view_uses_five_status_values'])
         self.assertTrue(harness['open_resolution']['machine_taxonomy_hidden_by_default'])
-        workbook=(ROOT/'sdlc/templates/core/open-resolution-workbook.md').read_text(encoding='utf-8')
+        workbook=(ROOT/'sdlc/templates/semantic/open-resolution-workbook.md').read_text(encoding='utf-8')
         self.assertIn('미확정',workbook)
         self.assertIn('확인중',workbook)
         self.assertIn('제안',workbook)
@@ -95,7 +95,7 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
         self.assertFalse(harness['source_drift_reverse']['auto_update_business_truth'])
 
     def test_branch_metadata_records_ci_without_self_declaring_production_validation(self):
-        text=(ROOT/'sdlc/design/branch-version.yaml').read_text(encoding='utf-8')
+        text=(ROOT/'framework/design/branch-version.yaml').read_text(encoding='utf-8')
         self.assertIn('status: P0_P1_CI_BEHAVIORAL_AND_INTEGRATION_PASS_EXTERNAL_EMPIRICAL_PENDING',text)
         self.assertIn('verdict: CONTROLLED_PILOT_READY_CI_PASS_EXTERNAL_AGENT_HUMAN_VALIDATION_PENDING',text)
         self.assertIn('self_assessment_is_not_validation: true',text)
