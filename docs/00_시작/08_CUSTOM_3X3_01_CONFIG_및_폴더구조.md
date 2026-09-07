@@ -18,9 +18,11 @@
 
 문서명이 같더라도 두 Layer의 역할은 다르다.
 
-- Internal 문서: `AGENT_DRAFT_HUMAN_REVIEW`, 설계/개발 Review Surface
-- Customer 문서: `GENERATED_VIEW`, 고객 커뮤니케이션 Projection
+- Internal 문서: 설계/개발자가 읽고 검토하는 Human Review Surface
+- Customer 문서: 고객과 합의·확인하기 위한 Generated View
 - Canonical Spec: 두 Layer가 공유하는 의미 기준이며 Template 변경으로 축약하거나 별도 복제하지 않는다.
+
+`AGENT_DRAFT_HUMAN_REVIEW`, `GENERATED_VIEW`, `HUMAN_AUTHORITATIVE`, `MACHINE_DERIVED` 같은 Agent/Framework용 ownership 표기는 Profile·Contract·Runtime metadata에서 관리하고 사람용 Markdown 본문에는 기본 노출하지 않는다.
 
 ## 2. 사용 파일
 
@@ -206,12 +208,30 @@ projection_creates_business_truth = false
 
 1. 고객사 문서명/순서/표현은 변경 가능하다.
 2. Canonical 의미를 고객 Template마다 새로 정의하지 않는다.
-3. `HUMAN_AUTHORITATIVE`, `HUMAN_REVIEWED`, `MACHINE_DERIVED` 책임을 섞지 않는다.
-4. Source에서 재생성 가능한 File/Method/Query/Hash를 사람이 수동 유지하게 만들지 않는다.
-5. 고객 문서는 `GENERATED_VIEW`를 유지한다.
-6. 고객 문서의 업무정책 수정은 Canonical auto-update가 아니라 Decision/Review로 되돌린다.
-7. 화면이 없는 RQ에서는 `HAS_UI` 조건 때문에 화면설계서를 강제로 만들지 않는다.
+3. Agent/Framework ownership 정보는 Profile·Contract·Runtime metadata에서 관리하고 사람용 Markdown에는 표시하지 않는다.
+4. Source에서 재생성 가능한 File/Method/Query/Table/Column/Hash를 사람이 수동 SSOT로 유지하게 만들지 않는다.
+5. 개발자에게 Source Mapping은 보여줄 수 있지만, 가능한 경우 Agent가 Source Evidence에서 생성하고 개발자는 정확성만 Review한다.
+6. 고객 문서는 Generated View 성격을 유지한다.
+7. 고객 문서의 업무정책 수정은 Canonical auto-update가 아니라 Decision/Review로 되돌린다.
+8. 화면이 없는 RQ에서는 `HAS_UI` 조건 때문에 화면설계서를 강제로 만들지 않는다.
+
+사람용 문서에서 숨길 대표 내부정보:
+
+```text
+HUMAN_AUTHORITATIVE
+HUMAN_REVIEWED
+MACHINE_DERIVED
+AGENT_DRAFT_HUMAN_REVIEW
+GENERATED_VIEW
+Canonical revision
+Source Hash
+Provenance/Trace JSON
+Stage Result 내부 구조
+Agent instruction
+```
+
+단, 안전성과 정합성을 위해 이 정보 자체를 삭제하는 것은 아니다. Human Projection에서만 숨기고 Machine Runtime에는 유지한다.
 
 ## 10. 다음 가이드
 
-실제 역할별 실행 순서는 `09_CUSTOM_3X3_02_이해관계자_실행프로세스.md`를 따른다.
+실제 역할별 실행 순서와 설계문서 수정 시 `직접 편집 / work / change` 선택 기준은 `09_CUSTOM_3X3_02_이해관계자_실행프로세스.md`를 따른다.
