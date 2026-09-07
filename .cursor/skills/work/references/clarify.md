@@ -44,8 +44,8 @@
 ## Output
 - 미확정 사항 해소표(Open Resolution Workbook)
 - 필요 시 고객용 Interview/Clarification View
-- Template: `sdlc/templates/core/open-resolution-workbook.md`
-- Customer/Interview View: `sdlc/templates/core/interview-questions.md`
+- Template: `sdlc/templates/semantic/open-resolution-workbook.md`
+- Customer/Interview View: `sdlc/templates/semantic/interview-questions.md`
 
 ## Quality Check
 - 실제 결과에 영향이 없는 사소한 OPEN까지 과도하게 만들지 않았는가

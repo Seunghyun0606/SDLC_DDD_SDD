@@ -39,7 +39,7 @@
 
 ## Output
 - SCN/PROC/BR candidate
-- Template: `sdlc/templates/core/process-analysis.md`
+- Template: `sdlc/templates/semantic/process-analysis.md`
 
 ## Quality Check
 - 6하원칙이 모두 표시되는가

@@ -70,7 +70,7 @@ STANDARD의 구현 준비도에 더해 프로젝트별 Architecture/Governance �
 ## Output
 - PGM implementation spec + TASK candidates
 - Program Readiness result
-- Template: `sdlc/templates/core/program-spec.md`
+- Template: `sdlc/templates/semantic/program-spec.md`
 
 ## Quality Check
 - Functional Design 기준점과 버전이 명확한가
