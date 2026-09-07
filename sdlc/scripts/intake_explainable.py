@@ -3,6 +3,7 @@
 
 The existing intake remains the authoritative parser/Canonical writer. This wrapper adds an RQ
 Extraction Manifest so a PM can understand why each RQ was formed without opening runtime JSON.
+After configured-project intake, the PM RQ worklist is refreshed as a non-authoritative View.
 """
 from __future__ import annotations
 
@@ -142,6 +143,17 @@ def run(
     return {"data": data, "manifests": manifests}
 
 
+def _refresh_project_worklist(root: Path, candidate_only: bool) -> dict[str, Any] | None:
+    if candidate_only or not (root / ".sdlc/project.yaml").is_file():
+        return None
+    try:
+        worklist = _load("explainable_intake_rq_worklist", "rq_worklist.py")
+        return worklist.refresh(root)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        # Management-view refresh must not roll back a successful Canonical intake.
+        return {"status": "RQ_WORKLIST_REFRESH_REQUIRED", "error": str(exc), "next_command": "python sdlc/scripts/harness.py rq-list refresh"}
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Requirement intake with per-RQ extraction explainability.")
     ap.add_argument("xlsx")
@@ -172,6 +184,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         data = result["data"]
         targets = list((data.get("canonical") or {}).get("rq_target_ids") or [])
+        worklist = _refresh_project_worklist(root, args.candidate_only)
         out = {
             "status": "INTAKE_READY_FOR_WORK" if targets else ("INTAKE_CANDIDATE_ONLY" if args.candidate_only else "INTAKE_NO_TARGET"),
             "import_result": data.get("import_result"),
@@ -179,6 +192,7 @@ def main(argv: list[str] | None = None) -> int:
             "first_target": targets[0] if targets else None,
             "rq_extraction_manifest": args.manifest_json,
             "human_manifest_report": args.manifest_report,
+            "rq_worklist": worklist,
             "next_command": f"python sdlc/scripts/harness.py work --target {targets[0]}" if targets else None,
         }
         print(json.dumps(out, ensure_ascii=False, indent=2))
