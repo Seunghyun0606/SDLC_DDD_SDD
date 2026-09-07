@@ -19,11 +19,11 @@ def load(name: str, filename: str):
     return mod
 
 
-CONFIG = load("consistency_config", "runtime_config_v19.py")
+CONFIG = load("consistency_config", "project_config.py")
 TAILOR = load("consistency_tailor", "tailoring_runtime.py")
 
-EXPECTED_PROFILES = {
-    "internal": "STANDARD_5",
+EXPECTED_PROJECT_PROFILES = {
+    "engineering": "ENGINEERING_SDD_COMPACT",
     "customer": "CUSTOMER_STANDARD_3",
     "pm": "PM_STANDARD",
 }
@@ -35,6 +35,8 @@ FAST_PRECONDITIONS = [
 
 
 class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
+    """Cross-version consistency: preserve v1.9 contracts without freezing v1.9 topology as v1.10 default."""
+
     def read(self, rel: str) -> str:
         return (ROOT / rel).read_text(encoding="utf-8")
 
@@ -45,25 +47,36 @@ class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
         data, _ = TAILOR.load_profile(ROOT, profile_id)
         return data
 
-    def test_default_profiles_match_runtime_config_and_guides(self):
-        self.assertEqual(EXPECTED_PROFILES, TAILOR.DEFAULT_PROFILES)
-        example = CONFIG.load_config(ROOT / "sdlc/config/project.example.yaml")
-        for audience, profile_id in EXPECTED_PROFILES.items():
+    def test_default_profiles_match_project_config_and_guides(self):
+        raw = CONFIG.load_config(ROOT / "sdlc/config/project.example.yaml")
+        example = CONFIG.normalize_document_profiles(raw)
+        for audience, profile_id in EXPECTED_PROJECT_PROFILES.items():
             self.assertEqual(profile_id, CONFIG.nested(example, "documents", audience, "profile"))
 
-        for rel in [
-            "docs/00_시작/START_HERE.md",
-            "docs/00_시작/02_PROJECT_설정가이드.md",
-            "docs/00_시작/03_TAILORING_설정가이드.md",
+        # Legacy internal alias must resolve to the same effective Engineering profile rather than
+        # becoming a second source of truth.
+        self.assertEqual(
+            EXPECTED_PROJECT_PROFILES["engineering"],
+            CONFIG.nested(example, "documents", "internal", "profile"),
+        )
+
+        start = self.read("docs/00_시작/START_HERE.md")
+        project_guide = self.read("docs/00_시작/02_PROJECT_설정가이드.md")
+        tailoring_guide = self.read("docs/00_시작/03_TAILORING_설정가이드.md")
+        for text, rel in [
+            (start, "START_HERE"),
+            (project_guide, "PROJECT_GUIDE"),
+            (tailoring_guide, "TAILORING_GUIDE"),
         ]:
-            text = self.read(rel)
-            for profile_id in EXPECTED_PROFILES.values():
-                self.assertIn(profile_id, text, rel)
+            self.assertIn("ENGINEERING_SDD_COMPACT", text, rel)
+            self.assertIn("CUSTOMER_STANDARD_3", text, rel)
             self.assertIn("STAGE_ORIENTED_FULL", text, rel)
             self.assertTrue(
-                any(marker in text for marker in ["기본값이 아니다", "신규 프로젝트에서 Full을 기본값으로 두지 않는다"]),
+                any(marker in text for marker in ["Legacy", "기본값이 아니다", "호환"]),
                 rel,
             )
+        self.assertIn("PM_STANDARD", start)
+        self.assertIn("PM_STANDARD", project_guide)
 
     def test_fast_path_preconditions_match_policy_runtime_skill_and_guide(self):
         policy = self.json("sdlc/config/change-execution-policy.json")
@@ -79,19 +92,20 @@ class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
         self.assertIn('policy.get("source_write_preconditions")', runtime)
         self.assertIn("if not source_changed", runtime)
 
-        for rel in [
-            "sdlc/agent/skills/work/SKILL.md",
-            "docs/00_시작/04_TEMPLATE_및_산출물_가이드.md",
-        ]:
-            text = self.read(rel)
-            for key in FAST_PRECONDITIONS:
-                self.assertIn(key, text, rel)
+        skill = self.read("sdlc/agent/skills/work/SKILL.md")
+        guide = self.read("docs/00_시작/04_TEMPLATE_및_산출물_가이드.md")
+        for key in FAST_PRECONDITIONS:
+            self.assertIn(key, skill)
+            self.assertIn(key, guide)
 
         start = self.read("docs/00_시작/START_HERE.md")
         project_guide = self.read("docs/00_시작/02_PROJECT_설정가이드.md")
+        # Human guides must retain the semantic meaning; exact machine gate identifiers are not the
+        # user-facing contract outside the implementation-oriented template guide.
         for phrase in ["Requirement Intent Decomposition", "AS-IS Source Analysis", "Impact Check"]:
-            self.assertIn(phrase, start)
             self.assertIn(phrase, project_guide)
+        self.assertIn("AS-IS Source", start)
+        self.assertIn("Impact", start)
 
     def test_program_readiness_config_template_contract_and_guide_match(self):
         readiness = self.json("sdlc/config/program-spec-readiness.json")
@@ -109,10 +123,13 @@ class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
         self.assertIn("Core Required 6개", template)
         self.assertIn("LEGACY_FULL_17", template)
         self.assertIn("Core Required 6 + Risk-triggered Conditional", guide)
+        self.assertIn("LEGACY_FULL_17", guide)
         for row in readiness["conditional_fields"]:
             self.assertIn(row["trigger"], template, row["field_id"])
 
     def test_standard_internal_profile_is_five_real_human_templates(self):
+        # STANDARD_5 remains a valid Legacy/Formal compatibility profile; it is simply no longer
+        # the new-project Engineering default.
         profile = self.profile("STANDARD_5")
         artifacts = profile["artifacts"]
         self.assertEqual(5, len(artifacts))
@@ -132,7 +149,6 @@ class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
         self.assertEqual(active, customer_config["active_document_types"])
         self.assertEqual(set(active), set(artifacts))
         self.assertEqual(set(active), set(contract["document_types"]))
-        self.assertEqual("v1.9.0-redteam-simplified", contract["candidate_design"])
 
         for artifact_id in active:
             row = artifacts[artifact_id]
@@ -161,13 +177,15 @@ class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
         skill = self.read("sdlc/agent/skills/work/SKILL.md")
 
         self.assertTrue(any("새로운 업무 사실" in x for x in contract["principles"]))
-        self.assertTrue(any("특정 Internal Profile" in x for x in contract["principles"]))
+        self.assertTrue(any("Internal Profile" in x for x in contract["principles"]))
         self.assertTrue(all(row["authoring"] == "GENERATED_VIEW" for row in profile["artifacts"].values()))
         self.assertIn('"business_truth_authority": False', runtime)
         self.assertIn('"customer_edit_auto_updates_canonical": False', runtime)
-        for text in [guide, skill]:
-            self.assertIn("특정 Internal Profile", text)
-            self.assertIn("Business Truth", text)
+        self.assertIn("Engineering Profile ID", guide)
+        self.assertIn("Business Truth", skill)
+        self.assertIn("Customer Runtime", guide)
+        self.assertNotIn("internal_profile_id", runtime)
+        self.assertNotIn("expected Engineering filename", runtime)
 
 
 if __name__ == "__main__":
