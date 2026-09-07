@@ -66,6 +66,8 @@ documents.engineering.profile
 
 `internal`은 호환 alias이며 신규 프로젝트의 개념 모델은 `engineering`을 사용한다.
 
+`STANDARD_5`와 `STAGE_ORIENTED_FULL`은 기존 고객/계약/단계 지향 문서 구조를 유지해야 할 때 쓰는 Legacy/Formal 호환 Profile이다. 신규 프로젝트 기본값은 아니다.
+
 ## 4. Change Level과 문서 Profile을 섞지 않는다
 
 ```text
@@ -75,6 +77,14 @@ Profile      = Human Artifact topology
 ```
 
 Change Level만 보고 Customer 문서 수를 결정하지 않는다. 문서 수는 Project Config의 Profile이 결정한다.
+
+L1/L2처럼 문서가 적은 Fast Path에서도 실제 Source 변경 전 다음 의미 검증은 생략하지 않는다.
+
+- Requirement Intent Decomposition
+- AS-IS Source Analysis
+- Impact Check
+
+즉, 문서 수를 줄이는 것과 분석을 줄이는 것은 다른 문제다.
 
 ## 5. Customer Scope
 
