@@ -92,27 +92,15 @@ Engineering 5 / Customer 3
 Custom Engineering N / Custom Customer M
 ```
 
-## 4. Legacy `documents.internal.profile`
+## 4. Legacy 설정은 신규 작성에 사용하지 않는다
 
-Migration 기간 동안 다음은 계속 읽는다.
+v1.10 신규 프로젝트에서는 `documents.engineering.profile`만 사용한다.
 
-```yaml
-documents:
-  internal:
-    profile: STANDARD_5
-```
+기존 v1.9 프로젝트에 남아 있는 `documents.internal.profile`은 Runtime이 Migration 호환 입력으로 읽을 수 있지만, 신규 `.sdlc/project.yaml` 예제나 프로젝트 Custom Config에는 다시 작성하지 않는다.
 
-Resolution 우선순위:
+Runtime 호환 Resolution은 기존 프로젝트를 깨뜨리지 않기 위한 내부 동작이며, 사용자 개념 모델과 문서 용어는 `engineering`으로 통일한다.
 
-```text
-documents.engineering.profile
-→ 없으면 documents.internal.profile
-→ 둘 다 없으면 ENGINEERING_SDD_COMPACT
-```
-
-`internal`은 호환 alias이며 신규 프로젝트의 개념 모델은 `engineering`을 사용한다.
-
-`STANDARD_3`, `STANDARD_5`, `STAGE_ORIENTED_FULL`은 기존 문서 체계를 유지해야 할 때 사용하는 Legacy compatibility Profile이며 신규 프로젝트 기본값이 아니다.
+`STANDARD_3`, `STANDARD_5`, `STAGE_ORIENTED_FULL`은 기존 Formal 문서 체계를 유지해야 할 때 사용하는 Legacy compatibility Profile이며 신규 프로젝트 기본값이 아니다.
 
 ## 5. Change Level과 문서 Profile을 섞지 않는다
 
