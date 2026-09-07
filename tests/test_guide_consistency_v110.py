@@ -20,6 +20,7 @@ class GuideConsistencyV110Test(unittest.TestCase):
         for name in [
             "11_INPUT_자료_준비가이드.md",
             "02_PROJECT_설정가이드.md",
+            "02A_PROJECT_CONFIG_옵션_상세가이드.md",
             "03_TAILORING_설정가이드.md",
             "04_TEMPLATE_및_산출물_가이드.md",
             "05_이해관계자별_작업가이드.md",
@@ -32,6 +33,7 @@ class GuideConsistencyV110Test(unittest.TestCase):
         active = [
             "START_HERE.md",
             "02_PROJECT_설정가이드.md",
+            "02A_PROJECT_CONFIG_옵션_상세가이드.md",
             "03_TAILORING_설정가이드.md",
             "04_TEMPLATE_및_산출물_가이드.md",
             "05_이해관계자별_작업가이드.md",
@@ -51,6 +53,61 @@ class GuideConsistencyV110Test(unittest.TestCase):
         self.assertNotIn("documents:\n  internal:", stakeholder)
         self.assertNotIn("BA/설계/개발 → INTERNAL_IT", stakeholder)
 
+    def test_config_reference_covers_runtime_context_and_dead_config_boundaries(self):
+        guide = self.read("docs/00_시작/02A_PROJECT_CONFIG_옵션_상세가이드.md")
+        for key in [
+            "schema_version",
+            "project.mode",
+            "delivery.profile",
+            "change.level_policy",
+            "change.minimum_level",
+            "change.default_level",
+            "change.target_levels",
+            "agent.execution",
+            "agent.provider.command",
+            "technology.build",
+            "technology.test",
+            "source.roots",
+            "source.excludes",
+            "git.protected_branches",
+            "documents.engineering.profile",
+            "documents.customer.profile",
+            "documents.customer.projection_contract",
+            "documents.customer.projection_config",
+            "documents.machine.visibility",
+            "unresolved",
+            "extensions.*",
+        ]:
+            self.assertIn(key, guide, key)
+        for phrase in [
+            "Runtime Switch",
+            "Document / Agent Context",
+            "Dead Config",
+            "source.excludes",
+            "Profile의 `output_path`",
+            "Allowlist-first",
+            "safety_floor",
+            "config-usage.json",
+        ]:
+            self.assertIn(phrase, guide, phrase)
+
+    def test_tailoring_and_template_guides_match_current_projection_visibility(self):
+        tailoring = self.read("docs/00_시작/03_TAILORING_설정가이드.md")
+        template = self.read("docs/00_시작/04_TEMPLATE_및_산출물_가이드.md")
+        self.assertIn("Allowlist-first", tailoring)
+        self.assertIn("PROFILE_PRIMARY_SET", tailoring)
+        self.assertIn("Relation 및 Relation Type", tailoring)
+        self.assertNotIn("2. Canonical Relation", tailoring)
+        self.assertIn("Projection에는 Canonical/Runtime 내부 표현을 최대한 숨긴다", template)
+        self.assertIn("L1/L2는 **분석·작성 깊이를 줄일 수 있지만**", template)
+        self.assertNotIn("L1/L2가 문서 수를 줄여도", template)
+
+    def test_config_reference_is_distributed_in_project_scaffold(self):
+        scaffold = self.json("sdlc/design/contracts/project-scaffold-contract.json")
+        rel = "docs/00_시작/02A_PROJECT_CONFIG_옵션_상세가이드.md"
+        self.assertIn(rel, scaffold["add_required_files"])
+        self.assertIn("Project Config option reference", scaffold["distribution_boundary"]["PROJECT_REQUIRED"])
+
     def test_start_here_does_not_tell_distributed_project_to_self_scaffold(self):
         start = self.read("docs/00_시작/START_HERE.md")
         scaffold = self.json("sdlc/design/contracts/project-scaffold-contract.json")
@@ -64,6 +121,9 @@ class GuideConsistencyV110Test(unittest.TestCase):
         package = self.json("sdlc/design/contracts/harness-package-contract.json")
         self.assertIn("Brownfield Extension", guide)
         self.assertIn("기본 Minimum Executable Core가 아니라", guide)
+        self.assertIn("AUTO 판정은 자동 Downgrade하지 않는다", guide)
+        self.assertIn("set-level", guide)
+        self.assertIn("sdlc/runtime/change-level/<TARGET>.json", guide)
         for rel in [
             "sdlc/scripts/build_reverse_inputs.py",
             "sdlc/scripts/detect_source_drift.py",
