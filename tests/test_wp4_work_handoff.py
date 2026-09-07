@@ -94,7 +94,8 @@ class WP4WorkHandoffTest(unittest.TestCase):
             # created only after Agent work/finalize, not before execution.
             self.assertNotIn("user_handoff", result)
             self.assertTrue(result["plan"]["tailoring"]["stage_preserved"])
-            self.assertIn("Tailoring", result["instruction"])
+            self.assertTrue(result["plan"]["execution_policy"]["required_semantic_work"])
+            self.assertIn("Semantic Work", result["instruction"])
 
     def test_execution_separates_human_document_from_machine_runtime(self):
         with tempfile.TemporaryDirectory() as td:
