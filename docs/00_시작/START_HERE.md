@@ -10,10 +10,10 @@ Engineering과 Customer는 같은 Canonical을 보지만 **문서 수, 순번, T
 
 ```mermaid
 flowchart LR
-  R[Requirement / Change] --> C[Canonical Spec]
-  C --> E[Engineering Projection\nWork Map / SDD]
-  C --> U[Customer Projection\nWaterfall Deliverables]
-  E --> S[Source] --> T[Test / Verify]
+  R["Requirement / Change"] --> C["Canonical Spec"]
+  C --> E["Engineering Projection\nWork Map / SDD"]
+  C --> U["Customer Projection\nWaterfall Deliverables"]
+  E --> S["Source"] --> T["Test / Verify"]
   S --> C
   T --> C
   C --> U
