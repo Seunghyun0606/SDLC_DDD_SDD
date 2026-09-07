@@ -95,7 +95,7 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
         self.assertFalse(harness['source_drift_reverse']['auto_update_business_truth'])
 
     def test_branch_metadata_records_ci_without_self_declaring_production_validation(self):
-        text=(ROOT/'sdlc/design/branch-version.yaml').read_text(encoding='utf-8')
+        text=(ROOT/'framework/design/branch-version.yaml').read_text(encoding='utf-8')
         self.assertIn('status: P0_P1_CI_BEHAVIORAL_AND_INTEGRATION_PASS_EXTERNAL_EMPIRICAL_PENDING',text)
         self.assertIn('verdict: CONTROLLED_PILOT_READY_CI_PASS_EXTERNAL_AGENT_HUMAN_VALIDATION_PENDING',text)
         self.assertIn('self_assessment_is_not_validation: true',text)
