@@ -107,9 +107,9 @@ Source Hash/Locator와 기술 Evidence를 갱신하고 관련 Engineering Projec
 
 Source를 근거로 업무정책을 자동 덮어쓰지 않는다. 이 경우 가장 중요한 결과는 “누가 어떤 판단을 해야 하는가”라는 Human Next Action이다.
 
-## 6. Change Level Escalation
+## 6. Change Level 재평가
 
-개발 중 다음이 발견되면 기존 Change Level을 자동 유지하지 않는다.
+개발 중 다음이 발견되면 기존 Change Level을 무조건 유지하지 않는다.
 
 - 예상하지 못한 다중 Module/Program 영향
 - Interface/Batch 변경
@@ -117,7 +117,29 @@ Source를 근거로 업무정책을 자동 덮어쓰지 않는다. 이 경우 �
 - Security/Privacy 영향
 - Architecture boundary 변경
 
-이때 L1/L2가 L3~L5로 상향될 수 있다. 자동 Downgrade는 하지 않는다.
+이때 L1/L2가 L3~L5로 자동 또는 명시적으로 상향될 수 있다. **AUTO 판정은 자동 Downgrade하지 않는다.**
+
+반대로 조사 결과 영향이 실제로 작다고 확인되면 사람이 이유를 명시해 Level을 낮출 수 있다.
+
+```bash
+python sdlc/scripts/change_execution_runtime.py set-level \
+  --target RQ-001 --level L2 \
+  --reason "Source 확인 결과 단일 조회조건만 영향"
+```
+
+Evidence `safety_floor`보다 낮추려면 별도 `--accept-below-safety-floor`가 필요하다. Level을 바꾼 뒤에는 같은 Target으로 `/work`를 다시 실행해 Semantic Work와 required Projection을 재계산한다.
+
+```bash
+python sdlc/scripts/harness.py work --target RQ-001
+```
+
+Level 판정/승격/강등 이력은 다음에 남는다.
+
+```text
+sdlc/runtime/change-level/<TARGET>.json
+```
+
+Project Config에서 Level 정책을 사전 설정하는 방법은 `02_PROJECT_설정가이드.md`, 모든 Config 옵션의 상세 역할은 `02A_PROJECT_CONFIG_옵션_상세가이드.md`를 본다.
 
 ## 7. Human Control Plane에서 보는 항목
 
@@ -128,7 +150,7 @@ python sdlc/scripts/harness.py check RQ-001
 
 PM/Reviewer가 확인할 핵심은 다음이다.
 
-- Change Level과 판정 사유
+- Change Level과 판정/Override 사유
 - Impact Coverage
 - Source Drift / Technical Gap
 - 사람 결정 필요 항목
@@ -145,6 +167,8 @@ PM/Reviewer가 확인할 핵심은 다음이다.
 - 고객용 Generated Projection에서 직접 수정한 문장을 SSOT로 간주하지 않는다.
 - `STALE_VIEW`를 승인 기준 문서로 사용하지 않는다.
 - Brownfield Extension이 없는 프로젝트에서 Reverse Script가 있다고 가정하지 않는다.
+- AUTO Level이 내려갔다고 기존 Effective Level이 자동 강등됐다고 가정하지 않는다.
+- 사람의 명시적 Level 변경 후 `/work` 재실행 없이 문서가 새 깊이로 갱신됐다고 가정하지 않는다.
 
 ## 9. 완료 기준
 
@@ -153,4 +177,5 @@ PM/Reviewer가 확인할 핵심은 다음이다.
 - Reconciliation에 Human Authority가 필요한 경우 Next Action으로 노출된다.
 - Source/Canonical 변경 후 관련 Engineering/Customer Projection freshness를 재검증한다.
 - 변경 영향이 커지면 Change Level Escalation Evidence가 남는다.
+- 명시적 Level 강등은 이유/이력이 남고 Safety Floor를 우회하지 않는다.
 - Optional Brownfield Extension의 설치 여부와 기본 Harness 기능을 혼동하지 않는다.
