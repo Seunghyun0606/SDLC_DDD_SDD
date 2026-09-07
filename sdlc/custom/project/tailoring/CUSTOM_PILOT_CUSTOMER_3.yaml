@@ -1,0 +1,39 @@
+schema_version: 1
+profile_id: CUSTOM_PILOT_CUSTOMER_3
+name: "Custom Pilot 고객 3종"
+output_root: "docs/20_고객"
+
+artifacts:
+  solution_agreement:
+    audience: CUSTOMER
+    template: "sdlc/custom/project/templates/pilot-3x3/customer/A01_업무정의서.md"
+    output_path: "docs/20_고객/{target}/A01_업무정의서.md"
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 10
+    sources:
+      stages: [DECOMPOSE, CLARIFY, PROCESS, DISCOVERY, IMPACT]
+      canonical: [RQ, FR, BR, PROC, AC]
+
+  delivery_scope:
+    audience: CUSTOMER
+    template: "sdlc/custom/project/templates/pilot-3x3/customer/A02_화면설계서.md"
+    output_path: "docs/20_고객/{target}/A02_화면설계서.md"
+    condition: HAS_UI
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 20
+    sources:
+      stages: [DESIGN]
+      canonical: [RQ, FR, PROC, PGM, AC]
+
+  acceptance_handover:
+    audience: CUSTOMER
+    template: "sdlc/custom/project/templates/pilot-3x3/customer/A03_프로그램설계서.md"
+    output_path: "docs/20_고객/{target}/A03_프로그램설계서.md"
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 30
+    sources:
+      stages: [PROGRAM, DEVELOPMENT, TEST, VERIFY, KNOWLEDGE_PROMOTION]
+      canonical: [RQ, PGM, DATA, AC, TC]
