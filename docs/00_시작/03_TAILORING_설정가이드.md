@@ -2,44 +2,47 @@
 
 ## 1. 문서 목적
 
-프로젝트마다 3종/5종/Full 등 서로 다른 Human Artifact 체계를 사용하면서도 Core Stage, Canonical, Evidence, Guard를 유지하는 방법을 설명한다.
+프로젝트마다 3종/5종/호환 Full 등 서로 다른 Human Artifact 체계를 사용하면서도 같은 Canonical/Evidence/Guard를 유지하는 방법을 설명한다.
 
 핵심 식은 다음이다.
 
-> `Stage / Canonical / Evidence → Tailoring Profile → Human Artifact`
+> `Semantic Work / Canonical / Evidence → Tailoring Profile → Human Artifact`
 
-Template만 추가하는 것은 Tailoring 완료가 아니다.
+Tailoring은 **문서 Projection 정책**이다. Change Level의 필수 분석을 삭제하는 정책이 아니다.
 
-## 2. 언제 읽는가
+## 2. 반드시 구분할 것
 
-- 고객사 표준 문서 수/이름/구성이 Harness 기본과 다를 때
-- 여러 Stage 정보를 하나의 문서로 합치려 할 때
-- 하나의 Stage 정보를 내부/PM/고객 여러 문서로 나눌 때
-- Change Level에 따라 조건부 문서를 만들 때
+- **Change Level**: 실제로 해야 하는 Semantic Work/Evidence/Review를 결정한다.
+- **Tailoring Profile**: 그 결과를 어떤 사람용 문서로 보여줄지 결정한다.
+- **Template**: 각 문서의 Section 구조를 정의한다.
 
-## 3. 선행조건
-
-- 프로젝트의 실제 산출물 목록과 Audience를 알고 있어야 한다.
-- 각 문서가 어떤 업무 의미/기술 Evidence를 필요로 하는지 식별한다.
-- Core Stage를 고객 문서 이름으로 바꾸지 않는다는 원칙에 동의한다.
-
-## 4. Tailoring 판단 흐름
+따라서 L1/L2에서 별도 Stage 문서를 줄여도 `Intent → AS-IS Source → Impact` 분석은 남는다. 반대로 STANDARD_3를 선택했다고 내부 Semantic Work가 3단계가 되는 것도 아니다.
 
 ```mermaid
-flowchart TD
-    A["고객/프로젝트 산출물 목록"] --> B["Audience 분류"]
-    B --> C["각 문서가 필요한 의미 식별"]
-    C --> D["Stage / Canonical / Evidence Source Mapping"]
-    D --> E["Template 연결"]
-    E --> F["Required / Conditional 정책"]
-    F --> G["Profile Validation"]
-    G --> H["Sample RQ Pilot"]
-    H --> I{"의미 손실 또는 중복?"}
-    I -- "Yes" --> D
-    I -- "No" --> J["Project Config에서 Profile ID 선택"]
+flowchart LR
+    C["Change Level"] --> W["Required Semantic Work"]
+    W --> E["Evidence/Review"]
+    E --> T["Tailoring"]
+    T --> A["Human Artifact"]
 ```
 
-## 5. 실제 Tailoring Profile 예제
+## 3. 기본 Profile
+
+신규 프로젝트 기본값:
+
+- Internal: `STANDARD_5`
+- Customer: `CUSTOMER_STANDARD_3`
+- PM: `PM_STANDARD`
+
+`STAGE_ORIENTED_FULL`은 다음 경우에만 사용한다.
+
+- Legacy compatibility
+- Formal contract compatibility
+- Existing customer document mapping
+
+신규 프로젝트에서 Full을 기본값으로 두지 않는다.
+
+## 4. 실제 Profile 예제
 
 ```yaml
 schema_version: 1
@@ -80,7 +83,7 @@ artifacts:
       stages: [DESIGN, PROGRAM, DEVELOPMENT, TEST]
 ```
 
-Project Config에는 복잡한 Mapping을 복사하지 않는다.
+Project Config에는 Mapping 전체를 복사하지 않는다.
 
 ```yaml
 documents:
@@ -88,29 +91,29 @@ documents:
     profile: HRIS_UNIT_3
 ```
 
-## 6. 3종 / 5종 / Full 차이
+## 5. 3종 / 5종 / Compatibility Full
 
-| Profile | 사람에게 보이는 구조 | 내부 Stage | 적합한 상황 |
-|---|---|---|---|
-| `STANDARD_3` | 업무정의/상세설계/화면설계 | 유지 | Unit 단위 문서가 강한 프로젝트 |
-| `STANDARD_5` | 요구/Process/기능·화면/Program/Test·인수 | 유지 | 일반 SI/SM |
-| `STAGE_ORIENTED_FULL` | Stage별 세분 문서 | 유지 | 기존 상세 산출물 체계와 호환 필요 |
+| Profile | 사람에게 보이는 구조 | 용도 |
+|---|---|---|
+| `STANDARD_3` | 업무정의/상세설계/화면설계 | Unit 중심 프로젝트 |
+| `STANDARD_5` | 요구/Process/기능·화면/Program/Test·인수 | 일반 SI/SM 기본 |
+| `STAGE_ORIENTED_FULL` | Stage별 세분 문서 | 기존 계약/고객 양식 호환 |
 
-문서 수가 달라도 Canonical 의미와 Guard는 동일해야 한다.
+문서 수가 달라도 Business Truth, Source Evidence, Guard의 의미는 같아야 한다.
 
-## 7. Mapping 패턴
+## 6. Mapping 패턴
 
 ### N Stage → 1 Artifact
 
-업무정의서가 `DECOMPOSE + CLARIFY + PROCESS + IMPACT`를 받을 수 있다. Stage를 합친 것이 아니라 여러 Stage의 의미를 한 문서에 Projection한 것이다.
+여러 내부 의미를 하나의 사람 문서에 Projection한다. 이것은 Stage를 하나로 합치는 것이 아니다.
 
 ### 1 Stage → N Artifact
 
-`DESIGN`이 상세설계서와 조건부 화면설계서 모두에 영향을 줄 수 있다. Runtime은 Primary 작업면과 영향을 받는 Projection 목록을 구분한다.
+하나의 내부 의미가 Internal/PM/Customer 여러 View를 stale하게 만들 수 있다.
 
 ### Conditional Artifact
 
-지원 조건 예:
+대표 조건:
 
 - `HAS_UI`
 - `HAS_INTERFACE`
@@ -119,24 +122,19 @@ documents:
 - `HAS_SECURITY_IMPACT`
 - `CHANGE_LEVEL_AT_LEAST_L4`
 
-## 8. 역할별 Action
+조건이 없다고 빈 문서나 N/A 문서를 생성하지 않는다.
 
-- 프로젝트 PM: 계약상 필요한 문서 목록과 승인 주체 정의
-- BA/설계 리드: Stage 의미가 어느 문서 Section으로 들어갈지 결정
-- 개발 리드: Program/Source/Test Evidence가 빠지지 않는지 확인
-- 고객 담당자: CUSTOMER 문서가 Internal/Canonical에서 파생되는지 확인
-- Harness 관리자: Profile Schema/Template 존재/Stage 이름/조건식 검증
+## 7. Customer Projection
 
-## 9. 자주 틀리는 부분
+`CUSTOMER_STANDARD_3`의 active View는 다음 세 가지다.
 
-- 문서 이름과 Stage 이름을 1:1로 만들 필요가 없다.
-- 3종 문서를 위해 Core Stage를 3개로 줄이지 않는다.
-- 고객사마다 `run_work.py`를 복사하지 않는다.
-- Template 안에 Business Truth를 하드코딩하지 않는다.
-- CUSTOMER Profile이 독립 Source가 되지 않게 한다.
-- L4라고 무조건 문서를 더 많이 만드는 식으로 묶지 않는다.
+- `solution_agreement` → A01 요구·업무·기능 합의
+- `delivery_scope` → A02 영향·개발범위 공유
+- `acceptance_handover` → A03 테스트·인수·운영 결과
 
-## 10. Validation 방법
+모두 `GENERATED_VIEW`이며 독립 Business Truth가 아니다. Internal/Canonical 변경 시 `STALE_VIEW`가 되고 재생성/Review 후 `CURRENT`가 된다.
+
+## 8. Validation
 
 ```bash
 python sdlc/scripts/tailoring_runtime.py validate-profile --profile STANDARD_3
@@ -144,16 +142,10 @@ python sdlc/scripts/tailoring_runtime.py validate-profile --profile STANDARD_5
 python sdlc/scripts/tailoring_runtime.py validate-profile --profile STAGE_ORIENTED_FULL
 ```
 
-특정 RQ/Stage의 실제 Mapping:
+완료 기준:
 
-```bash
-python sdlc/scripts/tailoring_runtime.py resolve --target RQ-001 --stage DESIGN
-```
-
-완료 기준은 “Template 파일이 존재함”이 아니라 다음이다.
-
-1. 모든 Artifact가 Stage Source를 가진다.
-2. Template이 실제 존재한다.
-3. Audience가 명시된다.
-4. 조건부 문서 정책이 테스트된다.
-5. 3/5/Full에서 동일 Canonical 의미가 손실되지 않는다.
+1. Profile Template 경로가 실제 존재한다.
+2. Audience/authoring이 명확하다.
+3. Customer Profile의 artifact ID/template/stage 범위가 Customer Document Contract와 모순되지 않는다.
+4. Tailoring이 Change Level Semantic Work를 우회하지 않는다.
+5. 신규 기본값은 `STANDARD_5`, Full은 compatibility로 유지된다.
