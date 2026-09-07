@@ -256,6 +256,16 @@ Change Level이 Human Artifact topology를 소유하지 않는다.
 
 내부 Runtime에서는 Fast Path의 의미 Gate를 Machine 상태로 확인한다. 일반 사용자가 내부 상수를 직접 관리할 필요는 없다.
 
+Harness 관리자 참고용 Machine Gate 이름은 다음과 같다.
+
+```text
+INTENT_DECOMPOSED
+AS_IS_SOURCE_ANALYZED
+IMPACT_CHECKED
+```
+
+이 값들은 Runtime 검증 상태이며 Engineering/Customer Projection의 사람 입력 항목이나 표시용 상태 코드가 아니다.
+
 ## 9. 생성 문서를 수정하고 싶을 때
 
 ### 9.1 기본 원칙
