@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Human-first /work adapter with Change-Level semantic execution policy.
 
-The legacy Stage taxonomy remains available for debug/re-entry, but an ordinary ``work --target``
-request no longer defaults to a fixed Stage chain. Typed Change Level selects the minimum semantic
-work/evidence/review plan first, then a compatible internal entry Stage and Human Artifact.
+Change Level selects execution depth. Stage selects an internal focus. Tailoring Profile owns Human
+Artifact topology. PROFILE_PRIMARY_SET therefore exposes and enforces all required Engineering
+projections even when one document is the current primary editing surface.
 """
 from __future__ import annotations
 
@@ -40,31 +40,24 @@ SUCCESS = {"APPLIED", "IDEMPOTENT", "NO_CHANGE", "DRY_RUN_VALIDATED"}
 
 def _value(args: list[str], option: str, default: str | None = None) -> str | None:
     for i, value in enumerate(args):
-        if value == option and i + 1 < len(args):
-            return args[i + 1]
-        if value.startswith(option + "="):
-            return value.split("=", 1)[1]
+        if value == option and i + 1 < len(args): return args[i + 1]
+        if value.startswith(option + "="): return value.split("=", 1)[1]
     return default
 
 
-def _flag(args: list[str], option: str) -> bool:
-    return option in args
+def _flag(args: list[str], option: str) -> bool: return option in args
 
 
 def _capture_main(fn, args: list[str]) -> tuple[int, dict[str, Any]]:
     captured = StringIO()
-    with redirect_stdout(captured):
-        code = fn(args)
+    with redirect_stdout(captured): code = fn(args)
     raw = captured.getvalue().strip()
-    try:
-        result = json.loads(raw)
-    except json.JSONDecodeError:
-        result = {"status": "DELEGATE_OUTPUT_INVALID", "raw": raw}
+    try: result = json.loads(raw)
+    except json.JSONDecodeError: result = {"status": "DELEGATE_OUTPUT_INVALID", "raw": raw}
     return code, result
 
 
-def _safe_path(root: Path, raw: str) -> tuple[Path, str]:
-    return WORK.safe_repo_path(root, raw)
+def _safe_path(root: Path, raw: str) -> tuple[Path, str]: return WORK.safe_repo_path(root, raw)
 
 
 def _semantic_context(root: Path, target: str) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
@@ -77,16 +70,10 @@ def _semantic_context(root: Path, target: str) -> tuple[dict[str, Any], dict[str
 
 
 def _route_default_stage(args: list[str], root: Path) -> tuple[list[str], dict[str, Any] | None, dict[str, Any] | None]:
-    """Use Change Level policy only when the user did not explicitly request a Stage.
-
-    Explicit ``--stage`` remains a compatibility/debug/re-entry mechanism and is never silently
-    rewritten. Ordinary work requests get a policy-selected entry stage; L1/L2 enter DEVELOPMENT.
-    """
     if _value(args, "--stage") is not None or _value(args, "--artifact") is not None:
         return list(args), None, None
     target = _value(args, "--target")
-    if not target:
-        return list(args), None, None
+    if not target: return list(args), None, None
     _, _, change, execution = _semantic_context(root, target)
     routed = list(args) + ["--stage", str(execution["default_entry_stage"])]
     return routed, change, execution
@@ -94,13 +81,16 @@ def _route_default_stage(args: list[str], root: Path) -> tuple[list[str], dict[s
 
 def _legacy_tailoring_fallback(project: dict[str, Any], target: str, stage: str, effective: str, error: str) -> dict[str, Any]:
     return {
-        "schema_version": 1,
+        "schema_version": 3,
         "target_id": target,
         "stage": stage,
         "change_level": effective,
         "profiles": TAILOR.project_profile_ids(project),
         "profile_paths": {},
+        "projection_topologies": {"internal": "STAGE_MATCHED", "customer": "STAGE_MATCHED", "pm": "STAGE_MATCHED"},
         "primary_work_artifact": None,
+        "required_engineering_artifacts": [],
+        "projection_update_set": [],
         "affected_artifacts": {"internal": [], "customer": [], "pm": []},
         "machine_evidence_visibility": str(CONFIG.nested(project, "documents", "machine", "visibility", default="HIDDEN") or "HIDDEN").upper(),
         "stage_preserved": True,
@@ -116,13 +106,32 @@ def _profile_plan(root: Path, target: str, stage: str) -> tuple[dict[str, Any], 
     try:
         tailoring = TAILOR.resolve_artifacts(root, project=project, target=target, stage=stage, change_level=effective, store=store)
     except ValueError as exc:
-        if "tailoring profile not found:" not in str(exc):
-            raise
+        if "tailoring profile not found:" not in str(exc): raise
         tailoring = _legacy_tailoring_fallback(project, target, stage, effective, str(exc))
     execution = dict(execution)
     execution["selected_internal_stage"] = stage
     execution["explicit_stage_outside_normal_allowlist"] = stage not in set(execution.get("stage_allowlist") or [])
     return change, execution, tailoring
+
+
+def _prepare_required_projection_targets(root: Path, tailoring: dict[str, Any]) -> list[dict[str, Any]]:
+    prepared: list[dict[str, Any]] = []
+    for row in tailoring.get("required_engineering_artifacts") or []:
+        if not isinstance(row, dict): continue
+        output_raw = str(row.get("output_path") or "")
+        template_raw = str(row.get("template") or "")
+        if not output_raw or not template_raw: continue
+        output_abs, output_rel = _safe_path(root, output_raw)
+        template_abs, template_rel = _safe_path(root, template_raw)
+        if not template_abs.is_file(): raise ValueError(f"tailoring template not found: {template_rel}")
+        output_abs.parent.mkdir(parents=True, exist_ok=True)
+        prepared.append({
+            "id": row.get("id"), "output_path": output_rel, "template": template_rel,
+            "projection_detail": row.get("projection_detail"), "stage_match": bool(row.get("stage_match")),
+            "projection_required": bool(row.get("projection_required")),
+            "existed_at_plan_time": output_abs.is_file(), "hash_at_plan_time": WORK._hash_file(output_abs),
+        })
+    return prepared
 
 
 def _apply_plan_tailoring(root: Path, plan: dict[str, Any], *, explicit_artifact: bool, explicit_stage: bool) -> dict[str, Any]:
@@ -132,10 +141,13 @@ def _apply_plan_tailoring(root: Path, plan: dict[str, Any], *, explicit_artifact
     plan["change_level"] = change
     plan["execution_policy"] = execution
     plan["tailoring"] = tailoring
+    plan["required_projection_targets"] = _prepare_required_projection_targets(root, tailoring)
     plan["human_control_plane"] = {
         "runtime_stage_hidden_by_default": True,
         "semantic_work_is_primary_execution_contract": True,
-        "primary_artifact_is_human_review_surface": True,
+        "change_level_does_not_own_projection_topology": True,
+        "primary_artifact_is_current_edit_focus_not_only_required_document": True,
+        "profile_required_projections_must_be_refreshed": bool(plan["required_projection_targets"]),
         "machine_evidence_visibility": tailoring.get("machine_evidence_visibility", "HIDDEN"),
         "customer_projection_creates_business_truth": False,
         "explicit_stage_override": explicit_stage,
@@ -154,10 +166,8 @@ def _apply_plan_tailoring(root: Path, plan: dict[str, Any], *, explicit_artifact
             artifact_abs, artifact_rel = _safe_path(root, artifact_rel)
             artifact_abs.parent.mkdir(parents=True, exist_ok=True)
             plan["selection"].update({
-                "artifact_path": artifact_rel,
-                "artifact_reason": "USER_DOCUMENT_DEFAULT_COMPATIBILITY_FALLBACK",
-                "artifact_override": False,
-                "artifact_existed_at_plan_time": artifact_abs.is_file(),
+                "artifact_path": artifact_rel, "artifact_reason": "USER_DOCUMENT_DEFAULT_COMPATIBILITY_FALLBACK",
+                "artifact_override": False, "artifact_existed_at_plan_time": artifact_abs.is_file(),
                 "artifact_hash_at_plan_time": WORK._hash_file(artifact_abs),
             })
         return plan
@@ -166,54 +176,57 @@ def _apply_plan_tailoring(root: Path, plan: dict[str, Any], *, explicit_artifact
     template_raw = str(primary.get("template") or "")
     artifact_abs, artifact_rel = _safe_path(root, artifact_raw)
     template_abs, template_rel = _safe_path(root, template_raw)
-    if not template_abs.is_file():
-        raise ValueError(f"tailoring template not found: {template_rel}")
+    if not template_abs.is_file(): raise ValueError(f"tailoring template not found: {template_rel}")
     artifact_abs.parent.mkdir(parents=True, exist_ok=True)
     plan["selection"].update({
-        "artifact_path": artifact_rel,
-        "artifact_reason": "TAILORING_PROFILE_PRIMARY",
-        "artifact_override": False,
-        "artifact_existed_at_plan_time": artifact_abs.is_file(),
-        "artifact_hash_at_plan_time": WORK._hash_file(artifact_abs),
-        "template_path": template_rel,
-        "tailoring_artifact_id": primary.get("id"),
-        "tailoring_profile_id": primary.get("profile_id"),
-        "audience": primary.get("audience"),
+        "artifact_path": artifact_rel, "artifact_reason": "TAILORING_PROFILE_PRIMARY", "artifact_override": False,
+        "artifact_existed_at_plan_time": artifact_abs.is_file(), "artifact_hash_at_plan_time": WORK._hash_file(artifact_abs),
+        "template_path": template_rel, "tailoring_artifact_id": primary.get("id"),
+        "tailoring_profile_id": primary.get("profile_id"), "audience": primary.get("audience"),
+        "projection_detail": primary.get("projection_detail"),
     })
     return plan
 
 
-def _record_projection(root: Path, plan: dict[str, Any]) -> str | None:
-    """Register Engineering/PM projection through the shared lifecycle runtime.
-
-    No second metadata schema is written here. Hash/manual-edit/staleness semantics therefore stay
-    identical to Customer projections and are owned by ``projection_lifecycle_runtime.py``.
-    """
+def _projection_rows(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    rows = (plan.get("tailoring") or {}).get("required_engineering_artifacts") or []
+    if rows: return [dict(x) for x in rows if isinstance(x, dict)]
     primary = (plan.get("tailoring") or {}).get("primary_work_artifact")
-    if not isinstance(primary, dict):
-        return None
-    artifact_path = str((plan.get("selection") or {}).get("artifact_path") or "")
-    if not artifact_path or not (root / artifact_path).is_file():
-        return None
+    return [dict(primary)] if isinstance(primary, dict) else []
+
+
+def _record_projections(root: Path, plan: dict[str, Any]) -> dict[str, Any]:
     target = str((plan.get("target") or {}).get("id") or "")
-    artifact_id = str(primary.get("id") or "artifact")
     resolved = CONFIG.resolve_runtime_config(root)
     project = resolved.get("project") or {}
-    profile_policy = primary.get("manual_edit_policy")
     configured_policy = CONFIG.nested(project, "documents", "engineering", "manual_edit_policy", default="TYPO_ONLY")
-    row = LIFE.register_generated(
-        root,
-        target=target,
-        artifact_id=artifact_id,
-        artifact_path=artifact_path,
-        audience=str(primary.get("audience") or "INTERNAL_IT"),
-        profile_id=str(primary.get("profile_id") or "") or None,
-        manual_edit_policy=str(profile_policy or configured_policy or "TYPO_ONLY"),
-    )
-    path = LIFE.metadata_path(root, target, artifact_id)
-    if not row.get("generated_content_hash"):
-        raise ValueError(f"projection content hash was not recorded: {artifact_path}")
-    return path.relative_to(root).as_posix()
+    metadata: list[str] = []
+    missing: list[str] = []
+    for row in _projection_rows(plan):
+        artifact_path = str(row.get("output_path") or "")
+        if not artifact_path or not (root / artifact_path).is_file():
+            missing.append(artifact_path or str(row.get("id") or "artifact")); continue
+        artifact_id = str(row.get("id") or "artifact")
+        registered = LIFE.register_generated(
+            root, target=target, artifact_id=artifact_id, artifact_path=artifact_path,
+            audience=str(row.get("audience") or "INTERNAL_IT"), profile_id=str(row.get("profile_id") or "") or None,
+            manual_edit_policy=str(row.get("manual_edit_policy") or configured_policy or "TYPO_ONLY"),
+        )
+        if not registered.get("generated_content_hash"):
+            raise ValueError(f"projection content hash was not recorded: {artifact_path}")
+        metadata.append(LIFE.metadata_path(root, target, artifact_id).relative_to(root).as_posix())
+    return {"metadata": metadata, "missing_required": missing, "complete": not missing}
+
+
+def _apply_projection_completion(result: dict[str, Any], registration: dict[str, Any]) -> None:
+    result["projection_metadata_set"] = registration["metadata"]
+    result["required_projection_missing"] = registration["missing_required"]
+    result["required_projection_complete"] = registration["complete"]
+    if registration["metadata"]: result["projection_metadata"] = registration["metadata"][0]
+    if not registration["complete"]:
+        result["semantic_status"] = result.get("status")
+        result["status"] = "PROJECTION_REFRESH_REQUIRED"
+        result["next_action"] = "update every tailoring.required_engineering_artifacts document from current Canonical/Evidence, then finalize again"
 
 
 def _interactive(args: list[str], root: Path, *, explicit_stage: bool) -> int:
@@ -223,17 +236,14 @@ def _interactive(args: list[str], root: Path, *, explicit_stage: bool) -> int:
         if result.get("status") in SUCCESS:
             context_raw = result.get("context_path")
             if context_raw:
-                context_path = Path(str(context_raw))
-                if not context_path.is_absolute():
-                    context_path = root / context_path
+                context_path = Path(str(context_raw)); context_path = context_path if context_path.is_absolute() else root / context_path
                 if context_path.is_file():
                     context = WORK.load_json(context_path)
                     plan = {k: v for k, v in context.items() if k not in {"interactive_baseline", "interactive_output"}}
-                    metadata = _record_projection(root, plan)
-                    if metadata:
-                        result["projection_metadata"] = metadata
-        print(json.dumps(result, ensure_ascii=False, indent=2))
-        return code
+                    registration = _record_projections(root, plan)
+                    _apply_projection_completion(result, registration)
+                    if not registration["complete"]: code = 3
+        print(json.dumps(result, ensure_ascii=False, indent=2)); return code
 
     code, result = _capture_main(INTERACTIVE.main, args)
     if result.get("status") not in {"INTERACTIVE_HANDOFF_READY", "PLAN_READY"}:
@@ -241,8 +251,7 @@ def _interactive(args: list[str], root: Path, *, explicit_stage: bool) -> int:
     context_raw = result.get("context_path")
     if not context_raw:
         print(json.dumps(result, ensure_ascii=False, indent=2)); return code
-    context_path = Path(str(context_raw))
-    if not context_path.is_absolute(): context_path = root / context_path
+    context_path = Path(str(context_raw)); context_path = context_path if context_path.is_absolute() else root / context_path
     context = WORK.load_json(context_path)
     plan = {k: v for k, v in context.items() if k not in {"interactive_baseline", "interactive_output"}}
     plan = _apply_plan_tailoring(root, plan, explicit_artifact=explicit_artifact, explicit_stage=explicit_stage)
@@ -258,14 +267,13 @@ def _interactive(args: list[str], root: Path, *, explicit_stage: bool) -> int:
         "change_level": plan.get("change_level"),
         "execution_policy": plan.get("execution_policy"),
         "tailoring": plan.get("tailoring"),
-        "instruction": "Change Level이 선택한 최소 Semantic Work만 수행한다. 개발자는 Canonical/Trace/Provenance/Source Hash/Stage Result를 수동 유지하지 않는다.",
+        "required_projection_targets": plan.get("required_projection_targets"),
+        "instruction": "Change Level은 Semantic/Evidence/Review 깊이만 결정한다. primary_work_artifact를 중심으로 작업하되 tailoring.required_engineering_artifacts를 모두 projection_detail 수준으로 갱신한다. Canonical/Trace/Provenance/Source Hash/Stage Result는 사람이 수동 유지하지 않는다.",
     })
     plan_out = _value(args, "--plan-out")
     if plan_out:
-        plan_path = Path(str(plan_out)); plan_path = plan_path if plan_path.is_absolute() else root / plan_path
-        WORK.save_json(plan_path, plan)
-    print(json.dumps(result, ensure_ascii=False, indent=2))
-    return code
+        plan_path = Path(str(plan_out)); plan_path = plan_path if plan_path.is_absolute() else root / plan_path; WORK.save_json(plan_path, plan)
+    print(json.dumps(result, ensure_ascii=False, indent=2)); return code
 
 
 def _headless(args: list[str], root: Path, *, explicit_stage: bool) -> int:
@@ -297,13 +305,12 @@ def _headless(args: list[str], root: Path, *, explicit_stage: bool) -> int:
             if not run_dir.is_absolute(): run_dir = root / run_dir
             result = WORK.execute_plan(root, plan, provider_config=provider, run_dir=run_dir, store_path=store_path, dry_run=ns.dry_run, source_profile=source_profile)
             if result.get("status") in SUCCESS:
-                metadata = _record_projection(root, plan)
-                if metadata: result["projection_metadata"] = metadata
-                try:
-                    handoff = HANDOFF.build_user_handoff(ns.target, plan, result); handoff_path = HANDOFF._write_handoff(root, ns.target, plan, result, handoff)
-                    result["user_handoff"] = handoff; result["handoff_path"] = handoff_path.relative_to(root).as_posix()
-                except Exception as exc:
-                    result["handoff_warning"] = str(exc)
+                registration = _record_projections(root, plan); _apply_projection_completion(result, registration)
+                if registration["complete"]:
+                    try:
+                        handoff = HANDOFF.build_user_handoff(ns.target, plan, result); handoff_path = HANDOFF._write_handoff(root, ns.target, plan, result, handoff)
+                        result["user_handoff"] = handoff; result["handoff_path"] = handoff_path.relative_to(root).as_posix()
+                    except Exception as exc: result["handoff_warning"] = str(exc)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         result = {"status": "TAILORED_WORK_FAILED", "error": str(exc), "canonical_applied": False}
     if ns.result_out:
@@ -322,12 +329,10 @@ def main(argv: list[str] | None = None) -> int:
         legacy_path = root / CONFIG.DEFAULT_PROVIDER_CONFIG_PATH
         legacy = CONFIG.load_config(legacy_path) if legacy_path.is_file() else {}
         runtime = CONFIG.resolve_agent_runtime(resolved.get("project") or {}, legacy_provider=legacy)
-        if runtime.get("execution_mode") == "INTERACTIVE":
-            return _interactive(args, root, explicit_stage=explicit_stage)
+        if runtime.get("execution_mode") == "INTERACTIVE": return _interactive(args, root, explicit_stage=explicit_stage)
         return _headless(args, root, explicit_stage=explicit_stage)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
-        print(json.dumps({"status": "TAILORED_WORK_FAILED", "error": str(exc)}, ensure_ascii=False, indent=2))
-        return 2
+        print(json.dumps({"status": "TAILORED_WORK_FAILED", "error": str(exc)}, ensure_ascii=False, indent=2)); return 2
 
 
 if __name__ == "__main__":
