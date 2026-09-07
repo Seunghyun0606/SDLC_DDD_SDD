@@ -1,121 +1,119 @@
-# Work Unit SDD
+# 기능 / 업무 상세설계
 
-> 이 문서는 Canonical Spec 기반의 개발/설계용 Living Spec입니다. 사람이 일반 제출문서처럼 별도 원장으로 유지하지 않습니다. 오탈자만 직접 수정하고, 설계/Evidence 보완은 `/work`, 업무 의미·정책·TO-BE 동작 변경은 `/change`로 처리합니다.
+> 이 문서는 개발자가 변경 목적, 현행 동작, 목표 동작, 구현 범위와 검증 조건을 한 화면에서 확인하기 위한 개발·설계 문서입니다.
 >
-> 이 문서는 **업무 의미를 다시 만드는 문서가 아니라**, 개발자가 변경 경계·근거·목표 동작·검증 조건을 한 화면에서 확인하는 Engineering Projection입니다.
+> 사용자는 이 Template의 빈칸을 처음부터 작성하지 않습니다. Agent가 현재 요구, 기존 문서와 실제 소스를 먼저 분석해 초안을 만들고, 사람 판단이 필요한 내용만 질문합니다.
 >
-> **사용자는 이 Template의 빈칸을 처음부터 작성하지 않습니다.** Agent가 Canonical/Source를 먼저 분석해 초안을 만들고, 사람 결정이 필요한 Gap만 질문합니다. 수정 요청은 `이 문서의 [BLOCK:WU-BUSINESS-RULE]을 ...로 바꿔줘`처럼 Block을 지정합니다. 즉시 답할 수 없는 질문은 Agent가 `WU-HITL-QUEUE`에 남기고 `Recheck At`에서 다시 확인합니다.
-
-**Block ID:** `WU-INTENT`, `WU-ASIS`, `WU-TOBE`, `WU-BUSINESS-RULE`, `WU-IMPACT`, `WU-MAPPING`, `WU-TECH-IMPACT`, `WU-DEV-CONTRACT`, `WU-AC-TEST`, `WU-OPEN-GUARD`, `WU-HITL-QUEUE`, `WU-ASBUILT`, `WU-VERIFY`
+> 수정이 필요하면 절 제목이나 내용을 자연어로 지정하면 됩니다. Agent는 문서 안의 숨겨진 Block 식별자를 사용해 정확한 위치를 찾아 반영합니다. 즉시 답할 수 없는 질문은 `추가 확인이 필요한 사항`에 남겨 적절한 시점에 다시 확인합니다.
 
 <!-- BLOCK_ID: WU-INTENT -->
-## 1. 목적 / Functional Intent
-- 이 Work Unit이 해결하는 문제:
+## 1. 목적과 기능 경계
+- 이 기능이 해결하는 문제:
 - 사용자가 얻어야 하는 결과:
-- 유지 조건:
+- 반드시 유지해야 하는 조건:
 
-### 1.1 Work Unit 경계
-| 포함 범위 | 제외 범위 | 분할/결합 근거 | 독립 검증·배포 관점 |
+### 1.1 포함 / 제외 범위
+| 포함 범위 | 제외 범위 | 함께 묶거나 나눈 이유 | 독립 검증·배포 관점 |
 |---|---|---|---|
 |  |  |  |  |
 
-> Work Unit은 화면 수나 CRUD 수가 아니라 함께 변경·검증되는 업무/기능 경계를 기준으로 한다. 구현 Program은 1:N일 수 있다.
+> 기능 단위는 화면 수나 CRUD 수가 아니라 함께 변경·검증되는 업무/기능 경계를 기준으로 합니다. 실제 구현은 여러 프로그램으로 나뉠 수 있습니다.
 
 <!-- BLOCK_ID: WU-ASIS -->
-## 2. AS-IS Evidence / Coverage Gap
-| Evidence | 구분 | 위치/식별자 | 관찰 내용 | 신뢰/상태 |
+## 2. 현행 확인 내용 / 미확인 영역
+### 2.1 현재 확인된 동작과 근거
+| 근거 | 구분 | 위치 / 식별자 | 확인 내용 | 상태 |
 |---|---|---|---|---|
-|  | Source/DB/UI/문서/Runtime |  |  | OBSERVED / CONFIRMED / OPEN |
+|  | 소스 / DB / 화면 / 문서 / 실행결과 |  |  | 현행 확인 / 확정 / 확인 필요 |
 
-### Coverage Gap
-| Gap | 미확인 영역 | 왜 미확인인가 | 확인 방법 | 영향 | 상태 |
-|---|---|---|---|---|---|
-|  |  |  |  |  | OPEN / CLOSED |
+### 2.2 아직 확인하지 못한 영역
+| 미확인 영역 | 미확인 이유 | 확인 방법 | 변경 영향 | 상태 |
+|---|---|---|---|---|
+|  |  |  |  | 확인 필요 / 해소 |
 
-> 확인하지 못한 영역을 임의로 `영향 없음`으로 바꾸지 않는다.
+> 확인하지 못한 영역을 임의로 `영향 없음`으로 처리하지 않습니다.
 
 <!-- BLOCK_ID: WU-TOBE -->
-## 3. TO-BE Spec
+## 3. 개선 후 동작
 - 목표 동작:
 
-### 3.1 Scenario / Flow
-| Scenario | Actor / Trigger | 정상 흐름·종료조건 | 대안/예외 | 관련 Rule/AC |
+### 3.1 주요 시나리오 / 흐름
+| 시나리오 | 사용자 / 시작 조건 | 정상 흐름·종료조건 | 대안·예외 | 관련 업무 규칙 / 인수 기준 |
 |---|---|---|---|---|
 |  |  |  |  |  |
 
-- Validation / 상태 / 예외:
+- 입력 검증 / 상태 / 예외 처리:
 - 변경되지 않아야 하는 동작:
 
 <!-- BLOCK_ID: WU-BUSINESS-RULE -->
-## 4. Business Rule / Decision
-| Rule/Decision | 상태 | 근거 | 영향 |
+## 4. 업무 규칙 / 결정사항
+| 업무 규칙 / 결정 | 상태 | 근거 / 결정자 | 영향 |
 |---|---|---|---|
-|  | CONFIRMED / OPEN |  |  |
+|  | 확정 / 확인 필요 |  |  |
 
 <!-- BLOCK_ID: WU-IMPACT -->
 ## 5. 영향 범위
-- Business / Functional Impact:
-- Technical Impact:
+- 업무 / 기능 영향:
+- 기술 영향:
 - 변경되지 않는 범위:
 
 <!-- BLOCK_ID: WU-MAPPING -->
-## 6. 구현 Mapping
-| TASK | PGM | Source/Symbol | 변경 유형 | 책임/역할 | 상태 |
-|---|---|---|---|---|---|
-|  |  |  | ADD/MOD/DEL/VERIFY |  |  |
+## 6. 구현 연결
+| 개발 작업 | 프로그램 / 소스 | 변경 유형 | 역할 / 책임 | 상태 |
+|---|---|---|---|---|
+|  |  | 추가 / 수정 / 삭제 / 확인 |  |  |
 
 <!-- BLOCK_ID: WU-TECH-IMPACT -->
-## 7. Program / Data / Interface / Authorization 영향
-- Program 책임 변화:
-- Data/Table/Column 영향:
-- Interface/Batch/Transaction 영향:
-- 인증/인가·Data Scope 영향:
+## 7. 프로그램 / 데이터 / 연계 / 권한 영향
+- 프로그램 책임 변화:
+- 데이터 / 테이블 / 컬럼 영향:
+- 인터페이스 / 배치 / 트랜잭션 영향:
+- 인증·인가 / 데이터 접근 범위 영향:
 
 <!-- BLOCK_ID: WU-DEV-CONTRACT -->
-## 8. Development Contract
+## 8. 개발 지침
 - 구현 순서:
-- 적용 표준 / Deviation:
-- Source Write 허용 경계:
+- 적용 표준 / 예외:
+- 수정 허용 범위:
 - 예상 밖 영향 발견 시 처리:
 
 <!-- BLOCK_ID: WU-AC-TEST -->
-## 9. AC / Test
-| AC | TC/Scenario | Evidence | Result |
+## 9. 인수 기준 / 테스트
+| 인수 기준 | 테스트 / 시나리오 | 확인 근거 | 결과 |
 |---|---|---|---|
 |  |  |  |  |
 
 <!-- BLOCK_ID: WU-OPEN-GUARD -->
-## 10. Open / Risk / Execution Guard
-| Open/Risk | 분류 | Source Write 영향 | 담당 | 상태 |
+## 10. 확인 필요사항 / 위험
+| 확인 또는 위험 사항 | 개발 영향 | 제한되는 작업 | 담당 | 상태 |
 |---|---|---|---|---|
-|  | SOURCE_BLOCK / ITERATE / ALERT |  |  | OPEN / CLOSED |
+|  | 개발 전 확인 필요 / 진행 가능·추후 보완 / 주의사항 |  |  | 확인 필요 / 해소 |
 
-### 분류 원칙
-- `SOURCE_BLOCK`: 대상/범위, 핵심 동작, 보안·권한, 데이터 변경, 위험한 실행 조건이 불확실해 **해당 Source Write만 제한**한다. Stage 전체 진행을 자동 중단시키는 의미는 아니다.
-- `ITERATE`: 대상과 큰 방향은 확정되어 구현 후 세부 조정이 가능한 항목이다.
-- `ALERT`: 추적은 필요하지만 현재 구현을 제한하지 않는 확인/주의 항목이다.
-- Framework의 Hard Block 정책과 충돌하면 Hard Block이 우선한다.
+### 개발 영향 구분
+- **개발 전 확인 필요**: 대상/범위, 핵심 동작, 보안·권한, 데이터 변경 등 잘못 구현할 위험이 있어 관련 작업 전에 반드시 확인합니다.
+- **진행 가능·추후 보완**: 대상과 큰 방향은 확정되어 구현을 진행하면서 세부 조정할 수 있습니다.
+- **주의사항**: 현재 작업을 막지는 않지만 추적이 필요한 항목입니다.
 
 <!-- BLOCK_ID: WU-HITL-QUEUE -->
-## 11. Human Decision Queue
+## 11. 추가 확인이 필요한 사항
 
-> 사용자가 바로 답하지 못한 HITL 질문을 Agent가 기록·갱신합니다. 같은 질문은 단계가 바뀌어도 같은 Queue ID를 유지하며, `Recheck At`에 도달하면 다음 Agent가 신규 질문보다 먼저 재확인합니다. 이 표는 Canonical SSOT가 아니라 OPEN/DEFERRED의 Human View입니다.
+> 사용자가 지금 바로 답하지 못한 질문을 Agent가 정리합니다. 사용자가 이 표를 직접 관리할 필요는 없습니다. 다시 확인할 시점이 되면 다음 Agent가 신규 질문보다 먼저 확인합니다.
 
-| Queue ID | 관련 Block | 질문 / 결정 필요사항 | 현재 확인값 / 제안 | 결정 담당 | 영향 분류 | Recheck At | 상태 |
-|---|---|---|---|---|---|---|---|
-|  |  |  |  |  | SOURCE_BLOCK / ITERATE / ALERT | NEXT_SEMANTIC_WORK / BEFORE_SOURCE_WRITE / BEFORE_TEST / BEFORE_VERIFY / Stage | 미확정 / 확인중 / 제안 / 보류 / 확정 |
+| 확인 필요사항 | 현재 확인 내용 / 제안 | 확인 담당 | 개발 영향 | 다시 확인할 시점 | 상태 |
+|---|---|---|---|---|---|
+|  |  |  | 개발 전 확인 필요 / 진행 가능·추후 보완 / 주의사항 | 다음 작업 / 상세설계 / 개발 시작 전 / 테스트 전 / 최종 검증 전 | 확인 필요 / 확인중 / 제안 / 보류 / 확정 |
 
 <!-- BLOCK_ID: WU-ASBUILT -->
-## 12. AS-BUILT
+## 12. 실제 구현 결과
 - 실제 구현 결과:
 - 설계 대비 차이:
-- Source-derived 기술 정보:
+- 실제 소스에서 추가로 확인된 기술 정보:
 - 추가로 발견된 영향:
 
 <!-- BLOCK_ID: WU-VERIFY -->
-## 13. Verification
-- Build/Test/Regression:
-- Canonical과 Source Drift 여부:
-- Coverage Gap 해소 여부:
-- 미해결 Human Decision Queue와 다음 Recheck At:
+## 13. 최종 검증
+- Build / Test / Regression 결과:
+- 설계와 실제 소스의 일치 여부:
+- 미확인 영역 해소 여부:
+- 남은 확인사항과 다시 확인할 시점:
 - 최종 판정 및 남은 작업:
