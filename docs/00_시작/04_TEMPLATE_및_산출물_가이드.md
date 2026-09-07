@@ -66,10 +66,13 @@ Profile에 따라 `docs/20_customer/...` 같은 Custom output root를 사용할 
 ```text
 /work 또는 /change
 → Agent가 Canonical / 기존 문서 / Source / DB / Config를 먼저 조사
+→ 이전 단계 Human Decision Queue 확인
 → Agent가 문서 초안을 먼저 작성
 → 사람의 업무 판단이 필요한 Gap만 질문
-→ 사용자는 질문에 자연어로 답변
-→ Agent가 답변을 Canonical Delta / Provenance에 반영
+→ 사용자는 질문에 자연어로 답변하거나 "지금은 확인 불가"라고 보류
+→ 즉시 답변: Agent가 Canonical Delta / Provenance에 반영
+→ 보류: Agent가 문서 Queue + Canonical OPEN/DEFERRED로 carry-forward
+→ 다음 Semantic Work에서 Recheck At이 도래한 Queue를 신규 질문보다 먼저 재확인
 → Engineering / Customer Projection 갱신
 ```
 
@@ -86,6 +89,49 @@ Agent가 Source에서 확인할 수 있는 다음 정보는 사람에게 질문�
 사람에게 묻는 것은 정책, 범위, 예외, 권한 의미, Acceptance 같은 Business Authority가 필요한 내용이다.
 
 질문 상세 규칙은 `sdlc/agent/skills/work/references/hitl.md`를 사용한다.
+
+### 3.1 바로 답할 수 없으면 "모른다"고 답해도 된다
+
+사용자가 모든 질문을 그 자리에서 확정할 필요는 없다.
+
+예:
+
+```text
+이건 지금 확정하기 어려워. 고객에게 확인한 뒤 다음 DESIGN 단계에서 다시 물어봐줘.
+```
+
+```text
+Procedure 변경 여부는 아직 DBA 확인 전이야. Source 수정 전에 다시 확인해줘.
+```
+
+이 경우 Agent는 임의의 값을 채우지 않고 해당 질문을 **Human Decision Queue**에 남긴다.
+
+Queue에는 다음 정보가 보인다.
+
+| 항목 | 의미 |
+|---|---|
+| Queue ID | 원래 HITL Question ID. 다음 단계에서도 같은 ID 유지 |
+| 관련 Block | 최종 답변이 반영될 문서 의미 단위 |
+| 질문 / 결정 필요사항 | 나중에 사람이 답할 내용 |
+| 현재 확인값 / 제안 | Source/Evidence와 Agent Proposal. 확정값 아님 |
+| 결정 담당 | 실제 Authority |
+| 영향 분류 | `SOURCE_BLOCK / ITERATE / ALERT` |
+| Recheck At | 다음 재확인 시점 또는 `BEFORE_SOURCE_WRITE / BEFORE_TEST / BEFORE_VERIFY` |
+| 상태 | 미확정 / 확인중 / 제안 / 보류 / 확정 |
+
+Queue 표는 Agent가 관리한다. 사용자가 문서 표를 직접 편집할 필요는 없다.
+
+### 3.2 다음 단계에서는 Queue부터 확인한다
+
+Agent는 새 질문을 만들기 전에 현재 단계에 `Recheck At`이 도래한 Queue를 먼저 확인한다.
+
+1. 이미 다른 Evidence로 해소됐으면 Agent가 스스로 갱신한다.
+2. Source/DB/Config로 확인 가능하면 사람에게 다시 묻기 전에 조사한다.
+3. 여전히 Business Authority가 필요하면 기존 Queue ID로 다시 질문한다.
+4. 아직 답이 없으면 동일 Queue의 상태와 다음 `Recheck At`만 갱신한다.
+5. 답을 받으면 Canonical Decision/Provenance를 반영하고 Queue를 확정 처리한다.
+
+`SOURCE_BLOCK`은 관련 Source/Action만 제한하며 전체 프로젝트를 자동 중단시키지 않는다. `ITERATE`와 `ALERT`는 가능한 설계/분석을 계속하면서 다음 경계로 이월할 수 있다.
 
 ## 4. Work Map
 
@@ -111,6 +157,7 @@ RQ → FR/FTR → WP → Design TASK / Development TASK / Test TASK
 - `WM-MAPPING`
 - `WM-AC-TEST`
 - `WM-OPEN`
+- `WM-HITL-QUEUE`
 
 ## 5. Work Unit SDD
 
@@ -132,6 +179,7 @@ CHANGE → IMPACT → SPEC → PLAN → IMPLEMENT → VERIFY → AS-BUILT
 - `WU-DEV-CONTRACT`
 - `WU-AC-TEST`
 - `WU-OPEN-GUARD`
+- `WU-HITL-QUEUE`
 - `WU-ASBUILT`
 - `WU-VERIFY`
 
@@ -158,6 +206,7 @@ Source에서 다시 생성 가능한 Query/Table/Symbol/Locator/Hash는 Machine-
 - `PGM-SOURCE-BOUNDARY`
 - `PGM-TRACE`
 - `PGM-READINESS`
+- `PGM-HITL-QUEUE`
 - `PGM-ASBUILT`
 
 ## 7. Fast Path에서도 없어지지 않는 분석
@@ -189,8 +238,8 @@ PGM-ATT-0016 Program Spec의 [BLOCK:PGM-SOURCE-EVIDENCE]를
 ```
 
 ```text
-HRIS 작업지시서의 [BLOCK:B-PROC]에서
-P_PY_CALC_MAIN의 OUT Parameter 영향만 다시 확인해줘.
+RQ-0042 Work Unit SDD의 [BLOCK:WU-HITL-QUEUE]에서
+HITL-RQ-0042-02는 아직 확정 못하니 PROGRAM 단계에서 다시 확인해줘.
 ```
 
 ### 8.2 Agent Routing
@@ -199,6 +248,8 @@ P_PY_CALC_MAIN의 OUT Parameter 영향만 다시 확인해줘.
 |---|---|
 | Requirement / Business Rule / TO-BE / AC / Scope 의미 변경 | `/change` → Canonical Delta |
 | AS-IS / Source / DB / Mapping / AS-BUILT 재분석 | `/work` → Evidence/Provenance 갱신 |
+| Queue 상태 / Recheck At 조정 | Queue metadata 갱신. 실제 Business Truth 변화 없음 |
+| Queue 질문에 실제 업무 답변 제공 | 답변의 의미에 따라 `/change` 또는 `/work` → Canonical/Provenance 반영 |
 | 오탈자 / 문장 표현 / 레이아웃 | Projection-only → Canonical 변화 없음 |
 
 Block을 지정하지 않아도 문맥이 명확하면 Agent가 자신이 해석한 Block을 먼저 알려주고 진행한다. 여러 후보가 있을 때만 Block 선택을 짧게 질문한다.
@@ -225,6 +276,8 @@ Agent가 diff를 읽고 `Semantic Change / Evidence Refresh / Projection-only`�
 
 `CUSTOMER_WATERFALL_FULL`은 같은 semantic contract를 8개의 제출 단위로 split한 예시다. 프로젝트는 Custom Profile로 다른 N종을 만들 수 있다.
 
+고객이 즉시 답하지 못한 Business Decision도 관련 Customer/Engineering Review Surface의 Queue로 연결하고 Canonical OPEN/DEFERRED로 유지한다. 다음 합의/설계 경계에서 다시 확인한다.
+
 ## 10. Customer Final Human Edit
 
 진행 중 문서는 Agent-generated View다. Final Submission 직전 `FINAL_REVIEW`에서 표현/레이아웃을 사람이 다듬을 수 있다.
@@ -249,6 +302,7 @@ Engineering Template:
 - TASK/PGM/Source/AC/TC가 연결되는가?
 - AS-BUILT/Verification을 담을 수 있는가?
 - Stable Block ID가 있어 사용자가 특정 의미 단위를 지시할 수 있는가?
+- Human Decision Queue가 있어 즉시 답하지 못한 질문을 다음 단계까지 carry-forward할 수 있는가?
 - 사용자가 빈칸을 직접 작성하는 Form처럼 보이지 않는가?
 
 Customer Template:
@@ -257,6 +311,7 @@ Customer Template:
 - 내부 ID/Hash/Confidence가 불필요하게 노출되지 않는가?
 - 어떤 `projection_type`의 의미를 표현하는가?
 - Engineering 파일명/순번에 의존하지 않는가?
+- 고객 미결정 사항이 대화에서 유실되지 않고 OPEN/Queue로 round-trip 되는가?
 
 Tailoring Profile:
 
