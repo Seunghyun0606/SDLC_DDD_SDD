@@ -1,8 +1,8 @@
 {
-  "schema_version": 2,
-  "contract_id": "PROJECT_SCAFFOLD_V110_PROJECTION_SEPARATION",
+  "schema_version": 3,
+  "contract_id": "PROJECT_SCAFFOLD_V110_ASSET_BOUNDARY",
   "source_package_contract": "sdlc/design/contracts/harness-package-contract.json",
-  "purpose": "Framework 개발/검증 자산을 제외하고 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide만 기존 Scaffold 경로로 배포한다.",
+  "purpose": "Framework 개발/검증/배포도구를 제외하고 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide만 기존 Scaffold 경로로 배포한다.",
   "base_file_set": "core_required_files",
   "add_required_files": [
     "sdlc/scripts/project_config.py",
@@ -24,12 +24,15 @@
     "sdlc/tailoring/standard/CUSTOMER_WATERFALL_FULL.yaml",
     "sdlc/scripts/architecture_check.py",
     "sdlc/config/architecture-rules.json",
-    "sdlc/scripts/sdlc_metrics_runtime.py",
-    "sdlc/design/contracts/project-scaffold-contract.json",
-    "sdlc/scripts/build_project_scaffold.py"
+    "sdlc/scripts/sdlc_metrics_runtime.py"
   ],
-  "exclude_exact": ["sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml"],
+  "exclude_exact": [
+    "sdlc/tailoring/standard/STANDARD_3.yaml",
+    "sdlc/tailoring/standard/STANDARD_5.yaml",
+    "sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml"
+  ],
   "exclude_prefixes": [
+    "framework/",
     "docs/00_관리/",
     "docs/99_파일럿/",
     "sdlc/design/baselines/",
@@ -38,6 +41,8 @@
     "sdlc/design/validations/",
     "sdlc/validation/",
     "sdlc/samples/",
+    "sdlc/guides/",
+    "sdlc/templates/tailoring/standard/",
     "tests/",
     ".github/"
   ],
@@ -45,10 +50,24 @@
   "default_internal_profile": "ENGINEERING_SDD_COMPACT",
   "default_customer_profile": "CUSTOMER_STANDARD_3",
   "legacy_compatibility_package": [
+    "sdlc/tailoring/standard/STANDARD_3.yaml",
+    "sdlc/tailoring/standard/STANDARD_5.yaml",
     "sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml",
-    "sdlc/tailoring/standard/STANDARD_5.yaml"
+    "sdlc/templates/tailoring/standard/01_업무정의서.md",
+    "sdlc/templates/tailoring/standard/02_상세설계서.md",
+    "sdlc/templates/tailoring/standard/03_화면설계서.md",
+    "sdlc/templates/tailoring/standard/11_요구사항정의서.md",
+    "sdlc/templates/tailoring/standard/12_업무프로세스설계서.md",
+    "sdlc/templates/tailoring/standard/13_기능화면설계서.md",
+    "sdlc/templates/tailoring/standard/14_프로그램설계서.md",
+    "sdlc/templates/tailoring/standard/15_테스트인수결과서.md"
+  ],
+  "framework_distribution_tools": [
+    "sdlc/scripts/build_project_scaffold.py",
+    "sdlc/design/contracts/project-scaffold-contract.json"
   ],
   "legacy_policy": {
+    "STANDARD_3_new_project_default": false,
     "STANDARD_5_new_project_default": false,
     "STAGE_ORIENTED_FULL_new_project_default": false,
     "documents_internal_profile_is_compatibility_alias": true,
@@ -57,14 +76,53 @@
     "CUSTOMER_WATERFALL_FULL_active": true
   },
   "distribution_boundary": {
-    "FRAMEWORK_ONLY": ["docs/00_관리/", "docs/99_파일럿/", "tests/", "sdlc/samples/", "sdlc/design/baselines/", "sdlc/design/validations/", ".github/"],
-    "PROJECT_REQUIRED": [".sdlc/project.yaml", "Harness runtime", "selected standard profiles/templates", "runtime contracts", "user skills"],
-    "PROJECT_OPTIONAL": ["legacy compatibility profiles", "project custom profiles/templates", "brownfield adapters/extensions"],
-    "GENERATED": ["sdlc/runtime/", "sdlc/canonical/store.json", "docs/10_engineering/", "docs/20_customer/"]
+    "FRAMEWORK_ONLY": [
+      "framework/",
+      "docs/00_관리/",
+      "docs/99_파일럿/",
+      "tests/",
+      "sdlc/samples/",
+      "sdlc/guides/",
+      "sdlc/design/baselines/",
+      "sdlc/design/candidates/",
+      "sdlc/design/reviews/",
+      "sdlc/design/validations/",
+      ".github/",
+      "framework distribution tools"
+    ],
+    "PROJECT_REQUIRED": [
+      ".sdlc/project.yaml",
+      "Harness runtime",
+      "ENGINEERING_SDD_COMPACT",
+      "CUSTOMER_STANDARD_3",
+      "selected active templates",
+      "runtime contracts",
+      "user skills"
+    ],
+    "PROJECT_OPTIONAL": [
+      "CUSTOMER_WATERFALL_FULL",
+      "project custom profiles/templates",
+      "brownfield adapters/extensions",
+      "enhancement extensions"
+    ],
+    "COMPATIBILITY_ONLY": [
+      "STANDARD_3",
+      "STANDARD_5",
+      "STAGE_ORIENTED_FULL",
+      "legacy tailoring templates"
+    ],
+    "GENERATED": [
+      "sdlc/runtime/",
+      "sdlc/canonical/store.json",
+      "docs/00_관리/",
+      "docs/10_engineering/",
+      "docs/20_customer/"
+    ]
   },
   "framework_source_is_single_source_of_truth": true,
   "project_kit_is_distribution_selection_not_source_copy": true,
   "framework_dev_assets_remain_in_framework_repository": true,
   "project_scaffold_must_exclude_framework_dev_assets": true,
+  "project_scaffold_does_not_self_distribute": true,
   "all_default_harness_commands_have_declared_runtime_dependencies": true
 }
