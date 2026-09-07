@@ -3,9 +3,11 @@
 이 파일은 특정 IDE나 Agent 제품에 종속되지 않는 `/work`의 **Core Source of Truth**다.
 Cursor, Codex, Claude Code 또는 다른 Repository-capable Agent는 Host Adapter에서 이 파일을 읽고 동일한 Runtime/Guard를 사용한다.
 
-핵심 원칙은 두 가지다.
+핵심 원칙은 세 가지다.
 
-> **Change Level이 요구하는 Semantic Work만 수행하고, 필요한 Evidence와 선택된 Human Artifact만 읽는다. Stage 전체 체계를 기본 Context로 로드하지 않는다.**
+> **Change Level은 Semantic Work / Evidence / Human Review의 깊이를 결정한다. Human Artifact 개수나 Profile topology를 결정하지 않는다.**
+>
+> **현재 Stage와 가장 잘 맞는 `primary_work_artifact`를 편집 초점으로 사용하되, Profile이 `PROFILE_PRIMARY_SET`이면 `required_engineering_artifacts` 전체를 필요한 깊이로 갱신한다.**
 >
 > **사람에게 Template을 작성시키지 않는다. Agent가 먼저 조사·초안 작성하고, 사람의 업무 판단이 필요한 Gap만 질문한다. 사용자가 즉시 답하지 못하면 Human Decision Queue로 이월하고 다음 Semantic Work에서 재확인한다.**
 
@@ -18,7 +20,7 @@ Human-maintained 설정은 `.sdlc/project.yaml` 하나다.
 - `HEADLESS`: Harness가 설정된 외부 Provider command를 실행한다.
 - Agent 제품명은 프로젝트 업무 Config가 아니다.
 
-두 모드는 Agent 시작 방식만 다르다. Target Graph Guard, Business Truth Guard, Stage Result Validator, Canonical Apply는 동일하다.
+두 모드는 Agent 시작 방식만 다르다. Target Graph Guard, Business Truth Guard, Stage Result Validator, Canonical Apply, Change Level/Projection Guard는 동일하다.
 
 ## 2. 사용자 진입
 
@@ -30,33 +32,58 @@ python sdlc/scripts/harness.py work --target RQ-001
 
 자연어 `RQ-001 다음 작업해줘`도 같은 의도다.
 
-`--stage`와 `--artifact`는 호환성/재진입/debug 용도다. 일반 작업에서는 Runtime이 Change Level과 Tailoring Profile로 실행 의미와 Primary Artifact를 선택한다.
+`--stage`와 `--artifact`는 호환성/재진입/debug 용도다. 일반 작업에서는 Runtime이 Change Level로 실행 깊이와 기본 내부 진입 Stage를 정하고, Tailoring Profile이 Human Artifact topology와 편집 초점을 정한다.
 
 확정된 업무 사실 자체를 바꾸는 요청은 `/change`가 우선이다.
 
-## 3. 기본 계획 — Semantic Work 우선
+### 2.1 Change Level 사용자 제어
+
+Change Level의 상세 제어는 `sdlc/agent/skills/work/references/change-level.md`를 따른다.
+
+사용자는 Project Config에서 사전 정의하거나 작업 중 자연어로 올리거나 내릴 수 있다.
+
+```text
+RQ-001은 L3로 진행해줘. 업무규칙 검토가 필요해서야.
+RQ-001을 L4에서 L2로 낮춰줘. 조회조건 하나만 영향 있는 것으로 확인됐어.
+RQ-001 Level override를 해제하고 AUTO로 다시 판단해줘.
+```
+
+Agent는 Level 요청을 대화에만 남기지 않고 `change_execution_runtime.py set-level / clear-level` 경계로 기록한다.
+
+- 자동 승격: 허용
+- 자동 강등: 금지
+- 명시적 Human 강등: 이유를 남기면 허용
+- 현재 `safety_floor`보다 낮은 강등: 명시적 Risk Acceptance 없이는 차단
+
+Level 변경 후에는 같은 Target으로 `/work`를 다시 실행하여 Semantic Plan과 Projection Update Set을 재계산한다.
+
+## 3. 기본 계획 — Semantic Work + Projection Update Set
 
 먼저 Harness가 만든 `work-context.json`만 기준으로 작업 범위를 정한다.
 
 우선 읽을 항목:
 
 1. `target`과 Target 중심 Canonical relation graph
-2. `change_level`
-3. `execution_policy.required_semantic_work`
-4. `execution_policy.required_evidence`
-5. `execution_policy.required_human_review`
-6. `selection.template_path`와 선택 Artifact
-7. 선택 Artifact와 Target 관련 문서의 미해결 `Human Decision Queue`
-8. Project Context와 실제 필요한 Source 범위
+2. `change_level.observed_change_level`
+3. `change_level.effective_change_level`
+4. `change_level.level_source / safety_floor / level_history`
+5. `execution_policy.required_semantic_work`
+6. `execution_policy.required_evidence`
+7. `execution_policy.required_human_review`
+8. `tailoring.primary_work_artifact`
+9. `tailoring.required_engineering_artifacts / projection_update_set`
+10. 선택/필수 Artifact와 Target 관련 문서의 미해결 `Human Decision Queue`
+11. Project Context와 실제 필요한 Source 범위
 
 ### Context 최소화 규칙
 
 - 모든 Stage Reference를 선로딩하지 않는다.
-- 모든 Template을 선로딩하지 않는다.
+- 모든 Template을 무조건 선로딩하지 않는다.
+- 단 `required_engineering_artifacts`에 들어간 Template은 이번 Run의 갱신 대상이므로 필요한 Block만 읽는다.
 - 전체 Repository를 LLM으로 먼저 읽지 않는다.
 - 선택된 Semantic Work와 관련된 Target Graph/Source symbol/file부터 탐색한다.
-- 다른 Stage Reference는 **명시적 Stage 재진입**, 현재 Semantic Work에 실제 필요, 또는 Change Level escalation이 발생한 경우에만 읽는다.
-- Customer/PM Projection Template은 내부 작업 초안을 만들 때 기본 Context에 넣지 않는다.
+- 다른 Stage Reference는 **명시적 Stage 재진입**, 현재 Semantic Work에 실제 필요, Change Level escalation, 또는 Level Control이 필요한 경우에만 읽는다.
+- Customer/PM Projection Template은 내부 구현 작업 초안을 만들 때 기본 Context에 넣지 않는다.
 - Machine Runtime JSON은 필요한 필드만 읽고 사람이 직접 유지하지 않는다.
 - Queue를 확인하기 위해 unrelated 문서 전체를 선로딩하지 않고 현재 Target과 연결된 Artifact의 Queue Block만 우선 확인한다.
 
@@ -68,15 +95,25 @@ L1/L2는 Stage를 여러 번 실행하지 않아도 되지만 Source write 전�
 2. `AS_IS_SOURCE_ANALYSIS` — 관련 현재 Source/Config/Data 흐름을 확인한다.
 3. `IMPACT_CHECK` — 직접 영향과 명백한 주변 영향을 확인한다.
 
-이 세 항목은 별도 Human 문서를 강제하지 않는다. 실제 Source를 수정하는 run에서는 `stage-result.json`의 `pre_write_analysis` Machine Evidence로 요약한다.
+이 세 분석을 각각 별도의 **Stage 문서**로 만들 필요는 없다. 그러나 선택된 Engineering Profile이 `PROFILE_PRIMARY_SET`이면 Profile-required Human Artifact는 유지해야 한다.
 
-Runtime이 검사하는 key는 Policy의 `source_write_preconditions`와 동일하다.
+즉:
+
+```text
+L1/L2 Fast Path
+= Stage 문서 체인을 줄일 수 있음
+≠ Custom Profile PRIMARY 문서를 삭제/미생성할 수 있음
+```
+
+Runtime이 검사하는 Source Write key:
 
 - `INTENT_DECOMPOSED`
 - `AS_IS_SOURCE_ANALYZED`
 - `IMPACT_CHECKED`
 
-L1/L2에서 불확실성이 커지거나 Interface/Batch/Schema/Security/Architecture/Cross-domain 영향이 확인되면 Runtime의 Change Level escalation을 따른다. 자동 downgrade는 하지 않는다.
+L1/L2에서 불확실성이 커지거나 Interface/Batch/Schema/Security/Architecture/Cross-domain 영향이 확인되면 Runtime의 Change Level escalation을 따른다.
+
+Profile이 `level_projection_detail`을 제공하면 L1/L2 문서는 `CONCISE`로 작성할 수 있다. 상세 Process나 정책 변경을 발명하지 않고 실제 확인된 변경 목적, 영향, 정책 변경 유무, 확인사항만 짧게 기록한다.
 
 ### L3~L5
 
@@ -98,18 +135,20 @@ Stage taxonomy는 내부 호환 의미를 보존하지만 일반 Agent의 사고
 - 두 개 이상의 합리적 대안 중 의사결정
 - 업무 권한이 필요한 Rule/Scope/Exception/AC 확정
 - 생성 문서의 특정 Block을 지정해 수정 요청
+- 필요하면 Change Level 승격/강등과 그 이유 명시
 
 ### 4.2 Agent가 먼저 해야 하는 일
 
 질문 전에 다음 순서를 반드시 수행한다.
 
 1. Canonical에 이미 답이 있는지 확인
-2. 현재 Target의 미해결 Human Decision Queue 확인
-3. 기존 요구사항/문서 Evidence 확인
-4. Brownfield면 Source/DB/Config/Trace에서 기술적으로 조사
-5. 프로젝트 Standard/Decision으로 결정 가능한지 확인
-6. Agent가 채울 수 있는 항목은 먼저 초안 작성
-7. 그래도 사람의 업무 권위가 필요한 Gap만 HITL 질문으로 생성
+2. Change Level 상태/이력과 Safety Floor 확인
+3. 현재 Target의 미해결 Human Decision Queue 확인
+4. 기존 요구사항/문서 Evidence 확인
+5. Brownfield면 Source/DB/Config/Trace에서 기술적으로 조사
+6. 프로젝트 Standard/Decision으로 결정 가능한지 확인
+7. Agent가 채울 수 있는 항목은 먼저 초안 작성
+8. 그래도 사람의 업무 권위가 필요한 Gap만 HITL 질문으로 생성
 
 따라서 `Program ID`, `Java Method`, `XML Query`, `Table Column`, 현재 권한 호출처럼 Source에서 확인할 수 있는 항목을 사람에게 작성시키지 않는다.
 
@@ -129,7 +168,7 @@ Stage taxonomy는 내부 호환 의미를 보존하지만 일반 Agent의 사고
 
 Agent는 질문을 강제하거나 Business Truth를 추정하지 않는다.
 
-1. 해당 질문을 선택 Artifact의 `Human Decision Queue` Block에 기록/갱신한다.
+1. 해당 질문을 관련 Engineering Artifact의 `Human Decision Queue` Block에 기록/갱신한다.
 2. Queue ID는 기존 HITL Question ID를 그대로 사용한다.
 3. `Related Block`, 현재 확인값/제안, Decision Owner, 영향 분류, `Recheck At`, 상태를 기록한다.
 4. 의미적으로는 기존 OPEN 해소 계약을 사용하여 `OPEN` 또는 `DEFERRED`로 유지한다. 사용자가 나중에 답하기로 한 경우 resolution method는 `DEFER`를 사용한다.
@@ -140,9 +179,7 @@ Agent는 질문을 강제하거나 Business Truth를 추정하지 않는다.
 
 ### 4.5 다음 Semantic Work 진입 시 Carry-forward Queue
 
-다음 작업 Agent는 다음 순서를 지킨다.
-
-1. 현재 Target/Artifact의 미해결 Queue를 읽는다.
+1. 현재 Target/관련 Artifact의 미해결 Queue를 읽는다.
 2. Queue가 이미 Canonical/Evidence 변경으로 해소됐는지 확인한다.
 3. 기술 조사로 해소할 수 있으면 사람에게 다시 묻기 전에 Source/DB/Config를 조사한다.
 4. 현재 `Recheck At`에 도달한 사람 소유 Queue를 신규 HITL 질문보다 먼저 재확인한다.
@@ -152,8 +189,6 @@ Agent는 질문을 강제하거나 Business Truth를 추정하지 않는다.
 단순히 여러 단계를 지나왔다는 이유만으로 자동 `SOURCE_BLOCK` 승격하지 않는다. 실제 Source Write/Test/Verify 안전 경계에 도달한 경우에만 영향 분류를 재판정한다.
 
 ### 4.6 답변 반영
-
-사용자 답변을 받은 뒤 Agent는 문서 Text만 수정하지 않는다.
 
 - 답변을 `GIVEN` Evidence로 기록한다.
 - Rule/Decision/Scope/AC 등 Semantic 의미가 생기면 Canonical Delta를 작성한다.
@@ -183,11 +218,12 @@ RQ-0042 Work Unit SDD의 [BLOCK:WU-HITL-QUEUE]에서
 HITL-RQ-0042-02는 지금 답하기 어려우니 PROGRAM 단계에서 다시 확인해줘.
 ```
 
-Agent는 요청을 다음으로 Routing한다.
+Agent Routing:
 
 - `SEMANTIC_CHANGE`: Requirement/Business Rule/TO-BE/AC/Scope 의미 변경 → `/change`
 - `EVIDENCE_REFRESH`: AS-IS/Source/DB/Mapping/AS-BUILT 근거 갱신 → `/work`
 - `PROJECTION_ONLY`: 오탈자/표현/레이아웃만 수정 → Canonical Delta 없음
+- Change Level 변경 → Change Level Runtime에 이력 반영 후 `/work` 재계산
 
 Queue의 일정/상태 조정 자체는 Business Truth 변경이 아니다. Queue 질문에 실제 업무 답을 제공하면 답변의 의미에 따라 `/change` 또는 `/work`로 Routing한다.
 
@@ -206,30 +242,34 @@ python sdlc/scripts/harness.py work --target <TARGET-ID>
 Runtime은 `INTERACTIVE_HANDOFF_READY`와 함께 다음을 제공한다.
 
 - `work-context.json`
-- 선택된 Artifact/Template
+- Change Level 상태와 Execution Policy
+- `primary_work_artifact`
+- `required_engineering_artifacts / projection_update_set`
+- `projection_detail`
 - `stage-result.json` 예정 경로
 - Git/Canonical baseline
 - Target Graph와 허용 변경 범위
-- Change Level / Semantic Execution Policy
 
 `INTERACTIVE_HANDOFF_READY`는 작업 준비 완료이지 Stage 완료가 아니다.
 
 ### 6.2 현재 Agent가 수행할 일
 
 1. `work-context.json`에서 필요한 필드만 읽는다.
-2. Requirement intent를 확인한다.
-3. **현재 Target/Artifact의 미해결 Human Decision Queue와 `Recheck At`을 확인한다.**
-4. Brownfield/Hybrid에서 Source write 가능성이 있으면 관련 AS-IS Source를 먼저 분석한다.
-5. 영향 범위를 확인하고 Change Level escalation 조건이 보이면 숨기지 않는다.
-6. **HITL Reference에 따라 사람에게 질문하기 전에 Agent가 조사 가능한 항목을 먼저 채운다.**
-7. 현재 단계에 재확인해야 할 Queue가 있으면 신규 질문보다 먼저 처리한다.
-8. 사람 판단이 필요한 새 Gap이 있으면 해당 Block과 이유를 표시해 질문한다.
-9. 사용자가 답하지 못하면 Artifact Queue + OPEN/DEFERRED로 carry-forward한다.
-10. 답변을 받은 뒤 Canonical Delta 후보와 선택 Artifact 초안을 함께 갱신한다.
-11. 선택된 `selection.template_path`는 Human 작성 Form이 아니라 Review Surface로 사용한다.
-12. 모르는 업무 사실은 발명하지 않고 OPEN/uncertainty로 남긴다.
-13. Artifact와 같은 run directory의 `stage-result.json`을 작성한다.
-14. finalize를 실행한다.
+2. Change Level의 observed/effective/source/safety/history를 확인한다.
+3. Requirement intent를 확인한다.
+4. `tailoring.required_engineering_artifacts`와 각 `projection_detail`을 확인한다.
+5. 현재 Target/Artifact의 미해결 Human Decision Queue와 `Recheck At`을 확인한다.
+6. Brownfield/Hybrid에서 Source write 가능성이 있으면 관련 AS-IS Source를 먼저 분석한다.
+7. 영향 범위를 확인하고 Change Level escalation 조건이 보이면 숨기지 않는다.
+8. HITL Reference에 따라 사람에게 질문하기 전에 Agent가 조사 가능한 항목을 먼저 채운다.
+9. 현재 단계에 재확인해야 할 Queue가 있으면 신규 질문보다 먼저 처리한다.
+10. 사람 판단이 필요한 새 Gap이 있으면 해당 Block과 이유를 표시해 질문한다.
+11. 사용자가 답하지 못하면 Artifact Queue + OPEN/DEFERRED로 carry-forward한다.
+12. 답변을 받은 뒤 Canonical Delta 후보와 Engineering Projection 초안을 함께 갱신한다.
+13. `primary_work_artifact`를 중심으로 작업하되 **required Engineering Artifact 전체를 갱신**한다.
+14. 모르는 업무 사실은 발명하지 않고 OPEN/uncertainty로 남긴다.
+15. Artifact와 같은 run directory의 `stage-result.json`을 작성한다.
+16. finalize를 실행한다.
 
 Source를 실제 수정한 L1/L2 예:
 
@@ -257,15 +297,18 @@ Runtime은 fail-closed로 다음을 확인한다.
 - 허용 범위 밖 파일을 수정하지 않았는가
 - Target Graph 밖 기존 Entity를 수정하지 않았는가
 - Confirmed Business Truth 변경 권한을 우회하지 않았는가
-- Stage Result와 선택 Artifact가 일치하는가
+- Stage Result와 Primary Artifact가 일치하는가
 - Validator가 PASS + executable인가
-- **실제 Source root 파일이 변경된 경우에만** 필요한 pre-write analysis와 Build/Test Evidence가 있는가
+- 실제 Source root 파일이 변경된 경우에만 필요한 pre-write analysis와 Build/Test Evidence가 있는가
+- **`required_engineering_artifacts`가 모두 실제 파일로 갱신되어 Projection lifecycle에 등록됐는가**
+
+필수 Projection이 하나라도 빠지면 Semantic 결과가 성공이더라도 최종 상태는 `PROJECTION_REFRESH_REQUIRED`다. 빠진 문서를 현재 Canonical/Evidence에서 갱신한 뒤 다시 finalize한다.
 
 Interactive 실패 시 사용자의 파일을 자동 rollback하지 않고 Canonical 적용을 중지한 뒤 `manual_recovery_required`를 표시한다.
 
 ## 7. HEADLESS 실행
 
-HEADLESS에서는 `.sdlc/project.yaml`에 Provider command가 있어야 한다.
+HEADLESS에서도 Provider는 `work-context.json`의 Semantic Work와 `required_engineering_artifacts`를 모두 처리해야 한다.
 
 ```yaml
 agent:
@@ -280,9 +323,9 @@ agent:
       - "{result_path}"
 ```
 
-Provider도 `work-context.json`의 Semantic Work만 수행해야 한다. Provider 성공 자체는 작업 성공이 아니며 동일 Validator/Canonical Guard를 통과해야 한다.
+Provider 성공 자체는 작업 성공이 아니며 동일 Validator/Canonical/Projection Guard를 통과해야 한다.
 
-HITL이 필요한 HEADLESS 실행은 Provider가 `HITL_REQUIRED`와 질문 목록을 결과에 남기고 Canonical/Source Write를 완료 처리하지 않는다. 외부 Orchestrator가 즉시 답변을 다시 공급할 수 없는 경우에도 선택 Artifact의 Human Decision Queue와 OPEN/DEFERRED에 같은 질문 ID를 남겨 다음 실행에서 재확인할 수 있어야 한다. `SOURCE_BLOCK`은 필요한 Source/Action 범위에 적용한다.
+HITL이 필요한 HEADLESS 실행은 Provider가 `HITL_REQUIRED`와 질문 목록을 결과에 남기고 Canonical/Source Write를 완료 처리하지 않는다. 외부 Orchestrator가 즉시 답변을 다시 공급할 수 없는 경우에도 관련 Engineering Artifact의 Human Decision Queue와 OPEN/DEFERRED에 같은 질문 ID를 남겨 다음 실행에서 재확인할 수 있어야 한다.
 
 ## 8. Stage Result Contract
 
@@ -292,13 +335,13 @@ HITL이 필요한 HEADLESS 실행은 Provider가 `HITL_REQUIRED`와 질문 목�
 {
   "schema_version": 1,
   "stage": "DEVELOPMENT",
-  "artifact_path": "docs/10_산출물/RQ-001/...md",
+  "artifact_path": "docs/10_engineering/RQ-001/...md",
   "canonical_delta": {
     "schema_version": 1,
     "delta_id": "WORK-RQ-001-001",
     "base_revision": 10,
     "stage": "DEVELOPMENT",
-    "source_artifact": "docs/10_산출물/RQ-001/...md",
+    "source_artifact": "docs/10_engineering/RQ-001/...md",
     "operations": []
   },
   "quality_gate": {"status": "PASS", "failures": []},
@@ -314,6 +357,7 @@ HITL이 필요한 HEADLESS 실행은 Provider가 `HITL_REQUIRED`와 질문 목�
 - L1/L2 Source write에서는 `pre_write_analysis`가 Requirement/AS-IS/Impact 분석의 Machine Evidence다.
 - HITL 답변이 Semantic 변경의 근거라면 `uncertainty`를 조용히 제거하지 말고 관련 `GIVEN`/Decision provenance와 Canonical Delta를 연결한다.
 - 미응답 HITL은 대화에서만 사라지게 두지 않고 Artifact Queue와 관련 OPEN/DEFERRED 상태에 남긴다.
+- Stage Result의 단일 `artifact_path`는 현재 실행의 Primary 결과이며, Profile-required 추가 Projection의 존재를 부정하지 않는다.
 
 ## 9. 공통 Guard
 
@@ -332,6 +376,14 @@ HITL이 필요한 HEADLESS 실행은 Provider가 `HITL_REQUIRED`와 질문 목�
 - Source 관찰만 추가할 때는 값 변경보다 `ADD_PROVENANCE`를 우선한다.
 - 사용자가 답하지 못한 Queue 항목을 `ASSUMED` Business Truth로 조용히 승격하지 않는다.
 
+### Change Level Guard
+
+- AUTO가 낮게 관측됐다는 이유로 기존 Effective Level을 자동 강등하지 않는다.
+- Human Override는 이유와 `level_history`를 남긴다.
+- Safety Floor 아래 Override는 명시적 Risk Acceptance가 없으면 차단한다.
+- Level 변경 자체가 Canonical Business Truth를 변경하지 않는다.
+- Level 변경 후 Projection Update Set을 다시 계산한다.
+
 ### Source Write Guard
 
 - Project Config의 Source root 밖 Source write는 허용하지 않는다.
@@ -343,17 +395,39 @@ HITL이 필요한 HEADLESS 실행은 Provider가 `HITL_REQUIRED`와 질문 목�
 
 ## 10. Artifact / Tailoring 원칙
 
-`Stage / Canonical / Evidence → Tailoring Profile → Human Artifact`
+```text
+Change Level → Semantic Work / Evidence / Review Depth
+Stage        → Internal Execution Focus
+Profile      → Human Artifact Topology
+Canonical   → Projection Content
+```
 
 - Template은 문서 모양이다.
 - Tailoring Profile은 어떤 의미를 어떤 Human Artifact에 보여줄지 결정한다.
 - Change Level은 RQ별 실행 깊이이며 문서 개수와 동일하지 않다.
+- `projection_topology: PROFILE_PRIMARY_SET`이면 PRIMARY Engineering Artifact 집합을 유지한다.
+- `primary_work_artifact`는 현재 편집 초점이지 유일한 필수 문서라는 뜻이 아니다.
+- `required_engineering_artifacts`는 이번 Run 뒤 존재·갱신되어야 하는 Engineering 문서다.
+- `projection_detail`은 `CONCISE / STANDARD / FULL`의 작성 밀도다.
 - 일반 사용자는 현재 Project Config의 Engineering/Customer/PM Profile을 따른다.
 - `STAGE_ORIENTED_FULL`은 Legacy/Formal compatibility용이며 신규 기본값이 아니다.
 - 이전 내용을 반복 복사하지 않고 현재 변경의 의미 Delta에 집중한다.
 - Source Hash/Locator/Trace 등 재생성 가능한 값은 Machine-derived로 관리한다.
-- Human Artifact는 **사람이 처음부터 채우는 Template Form이 아니라 Agent 초안을 검토하는 Projection**이다.
+- Human Artifact는 사람이 처음부터 채우는 Template Form이 아니라 Agent 초안을 검토하는 Projection이다.
 - Human Decision Queue 역시 사람이 수동 관리하는 원장이 아니라 Agent가 OPEN/DEFERRED를 보여주는 Review Surface다.
+
+### HRIS 2종 예
+
+L1 / DEVELOPMENT라도:
+
+```text
+주 편집: 02_작업지시서.md
+필수 갱신:
+- 01_업무정의서.md → CONCISE
+- 02_작업지시서.md → CONCISE
+```
+
+업무정의서에는 실제 근거가 없다면 상세 Process를 발명하지 않는다. `업무 정책 변경 없음`, `국소 변경`, `주변 영향 없음/확인 필요`처럼 이번 변경에 필요한 최소 정보만 남긴다.
 
 ## 11. Customer / PM Projection
 
@@ -379,7 +453,7 @@ OPEN은 대기표시가 아니라 해소할 설계 Backlog다.
 
 상세 절차가 필요할 때만 `.cursor/skills/open-resolve/SKILL.md`를 읽는다.
 
-## 13. Stage Reference — 필요할 때만
+## 13. Reference — 필요할 때만
 
 Core Reference는 `sdlc/agent/skills/work/references/` 아래에 있다.
 
@@ -388,17 +462,25 @@ Core Reference는 `sdlc/agent/skills/work/references/` 아래에 있다.
 - 사용자가 `--stage`를 명시했다.
 - `execution_policy.required_semantic_work`가 해당 전문 규칙을 요구한다.
 - Change Level escalation으로 추가 설계/영향 규칙이 필요하다.
-- 사람 판단 Gap 또는 carry-forward Queue가 있어 HITL 질문/재확인 규칙이 필요하면 `hitl.md`만 추가로 읽는다.
+- Level 사전 지정/승격/강등/이력 또는 `PROFILE_PRIMARY_SET`가 관련되면 `change-level.md`를 읽는다.
+- 사람 판단 Gap 또는 carry-forward Queue가 있으면 `hitl.md`를 읽는다.
 
 `.cursor/skills/work/references/`는 Legacy Mirror다. 동일 이름의 Core Reference가 있으면 Core 경로를 우선한다.
 
 ## 14. 완료 판정
 
-다음 Runtime 결과가 확인될 때만 성공으로 말한다.
+다음 Runtime 결과가 확인되고 **required Engineering Projection이 모두 갱신됐을 때만** 성공으로 말한다.
 
 - `APPLIED`
 - `IDEMPOTENT`
 - `NO_CHANGE`
 - 검증 목적의 `DRY_RUN_VALIDATED`
 
-`INTERACTIVE_HANDOFF_READY`, `PLAN_READY`, `HITL_REQUIRED`는 완료가 아니다. 다만 `ITERATE`/`ALERT` Queue가 남아 있다는 사실 자체는 해당 Semantic Work의 완료를 자동 부정하지 않으며, 실제 Guard와 `Recheck At`을 기준으로 판단한다.
+다음은 완료가 아니다.
+
+- `INTERACTIVE_HANDOFF_READY`
+- `PLAN_READY`
+- `HITL_REQUIRED`
+- `PROJECTION_REFRESH_REQUIRED`
+
+`ITERATE`/`ALERT` Queue가 남아 있다는 사실 자체는 해당 Semantic Work의 완료를 자동 부정하지 않으며 실제 Guard와 `Recheck At`을 기준으로 판단한다.
