@@ -1,0 +1,36 @@
+schema_version: 1
+profile_id: CUSTOM_HRIS_HUNEL_ENGINEERING
+name: "HRIS hunel Engineering 2-Document"
+projection_role: ENGINEERING
+output_root: "docs/10_engineering"
+
+artifacts:
+  business_definition:
+    audience: INTERNAL_IT
+    projection_role: ENGINEERING
+    template: "sdlc/custom/project/templates/hris-hunel/01_업무정의서.md"
+    output_path: "docs/10_engineering/{target}/01_업무정의서.md"
+    visibility: PRIMARY
+    authoring: AGENT_DRAFT_HUMAN_REVIEW
+    semantic_owner: CANONICAL
+    projection_owner: AGENT
+    manual_edit_policy: HUMAN_REVIEW
+    order: 10
+    sources:
+      stages: [DECOMPOSE, CLARIFY, PROCESS, DISCOVERY, IMPACT]
+      canonical: [RQ, FR, BR, PROC, FTR, WP, TASK, PGM, ART, DATA, AC, TC]
+
+  work_instruction:
+    audience: INTERNAL_IT
+    projection_role: ENGINEERING
+    template: "sdlc/custom/project/templates/hris-hunel/02_작업지시서.md"
+    output_path: "docs/10_engineering/{target}/02_작업지시서.md"
+    visibility: PRIMARY
+    authoring: AGENT_DRAFT_HUMAN_REVIEW
+    semantic_owner: CANONICAL
+    projection_owner: AGENT
+    manual_edit_policy: HUMAN_REVIEW
+    order: 20
+    sources:
+      stages: [DESIGN, PROGRAM, DEVELOPMENT, TEST, VERIFY]
+      canonical: [RQ, FR, BR, PROC, FTR, WP, TASK, PGM, ART, DATA, AC, TC]
