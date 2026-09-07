@@ -177,7 +177,7 @@ class RawDocumentEvidenceTest(unittest.TestCase):
             path = Path(tmp) / "brief.pptx"
             with zipfile.ZipFile(path, "w") as zf:
                 zf.writestr("ppt/slides/slide1.xml", '''<?xml version="1.0" encoding="UTF-8"?>
-<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>주문 취소 후 환불 상태를 조회한다</a:t></a:r></a:p></txBody></p:sp></p:spTree></p:cSld></p:sld>''')
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>주문 취소 후 환불 상태를 조회한다</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>''')
             result = EXTRACT.extract(path)
             self.assertEqual("EXTRACTED", result["extraction_status"])
             self.assertEqual("slide 1", result["evidence_chunks"][0]["locator"])
