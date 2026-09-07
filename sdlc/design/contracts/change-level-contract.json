@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "contract_id": "CHANGE_LEVEL_V1",
+  "candidate_design": "v1.9.0-tailoring-control-plane",
+  "purpose": "Project Delivery Profile과 개별 RQ/CR Change Level을 분리하고, Evidence 기반 잠정 판정·확정·Escalation을 추적한다.",
+  "delivery_profiles": ["FAST", "STANDARD", "FULL"],
+  "change_levels": {
+    "L1": {"name": "MICRO", "intent": "단일 Local Change, 제한된 구현/운영 위험"},
+    "L2": {"name": "LOCAL", "intent": "복수 Local Component 또는 제한된 Rule/Data 영향"},
+    "L3": {"name": "FEATURE", "intent": "기능 단위 변경, Multi Program 또는 명시적 Data/Interface 영향"},
+    "L4": {"name": "PROCESS", "intent": "업무 Process/Cross-domain/Batch/Interface/Transaction 영향"},
+    "L5": {"name": "ARCH", "intent": "Architecture/Security/대규모 Schema/고위험 운영 영향"}
+  },
+  "decision_points": [
+    {"phase": "DECOMPOSE_TRIAGE", "result": "provisional_change_level", "required": true},
+    {"phase": "DISCOVERY_IMPACT", "result": "effective_change_level", "required": true},
+    {"phase": "DEVELOPMENT_DISCOVERY", "result": "escalation_if_required", "required": false}
+  ],
+  "classification_factors": [
+    "changed_component_count",
+    "business_rule_impact",
+    "data_or_schema_change",
+    "external_interface",
+    "batch",
+    "transaction",
+    "security_or_privacy",
+    "cross_domain",
+    "operational_risk",
+    "brownfield_impact_coverage_uncertainty"
+  ],
+  "runtime_fields": [
+    "provisional_change_level",
+    "effective_change_level",
+    "classification_reason",
+    "evidence_refs",
+    "escalation_history"
+  ],
+  "policy": {
+    "automatic_escalation": true,
+    "automatic_downgrade": false,
+    "downgrade_requires_human_review": true,
+    "change_level_equals_document_count": false,
+    "source_observation_can_confirm_business_truth": false,
+    "unknown_or_missing_evidence_behavior": "CONSERVATIVE_ESCALATE_OR_CHECK_REQUIRED"
+  },
+  "minimum_evidence": {
+    "provisional": ["requirement_scope_or_intake", "known_target_or_component_candidates"],
+    "effective": ["impact_or_discovery_evidence", "risk_factor_observations"],
+    "escalation": ["newly_discovered_impact_evidence"]
+  },
+  "explainability": {
+    "required_per_rq": true,
+    "must_show_factor_scores": true,
+    "must_show_evidence_refs": true,
+    "must_show_history": true
+  }
+}

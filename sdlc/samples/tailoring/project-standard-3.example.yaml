@@ -1,0 +1,34 @@
+schema_version: 1
+project:
+  name: "sample-standard-3"
+  mode: "BROWNFIELD"
+delivery:
+  profile: "STANDARD"
+agent:
+  execution: "INTERACTIVE"
+change:
+  level_policy: "AUTO"
+technology:
+  language: "Java"
+  framework: "Spring Boot"
+  build: ["./mvnw -q -DskipTests package"]
+  test: ["./mvnw test"]
+source:
+  roots: ["src/main/java"]
+  test_roots: ["src/test/java"]
+  resource_roots: ["src/main/resources"]
+  excludes: ["target/**"]
+git:
+  branch_strategy: "feature-branch + pull-request"
+  protected_branches: ["main"]
+documents:
+  language: "ko-KR"
+  internal:
+    profile: "STANDARD_3"
+  customer:
+    profile: "CUSTOMER_STANDARD_3"
+  pm:
+    profile: "PM_STANDARD"
+  machine:
+    visibility: "HIDDEN"
+unresolved: []

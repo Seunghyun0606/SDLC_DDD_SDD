@@ -1,209 +1,155 @@
-# START HERE — 프로젝트 첫 사용 안내
+# SDLC Harness 시작하기 — v1.9
 
-이 문서는 AI-SDLC Harness를 처음 사용하는 분석가·설계자·개발자·QA를 위한 시작점입니다.
+## 1. 문서 목적
 
-Harness의 기본 사용 경험은 다음 한 줄입니다.
+이 문서는 PM, BA, 설계자, 개발자, 테스트 담당자가 내부 Stage/Canonical JSON을 직접 관리하지 않고 Harness를 사용하는 첫 진입점이다.
 
-> **프로젝트 자료 제공 → Agent 초안 → 사람이 확인해야 할 항목만 결정 → Agent 문서 완성 → 다음 단계 자동 안내**
+v1.9에서 반드시 구분한다.
 
-사용자가 Rule, Skill, Reference, Contract를 먼저 공부하거나 빈 Stage Template을 직접 작성하는 것은 기본 절차가 아닙니다.
+- **Change Level**: RQ별 실제 Semantic Work와 Evidence/Review 깊이를 정한다.
+- **Stage**: 내부 taxonomy/debug/re-entry 단위다. 일반 사용자가 모든 Stage를 순서대로 실행하지 않는다.
+- **Template**: 사람에게 보여 줄 문서 구조다.
+- **Tailoring Profile**: 같은 내부 의미를 프로젝트에 맞는 Human Artifact로 Projection한다.
+- **Delivery Profile**: 프로젝트 공통 실행 기본값/호환 정책이다. 개별 RQ의 Semantic Work를 대신 결정하지 않는다.
 
-## 1. 프로젝트 종류를 선택한다
+## 2. 기본 원칙
 
-모르면 `AUTO`로 시작합니다.
+**문서를 줄이는 것과 분석을 줄이는 것은 다르다.**
 
-- `GREENFIELD`: 기존 Source 없이 신규 시스템/기능을 설계
-- `BROWNFIELD`: 기존 Source/DB/Batch/API 등의 영향 분석이 중요
-- `HYBRID`: 기존 영역과 신규 영역이 함께 존재
-- `AUTO`: Repository Evidence로 Runtime이 우선 판정
+L1/L2는 별도 DECOMPOSE/DISCOVERY/IMPACT 문서를 차례로 만들지 않을 수 있지만 Source를 실제로 바꾸기 전 다음 세 가지는 반드시 수행한다.
 
-## 2. 실제로 있는 자료만 준비한다
+1. Requirement Intent Decomposition
+2. AS-IS Source Analysis
+3. Impact Check
 
-다음 중 프로젝트에 존재하는 자료만 제공합니다.
+이 결과는 별도 사람이 작성하는 문서가 아니라 Work Context/Stage Result의 Machine Evidence로 남는다. 실제 Source가 바뀌는 경우에만 이 Gate와 Build/Test 검증이 강제된다.
 
-- 요구사항 XLSX 또는 변경요청 원문
-- 고객 문서/SOP/업무 매뉴얼
-- 기존 Repository 또는 Source 위치
-- Build/Test 방법
-- 이미 결정된 기술/보안/운영 기준
+```mermaid
+flowchart LR
+    R["RQ"] --> I["Intent 분해"] --> S["AS-IS Source 분석"] --> P["Impact 확인"]
+    P --> D["Implementation Delta"] --> C["Source Change"] --> T["Test"] --> X["Reconcile"]
+```
 
-없는 자료를 새로 만들어서 시작하지 않습니다. 확인되지 않은 내용은 Agent가 발명하지 않고 `OPEN`으로 남깁니다.
-
-## 3. 최초 실행
+## 3. 사용자 기본 흐름
 
 ```bash
-python sdlc/scripts/harness.py setup \
-  --name my-project \
-  --mode AUTO \
-  --delivery STANDARD
-
+python sdlc/scripts/harness.py setup --name <project> --mode <GREENFIELD|BROWNFIELD|HYBRID|AUTO>
 python sdlc/scripts/harness.py check --setup
-```
-
-사용자가 직접 유지하는 기본 설정은 `.sdlc/project.yaml` 하나입니다. 내부 Profile/Contract/Starter Manifest를 먼저 작성하지 않습니다.
-
-### Provider가 아직 없어도 setup과 intake는 실패가 아니다
-
-처음 배포할 때 Agent Provider가 아직 연결되지 않았다면 `SETUP_READY_PROVIDER_PENDING`이 표시될 수 있습니다. 이것은 프로젝트 설정 실패가 아닙니다.
-
-이 상태에서도 다음은 바로 할 수 있습니다.
-
-- `.sdlc/project.yaml` 확인
-- 요구사항 원본 intake
-- 실제 RQ Target 생성
-
-Provider는 첫 `work` 실행 전에만 필요합니다.
-
-프로젝트에서 사용할 Agent CLI/wrapper 명령이 정해지면 기술 담당자가 공식 setup 명령으로 1회 연결합니다.
-
-```bash
-python sdlc/scripts/harness.py setup \
-  --provider-command "프로젝트에서 사용하는 Agent 실행 명령"
-```
-
-이 명령을 나중에 다시 실행해도 기존 `.sdlc/project.yaml`을 강제로 다시 작성하지 않고 Provider 연결만 갱신합니다. 일반 분석가·설계자·개발자·QA가 `sdlc/config/agent-provider.json`을 직접 편집하는 것은 기본 절차가 아닙니다.
-
-## 4. 요구사항을 그대로 인입한다
-
-표준 2행 Header XLSX라면 다음 명령으로 바로 인입합니다.
-
-```bash
-python sdlc/scripts/harness.py intake 요구사항목록.xlsx
-```
-
-Runtime은 원본 행·Sheet·외부 요구사항 ID·Source Hash를 보존하고 RQ/FR Candidate를 Canonical에 등록합니다. 유사 제목은 자동 병합하지 않습니다.
-
-결과에는 실제 Target과 다음 명령이 포함됩니다.
-
-```text
-first_target: RQ-001
-next_command: python sdlc/scripts/harness.py work --target RQ-001
-```
-
-비표준 고객 Column 명칭만 선택적으로 `--profile`을 사용합니다.
-
-## 5. Agent에게 초안을 맡긴다
-
-먼저 계획만 보고 싶다면:
-
-```bash
-python sdlc/scripts/harness.py work --target RQ-001 --plan-only
-```
-
-실제 작업:
-
-```bash
+python sdlc/scripts/harness.py intake <requirements.xlsx>
+python sdlc/scripts/harness.py check project
 python sdlc/scripts/harness.py work --target RQ-001
+python sdlc/scripts/harness.py check RQ-001
 ```
 
-기본적으로 새 사용자 문서는 `docs/10_산출물/` 아래에 생성됩니다. 예:
+일반 개발자는 `--stage`, Template 경로, Canonical JSON, Trace/Provenance JSON, Source Hash를 직접 유지하지 않는다.
 
-```text
-docs/10_산출물/RQ-001_근무계획승인_요구사항정의.md
+## 4. 기본 Config
+
+`.sdlc/project.yaml`이 유일한 Human-maintained Config다.
+
+```yaml
+schema_version: 1
+project:
+  name: HRIS
+  mode: BROWNFIELD
+
+delivery:
+  profile: STANDARD
+
+change:
+  level_policy: AUTO
+
+documents:
+  language: ko-KR
+  internal:
+    profile: STANDARD_5
+  customer:
+    profile: CUSTOMER_STANDARD_3
+  pm:
+    profile: PM_STANDARD
+  machine:
+    visibility: HIDDEN
 ```
 
-이 문서는 **사용자가 빈 Template을 채우는 파일이 아닙니다.** Agent가 Requirement 원문, Canonical, 프로젝트 자료와 Source Evidence로 작성합니다.
+신규 프로젝트 기본 문서 Profile은 `STANDARD_5 / CUSTOMER_STANDARD_3 / PM_STANDARD`다. `STAGE_ORIENTED_FULL`은 Legacy/Formal Contract/기존 고객 문서 호환용이지 신규 기본값이 아니다.
 
-Agent는 다음을 먼저 수행합니다.
+## 5. L1/L2가 가벼운 이유
 
-- 원문과 외부 ID 보존
-- Evidence로 확인 가능한 내용 조사
-- RQ/FR/AC/설계·테스트 내용 초안
-- 근거가 없는 업무 사실은 OPEN 유지
-- Source 관찰과 Business Truth 분리
-- 다음 작업 후보 계산
+L1/L2는 **분석을 생략해서** 가벼운 것이 아니다. 한 Work Run 안에서 필수 분석을 수행하고 불필요한 사람 문서/검토를 만들지 않기 때문에 가볍다.
 
-## 6. 사람에게는 판단권한이 필요한 항목만 보낸다
+- L1: Intent + AS-IS Source + Impact sanity + Implementation Delta + Test + Reconcile
+- L2: Intent + AS-IS Source + Impact + Implementation Delta + Test + Reconcile
+- 실제 Source가 바뀌지 않은 문서/분석-only DEVELOPMENT run에는 Build/Test를 강제하지 않는다.
+- 실제 Source가 바뀌면 Intent/AS-IS/Impact 근거가 없을 경우 fail-closed 한다.
+- Change Level이 불확실하면 L1로 낙관적으로 낮추지 않고 최소 L2 safety floor를 사용한다.
 
-`work` 결과의 `user_handoff.review_items`에 항목이 있을 때만 사람이 확인합니다.
+## 6. Program Spec 정책
 
-사람 검토 대상으로 허용되는 범주는 다음과 같습니다.
+신규 Standard는 `17개 항목 전체 필수`가 아니다.
 
-- 업무 정책(`BUSINESS_POLICY`)
-- 범위 결정(`SCOPE`)
-- 승인/권한(`APPROVAL`)
-- 프로젝트 기술 선택(`TECHNICAL_CHOICE`)
-- 인수/합의(`ACCEPTANCE`)
+**Core Required 6개 + Risk-triggered Conditional**을 사용한다.
 
-Source를 더 찾으면 확인할 수 있는 내용, 코드 분석으로 확인 가능한 내용, Agent가 추가 조사해야 하는 내용은 기본적으로 사람에게 떠넘기지 않고 `agent_open_items`로 남깁니다.
+Core:
 
-### 사람이 결정을 알려주는 방법
+- 기능/요구 설계 기준
+- 실제 구현 대상
+- Source Evidence
+- 개발 Delta·변경 Source
+- AC/Test
+- OPEN/Guard
 
-검토 문서를 그대로 승인:
+Conditional은 Data, Transaction, Concurrency, Interface, Security, Observability, Migration, Architecture 등 실제 Typed Risk가 있을 때만 추가한다. Source에서 재생성 가능한 Query/Table/Symbol Mapping은 Machine-derived가 기본이다.
+
+`LEGACY_FULL_17`만 기존 17개 전체 확인을 유지한다.
+
+## 7. 문서와 Projection
+
+- Internal Artifact는 설계/개발 Review용이다.
+- Customer Artifact는 `A01 요구·업무·기능 합의 / A02 영향·개발범위 / A03 테스트·인수·운영 결과` 3종이 표준이다.
+- Customer 문서는 Canonical/Internal에서 생성되는 View이며 독립 Business Truth가 아니다.
+- Canonical/Internal이 바뀌면 관련 View는 `STALE_VIEW → Regeneration → Human/Customer Review → CURRENT` lifecycle을 따른다.
+- Customer 문서에서 사람이 정책을 바꿔도 Canonical을 자동 overwrite하지 않는다. Decision/Review가 필요하다.
+
+## 8. 역할별 최소 행동
+
+| 역할 | 기본 행동 |
+|---|---|
+| PM | `/check project`에서 blocker/decision/release/stale 상태 확인 |
+| BA/설계자 | Agent가 정리한 업무 의미와 Human Decision만 검토 |
+| 개발자 | `work --target RQ-xxx`; 예상 밖 영향 발견 시 해당 RQ와 Component만 보고 |
+| Tester | AC/Test 결과 검증 |
+| Customer | A01/A02/A03 검토/합의/인수 |
+| Harness 관리자 | Config/Profile/Contract/Runtime 정합성과 예외 관리 |
+
+## 9. 하지 말아야 할 것
+
+- L1이므로 Source 분석을 건너뛰지 않는다.
+- 문서 수 감소를 Semantic Work 감소와 동일시하지 않는다.
+- `STAGE_ORIENTED_FULL`을 신규 프로젝트 기본값으로 쓰지 않는다.
+- 관련 없는 Program Spec Conditional 항목을 N/A로 채우기 위해 작업하지 않는다.
+- Source Observation을 Business Truth로 자동 승격하지 않는다.
+- Customer Projection에서 새로운 업무 사실을 만들지 않는다.
+- CI PASS를 External Agent/Human empirical PASS로 해석하지 않는다.
+
+## 10. Validation
 
 ```bash
-python sdlc/scripts/harness.py review --target RQ-001 --by 홍길동 --approve
+python sdlc/scripts/harness.py check --setup
+python sdlc/scripts/harness.py check project
 ```
 
-업무정책·범위·승인·기술 선택 등에 답변:
+Harness 관리자가 Profile을 직접 검증할 때만 실행한다.
 
 ```bash
-python sdlc/scripts/harness.py review \
-  --target RQ-001 \
-  --by 홍길동 \
-  --answer "승인 주체는 팀장으로 한다"
+python sdlc/scripts/tailoring_runtime.py validate-profile --profile STANDARD_5
 ```
 
-수정 요청:
+## 11. 다음 문서
 
-```bash
-python sdlc/scripts/harness.py review \
-  --target RQ-001 \
-  --by 홍길동 \
-  --request-change "해외 법인은 이번 범위에서 제외한다"
-```
-
-사용자가 Decision JSON을 직접 만들 필요는 없습니다. Review 결과는 근거로 기록되지만, 이 명령 자체가 Business Truth 필드를 조용히 자동 변경하지 않습니다.
-
-## 7. 다음 단계는 결과가 안내한다
-
-`work` 또는 `review` 결과의 `next_command`를 사용합니다.
-
-- 사람 확인이 필요 없으면 다음 `work`
-- 사람 답변이 기록되면 다시 `work`하여 문서 반영
-- 변경 요청이면 `/change`
-
-따라서 사용자가 Stage 이름이나 내부 Contract 구조를 외워서 다음 단계를 결정하지 않습니다.
-
-## 8. 사용자 문서와 Machine Runtime은 구분한다
-
-사람이 읽고 협의하는 문서:
-
-```text
-docs/00_관리/
-docs/10_산출물/
-```
-
-Machine 검증·추적용 Artifact:
-
-```text
-sdlc/runtime/intake/
-sdlc/runtime/work-runs/
-sdlc/runtime/work-handoff/
-sdlc/runtime/customer-decisions/
-sdlc/canonical/
-```
-
-Machine JSON을 일반 프로젝트 참여자가 직접 편집하는 것은 기본 Workflow가 아닙니다.
-
-## 9. Greenfield / Brownfield 자료 안내
-
-- Greenfield: `sdlc/starter-kits/greenfield/README.md`
-- Brownfield: `sdlc/starter-kits/brownfield/README.md`
-
-Greenfield는 Source가 없어도 정상입니다. Brownfield는 찾지 못한 영역을 `영향 없음`으로 해석하지 않고 Coverage Gap으로 남깁니다.
-
-## 10. 문제가 생겼을 때
-
-- setup 상태: `python sdlc/scripts/harness.py check --setup`
-- 요구사항 인입 결과: `docs/00_관리/요구사항_인입결과.md`
-- 현재 사용자 산출물: `docs/10_산출물/`
-- Machine intake 상세: `sdlc/runtime/intake/requirements-import.json`
-- 최근 Work handoff: `sdlc/runtime/work-handoff/`
-- 설정 상세: `docs/00_시작/프로젝트_설정_가이드.md`
-
-## 검증 경계
-
-Python/fixture Behavioral Test가 통과하더라도 실제 외부 저수준 Agent의 의미 품질과 일반 분석가·설계자·개발자·QA의 First-use usability가 증명되는 것은 아닙니다.
-
-또한 `provider_class: EXTERNAL_AGENT` 같은 Config 라벨만으로 실제 Agent가 수행했다고 판정하지 않습니다. 반복성 Runtime은 Provider 명령 실행과 결과의 의미 일치율까지만 검증합니다. 실제 저수준 Agent와 실제 Human first-use는 별도 관찰 실증이 필요합니다.
+- `01_STANDARD_SCAFFOLD_사용가이드.md`
+- `02_PROJECT_설정가이드.md`
+- `03_TAILORING_설정가이드.md`
+- `04_TEMPLATE_및_산출물_가이드.md`
+- `05_이해관계자별_작업가이드.md`
+- `06_CUSTOM_SCAFFOLD_적용가이드.md`
+- `07_BROWNFIELD_SSOT_현행화가이드.md`

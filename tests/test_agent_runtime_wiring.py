@@ -30,15 +30,22 @@ class AgentRuntimeWiringTest(unittest.TestCase):
         self.assertTrue(envelope["delta_source_artifact_must_match_artifact_path"])
         self.assertTrue(contract["repeatability"]["validator_does_not_claim_llm_determinism"])
 
-    def test_work_enforces_stage_result_before_canonical_apply(self):
-        text = (ROOT / ".cursor/skills/work/SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("## Agent Stage Result 실행 경계", text)
-        self.assertIn("validate_agent_stage_result.py", text)
-        self.assertIn("validation.executable = true", text)
-        self.assertIn("--compare", text)
-        self.assertIn("semantic fingerprint", text)
-        self.assertIn("Agent/LLM 자체가 결정론적임을 증명하는 기능이 아니다", text)
-        self.assertLess(text.index("validate_agent_stage_result.py"), text.index("## Canonical 실행 경로"))
+    def test_work_enforces_stage_result_before_canonical_apply_without_adapter_duplication(self):
+        core = (ROOT / "sdlc/agent/skills/work/SKILL.md").read_text(encoding="utf-8")
+        adapter = (ROOT / ".cursor/skills/work/SKILL.md").read_text(encoding="utf-8")
+        runtime = (ROOT / "sdlc/scripts/run_work.py").read_text(encoding="utf-8")
+
+        self.assertIn("Stage Result Validator", core)
+        self.assertIn("Canonical Apply", core)
+        self.assertIn("APPLIED", core)
+        self.assertIn("IDEMPOTENT", core)
+        self.assertIn("NO_CHANGE", core)
+        self.assertIn("sdlc/agent/skills/work/SKILL.md", adapter)
+        self.assertIn("Core Skill", adapter)
+        self.assertIn("Stage Result Validator", adapter)
+        self.assertIn("모든 Stage Reference/Template을 선로딩하지 않는다", adapter)
+        self.assertIn("VALIDATOR.validate_stage_result", runtime)
+        self.assertLess(runtime.index("VALIDATOR.validate_stage_result"), runtime.index("APPLY.apply_delta_to_store"))
 
     def test_change_uses_same_stage_result_boundary(self):
         text = (ROOT / ".cursor/skills/change/SKILL.md").read_text(encoding="utf-8")

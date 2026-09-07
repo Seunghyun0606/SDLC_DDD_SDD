@@ -39,7 +39,7 @@ class P0CompletionWiringTest(unittest.TestCase):
         self.assertTrue(work["target_graph_existing_entity_scope_guard"])
         text = (ROOT / ".cursor/skills/work/SKILL.md").read_text(encoding="utf-8")
         self.assertIn("--target PGM-001 --stage PROGRAM", text)
-        self.assertIn("--target ANA001", text)
+        self.assertIn("명시적 재진입/debug", text)
         self.assertIn("--artifact", text)
 
     def test_canonical_runtime_hashes_delta_identity_and_blocks_nonconfirmed_truth_overwrite(self):

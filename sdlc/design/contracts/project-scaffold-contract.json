@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "contract_id": "PROJECT_SCAFFOLD_V19_REDTEAM",
+  "source_package_contract": "sdlc/design/contracts/harness-package-contract.json",
+  "purpose": "Framework 개발/검증 이력을 실제 프로젝트 배포 Scaffold에서 제외하고 Runtime/Template/Config/Guide만 배포한다.",
+  "base_file_set": "core_required_files",
+  "add_required_files": [
+    "sdlc/config/change-execution-policy.json",
+    "sdlc/scripts/change_execution_runtime.py",
+    "sdlc/scripts/delivery_status_runtime.py",
+    "sdlc/scripts/component_state_runtime.py",
+    "sdlc/scripts/impact_learning_runtime.py",
+    "sdlc/scripts/unexpected_discovery_runtime.py",
+    "sdlc/scripts/projection_lifecycle_runtime.py",
+    "sdlc/scripts/customer_projection_runtime.py",
+    "sdlc/scripts/render_customer_document.py",
+    "sdlc/design/contracts/customer-document-contract.json",
+    "sdlc/config/customer-document-profile.example.json",
+    "sdlc/scripts/architecture_check.py",
+    "sdlc/config/architecture-rules.json",
+    "sdlc/scripts/sdlc_metrics_runtime.py",
+    "sdlc/design/contracts/project-scaffold-contract.json",
+    "sdlc/scripts/build_project_scaffold.py"
+  ],
+  "exclude_exact": ["sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml"],
+  "exclude_prefixes": [
+    "docs/99_파일럿/", "sdlc/design/baselines/", "sdlc/design/candidates/", "sdlc/design/reviews/", "sdlc/design/validations/", "sdlc/validation/", "sdlc/samples/", "tests/", ".github/"
+  ],
+  "default_internal_profile": "STANDARD_5",
+  "default_customer_profile": "CUSTOMER_STANDARD_3",
+  "legacy_compatibility_package": ["sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml"],
+  "legacy_policy": {
+    "STAGE_ORIENTED_FULL_new_project_default": false,
+    "legacy_customer_01_08_in_new_scaffold": false,
+    "A01_A02_A03_active_customer_views": true
+  },
+  "framework_dev_assets_remain_in_framework_repository": true,
+  "project_scaffold_must_exclude_framework_dev_assets": true,
+  "all_default_harness_commands_have_declared_runtime_dependencies": true
+}

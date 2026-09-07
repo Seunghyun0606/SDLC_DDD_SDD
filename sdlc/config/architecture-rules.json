@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {
+      "id": "COMMON_MAIL_ONLY",
+      "description": "업무 모듈의 메일 발송은 프로젝트 공통 COMMON_MAIL 경계를 사용한다.",
+      "severity": "ARCH_VIOLATION",
+      "file_globs": ["**/*.java", "**/*.kt"],
+      "forbidden_regex": "(?:JavaMailSender|jakarta\\.mail|javax\\.mail)",
+      "allowed_path_regex": "(?:^|/)(?:common|shared)/.*mail",
+      "guidance": "COMMON_MAIL abstraction을 사용하거나 Architecture Exception Decision을 기록한다."
+    },
+    {
+      "id": "NO_RAW_SMTP",
+      "description": "업무 모듈에서 raw SMTP socket/session을 직접 생성하지 않는다.",
+      "severity": "ARCH_VIOLATION",
+      "file_globs": ["**/*.java", "**/*.kt", "**/*.py"],
+      "forbidden_regex": "(?:smtplib\\.SMTP\\s*\\(|Socket\\s*\\([^\\n,]+,\\s*25\\s*\\))",
+      "allowed_path_regex": "(?:^|/)(?:common|shared)/.*mail",
+      "guidance": "공통 메일 경계를 사용하거나 승인된 예외를 등록한다."
+    }
+  ],
+  "exceptions": [],
+  "principles": {
+    "knowledge_to_standard_to_static_check": true,
+    "violation_is_not_automatically_business_defect": true,
+    "exception_requires_human_decision": true
+  }
+}

@@ -2,6 +2,7 @@
 # setup이 만든 .sdlc/project.yaml 한 파일만 유지합니다.
 # 모르는 값을 예시 값으로 복사하지 말고 unresolved에 남깁니다.
 # agent 항목은 생략하면 INTERACTIVE가 기본입니다.
+# Change Level은 RQ별 영향 크기이며 Delivery Profile/문서 개수와 다른 개념입니다.
 schema_version: 1
 project:
   name: "order-service"
@@ -9,6 +10,8 @@ project:
   description: "주문/결제/재고 연계 서비스를 유지보수하는 프로젝트"
 delivery:
   profile: "STANDARD"
+change:
+  level_policy: "AUTO"
 agent:
   execution: "INTERACTIVE"
 technology:
@@ -55,5 +58,13 @@ deployment:
   environment: "dev/test/prod"
 documents:
   language: "ko-KR"
+  internal:
+    profile: "STANDARD_5"
+  customer:
+    profile: "CUSTOMER_STANDARD_3"
+  pm:
+    profile: "PM_STANDARD"
+  machine:
+    visibility: "HIDDEN"
 unresolved:
   - "부분취소 시 재고 복구 순서의 업무정책 확인 필요"

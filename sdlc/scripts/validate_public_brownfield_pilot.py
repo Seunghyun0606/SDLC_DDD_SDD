@@ -3,6 +3,8 @@
 
 This is an integration pilot, not a claim of production completeness. The validator
 checks a few source-grounded relations and explicitly records known static-analysis gaps.
+A public source repository has no customer-confirmed Business Truth, so this pilot also
+records that Brownfield Reconciliation empirical validation is still NOT_RUN.
 """
 from __future__ import annotations
 
@@ -78,10 +80,26 @@ def validate(source_root: Path, repository: str, commit: str) -> dict[str, Any]:
             "required_checks_passed": len(checks) - len(failures),
             "required_checks_total": len(checks),
         },
+        "reconciliation": {
+            "execution_status": "NOT_RUN",
+            "readiness": "WAITING_BUSINESS_AUTHORITY",
+            "source_evidence_observed": True,
+            "source_evidence_class": "CURRENT_SOURCE_DB_CONFIG_RUNTIME_EVIDENCE",
+            "confirmed_human_business_truth_present": False,
+            "reviewer_decision_present": False,
+            "business_truth_auto_rewritten": False,
+            "empirical_reconciliation_pass": False,
+            "required_next_evidence": [
+                "CONFIRMED_HUMAN_BUSINESS_TRUTH",
+                "REVIEWER_DECISION"
+            ],
+            "interpretation": "공개 Repository는 실제 Source Evidence를 제공하지만 고객의 Confirmed Business Truth를 제공하지 않는다. 따라서 Impact integration PASS와 Brownfield Reconciliation empirical PASS는 분리한다."
+        },
         "safety": {
             "production_complete_claimed": False,
             "business_truth_confirmed_from_source": False,
             "not_found_means_no_impact": False,
+            "public_source_only_is_reconciliation_pass": False
         },
     }
     if failures:
@@ -110,7 +128,13 @@ def main(argv: list[str] | None = None) -> int:
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"verdict": result["verdict"], **result["summary"]}, ensure_ascii=False))
+    print(json.dumps({
+        "verdict": result["verdict"],
+        **result["summary"],
+        "reconciliation_execution_status": result["reconciliation"]["execution_status"],
+        "reconciliation_readiness": result["reconciliation"]["readiness"],
+        "reconciliation_empirical_pass": result["reconciliation"]["empirical_reconciliation_pass"],
+    }, ensure_ascii=False))
     return 0 if result["verdict"] == "PASS_REAL_REPOSITORY_PARTIAL_COVERAGE" else 1
 
 

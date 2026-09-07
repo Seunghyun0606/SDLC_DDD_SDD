@@ -1,27 +1,11 @@
 #!/usr/bin/env python3
 """Guarded INTERACTIVE /work runtime for IDE/CLI Agents.
 
-INTERACTIVE means the Agent that is already running in Cursor, Codex, Claude Code, or another
-repository-capable host performs the Stage work. Harness therefore must not launch a second Agent
-process and must not claim Provider execution success.
-
-The flow is deliberately two-phase:
-
-1. prepare (default)
-   - build the same canonical Target/Stage/Artifact plan as headless /work
-   - capture Git/Canonical/dirty-file fingerprints
-   - write ``work-context.json``
-   - return ``INTERACTIVE_HANDOFF_READY``
-2. the current Agent writes the selected Artifact and ``stage-result.json``
-3. finalize (``--finalize``)
-   - verify the baseline and write scope
-   - validate Stage Result / Target Graph / Business Truth guards
-   - run DEVELOPMENT build/test checks when applicable
-   - apply Canonical Delta only after validation passes
-
-Validation and Canonical apply reuse ``run_work.py`` so INTERACTIVE and HEADLESS share the same
-semantic safety boundary. Interactive failures never auto-rollback user/Agent edits; they fail
-closed and report ``manual_recovery_required`` instead.
+INTERACTIVE means the Agent already running in the host performs the work; Harness does not launch
+a second Agent. Prepare captures the baseline/context, the Agent writes the selected Artifact and
+stage-result.json, and finalize reuses run_work.py guards. L1/L2 may skip separate Stage documents,
+but when Source changed finalize requires the compact pre-write analysis evidence plus configured
+build/test verification.
 """
 from __future__ import annotations
 
@@ -294,6 +278,10 @@ def finalize(
 
     interactive_changes = _changed_since_prepare(root, baseline) if git_now.get("available") else set()
     allowed_source_roots = WORK.CONFIG.source_roots(source_profile) or list(plan.get("source_policy", {}).get("allowed_write_roots", []))
+    source_changed_files = WORK._source_changed_paths(interactive_changes, allowed_source_roots) if git_now.get("available") else []
+    source_change_unknown = bool(stage == "DEVELOPMENT" and not git_now.get("available") and allowed_source_roots)
+    source_changed = bool(source_changed_files or source_change_unknown)
+
     run_rel = _repo_rel(root, run_dir)
     exact = {artifact_rel}
     prefixes = ([run_rel] if run_rel else []) + (["sdlc/runtime"] if stage != "DEVELOPMENT" else ["sdlc/runtime", *allowed_source_roots])
@@ -316,6 +304,14 @@ def finalize(
         )
     if not artifact_abs.is_file():
         return _failure("FAIL_SELECTED_ARTIFACT_MISSING", artifact_path=artifact_rel)
+
+    prewrite_errors = WORK.validate_fast_path_prewrite_analysis(plan, stage_result, source_changed=source_changed)
+    if prewrite_errors:
+        return _failure(
+            "FAIL_FAST_PATH_PREWRITE_ANALYSIS",
+            pre_write_analysis_errors=prewrite_errors,
+            source_changed_files=source_changed_files,
+        )
 
     delta = stage_result.get("canonical_delta") if isinstance(stage_result.get("canonical_delta"), dict) else {}
     if git_now.get("available") and delta.get("operations"):
@@ -345,11 +341,11 @@ def finalize(
         )
 
     verification: list[dict[str, Any]] = []
-    if stage == "DEVELOPMENT" and not dry_run:
+    if stage == "DEVELOPMENT" and not dry_run and source_changed:
         build_commands = WORK.CONFIG.command_list(WORK.CONFIG.nested(source_profile, "build", "commands", default=[]))
         test_commands = WORK.CONFIG.command_list(WORK.CONFIG.nested(source_profile, "test", "commands", default=[]))
         if not build_commands and not test_commands:
-            return _failure("FAIL_BUILD_TEST_COMMANDS_MISSING", validation=validation)
+            return _failure("FAIL_BUILD_TEST_COMMANDS_MISSING", validation=validation, source_changed_files=source_changed_files)
         if build_commands:
             verification.extend(WORK._run_commands(root, build_commands, "build"))
         if not verification or verification[-1]["exit_code"] == 0:
@@ -365,11 +361,15 @@ def finalize(
         "context_path": str(context_path),
         "result_path": str(result_path),
         "interactive_changed_files": sorted(interactive_changes),
+        "source_changed_files": source_changed_files,
+        "source_change_detection": "GIT_DIFF" if git_now.get("available") else ("UNKNOWN_NON_GIT_WITH_SOURCE_ROOTS" if source_change_unknown else "NO_SOURCE_ROOTS"),
         "validation": validation,
         "source_verification": verification,
         "canonical_applied": False,
         "executable": True,
     }
+    if stage == "DEVELOPMENT" and not source_changed:
+        execution["source_verification_skipped_reason"] = "NO_SOURCE_CHANGE"
     if dry_run:
         execution["status"] = "DRY_RUN_VALIDATED"
         execution["canonical_status"] = canonical_check.get("status")

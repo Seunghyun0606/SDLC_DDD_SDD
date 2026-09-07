@@ -24,14 +24,17 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
         self.assertNotIn('### CRUD 및 사용자/시스템 행위',program)
         self.assertNotIn('### 핵심 업무 로직과 판단 규칙',program)
 
-    def test_program_readiness_is_one_table_with_seventeen_items(self):
+    def test_program_readiness_is_core_plus_risk_conditional_with_legacy_full_compatibility(self):
         harness=json.loads((ROOT/'sdlc/design/contracts/harness-package-contract.json').read_text(encoding='utf-8'))
         rules=harness['program_readiness_rules']
-        self.assertEqual('SINGLE_READINESS_TABLE',rules['representation'])
-        self.assertEqual(17,rules['readiness_item_count'])
-        self.assertEqual(7,rules['fast_required_item_count'])
+        self.assertEqual('CORE_PLUS_RISK_TRIGGERED_CONDITIONAL',rules['representation'])
+        self.assertEqual(6,rules['core_required_item_count'])
+        self.assertEqual(17,rules['legacy_full_item_count'])
+        self.assertTrue(rules['change_level_aware'])
+        self.assertTrue(rules['machine_derived_fields_are_not_human_maintenance'])
         program=(ROOT/'sdlc/templates/core/program-spec.md').read_text(encoding='utf-8')
         self.assertEqual(1,program.count('### 구현 준비도'))
+        self.assertIn('LEGACY_FULL_17',program)
 
     def test_open_human_view_hides_machine_taxonomy(self):
         harness=json.loads((ROOT/'sdlc/design/contracts/harness-package-contract.json').read_text(encoding='utf-8'))
@@ -62,7 +65,7 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
         self.assertTrue(doc['customer_projection_must_not_invent_missing_business_facts'])
         self.assertTrue((ROOT/doc['customer_projection_script']).is_file())
 
-    def test_canonical_runtime_is_executable_and_wired_to_work_and_change(self):
+    def test_canonical_runtime_is_executable_and_core_skill_owns_wiring(self):
         harness=json.loads((ROOT/'sdlc/design/contracts/harness-package-contract.json').read_text(encoding='utf-8'))
         runtime=harness['canonical_runtime']
         self.assertTrue(runtime['all_or_nothing'])
@@ -71,11 +74,19 @@ class ComplexityReductionRegressionTest(unittest.TestCase):
         self.assertFalse(runtime['source_derived_can_overwrite_confirmed_business'])
         self.assertTrue((ROOT/runtime['script']).is_file())
         self.assertIn(runtime['script'],harness['core_required_files'])
-        for skill_path in ['.cursor/skills/work/SKILL.md','.cursor/skills/change/SKILL.md']:
-            text=(ROOT/skill_path).read_text(encoding='utf-8')
-            self.assertIn('apply_canonical_delta.py',text)
-            self.assertIn('--dry-run',text)
-            self.assertIn('ADD_PROVENANCE',text)
+
+        core=(ROOT/'sdlc/agent/skills/work/SKILL.md').read_text(encoding='utf-8')
+        cursor=(ROOT/'.cursor/skills/work/SKILL.md').read_text(encoding='utf-8')
+        change=(ROOT/'.cursor/skills/change/SKILL.md').read_text(encoding='utf-8')
+        executor=(ROOT/'sdlc/scripts/run_work.py').read_text(encoding='utf-8')
+
+        self.assertIn('Canonical Apply',core)
+        self.assertIn('ADD_PROVENANCE',core)
+        self.assertIn('sdlc/agent/skills/work/SKILL.md',cursor)
+        self.assertIn('apply_canonical_delta.py',change)
+        self.assertIn('--dry-run',change)
+        self.assertIn('ADD_PROVENANCE',change)
+        self.assertIn('APPLY.apply_delta_to_store',executor)
 
     def test_reverse_capability_is_not_overclaimed(self):
         harness=json.loads((ROOT/'sdlc/design/contracts/harness-package-contract.json').read_text(encoding='utf-8'))

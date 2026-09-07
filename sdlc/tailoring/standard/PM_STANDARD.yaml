@@ -1,0 +1,15 @@
+schema_version: 1
+profile_id: PM_STANDARD
+name: "PM / Reviewer Human Control View"
+output_root: "docs/00_관리"
+artifacts:
+  rq_review:
+    audience: PM_REVIEW
+    template: "sdlc/templates/management/rq-review.md"
+    output_path: "docs/00_관리/RQ/{target}_검토현황.md"
+    visibility: PRIMARY
+    authoring: GENERATED_VIEW
+    order: 10
+    sources:
+      stages: [DECOMPOSE, CLARIFY, PROCESS, DISCOVERY, IMPACT, DESIGN, PROGRAM, DEVELOPMENT, TEST, VERIFY, KNOWLEDGE_PROMOTION]
+      canonical: [RQ, FR, BR, PGM, AC, TC, ALT, ASM]

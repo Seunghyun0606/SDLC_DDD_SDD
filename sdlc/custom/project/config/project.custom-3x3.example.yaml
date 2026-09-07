@@ -1,0 +1,81 @@
+# 이 파일을 그대로 사용하지 말고 프로젝트 root의 .sdlc/project.yaml로 복사한 뒤 실제 값으로 수정한다.
+schema_version: 1
+
+project:
+  name: "custom-3x3-pilot"
+  mode: "BROWNFIELD"
+  description: "JSP/Java Brownfield Custom Template 3x3 Pilot"
+
+delivery:
+  profile: "STANDARD"
+
+change:
+  level_policy: "AUTO"
+
+agent:
+  execution: "INTERACTIVE"
+
+technology:
+  language: "Java"
+  framework: "JSP + Spring MVC"
+  build:
+    - "./mvnw -q -DskipTests package"
+  test:
+    - "./mvnw test"
+
+source:
+  roots:
+    - "src/main/java"
+  test_roots:
+    - "src/test/java"
+  resource_roots:
+    - "src/main/resources"
+    - "src/main/webapp"
+  excludes:
+    - ".git/**"
+    - "target/**"
+
+architecture:
+  style: "Layered"
+  modules: []
+
+git:
+  branch_strategy: "feature-branch + pull-request"
+  protected_branches:
+    - "main"
+
+coding:
+  convention: "기존 프로젝트 Coding Convention 유지"
+  naming: "기존 package/class/method naming 유지"
+
+data:
+  database: "PROJECT_ACTUAL_DB"
+  orm_mapper: "PROJECT_ACTUAL_MAPPER"
+  migration: "PROJECT_ACTUAL_POLICY"
+
+interface:
+  api: "PROJECT_ACTUAL_INTERFACE"
+  event: "없음"
+  batch: "PROJECT_ACTUAL_BATCH_POLICY"
+
+security:
+  standard: "프로젝트 보안 가이드"
+
+deployment:
+  environment: "dev/test/prod"
+
+documents:
+  language: "ko-KR"
+  internal:
+    profile: "CUSTOM_PILOT_INTERNAL_3"
+  customer:
+    profile: "CUSTOM_PILOT_CUSTOMER_3"
+    projection_contract: "sdlc/custom/project/config/customer-3x3-document-contract.json"
+    projection_config: "sdlc/custom/project/config/customer-3x3-projection-profile.json"
+  pm:
+    profile: "PM_STANDARD"
+  machine:
+    visibility: "HIDDEN"
+
+unresolved:
+  - "PROJECT_ACTUAL_* 예시 값을 실제 프로젝트 값으로 교체해야 함"

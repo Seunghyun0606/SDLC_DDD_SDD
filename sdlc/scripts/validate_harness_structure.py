@@ -10,8 +10,46 @@ def validate(root: Path) -> list[str]:
     if not contract_path.exists():
         return ['missing contract: sdlc/design/contracts/harness-package-contract.json']
     c=json.loads(contract_path.read_text(encoding='utf-8'))
+    core_required=set(c['core_required_files'])
     for rel in c['core_required_files']:
         if not (root/rel).is_file(): errors.append(f'missing core file: {rel}')
+
+    if c.get('candidate_design') != 'v1.9.0-redteam-simplified':
+        errors.append('active package contract must identify v1.9.0-redteam-simplified')
+    for rel in ['sdlc/scripts/change_execution_runtime.py','sdlc/config/change-execution-policy.json']:
+        if rel not in core_required:
+            errors.append(f'change execution core dependency missing from package: {rel}')
+    for group in ['official_entrypoint_required_files','default_tailoring_assets','default_user_guides']:
+        required=c.get(group, [])
+        if not isinstance(required, list) or not required:
+            errors.append(f'package contract missing non-empty {group}')
+            continue
+        for rel in required:
+            if rel not in core_required:
+                errors.append(f'{group} item not in core_required_files: {rel}')
+            if not (root/rel).is_file():
+                errors.append(f'{group} file missing: {rel}')
+    if 'sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml' in set(c.get('default_tailoring_assets', [])):
+        errors.append('STAGE_ORIENTED_FULL must not be a new-project default Tailoring asset')
+    if 'sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml' not in set(c.get('compatibility_tailoring_assets', [])):
+        errors.append('STAGE_ORIENTED_FULL must remain available as compatibility asset')
+
+    readiness_path=root/'sdlc/config/program-spec-readiness.json'
+    if readiness_path.is_file():
+        readiness=json.loads(readiness_path.read_text(encoding='utf-8'))
+        package_rules=c.get('program_readiness_rules', {})
+        if readiness.get('representation') != 'CORE_PLUS_RISK_TRIGGERED_CONDITIONAL':
+            errors.append('program readiness must use CORE_PLUS_RISK_TRIGGERED_CONDITIONAL')
+        if package_rules.get('representation') != readiness.get('representation'):
+            errors.append('package/program readiness representation mismatch')
+        if len(readiness.get('core_required_field_ids', [])) != int(package_rules.get('core_required_item_count', -1)):
+            errors.append('package/program readiness core item count mismatch')
+        legacy=len((readiness.get('legacy_compatibility') or {}).get('required_field_ids', []))
+        if legacy != int(package_rules.get('legacy_full_item_count', -1)):
+            errors.append('package/program readiness legacy item count mismatch')
+    else:
+        errors.append('program readiness config missing')
+
     for d in c['customization_roots']:
         if not (root/d).is_dir(): errors.append(f'missing customization root: {d}')
     profile=(root/'sdlc/config/project-profile.example.yaml').read_text(encoding='utf-8')
@@ -72,13 +110,19 @@ def validate(root: Path) -> list[str]:
             errors.append('developer spec N/A must require a reason')
         if not rules.get('functional_design_semantics_must_not_be_duplicated_in_program_spec'):
             errors.append('program spec must not duplicate functional design semantics')
+        if not rules.get('all_program_delta_dimensions_are_not_unconditionally_required'):
+            errors.append('program spec dimensions must not all be unconditionally required')
+        if not rules.get('machine_derived_fields_are_not_human_maintenance'):
+            errors.append('source-regeneratable program fields must not be human maintenance')
         ownership=dev.get('ownership_model', {})
         if ownership.get('functional_design') != 'SEMANTIC_SOURCE_OF_TRUTH':
             errors.append('functional design must be semantic source of truth')
         if ownership.get('program_spec') != 'IMPLEMENTATION_DELTA_AND_EXECUTION_READINESS':
             errors.append('program spec must be implementation delta and readiness')
         if not c['developer_specification'].get('legacy_program_dor_17_fields_preserved'):
-            errors.append('legacy 17-field Program DoR must remain preserved')
+            errors.append('legacy 17-field Program DoR must remain preserved for compatibility')
+        if c['developer_specification'].get('legacy_program_dor_17_fields_default') is not False:
+            errors.append('legacy 17-field Program DoR must not be the new-project default')
 
     open_cfg=c.get('open_resolution', {})
     open_path=root/open_cfg.get('contract','sdlc/design/contracts/open-resolution-contract.json')

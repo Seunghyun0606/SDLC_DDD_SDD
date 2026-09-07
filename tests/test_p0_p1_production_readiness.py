@@ -63,7 +63,7 @@ class BootstrapAndProfileTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             result = SETUP.bootstrap(root, name="green", mode="GREENFIELD", delivery="FAST", validate=False)
-            self.assertEqual("CONFIGURED_PROVIDER_REQUIRED", result["status"])
+            self.assertEqual("READY_FOR_PLAN", result["status"])
             project = CONFIG.load_config(root / "sdlc/config/project-profile.yaml")
             source = CONFIG.load_config(root / "sdlc/config/source-profile.yaml")
             self.assertEqual("GREENFIELD", CONFIG.project_mode(project))
@@ -71,14 +71,19 @@ class BootstrapAndProfileTest(unittest.TestCase):
             self.assertEqual([], CONFIG.source_roots(source))
             provider = json.loads((root / "sdlc/config/agent-provider.json").read_text(encoding="utf-8"))
             self.assertFalse(provider["enabled"])
+            self.assertFalse(result["provider_ready"])
 
-    def test_fast_standard_full_are_runtime_policies(self):
+    def test_delivery_profile_and_program_readiness_are_separate_runtime_policies(self):
         project = {"project": {"mode": "BROWNFIELD"}, "delivery": {"profile": "FAST"}}
         fast = CONFIG.delivery_policy(project)
         self.assertEqual("FAST", fast["profile"])
         self.assertIn("IMPACT", fast["enabled_stages"])
         self.assertNotIn("PROCESS", fast["enabled_stages"])
-        self.assertEqual(7, len(json.loads((ROOT / "sdlc/config/program-spec-readiness.json").read_text(encoding="utf-8"))["profiles"]["FAST"]["required_field_ids"]))
+
+        readiness = json.loads((ROOT / "sdlc/config/program-spec-readiness.json").read_text(encoding="utf-8"))
+        self.assertEqual("CORE_PLUS_RISK_TRIGGERED_CONDITIONAL", readiness["representation"])
+        self.assertEqual(6, len(readiness["core_required_field_ids"]))
+        self.assertEqual(17, len(readiness["legacy_compatibility"]["required_field_ids"]))
 
 
 class CanonicalConcurrencyTest(unittest.TestCase):
@@ -141,23 +146,29 @@ class WorkRuntimeSafetyTest(unittest.TestCase):
             result = WORK.execute_plan(root, plan, provider_config=provider, run_dir=root / "sdlc/runtime/run", store_path=store_path)
             self.assertEqual("FAIL_PROTECTED_BRANCH_WRITE", result["status"])
 
-    def test_check_reports_unconfigured_provider(self):
+    def test_check_reports_interactive_ready_without_provider(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             SETUP.bootstrap(root, name="g", mode="GREENFIELD", validate=False)
             result = CHECK.check(root, setup_only=True)
-            self.assertEqual("SETUP_OR_PROVIDER_REQUIRED", result["status"])
+            self.assertEqual("READY", result["status"])
+            self.assertEqual("INTERACTIVE", result["setup"]["agent_execution"]["mode"])
+            self.assertTrue(result["setup"]["agent_execution"]["ready"])
+            self.assertFalse(result["setup"]["agent_execution"]["provider_required"])
             self.assertFalse(result["setup"]["provider"]["enabled"])
 
 
 class FastProgramSpecTest(unittest.TestCase):
-    def test_fast_accepts_seven_core_readiness_items_while_standard_does_not(self):
+    def test_core_readiness_is_small_and_risk_fields_are_conditional(self):
         config = json.loads((ROOT / "sdlc/config/program-spec-readiness.json").read_text(encoding="utf-8"))
-        ids = config["profiles"]["FAST"]["required_field_ids"]
         markers = {row["id"]: row["marker"] for row in config["required_fields"]}
-        text = "\n".join(markers[i] for i in ids)
-        self.assertEqual([], PROGRAM.validate_text(text, config, "FAST"))
-        self.assertTrue(PROGRAM.validate_text(text, config, "STANDARD"))
+        text = "\n".join(markers[field_id] for field_id in config["core_required_field_ids"])
+
+        self.assertEqual([], PROGRAM.validate_text(text, config, "STANDARD", "L1", {}))
+        interface_errors = PROGRAM.validate_text(text, config, "STANDARD", "L2", {"HAS_INTERFACE": "YES"})
+        self.assertTrue(any(x.startswith("MISSING_READINESS_ITEM:integration") for x in interface_errors))
+        legacy_errors = PROGRAM.validate_text(text, config, "LEGACY_FULL_17", "L3", {})
+        self.assertTrue(any(x.startswith("MISSING_READINESS_ITEM:transaction") for x in legacy_errors))
 
 
 class RawDocumentEvidenceTest(unittest.TestCase):
@@ -245,6 +256,8 @@ interface OrderRepository extends JpaRepository<OrderEntity, Long> {}
         core = set(harness["core_required_files"])
         self.assertNotIn("sdlc/scripts/render_customer_document.py", core)
         self.assertNotIn("sdlc/scripts/detect_source_drift.py", core)
+        self.assertIn("sdlc/scripts/change_execution_runtime.py", core)
+        self.assertIn("sdlc/config/change-execution-policy.json", core)
         self.assertIn("sdlc/scripts/harness.py", core)
         self.assertEqual(["core", "project_overlay", "local_override"], harness["overlay_precedence"])
 

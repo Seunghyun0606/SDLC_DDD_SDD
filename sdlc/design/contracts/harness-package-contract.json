@@ -1,6 +1,6 @@
 {
-  "schema_version": 16,
-  "candidate_design": "v1.7-wp4-work-handoff-v0.1",
+  "schema_version": 18,
+  "candidate_design": "v1.9.0-redteam-simplified",
   "core_required_files": [
     ".cursor/rules/00-core.mdc",
     ".cursor/rules/10-project.mdc",
@@ -23,6 +23,8 @@
     "sdlc/scripts/apply_canonical_delta.py",
     "sdlc/scripts/validate_agent_stage_result.py",
     "sdlc/scripts/validate_program_spec.py",
+    "sdlc/scripts/change_execution_runtime.py",
+    "sdlc/config/change-execution-policy.json",
     "sdlc/config/program-spec-readiness.json",
     "sdlc/design/contracts/agent-execution-contract.json",
     "sdlc/design/contracts/business-scenario-sixw-contract.json",
@@ -36,13 +38,68 @@
     "sdlc/templates/core/implementation-result.md",
     "sdlc/templates/core/test-scenario.md",
     "sdlc/templates/core/verification-result.md",
-    "sdlc/templates/core/operations-knowledge.md"
+    "sdlc/templates/core/operations-knowledge.md",
+    "sdlc/design/contracts/harness-package-contract.json",
+    "sdlc/scripts/runtime_config_v19.py",
+    "sdlc/scripts/intake_explainable.py",
+    "sdlc/scripts/tailored_work.py",
+    "sdlc/scripts/tailored_check.py",
+    "sdlc/scripts/delivery_status_runtime.py",
+    "sdlc/scripts/tailoring_runtime.py",
+    "sdlc/scripts/interactive_work.py",
+    "sdlc/scripts/interactive_change.py",
+    "sdlc/agent/skills/work/SKILL.md",
+    "sdlc/agent/skills/change/SKILL.md",
+    ".cursor/skills/work/references/requirement.md",
+    ".cursor/skills/work/references/clarify.md",
+    ".cursor/skills/work/references/process.md",
+    ".cursor/skills/work/references/discovery.md",
+    ".cursor/skills/work/references/impact.md",
+    ".cursor/skills/work/references/design.md",
+    ".cursor/skills/work/references/program.md",
+    ".cursor/skills/work/references/development.md",
+    ".cursor/skills/work/references/test.md",
+    ".cursor/skills/work/references/verify.md",
+    "sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml",
+    "sdlc/tailoring/standard/STANDARD_3.yaml",
+    "sdlc/tailoring/standard/STANDARD_5.yaml",
+    "sdlc/tailoring/standard/CUSTOMER_STANDARD_3.yaml",
+    "sdlc/tailoring/standard/PM_STANDARD.yaml",
+    "sdlc/templates/tailoring/standard/01_업무정의서.md",
+    "sdlc/templates/tailoring/standard/02_상세설계서.md",
+    "sdlc/templates/tailoring/standard/03_화면설계서.md",
+    "sdlc/templates/tailoring/standard/11_요구사항정의서.md",
+    "sdlc/templates/tailoring/standard/12_업무프로세스설계서.md",
+    "sdlc/templates/tailoring/standard/13_기능화면설계서.md",
+    "sdlc/templates/tailoring/standard/14_프로그램설계서.md",
+    "sdlc/templates/tailoring/standard/15_테스트인수결과서.md",
+    "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md",
+    "sdlc/templates/customer/standard/A02_영향_개발범위_공유서.md",
+    "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md",
+    "sdlc/templates/management/rq-review.md",
+    "docs/00_시작/START_HERE.md",
+    "docs/00_시작/01_STANDARD_SCAFFOLD_사용가이드.md",
+    "docs/00_시작/02_PROJECT_설정가이드.md",
+    "docs/00_시작/03_TAILORING_설정가이드.md",
+    "docs/00_시작/04_TEMPLATE_및_산출물_가이드.md",
+    "docs/00_시작/05_이해관계자별_작업가이드.md",
+    "docs/00_시작/06_CUSTOM_SCAFFOLD_적용가이드.md",
+    "docs/00_시작/07_BROWNFIELD_SSOT_현행화가이드.md"
   ],
   "deployment_sets": {
     "MINIMUM_EXECUTABLE_CORE": {
       "required": "core_required_files",
-      "notes": "Validation/Pilot/Test/Sample은 Production Project 배포 필수가 아니다."
+      "notes": "setup/intake/work/review/change/check와 Change-Level semantic Fast Path를 실행하는 최소 배포 묶음. Pilot/Test/Sample과 고급 운영 도구는 별도 Extension이다."
     },
+    "ENHANCEMENT_EXTENSION": [
+      "sdlc/scripts/component_state_runtime.py",
+      "sdlc/scripts/impact_learning_runtime.py",
+      "sdlc/scripts/unexpected_discovery_runtime.py",
+      "sdlc/scripts/projection_lifecycle_runtime.py",
+      "sdlc/scripts/sdlc_metrics_runtime.py",
+      "sdlc/scripts/architecture_check.py",
+      "sdlc/config/architecture-rules.json"
+    ],
     "BROWNFIELD_EXTENSION": [
       "sdlc/design/contracts/brownfield-impact-contract.json",
       "sdlc/design/contracts/source-drift-contract.json",
@@ -55,6 +112,8 @@
     "CUSTOMER_EXTENSION": [
       "sdlc/design/contracts/customer-document-contract.json",
       "sdlc/scripts/render_customer_document.py",
+      "sdlc/scripts/customer_projection_runtime.py",
+      "sdlc/scripts/projection_lifecycle_runtime.py",
       "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md",
       "sdlc/templates/customer/standard/A02_영향_개발범위_공유서.md",
       "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md"
@@ -72,10 +131,20 @@
   "overlay_precedence": ["core", "project_overlay", "local_override"],
   "compatibility_overlay_precedence": ["core", "preset", "project_profile", "project_overlay", "domain_overlay", "local_override"],
   "customization_roots": ["sdlc/custom/project", "sdlc/custom/domain"],
-  "work_reference_required_sections": ["## Purpose", "## Required Input", "## Optional Input", "## Retrieval Strategy", "## 실행 계약(Agent Execution Contract)", "## Steps", "## Output", "## Quality Check", "## Alert Conditions", "## Token Strategy", "## Do Not"],
-  "template_required_sections": ["## 문서 목적", "## 한눈에 보기", "## 업무 흐름", "## 입력 및 근거", "## 상세 내용", "## 미확정 사항·주의·가정", "## 관련 ID 및 추적성", "## 다음 작업"],
+  "work_reference_required_sections": [
+    "## Purpose", "## Required Input", "## Optional Input", "## Retrieval Strategy",
+    "## 실행 계약(Agent Execution Contract)", "## Steps", "## Output", "## Quality Check",
+    "## Alert Conditions", "## Token Strategy", "## Do Not"
+  ],
+  "template_required_sections": [
+    "## 문서 목적", "## 한눈에 보기", "## 업무 흐름", "## 입력 및 근거", "## 상세 내용",
+    "## 미확정 사항·주의·가정", "## 관련 ID 및 추적성", "## 다음 작업"
+  ],
   "source_evidence_markers": ["Locator", "Source Hash", "Confidence", "Status"],
-  "process_sixw_required_markers": ["### 업무 정의(6하원칙)", "누가(Who)", "언제(When)", "어디서(Where)", "무엇을(What)", "어떻게(How)", "왜(Why)"],
+  "process_sixw_required_markers": [
+    "### 업무 정의(6하원칙)", "누가(Who)", "언제(When)", "어디서(Where)",
+    "무엇을(What)", "어떻게(How)", "왜(Why)"
+  ],
   "functional_design_required_markers": [
     "### 업무 정의(6하원칙)", "### 화면·채널 및 사용자 동선", "### 화면·입력·출력 필드 명세",
     "### CRUD 및 사용자/시스템 행위", "### 핵심 업무 로직과 판단 규칙", "### 데이터 조회·저장 설계",
@@ -84,17 +153,19 @@
   ],
   "program_spec_required_markers": [
     "### 기능 설계 기준점", "### 실제 구현 Target", "### 구현 매핑과 차이", "### Query·Table·Source 구현 근거",
-    "### 트랜잭션·실행 제어", "### 연계 구현 계약", "### 기술 제어와 운영 조건", "### TASK·AC·TC·Source 연결",
-    "### 구현 준비도", "## 관련 ID 및 추적성", "## 다음 작업"
+    "### 트랜잭션·실행 제어", "### 연계 구현 계약", "### 기술 제어와 운영 조건",
+    "### TASK·AC·TC·Source 연결", "### 구현 준비도", "## 관련 ID 및 추적성", "## 다음 작업"
   ],
   "program_readiness_rules": {
     "ready_requires_zero_open": true,
     "simulated_source_cannot_be_ready": true,
     "open_real_source_cannot_be_ready": true,
-    "ready_requires_functional_design_reference": true,
-    "representation": "SINGLE_READINESS_TABLE",
-    "readiness_item_count": 17,
-    "fast_required_item_count": 7,
+    "functional_design_reference_required_from_change_level": "L3",
+    "representation": "CORE_PLUS_RISK_TRIGGERED_CONDITIONAL",
+    "core_required_item_count": 6,
+    "legacy_full_item_count": 17,
+    "change_level_aware": true,
+    "machine_derived_fields_are_not_human_maintenance": true,
     "profile_aware_validator": true
   },
   "stage_contracts": {
@@ -103,8 +174,15 @@
     "PROCESS": {"reference": "process.md", "template": "process-analysis.md", "business_scenario_contract": true},
     "DISCOVERY": {"reference": "discovery.md", "template": "impact-analysis.md", "source_evidence": true},
     "IMPACT": {"reference": "impact.md", "template": "impact-analysis.md", "source_evidence": true},
-    "DESIGN": {"reference": "design.md", "template": "functional-design.md", "source_evidence": true, "business_scenario_contract": true, "developer_spec_contract": true, "open_resolution_contract": true},
-    "PROGRAM": {"reference": "program.md", "template": "program-spec.md", "source_evidence": true, "readiness_contract": true, "business_scenario_trace": true, "developer_spec_contract": true, "open_resolution_contract": true},
+    "DESIGN": {
+      "reference": "design.md", "template": "functional-design.md", "source_evidence": true,
+      "business_scenario_contract": true, "developer_spec_contract": true, "open_resolution_contract": true
+    },
+    "PROGRAM": {
+      "reference": "program.md", "template": "program-spec.md", "source_evidence": true,
+      "readiness_contract": true, "business_scenario_trace": true, "developer_spec_contract": true,
+      "open_resolution_contract": true
+    },
     "DEVELOPMENT": {"reference": "development.md", "template": "implementation-result.md", "source_evidence": true},
     "TEST": {"reference": "test.md", "template": "test-scenario.md", "source_evidence": true},
     "VERIFY": {"reference": "verify.md", "template": "verification-result.md", "source_evidence": true}
@@ -183,13 +261,25 @@
     "provider_write_scope_guard": true,
     "provider_failure_rolls_back_git_changes": true,
     "development_build_test_before_canonical_commit": true,
+    "development_stage_without_source_change_does_not_require_build_test": true,
+    "l1_l2_source_change_requires_intent_as_is_impact_preconditions": true,
     "delivery_profiles": ["FAST", "STANDARD", "FULL"],
     "default_human_document_root": "docs/10_산출물",
     "machine_runtime_root": "sdlc/runtime",
     "human_decision_categories": ["BUSINESS_POLICY", "SCOPE", "APPROVAL", "TECHNICAL_CHOICE", "ACCEPTANCE"],
     "human_review_requires_explicit_authority_metadata": true,
     "review_input_json_required_from_user": false,
-    "review_command_auto_mutates_business_fields": false
+    "review_command_auto_mutates_business_fields": false,
+    "tailoring_adapter": "sdlc/scripts/tailored_work.py",
+    "human_check_adapter": "sdlc/scripts/tailored_check.py",
+    "human_check_delivery_status_runtime": "sdlc/scripts/delivery_status_runtime.py",
+    "interactive_work_adapter": "sdlc/scripts/interactive_work.py",
+    "interactive_change_adapter": "sdlc/scripts/interactive_change.py",
+    "change_execution_policy": "sdlc/config/change-execution-policy.json",
+    "change_execution_runtime": "sdlc/scripts/change_execution_runtime.py",
+    "default_execution_mode": "INTERACTIVE",
+    "provider_required_for_interactive": false,
+    "provider_required_for_headless": true
   },
   "requirement_intake": {
     "entrypoint": "sdlc/scripts/harness.py intake",
@@ -202,7 +292,11 @@
     "auto_confirm_business_truth": false,
     "confirmed_business_reintake_overwrite": false,
     "returns_concrete_rq_target": true,
-    "next_stage": "DECOMPOSE"
+    "next_stage": "DECOMPOSE",
+    "explainability_adapter": "sdlc/scripts/intake_explainable.py",
+    "core_executor": "sdlc/scripts/intake_requirements.py",
+    "rq_extraction_manifest": "sdlc/runtime/intake/rq-extraction-manifest.json",
+    "rq_extraction_human_report": "docs/00_관리/RQ_생성근거.md"
   },
   "business_scenario": {
     "contract": "sdlc/design/contracts/business-scenario-sixw-contract.json",
@@ -213,8 +307,11 @@
     "contract": "sdlc/design/contracts/developer-spec-contract.json",
     "functional_design_is_semantic_source_of_truth": true,
     "program_spec_is_implementation_delta": true,
+    "program_readiness_representation": "CORE_PLUS_RISK_TRIGGERED_CONDITIONAL",
+    "core_program_dor_required_fields": 6,
+    "risk_triggered_conditional_fields": true,
     "legacy_program_dor_17_fields_preserved": true,
-    "fast_program_dor_required_fields": 7
+    "legacy_program_dor_17_fields_default": false
   },
   "open_resolution": {
     "contract": "sdlc/design/contracts/open-resolution-contract.json",
@@ -310,5 +407,94 @@
     "greenfield_human_usability_not_measured": true,
     "public_brownfield_workflow": ".github/workflows/public-brownfield-pilot.yml",
     "greenfield_workflow": ".github/workflows/greenfield-e2e-pilot.yml"
-  }
+  },
+  "official_entrypoint_required_files": [
+    "sdlc/design/contracts/harness-package-contract.json",
+    "sdlc/scripts/harness.py",
+    "sdlc/scripts/runtime_config.py",
+    "sdlc/scripts/runtime_config_v19.py",
+    "sdlc/scripts/bootstrap_project.py",
+    "sdlc/scripts/intake_requirements.py",
+    "sdlc/scripts/intake_explainable.py",
+    "sdlc/scripts/import_requirements.py",
+    "sdlc/scripts/tailored_work.py",
+    "sdlc/scripts/tailored_check.py",
+    "sdlc/scripts/delivery_status_runtime.py",
+    "sdlc/scripts/tailoring_runtime.py",
+    "sdlc/scripts/change_execution_runtime.py",
+    "sdlc/config/change-execution-policy.json",
+    "sdlc/scripts/interactive_work.py",
+    "sdlc/scripts/interactive_change.py",
+    "sdlc/scripts/work_handoff.py",
+    "sdlc/scripts/review_work.py",
+    "sdlc/scripts/run_work.py",
+    "sdlc/scripts/run_change.py",
+    "sdlc/scripts/run_check.py",
+    "sdlc/scripts/apply_canonical_delta.py",
+    "sdlc/scripts/validate_agent_stage_result.py",
+    "sdlc/scripts/validate_program_spec.py",
+    "sdlc/agent/skills/work/SKILL.md",
+    "sdlc/agent/skills/change/SKILL.md",
+    ".cursor/skills/work/references/requirement.md",
+    ".cursor/skills/work/references/clarify.md",
+    ".cursor/skills/work/references/process.md",
+    ".cursor/skills/work/references/discovery.md",
+    ".cursor/skills/work/references/impact.md",
+    ".cursor/skills/work/references/design.md",
+    ".cursor/skills/work/references/program.md",
+    ".cursor/skills/work/references/development.md",
+    ".cursor/skills/work/references/test.md",
+    ".cursor/skills/work/references/verify.md",
+    "sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml",
+    "sdlc/tailoring/standard/STANDARD_3.yaml",
+    "sdlc/tailoring/standard/STANDARD_5.yaml",
+    "sdlc/tailoring/standard/CUSTOMER_STANDARD_3.yaml",
+    "sdlc/tailoring/standard/PM_STANDARD.yaml",
+    "sdlc/templates/tailoring/standard/01_업무정의서.md",
+    "sdlc/templates/tailoring/standard/02_상세설계서.md",
+    "sdlc/templates/tailoring/standard/03_화면설계서.md",
+    "sdlc/templates/tailoring/standard/11_요구사항정의서.md",
+    "sdlc/templates/tailoring/standard/12_업무프로세스설계서.md",
+    "sdlc/templates/tailoring/standard/13_기능화면설계서.md",
+    "sdlc/templates/tailoring/standard/14_프로그램설계서.md",
+    "sdlc/templates/tailoring/standard/15_테스트인수결과서.md",
+    "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md",
+    "sdlc/templates/customer/standard/A02_영향_개발범위_공유서.md",
+    "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md",
+    "sdlc/templates/management/rq-review.md",
+    "docs/00_시작/START_HERE.md",
+    "docs/00_시작/02_PROJECT_설정가이드.md",
+    "docs/00_시작/03_TAILORING_설정가이드.md"
+  ],
+  "default_tailoring_assets": [
+    "sdlc/tailoring/standard/STANDARD_3.yaml",
+    "sdlc/tailoring/standard/STANDARD_5.yaml",
+    "sdlc/tailoring/standard/CUSTOMER_STANDARD_3.yaml",
+    "sdlc/tailoring/standard/PM_STANDARD.yaml",
+    "sdlc/templates/tailoring/standard/01_업무정의서.md",
+    "sdlc/templates/tailoring/standard/02_상세설계서.md",
+    "sdlc/templates/tailoring/standard/03_화면설계서.md",
+    "sdlc/templates/tailoring/standard/11_요구사항정의서.md",
+    "sdlc/templates/tailoring/standard/12_업무프로세스설계서.md",
+    "sdlc/templates/tailoring/standard/13_기능화면설계서.md",
+    "sdlc/templates/tailoring/standard/14_프로그램설계서.md",
+    "sdlc/templates/tailoring/standard/15_테스트인수결과서.md",
+    "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md",
+    "sdlc/templates/customer/standard/A02_영향_개발범위_공유서.md",
+    "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md",
+    "sdlc/templates/management/rq-review.md"
+  ],
+  "compatibility_tailoring_assets": [
+    "sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml"
+  ],
+  "default_user_guides": [
+    "docs/00_시작/START_HERE.md",
+    "docs/00_시작/01_STANDARD_SCAFFOLD_사용가이드.md",
+    "docs/00_시작/02_PROJECT_설정가이드.md",
+    "docs/00_시작/03_TAILORING_설정가이드.md",
+    "docs/00_시작/04_TEMPLATE_및_산출물_가이드.md",
+    "docs/00_시작/05_이해관계자별_작업가이드.md",
+    "docs/00_시작/06_CUSTOM_SCAFFOLD_적용가이드.md",
+    "docs/00_시작/07_BROWNFIELD_SSOT_현행화가이드.md"
+  ]
 }

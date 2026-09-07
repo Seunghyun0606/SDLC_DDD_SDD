@@ -1,0 +1,50 @@
+schema_version: 1
+profile_id: STANDARD_5
+name: "5종 통합 산출물 Profile"
+output_root: "docs/10_산출물"
+artifacts:
+  requirement_definition:
+    audience: INTERNAL_IT
+    template: "sdlc/templates/tailoring/standard/11_요구사항정의서.md"
+    output_path: "docs/10_산출물/{target}/01_요구사항정의서.md"
+    visibility: PRIMARY
+    authoring: AGENT_DRAFT_HUMAN_REVIEW
+    order: 10
+    sources:
+      stages: [DECOMPOSE, CLARIFY]
+  process_design:
+    audience: INTERNAL_IT
+    template: "sdlc/templates/tailoring/standard/12_업무프로세스설계서.md"
+    output_path: "docs/10_산출물/{target}/02_업무프로세스설계서.md"
+    visibility: PRIMARY
+    authoring: AGENT_DRAFT_HUMAN_REVIEW
+    order: 20
+    sources:
+      stages: [PROCESS, DISCOVERY, IMPACT]
+  functional_screen_design:
+    audience: INTERNAL_IT
+    template: "sdlc/templates/tailoring/standard/13_기능화면설계서.md"
+    output_path: "docs/10_산출물/{target}/03_기능화면설계서.md"
+    visibility: PRIMARY
+    authoring: AGENT_DRAFT_HUMAN_REVIEW
+    order: 30
+    sources:
+      stages: [DESIGN]
+  program_design:
+    audience: INTERNAL_IT
+    template: "sdlc/templates/tailoring/standard/14_프로그램설계서.md"
+    output_path: "docs/10_산출물/{target}/04_프로그램설계서.md"
+    visibility: PRIMARY
+    authoring: AGENT_DRAFT_HUMAN_REVIEW
+    order: 40
+    sources:
+      stages: [PROGRAM, DEVELOPMENT]
+  test_acceptance:
+    audience: INTERNAL_IT
+    template: "sdlc/templates/tailoring/standard/15_테스트인수결과서.md"
+    output_path: "docs/10_산출물/{target}/05_테스트인수결과서.md"
+    visibility: PRIMARY
+    authoring: AGENT_DRAFT_HUMAN_REVIEW
+    order: 50
+    sources:
+      stages: [TEST, VERIFY, KNOWLEDGE_PROMOTION]

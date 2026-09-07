@@ -1,32 +1,41 @@
 {
-  "schema_version": 5,
-  "candidate_design": "v1.6-p0-p1-remediation",
+  "schema_version": 6,
+  "candidate_design": "v1.9-redteam-semantic-fast-path",
   "readiness_states": ["READY", "PARTIAL", "EXECUTION_GUARDED"],
+  "representation": "CORE_PLUS_RISK_TRIGGERED_CONDITIONAL",
+  "profile_aware": true,
+  "change_level_aware": true,
   "rules": {
     "ready_requires_zero_open": true,
     "simulated_source_cannot_be_ready": true,
     "open_real_source_cannot_be_ready": true,
-    "ready_requires_functional_design_reference": true
+    "functional_design_reference_required_from_change_level": "L3",
+    "not_applicable_sections_are_not_required": true,
+    "machine_derived_fields_are_not_human_maintenance": true
   },
   "developer_spec_contract": "sdlc/design/contracts/developer-spec-contract.json",
-  "representation": "SINGLE_READINESS_TABLE",
-  "profile_aware": true,
-  "profiles": {
-    "FAST": {
-      "purpose": "XS/S 변경에서 실제 구현·검증에 직접 필요한 항목만 필수로 한다.",
-      "required_field_ids": ["functional_design_ref", "implementation_target", "source_evidence", "query_data", "task_source", "ac_tc", "open_guard"]
-    },
-    "STANDARD": {
-      "purpose": "일반 SI/SM 기능의 전체 구현 준비도를 확인한다.",
-      "required_field_ids": ["functional_design_ref", "implementation_target", "source_evidence", "io_mapping", "query_data", "common_code", "transaction", "concurrency", "integration", "error", "security", "observability", "nfr", "standards", "task_source", "ac_tc", "open_guard"]
-    },
-    "FULL": {
-      "purpose": "대형/고위험 기능. STANDARD 전체 항목을 동일하게 요구하고 추가 Governance는 Project Overlay에서 다룬다.",
-      "required_field_ids": ["functional_design_ref", "implementation_target", "source_evidence", "io_mapping", "query_data", "common_code", "transaction", "concurrency", "integration", "error", "security", "observability", "nfr", "standards", "task_source", "ac_tc", "open_guard"]
-    }
+  "core_required_field_ids": ["functional_design_ref", "implementation_target", "source_evidence", "task_source", "ac_tc", "open_guard"],
+  "machine_derived_field_ids": ["source_evidence", "query_data", "io_mapping"],
+  "conditional_fields": [
+    {"field_id": "io_mapping", "trigger": "DATA_MAPPING_IMPACT"},
+    {"field_id": "query_data", "trigger": "DATA_ACCESS_OR_SCHEMA_IMPACT"},
+    {"field_id": "common_code", "trigger": "COMMON_CODE_IMPACT"},
+    {"field_id": "transaction", "trigger": "TRANSACTION_IMPACT"},
+    {"field_id": "concurrency", "trigger": "CONCURRENCY_RISK"},
+    {"field_id": "integration", "trigger": "HAS_INTERFACE"},
+    {"field_id": "error", "trigger": "ERROR_HANDLING_DELTA"},
+    {"field_id": "security", "trigger": "SECURITY_IMPACT"},
+    {"field_id": "observability", "trigger": "OBSERVABILITY_IMPACT"},
+    {"field_id": "nfr", "trigger": "NFR_OR_MIGRATION_IMPACT"},
+    {"field_id": "standards", "trigger": "ARCHITECTURE_OR_STANDARD_IMPACT"}
+  ],
+  "legacy_compatibility": {
+    "profile": "LEGACY_FULL_17",
+    "purpose": "Formal/legacy contract compatibility only; not a new project default.",
+    "required_field_ids": ["functional_design_ref", "implementation_target", "source_evidence", "io_mapping", "query_data", "common_code", "transaction", "concurrency", "integration", "error", "security", "observability", "nfr", "standards", "task_source", "ac_tc", "open_guard"]
   },
   "required_fields": [
-    {"id": "functional_design_ref", "label": "기능 설계 기준", "marker": "| 기능 설계 기준 |"},
+    {"id": "functional_design_ref", "label": "기능 의도·설계 기준", "marker": "| 기능 설계 기준 |"},
     {"id": "implementation_target", "label": "실제 구현 대상", "marker": "| 실제 구현 대상 |"},
     {"id": "source_evidence", "label": "소스 근거", "marker": "| 소스 근거 |"},
     {"id": "io_mapping", "label": "입출력 구현 매핑", "marker": "| 입출력 구현 매핑 |"},
@@ -38,9 +47,9 @@
     {"id": "error", "label": "오류·예외 처리", "marker": "| 오류·예외 처리 |"},
     {"id": "security", "label": "인증·인가·보안", "marker": "| 인증·인가·보안 |"},
     {"id": "observability", "label": "감사·로그·관측", "marker": "| 감사·로그·관측 |"},
-    {"id": "nfr", "label": "성능·운영 조건", "marker": "| 성능·운영 조건 |"},
-    {"id": "standards", "label": "적용 표준·예외", "marker": "| 적용 표준·예외 |"},
-    {"id": "task_source", "label": "개발 작업·변경 소스", "marker": "| 개발 작업·변경 소스 |"},
+    {"id": "nfr", "label": "성능·운영·Migration 조건", "marker": "| 성능·운영 조건 |"},
+    {"id": "standards", "label": "Architecture·적용 표준·예외", "marker": "| 적용 표준·예외 |"},
+    {"id": "task_source", "label": "개발 Delta·변경 소스", "marker": "| 개발 작업·변경 소스 |"},
     {"id": "ac_tc", "label": "인수조건·테스트 연결", "marker": "| 인수조건·테스트 연결 |"},
     {"id": "open_guard", "label": "남은 미확정·실행 가드", "marker": "| 남은 미확정·실행 가드 |"}
   ]

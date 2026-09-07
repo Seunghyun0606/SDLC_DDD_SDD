@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "pilot_id": "PILOT-BROWNFIELD-RECONCILIATION-001",
+  "pilot_type": "BROWNFIELD_RECONCILIATION",
+  "execution_status": "NOT_RUN",
+  "observed_at": null,
+  "observer": null,
+  "evidence": [],
+  "reviewer_decision": null,
+  "business_truth_auto_rewritten": false,
+  "claims": {
+    "brownfield_reconciliation_empirical_pass": false
+  },
+  "boundary": {
+    "public_source_only_is_business_truth_evidence": false,
+    "source_observation_can_auto_rewrite_business_truth": false,
+    "production_ready_claimed": false
+  }
+}

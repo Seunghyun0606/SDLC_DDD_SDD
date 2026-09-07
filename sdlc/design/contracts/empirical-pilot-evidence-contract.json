@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "contract_id": "EMPIRICAL_PILOT_EVIDENCE_V1",
+  "candidate_design": "v1.9.0-tailoring-control-plane",
+  "purpose": "CI/Fixture/구조 검증과 실제 External Agent/Human/Brownfield 관찰 Evidence를 분리하고, 관찰되지 않은 실증을 PASS로 승격하지 못하게 한다.",
+  "pilot_types": [
+    "EXTERNAL_AGENT_TAILORING_SEMANTIC_EQUIVALENCE",
+    "HUMAN_FIRST_USE",
+    "BROWNFIELD_RECONCILIATION"
+  ],
+  "execution_statuses": ["NOT_RUN", "OBSERVED"],
+  "common_required_when_observed": [
+    "pilot_id",
+    "pilot_type",
+    "execution_status",
+    "observed_at",
+    "observer"
+  ],
+  "runtime": {
+    "entrypoint": "sdlc/scripts/empirical_pilot_runtime.py",
+    "commands": ["init", "validate", "status"],
+    "default_evidence_root": "sdlc/runtime/pilots",
+    "default_evidence_files": {
+      "EXTERNAL_AGENT_TAILORING_SEMANTIC_EQUIVALENCE": "sdlc/runtime/pilots/external-agent-tailoring.json",
+      "HUMAN_FIRST_USE": "sdlc/runtime/pilots/human-first-use.json",
+      "BROWNFIELD_RECONCILIATION": "sdlc/runtime/pilots/brownfield-reconciliation.json"
+    },
+    "init_creates_observation": false,
+    "init_default_execution_status": "NOT_RUN",
+    "missing_evidence_status": "NOT_RUN",
+    "status_can_substitute_ci_or_fixture_for_observation": false,
+    "runtime_path_must_remain_under_project_root": true
+  },
+  "rules": {
+    "ci_or_fixture_can_claim_empirical_pass": false,
+    "provider_class_label_can_prove_agent_identity": false,
+    "unobserved_pilot_can_claim_pass": false,
+    "missing_required_evidence_fails_closed": true,
+    "negative_observation_is_valid_evidence": true,
+    "production_ready_implied_by_pilot_pass": false
+  },
+  "external_agent_tailoring": {
+    "required_profiles": ["STANDARD_3", "STANDARD_5", "STAGE_ORIENTED_FULL"],
+    "required_provider_fields": ["provider_id", "declared_class", "identity_evidence"],
+    "identity_evidence_must_be_non_empty": true,
+    "same_canonical_fingerprint_required": true,
+    "each_profile_requires_artifact_paths": true,
+    "each_profile_requires_human_semantic_review": true,
+    "semantic_pass_requires": {
+      "meaning_preserved": true,
+      "unsupported_business_fact_count": 0,
+      "material_omission_count": 0
+    }
+  },
+  "human_first_use": {
+    "minimum_observed_participants": 3,
+    "required_participant_fields": [
+      "participant_id",
+      "role",
+      "started_from_start_here",
+      "completed_without_framework_designer",
+      "critical_blocker_count",
+      "review_burden_rating_1_to_5"
+    ],
+    "pass_requires_all_started_from_start_here": true,
+    "pass_requires_all_completed_without_framework_designer": true,
+    "pass_requires_zero_critical_blockers": true
+  },
+  "brownfield_reconciliation": {
+    "required_evidence_classes": [
+      "CURRENT_SOURCE_DB_CONFIG_RUNTIME_EVIDENCE",
+      "CONFIRMED_HUMAN_BUSINESS_TRUTH"
+    ],
+    "reviewer_decision_required": true,
+    "source_can_auto_rewrite_business_truth": false,
+    "source_only_observation_is_reconciliation_pass": false
+  },
+  "computed_verdicts": [
+    "NOT_RUN",
+    "PASS_OBSERVED_EMPIRICAL_PILOT",
+    "FAIL_OBSERVED_EMPIRICAL_PILOT",
+    "FAIL_INSUFFICIENT_EVIDENCE",
+    "FAIL_OVERCLAIMED_PASS"
+  ]
+}
