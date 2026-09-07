@@ -8,6 +8,7 @@ FORBIDDEN_VISIBLE=['## Workflow','## 입력/Evidence','## 미확정/Alert/Assump
 CUSTOMER_REQUIRED=['문서 목적','한눈에 보기','고객과 함께 확인할 내용','합의된 내용','미확정 사항','다음 단계']
 ACTIVE_CUSTOMER_TYPES=['solution_agreement','delivery_scope','acceptance_handover']
 
+
 def validate(root: Path) -> list[str]:
     errors=[]
     semantic=root/'sdlc/templates/semantic'
@@ -19,13 +20,27 @@ def validate(root: Path) -> list[str]:
             if sec in txt: errors.append(f'{p.name}: old mixed-language section remains {sec}')
     term=root/'sdlc/config/terminology-profile.example.json'
     cdoc=root/'sdlc/design/contracts/customer-document-contract.json'
+    visibility=root/'sdlc/design/contracts/projection-visibility-contract.json'
     cprofile=root/'sdlc/config/customer-document-profile.json'
     brp=root/'sdlc/config/br-intake-profile.example.json'
     brs=root/'sdlc/design/contracts/br-candidate.schema.json'
     bre=root/'sdlc/design/contracts/br-document-extraction-contract.json'
     renderer=root/'sdlc/scripts/render_customer_document.py'
-    for p in [term,cdoc,cprofile,brp,brs,bre,renderer]:
+    runtime=root/'sdlc/scripts/customer_projection_runtime.py'
+    for p in [term,cdoc,visibility,cprofile,brp,brs,bre,renderer,runtime]:
         if not p.exists(): errors.append(f'missing document-experience contract: {p.relative_to(root)}')
+    if visibility.exists():
+        v=json.loads(visibility.read_text(encoding='utf-8'))
+        principles=v.get('principles',{})
+        if not principles.get('allowlist_before_sanitize'):
+            errors.append('projection visibility must select by allowlist before sanitize')
+        if not principles.get('stable_block_ids_may_exist_as_hidden_markers'):
+            errors.append('projection visibility must preserve hidden stable block markers')
+        policy=v.get('customer_direct_canonical_policy',{})
+        if policy.get('default') != 'ALLOWLIST_ONLY':
+            errors.append('customer direct canonical visibility must be ALLOWLIST_ONLY')
+        if policy.get('relation_expansion') != 'DENY_BY_DEFAULT':
+            errors.append('customer direct canonical relation expansion must be denied by default')
     if cdoc.exists():
         c=json.loads(cdoc.read_text(encoding='utf-8'))
         for s in CUSTOMER_REQUIRED:
@@ -62,6 +77,12 @@ def validate(root: Path) -> list[str]:
         projection=c.get('projection',{})
         if not projection.get('base_section_sources') or not projection.get('catalog_section_sources'):
             errors.append('customer projection mappings must define base and catalog section sources')
+        if projection.get('direct_canonical_visibility') != 'ALLOWLIST_ONLY':
+            errors.append('customer contract direct canonical visibility must be ALLOWLIST_ONLY')
+        if projection.get('direct_relation_expansion') is not False:
+            errors.append('customer contract must not expand Canonical relations into customer view by default')
+        if projection.get('sanitizer_role') != 'SECONDARY_DEFENSE':
+            errors.append('customer sanitizer must remain secondary defense after visibility selection')
         if projection.get('empty_section_policy') != 'EXPLICIT_NOT_FOUND':
             errors.append('customer projection must not invent content for empty source sections')
         # Legacy templates remain compatibility assets; all customer-facing files still keep the common base sections.
@@ -73,10 +94,31 @@ def validate(root: Path) -> list[str]:
         profile=json.loads(cprofile.read_text(encoding='utf-8'))
         if profile.get('active_document_types') != ACTIVE_CUSTOMER_TYPES:
             errors.append('customer profile must default to the three active customer views')
-        if profile.get('display',{}).get('show_internal_ids'):
+        display=profile.get('display',{})
+        if display.get('show_internal_ids'):
             errors.append('customer profile must hide internal ids by default')
-        if profile.get('display',{}).get('show_source_hash'):
+        if display.get('show_source_hash'):
             errors.append('customer profile must hide source hash by default')
+        if display.get('show_confidence_status'):
+            errors.append('customer profile must hide confidence status by default')
+        overrides=profile.get('document_overrides',{})
+        for dtype in ACTIVE_CUSTOMER_TYPES:
+            disabled=set((overrides.get(dtype) or {}).get('disable_optional',[]))
+            for appendix in ['기술_상세_부록','근거_상세_부록']:
+                if appendix not in disabled:
+                    errors.append(f'{dtype}: {appendix} must be disabled by default')
+    if runtime.exists():
+        txt=runtime.read_text(encoding='utf-8')
+        for marker in [
+            'CUSTOMER_CANONICAL_SAFE_FIELDS',
+            'CUSTOMER_CANONICAL_DENIED_FIELDS',
+            '_customer_safe_entity_fields',
+            '_customer_safe_value',
+            '"canonical_direct_input_visibility": "ALLOWLIST_ONLY"',
+            '"canonical_relation_expansion": False',
+        ]:
+            if marker not in txt:
+                errors.append(f'customer runtime visibility guard missing: {marker}')
     if brp.exists():
         b=json.loads(brp.read_text(encoding='utf-8'))
         if b.get('minimum_manifest_fields') != ['document_id','path']: errors.append('BR minimum manifest must remain document_id + path')
@@ -94,6 +136,7 @@ def validate(root: Path) -> list[str]:
         if 'EXTRACTION_REQUIRED' not in e.get('extraction_status',[]): errors.append('BR extraction status missing EXTRACTION_REQUIRED')
     return errors
 
+
 def main(argv=None):
     args=argv or sys.argv[1:]
     root=Path(args[0] if args else '.')
@@ -103,4 +146,6 @@ def main(argv=None):
         return 1
     print('Document experience contract OK')
     return 0
+
+
 if __name__=='__main__': raise SystemExit(main())
