@@ -109,6 +109,12 @@ Stage        = 내부 Execution Semantic / 재진입 초점
 Profile      = Human Artifact topology
 ```
 
+L1/L2 Fast Path에서도 Source 변경 전 다음 세 의미 검증은 유지한다.
+
+- `Requirement Intent Decomposition` — 요구 의도와 변경 경계를 분해
+- `AS-IS Source Analysis` — 현재 Source/Config/Data 흐름 확인
+- `Impact Check` — 직접 및 명백한 주변 영향 확인
+
 ## 6. AUTO / MANUAL / 최소 Level
 
 ### AUTO
