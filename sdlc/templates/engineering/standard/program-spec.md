@@ -4,9 +4,9 @@
 >
 > 모든 기술 항목을 항상 채우지 않습니다. **실제 변경 특성에 해당하는 조건부 구현 블록만 활성화**하고, 나머지는 제거합니다.
 >
-> **사용자는 이 Template의 빈칸을 직접 채우지 않습니다.** Agent가 관련 Source/표준/Canonical을 먼저 분석하고 필요한 사람 결정만 질문합니다. 수정 요청은 `이 문서의 [BLOCK:PGM-SOURCE-EVIDENCE]를 현재 Source 기준으로 다시 갱신해줘`처럼 Block을 지정합니다.
+> **사용자는 이 Template의 빈칸을 직접 채우지 않습니다.** Agent가 관련 Source/표준/Canonical을 먼저 분석하고 필요한 사람 결정만 질문합니다. 수정 요청은 `이 문서의 [BLOCK:PGM-SOURCE-EVIDENCE]를 현재 Source 기준으로 다시 갱신해줘`처럼 Block을 지정합니다. 즉시 답하지 못한 결정은 `PGM-HITL-QUEUE`에 carry-forward합니다.
 
-**Block ID:** `PGM-INTENT`, `PGM-TARGET`, `PGM-SOURCE-EVIDENCE`, `PGM-DELTA`, `PGM-CONDITIONAL`, `PGM-SOURCE-BOUNDARY`, `PGM-TRACE`, `PGM-READINESS`, `PGM-ASBUILT`
+**Block ID:** `PGM-INTENT`, `PGM-TARGET`, `PGM-SOURCE-EVIDENCE`, `PGM-DELTA`, `PGM-CONDITIONAL`, `PGM-SOURCE-BOUNDARY`, `PGM-TRACE`, `PGM-READINESS`, `PGM-HITL-QUEUE`, `PGM-ASBUILT`
 
 <!-- BLOCK_ID: PGM-INTENT -->
 ## 1. Functional Intent Reference
@@ -97,9 +97,19 @@
 - Source Write Guard:
 - 필요한 추가 Evidence:
 
+<!-- BLOCK_ID: PGM-HITL-QUEUE -->
+## 9. Human Decision Queue
+
+> Program 단계까지 도달했지만 사람이 바로 결정하지 못한 항목을 Agent가 유지합니다. 다음 단계 Agent는 `Recheck At`이 도래한 Queue를 신규 질문보다 먼저 확인합니다. `SOURCE_BLOCK`은 해당 Source/Action만 제한하며, `ITERATE`/`ALERT`는 가능한 작업을 계속할 수 있습니다.
+
+| Queue ID | 관련 Block | 질문 / 결정 필요사항 | 현재 확인값 / 제안 | 결정 담당 | 영향 분류 | Recheck At | 상태 |
+|---|---|---|---|---|---|---|---|
+|  |  |  |  |  | SOURCE_BLOCK / ITERATE / ALERT | NEXT_SEMANTIC_WORK / BEFORE_SOURCE_WRITE / BEFORE_TEST / BEFORE_VERIFY / Stage | 미확정 / 확인중 / 제안 / 보류 / 확정 |
+
 <!-- BLOCK_ID: PGM-ASBUILT -->
-## 9. AS-BUILT Difference
+## 10. AS-BUILT Difference
 - 실제 변경:
 - Spec 대비 차이:
 - 계획 밖 변경이 있었다면 이유와 승인/근거:
+- 미해결 Queue 및 이후 Recheck At:
 - Drift / Reconciliation 결과:
