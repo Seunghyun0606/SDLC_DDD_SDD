@@ -30,7 +30,6 @@ class AssetBoundaryV110Test(unittest.TestCase):
         self.assertIn("sdlc/templates/semantic/requirement.md", selected)
         self.assertIn("sdlc/templates/semantic/program-spec.md", selected)
         self.assertIn("sdlc/templates/README.md", selected)
-        self.assertFalse(any(path.startswith("sdlc/templates/core/") for path in selected))
         self.assertNotIn("sdlc/tailoring/standard/STANDARD_3.yaml", selected)
         self.assertNotIn("sdlc/tailoring/standard/STANDARD_5.yaml", selected)
         self.assertNotIn("sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml", selected)
@@ -52,7 +51,7 @@ class AssetBoundaryV110Test(unittest.TestCase):
         ]:
             self.assertIn(rel, selected)
 
-    def test_materialized_project_has_no_framework_distribution_tooling(self):
+    def test_materialized_project_uses_semantic_template_root_only(self):
         with tempfile.TemporaryDirectory() as td:
             output = Path(td) / "project"
             result = SCAFFOLD.build(ROOT, output)
@@ -61,12 +60,6 @@ class AssetBoundaryV110Test(unittest.TestCase):
             self.assertFalse(result["forbidden_framework_dev_assets_present"])
             self.assertTrue((output / "sdlc/templates/semantic/requirement.md").is_file())
             self.assertTrue((output / "sdlc/templates/semantic/program-spec.md").is_file())
-            self.assertTrue((output / "sdlc/templates/core").exists())
-            self.assertEqual(
-                (output / "sdlc/templates/semantic").resolve(),
-                (output / "sdlc/templates/core").resolve(),
-            )
-            self.assertEqual("sdlc/templates/core", result["compatibility_aliases"][0]["path"])
             self.assertFalse((output / "framework").exists())
             self.assertFalse((output / "tests").exists())
             self.assertFalse((output / "sdlc/scripts/build_project_scaffold.py").exists())
