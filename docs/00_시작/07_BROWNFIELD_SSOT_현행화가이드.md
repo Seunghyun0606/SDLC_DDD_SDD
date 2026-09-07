@@ -2,14 +2,14 @@
 
 ## 1. 문서 목적
 
-기존 시스템 고도화에서 Business Truth, Source Evidence, 설계 문서, Generated View의 권위를 분리하고 Source Drift가 발생했을 때 안전하게 현행화하는 방법을 설명한다.
+기존 시스템 고도화에서 Business Truth, Source Evidence, Engineering Projection, Customer/PM Projection의 권위를 분리하고 Source Drift가 발생했을 때 안전하게 현행화하는 방법을 설명한다.
 
 ## 2. 권위 원칙
 
 - **Confirmed Business Truth**: 고객/업무 권위자가 확정한 정책·범위·결정
 - **Current Source/DB/Config Evidence**: 실제 AS-IS 기술 구현의 관찰 근거
-- **Internal Design Artifact**: Canonical/Evidence를 사람이 검토할 수 있게 표현한 작업 문서
-- **Customer/PM View**: Internal/Canonical에서 파생된 Generated View
+- **Engineering Projection**: Canonical/Evidence를 설계·개발자가 구현하기 위해 보는 Living Spec
+- **Customer/PM Projection**: Canonical/Evidence에서 파생된 Human-oriented Generated View
 
 Source가 현재 동작을 보여준다고 해서 업무정책을 자동 변경하지 않는다. 반대로 문서가 오래되었다고 Source 관찰을 무시하지 않는다.
 
@@ -21,9 +21,9 @@ flowchart TD
     C --> R
     D["Existing Design Docs"] --> R
     R --> Q{"Conflict / Drift?"}
-    Q -- "No" --> V["Current Human View"]
-    Q -- "Yes" --> H["Human/Technical Review"]
-    H --> U["Canonical or Design Update"]
+    Q -- "No" --> V["Current Engineering Projection"]
+    Q -- "Yes" --> H["Human / Technical Review"]
+    H --> U["Canonical or Engineering Update"]
     U --> V
     V --> P["PM / Customer Projection"]
 ```
@@ -34,11 +34,31 @@ flowchart TD
 |---|---|---|
 | 업무 정책/범위/승인 | Confirmed Business Truth | 아니오 |
 | 실제 Class/Method/Query/Table | Current Source/DB Evidence | 관찰값 갱신 가능 |
-| 설계 의도/To-Be 기능 의미 | Human-reviewed Design/Canonical | 사람 검토 필요 |
-| 고객 표현/요약 | Generated View | 재생성 가능 |
+| 설계 의도/TO-BE 기능 의미 | Canonical + Human-reviewed Engineering Projection | 사람 검토 필요 |
+| 고객/PM 표현·요약 | Generated Projection | 재생성 가능 |
 | Source Hash/Locator | Machine-derived Evidence | 재생성 가능 |
 
 ## 4. Source Drift 절차
+
+### 기본 프로젝트에서 먼저 할 일
+
+일반 사용자는 먼저 Harness의 `/work`와 `/check`로 현재 Source Evidence와 영향 범위를 확인한다.
+
+```bash
+python sdlc/scripts/harness.py work --target RQ-001
+python sdlc/scripts/harness.py check RQ-001
+```
+
+### Brownfield Extension이 포함된 경우
+
+`run_source_reverse_check.py`는 **기본 Minimum Executable Core가 아니라 Brownfield Extension**이다. 프로젝트에 다음 파일이 실제로 포함된 경우에만 아래 명령을 사용한다.
+
+```text
+sdlc/scripts/build_reverse_inputs.py
+sdlc/scripts/detect_source_drift.py
+sdlc/scripts/run_source_reverse_check.py
+sdlc/scripts/generate_program_spec_reverse_candidate.py
+```
 
 첫 Baseline:
 
@@ -63,21 +83,25 @@ python sdlc/scripts/run_source_reverse_check.py \
   --output sdlc/runtime/reverse/result.json
 ```
 
+Extension이 없는 프로젝트에서는 “명령 실패 = Drift 없음”으로 해석하지 않는다. 필요한 경우 Harness 관리자에게 Brownfield Extension 포함 여부를 확인한다.
+
 Drift 결과는 자동 Business Truth 수정 지시가 아니라 **Reconciliation Candidate**다.
 
 ## 5. Reconciliation 판단
 
 ### Source만 바뀐 경우
 
-Source Hash/Locator와 기술 Evidence를 갱신하고 관련 Internal Artifact를 `STALE_VIEW`로 표시한다. 업무 의미가 그대로라면 Business Truth는 변경하지 않는다.
+Source Hash/Locator와 기술 Evidence를 갱신하고 관련 Engineering Projection을 `STALE_VIEW`로 표시한다. 업무 의미가 그대로라면 Business Truth는 변경하지 않는다.
 
 ### Source와 설계가 충돌하는 경우
 
 1. Source가 실제 운영 기준인지 확인
-2. 설계 문서가 오래된 것인지 확인
+2. Engineering Projection이 오래된 것인지 확인
 3. 업무정책 변경이 있었는지 확인
 4. 기술 구현 오류인지 확인
 5. 권위자 Review 후 Canonical 또는 설계를 명시적으로 변경
+
+설계/Evidence/Program Mapping 보완은 `/work`, Requirement/Business Rule/TO-BE 변경은 `/change`를 사용한다.
 
 ### 업무정책과 Source가 충돌하는 경우
 
@@ -108,7 +132,7 @@ PM/Reviewer가 확인할 핵심은 다음이다.
 - Impact Coverage
 - Source Drift / Technical Gap
 - 사람 결정 필요 항목
-- 오래된 Human/Customer View 수
+- 오래된 Engineering/Customer Projection 수
 - Next Action / Owner
 
 내부 Stage는 기본적으로 숨긴다.
@@ -117,14 +141,16 @@ PM/Reviewer가 확인할 핵심은 다음이다.
 
 - 현재 Source를 곧바로 업무 요구사항으로 승격하지 않는다.
 - 과거 설계 문서가 있다고 현재 Source보다 기술적 사실 권위가 높다고 가정하지 않는다.
-- Drift 검출 결과로 Functional/Business 문서를 자동 rewrite하지 않는다.
-- 고객용 Generated View에서 직접 수정한 문장을 SSOT로 간주하지 않는다.
+- Drift 검출 결과로 Functional/Business 의미를 자동 rewrite하지 않는다.
+- 고객용 Generated Projection에서 직접 수정한 문장을 SSOT로 간주하지 않는다.
 - `STALE_VIEW`를 승인 기준 문서로 사용하지 않는다.
+- Brownfield Extension이 없는 프로젝트에서 Reverse Script가 있다고 가정하지 않는다.
 
 ## 9. 완료 기준
 
 - Business Truth와 Source Evidence의 권위가 분리되어 있다.
 - Drift는 Candidate/Gap으로 기록되고 자동 역갱신하지 않는다.
 - Reconciliation에 Human Authority가 필요한 경우 Next Action으로 노출된다.
-- Source/Canonical 변경 후 관련 Generated View의 freshness를 재검증한다.
+- Source/Canonical 변경 후 관련 Engineering/Customer Projection freshness를 재검증한다.
 - 변경 영향이 커지면 Change Level Escalation Evidence가 남는다.
+- Optional Brownfield Extension의 설치 여부와 기본 Harness 기능을 혼동하지 않는다.
