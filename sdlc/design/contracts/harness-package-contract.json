@@ -14,6 +14,7 @@
     "sdlc/scripts/import_requirements.py",
     "sdlc/scripts/bootstrap_project.py",
     "sdlc/scripts/runtime_config.py",
+    "sdlc/scripts/project_config.py",
     "sdlc/scripts/work_handoff.py",
     "sdlc/scripts/review_work.py",
     "sdlc/scripts/capture_customer_decision.py",
@@ -24,6 +25,7 @@
     "sdlc/scripts/validate_agent_stage_result.py",
     "sdlc/scripts/validate_program_spec.py",
     "sdlc/scripts/change_execution_runtime.py",
+    "sdlc/scripts/projection_lifecycle_runtime.py",
     "sdlc/config/change-execution-policy.json",
     "sdlc/config/program-spec-readiness.json",
     "sdlc/design/contracts/agent-execution-contract.json",
@@ -60,6 +62,10 @@
     ".cursor/skills/work/references/development.md",
     ".cursor/skills/work/references/test.md",
     ".cursor/skills/work/references/verify.md",
+    "sdlc/tailoring/standard/ENGINEERING_SDD_COMPACT.yaml",
+    "sdlc/templates/engineering/standard/00_work-map.md",
+    "sdlc/templates/engineering/standard/work-unit-sdd.md",
+    "sdlc/templates/engineering/standard/program-spec.md",
     "sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml",
     "sdlc/tailoring/standard/STANDARD_3.yaml",
     "sdlc/tailoring/standard/STANDARD_5.yaml",
@@ -89,13 +95,12 @@
   "deployment_sets": {
     "MINIMUM_EXECUTABLE_CORE": {
       "required": "core_required_files",
-      "notes": "setup/intake/work/review/change/check와 Change-Level semantic Fast Path를 실행하는 최소 배포 묶음. Pilot/Test/Sample과 고급 운영 도구는 별도 Extension이다."
+      "notes": "setup/intake/work/review/change/check와 Change-Level semantic Fast Path 및 기본 Engineering Projection lifecycle을 실행하는 최소 배포 묶음. Pilot/Test/Sample과 고급 운영 도구는 별도 Extension이다."
     },
     "ENHANCEMENT_EXTENSION": [
       "sdlc/scripts/component_state_runtime.py",
       "sdlc/scripts/impact_learning_runtime.py",
       "sdlc/scripts/unexpected_discovery_runtime.py",
-      "sdlc/scripts/projection_lifecycle_runtime.py",
       "sdlc/scripts/sdlc_metrics_runtime.py",
       "sdlc/scripts/architecture_check.py",
       "sdlc/config/architecture-rules.json"
@@ -113,7 +118,6 @@
       "sdlc/design/contracts/customer-document-contract.json",
       "sdlc/scripts/render_customer_document.py",
       "sdlc/scripts/customer_projection_runtime.py",
-      "sdlc/scripts/projection_lifecycle_runtime.py",
       "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md",
       "sdlc/templates/customer/standard/A02_영향_개발범위_공유서.md",
       "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md"
@@ -204,7 +208,7 @@
     "br_document_extraction_contract": "sdlc/design/contracts/br-document-extraction-contract.json",
     "sop_extraction_contract": "sdlc/design/contracts/sop-extraction-contract.json",
     "requirement_analysis_legacy_view_is_not_active_output": true,
-    "default_work_document_root": "docs/10_산출물",
+    "default_work_document_root": "docs/10_engineering",
     "machine_work_runtime_root": "sdlc/runtime/work-runs",
     "machine_handoff_root": "sdlc/runtime/work-handoff"
   },
@@ -264,7 +268,7 @@
     "development_stage_without_source_change_does_not_require_build_test": true,
     "l1_l2_source_change_requires_intent_as_is_impact_preconditions": true,
     "delivery_profiles": ["FAST", "STANDARD", "FULL"],
-    "default_human_document_root": "docs/10_산출물",
+    "default_human_document_root": "docs/10_engineering",
     "machine_runtime_root": "sdlc/runtime",
     "human_decision_categories": ["BUSINESS_POLICY", "SCOPE", "APPROVAL", "TECHNICAL_CHOICE", "ACCEPTANCE"],
     "human_review_requires_explicit_authority_metadata": true,
@@ -412,6 +416,7 @@
     "sdlc/design/contracts/harness-package-contract.json",
     "sdlc/scripts/harness.py",
     "sdlc/scripts/runtime_config.py",
+    "sdlc/scripts/project_config.py",
     "sdlc/scripts/runtime_config_v19.py",
     "sdlc/scripts/bootstrap_project.py",
     "sdlc/scripts/intake_requirements.py",
@@ -422,6 +427,7 @@
     "sdlc/scripts/delivery_status_runtime.py",
     "sdlc/scripts/tailoring_runtime.py",
     "sdlc/scripts/change_execution_runtime.py",
+    "sdlc/scripts/projection_lifecycle_runtime.py",
     "sdlc/config/change-execution-policy.json",
     "sdlc/scripts/interactive_work.py",
     "sdlc/scripts/interactive_change.py",
@@ -445,6 +451,10 @@
     ".cursor/skills/work/references/development.md",
     ".cursor/skills/work/references/test.md",
     ".cursor/skills/work/references/verify.md",
+    "sdlc/tailoring/standard/ENGINEERING_SDD_COMPACT.yaml",
+    "sdlc/templates/engineering/standard/00_work-map.md",
+    "sdlc/templates/engineering/standard/work-unit-sdd.md",
+    "sdlc/templates/engineering/standard/program-spec.md",
     "sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml",
     "sdlc/tailoring/standard/STANDARD_3.yaml",
     "sdlc/tailoring/standard/STANDARD_5.yaml",
@@ -467,6 +477,10 @@
     "docs/00_시작/03_TAILORING_설정가이드.md"
   ],
   "default_tailoring_assets": [
+    "sdlc/tailoring/standard/ENGINEERING_SDD_COMPACT.yaml",
+    "sdlc/templates/engineering/standard/00_work-map.md",
+    "sdlc/templates/engineering/standard/work-unit-sdd.md",
+    "sdlc/templates/engineering/standard/program-spec.md",
     "sdlc/tailoring/standard/STANDARD_3.yaml",
     "sdlc/tailoring/standard/STANDARD_5.yaml",
     "sdlc/tailoring/standard/CUSTOMER_STANDARD_3.yaml",
