@@ -1,5 +1,5 @@
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "contract_id": "PROJECT_SCAFFOLD_V110_ASSET_BOUNDARY",
   "source_package_contract": "sdlc/design/contracts/harness-package-contract.json",
   "purpose": "Framework 개발/검증/배포도구와 compatibility notice를 제외하고 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide만 배포한다.",
@@ -25,7 +25,21 @@
     "sdlc/scripts/architecture_check.py",
     "sdlc/config/architecture-rules.json",
     "sdlc/scripts/sdlc_metrics_runtime.py",
-    "docs/00_시작/11_INPUT_자료_준비가이드.md"
+    "docs/00_시작/11_INPUT_자료_준비가이드.md",
+    "sdlc/templates/README.md",
+    "sdlc/templates/semantic/requirement.md",
+    "sdlc/templates/semantic/requirement-analysis.md",
+    "sdlc/templates/semantic/interview-questions.md",
+    "sdlc/templates/semantic/process-analysis.md",
+    "sdlc/templates/semantic/impact-analysis.md",
+    "sdlc/templates/semantic/functional-design.md",
+    "sdlc/templates/semantic/program-spec.md",
+    "sdlc/templates/semantic/implementation-result.md",
+    "sdlc/templates/semantic/test-scenario.md",
+    "sdlc/templates/semantic/verification-result.md",
+    "sdlc/templates/semantic/operations-knowledge.md",
+    "sdlc/templates/semantic/open-resolution-workbook.md",
+    "sdlc/templates/semantic/sop-extraction-result.md"
   ],
   "exclude_exact": [
     "sdlc/tailoring/standard/STANDARD_3.yaml",
@@ -46,9 +60,19 @@
     "sdlc/validation/",
     "sdlc/samples/",
     "sdlc/guides/",
+    "sdlc/templates/core/",
     "sdlc/templates/tailoring/standard/",
     "tests/",
     ".github/"
+  ],
+  "compatibility_aliases": [
+    {
+      "path": "sdlc/templates/core",
+      "target": "semantic",
+      "type": "DIRECTORY_SYMLINK",
+      "fallback": "COPYTREE_IF_SYMLINK_UNAVAILABLE",
+      "purpose": "v1.9 Runtime/contract/external path compatibility only"
+    }
   ],
   "default_engineering_profile": "ENGINEERING_SDD_COMPACT",
   "default_internal_profile": "ENGINEERING_SDD_COMPACT",
@@ -78,7 +102,9 @@
     "legacy_customer_01_08_in_new_scaffold": false,
     "CUSTOMER_STANDARD_3_active": true,
     "CUSTOMER_WATERFALL_FULL_active": true,
-    "old_scaffold_guides_are_framework_compatibility_notices": true
+    "old_scaffold_guides_are_framework_compatibility_notices": true,
+    "templates_core_is_compatibility_alias": true,
+    "templates_semantic_is_primary_stage_template_root": true
   },
   "distribution_boundary": {
     "FRAMEWORK_ONLY": [
@@ -95,6 +121,7 @@
     "PROJECT_REQUIRED": [
       ".sdlc/project.yaml",
       "Harness runtime",
+      "sdlc/templates/semantic",
       "ENGINEERING_SDD_COMPACT",
       "CUSTOMER_STANDARD_3",
       "selected active templates",
@@ -109,6 +136,7 @@
       "enhancement extensions"
     ],
     "COMPATIBILITY_ONLY": [
+      "sdlc/templates/core -> semantic alias",
       "STANDARD_3",
       "STANDARD_5",
       "STAGE_ORIENTED_FULL",
