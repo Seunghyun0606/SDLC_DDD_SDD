@@ -24,31 +24,10 @@ agent:
   execution: INTERACTIVE
 ```
 
-의미:
+- `INTERACTIVE`: 현재 대화/IDE/CLI 세션의 Agent가 작업한다.
+- `HEADLESS`: CI/Batch 등에서 Harness가 설정된 외부 Provider를 실행한다.
 
-- 현재 대화/IDE/CLI 세션의 Agent가 Stage Agent다.
-- Harness가 별도 LLM subprocess를 다시 실행하지 않는다.
-- `/work`는 Work Context와 finalize 경계를 준비한다.
-- Agent가 Artifact와 `stage-result.json`을 작성한 뒤 Validator/Canonical Guard를 통과해야 완료다.
-
-CI/Batch처럼 Harness가 외부 Agent를 직접 호출해야 할 때만 `HEADLESS`를 사용한다.
-
-```yaml
-agent:
-  execution: HEADLESS
-  provider:
-    id: PROJECT_AGENT_PROVIDER
-    timeout_seconds: 180
-    command:
-      - python
-      - path/to/provider_adapter.py
-      - --context
-      - "{context_path}"
-      - --result
-      - "{result_path}"
-```
-
-`HEADLESS`인데 provider command가 없으면 Config 오류다. 기존 `sdlc/config/agent-provider.json`과 `--provider-command`는 Legacy compatibility 경로다.
+두 모드는 Agent 시작 방식만 다르고 Target Graph Guard, Business Truth Guard, Stage Result Validator, Canonical Apply는 같다.
 
 ## 3. 문서 Projection 설정
 
@@ -96,31 +75,187 @@ Custom Engineering N / Custom Customer M
 
 v1.10 신규 프로젝트에서는 `documents.engineering.profile`만 사용한다.
 
-기존 v1.9 프로젝트에 남아 있는 `documents.internal.profile`은 Runtime이 Migration 호환 입력으로 읽을 수 있지만, 신규 `.sdlc/project.yaml` 예제나 프로젝트 Custom Config에는 다시 작성하지 않는다.
+기존 v1.9 프로젝트에 남아 있는 `documents.internal.profile`은 Runtime이 Migration 호환 입력으로 읽을 수 있지만 신규 `.sdlc/project.yaml`에는 다시 작성하지 않는다.
 
-Runtime 호환 Resolution은 기존 프로젝트를 깨뜨리지 않기 위한 내부 동작이며, 사용자 개념 모델과 문서 용어는 `engineering`으로 통일한다.
+`STANDARD_3`, `STANDARD_5`, `STAGE_ORIENTED_FULL`은 기존 Formal 문서 체계를 유지해야 할 때 사용하는 Compatibility Profile이며 신규 프로젝트 기본값이 아니다.
 
-`STANDARD_3`, `STANDARD_5`, `STAGE_ORIENTED_FULL`은 기존 Formal 문서 체계를 유지해야 할 때 사용하는 Legacy compatibility Profile이며 신규 프로젝트 기본값이 아니다.
+## 5. Change Level은 어디서 정의하는가
 
-## 5. Change Level과 문서 Profile을 섞지 않는다
+Change Level의 표준 의미와 실행 깊이는 다음 두 곳이 기준이다.
+
+```text
+sdlc/design/contracts/change-level-contract.json
+sdlc/config/change-execution-policy.json
+```
+
+- Contract: L1~L5의 의미, Override/History/Safety 정책
+- Execution Policy: Level별 Semantic Work, Evidence, Review, 기본 내부 진입 Stage
+
+현재 표준 의미:
+
+| Level | 이름 | 대표 의미 | 기본 내부 진입 |
+|---|---|---|---|
+| L1 | MICRO | 단일 국소 변경 | DEVELOPMENT |
+| L2 | LOCAL | 제한된 복수 Component/Rule 영향 | DEVELOPMENT |
+| L3 | FEATURE | 기능 단위 변경 | DESIGN |
+| L4 | PROCESS | 업무 Process/Cross-domain 영향 | PROCESS |
+| L5 | ARCH | Architecture/Security/Migration 고위험 영향 | IMPACT |
+
+중요한 점은 **기본 진입 Stage가 Human 문서 존재 여부를 결정하는 기준이 아니라는 것**이다.
 
 ```text
 Change Level = 실행 깊이 / Evidence / Review 필요성
-Stage        = 내부 Execution Semantic
+Stage        = 내부 Execution Semantic / 재진입 초점
 Profile      = Human Artifact topology
 ```
 
-Change Level만 보고 Customer 문서 수를 결정하지 않는다. 문서 수는 Project Config의 Profile이 결정한다.
+## 6. AUTO / MANUAL / 최소 Level
 
-L1/L2처럼 문서가 적은 Fast Path에서도 실제 Source 변경 전 다음 의미 검증은 생략하지 않는다.
+### AUTO
 
-- Requirement Intent Decomposition
-- AS-IS Source Analysis
-- Impact Check
+```yaml
+change:
+  level_policy: AUTO
+  minimum_level: L1
+```
 
-즉, 문서 수를 줄이는 것과 분석을 줄이는 것은 다른 문제다.
+Agent/Runtime이 Canonical 구조와 Typed Evidence로 Level을 판정한다. `minimum_level`을 L2 또는 L3로 두면 AUTO가 그 아래로 내려가지 않는다.
 
-## 6. Customer Scope
+### 프로젝트 전체 MANUAL
+
+```yaml
+change:
+  level_policy: MANUAL
+  default_level: L3
+```
+
+모든 Target의 기본 Level을 사람이 정해야 하는 프로젝트에서 사용한다.
+
+## 7. Target별 사전 Level 지정
+
+특정 요구사항만 사전에 Level을 정할 수 있다.
+
+```yaml
+change:
+  level_policy: AUTO
+  minimum_level: L1
+  target_levels:
+    RQ-001:
+      level: L3
+      reason: "업무규칙과 기능 영향을 상세 검토해야 하는 요구사항"
+    RQ-002:
+      level: L4
+      reason: "승인 Process와 타 모듈 영향 존재"
+```
+
+Target별 지정은 AUTO 관측값보다 우선한다. 사전 정의해 두면 `/work --target RQ-001`부터 L3가 Effective Level이 된다.
+
+Safety Floor보다 낮은 값을 강제하는 것은 일반 설정이 아니다. 꼭 필요한 경우에만 Risk Acceptance를 명시한다.
+
+```yaml
+    RQ-003:
+      level: L2
+      reason: "검토 결과 외부 Interface가 실제 변경 대상이 아님을 확인"
+      accept_below_safety_floor: true
+```
+
+이 값은 단순 편의를 위해 사용하지 않는다.
+
+## 8. 작업 중 Level 올리기/내리기
+
+사용자는 자연어로 요청할 수 있다.
+
+```text
+RQ-001은 L3로 진행해줘. 업무규칙 검토가 필요해서야.
+RQ-001을 L4에서 L2로 낮춰줘. 조회조건 한 곳만 영향 있는 것으로 확인됐어.
+RQ-001 Level override를 해제하고 AUTO로 다시 판단해줘.
+```
+
+Runtime 명령으로는 다음과 같다.
+
+```bash
+python sdlc/scripts/change_execution_runtime.py set-level \
+  --target RQ-001 --level L3 --reason "업무규칙 검토 필요"
+
+python sdlc/scripts/change_execution_runtime.py show --target RQ-001
+
+python sdlc/scripts/change_execution_runtime.py clear-level \
+  --target RQ-001 --reason "AUTO 재평가"
+```
+
+자동 판정의 **자동 강등은 금지**한다. 하지만 사람이 근거와 이유를 명시한 downgrade는 허용한다. 현재 Evidence의 `safety_floor`보다 낮추려면 별도 Risk Acceptance가 필요하다.
+
+```bash
+python sdlc/scripts/change_execution_runtime.py set-level \
+  --target RQ-001 --level L2 \
+  --reason "검토 결과 Cross-domain 영향 없음" \
+  --accept-below-safety-floor
+```
+
+## 9. Level 이력은 어디에 남는가
+
+Target별 Runtime state에 자동으로 남는다.
+
+```text
+sdlc/runtime/change-level/<TARGET>.json
+```
+
+주요 필드:
+
+```text
+observed_change_level   Evidence 기반 AUTO 관측값
+effective_change_level 실제 실행에 적용되는 값
+level_source            AUTO / Project Target / Manual / Human Override
+safety_floor            현재 Evidence 기준 최소 안전 수준
+classification_reason   판정/결정 이유
+level_history           최초 판정, 승격, 명시적 강등, Override 해제 이력
+human_override          현재 Human Override가 있으면 그 내용
+```
+
+따라서 상세 문서가 짧은 L1 작업도 **왜 L1이었는지와 이후 L3로 올렸는지**를 Runtime 이력에서 확인할 수 있다.
+
+## 10. Level 변경 후 문서를 다시 만드는 방법
+
+Level을 바꾼 뒤에는 같은 Target으로 `/work`를 다시 실행한다.
+
+```bash
+python sdlc/scripts/harness.py work --target RQ-001
+```
+
+새 `/work`는:
+
+1. 새 Effective Level을 읽고
+2. `required_semantic_work / evidence / review`를 재계산하고
+3. Tailoring Profile을 다시 Resolve하고
+4. `required_engineering_artifacts / projection_update_set`을 갱신 대상으로 제시한다.
+
+Agent는 부족한 분석을 보완한 뒤 해당 Projection들을 Canonical/Evidence 기준으로 다시 만든다.
+
+## 11. Change Level과 문서 Profile을 섞지 않는다
+
+Profile이 문서 topology를 고정해야 하는 경우 `projection_topology: PROFILE_PRIMARY_SET`을 사용할 수 있다.
+
+예: HRIS Custom 2종
+
+```text
+CUSTOM_HRIS_HUNEL_ENGINEERING
+├─ 01_업무정의서.md
+└─ 02_작업지시서.md
+```
+
+이 Profile은 L1~L5와 무관하게 2종을 유지한다.
+
+```text
+L1/L2 → 두 문서 모두 유지, 필요한 내용만 CONCISE
+L3/L4 → 두 문서 모두 유지, STANDARD
+L5    → 두 문서 모두 유지, FULL
+```
+
+L1/DEVELOPMENT이면 `02_작업지시서`가 주 편집 문서일 수 있지만 `01_업무정의서`도 짧게 갱신한다. 예를 들어 실제 근거가 그렇다면 `업무 정책 변경 없음`, `국소 조회조건 수정`, `주변 영향 없음` 정도로 기록한다. 상세 Process를 억지로 만들어내지는 않는다.
+
+즉 **문서 수를 줄이는 것과 분석 깊이를 줄이는 것은 다른 문제이며, Profile-required 문서를 없애는 것과도 다른 문제다.**
+
+## 12. Customer Scope
 
 ```yaml
 documents:
@@ -132,9 +267,7 @@ documents:
 - `MILESTONE`: Release/Milestone 제출
 - `PROJECT`: 최종 프로젝트 제출
 
-Profile이 여러 RQ를 하나의 고객 문서로 합칠 수 있지만 새로운 Reporting Engine을 따로 만들지 않는다.
-
-## 7. 직접 수정 정책
+## 13. 직접 수정 정책
 
 Engineering:
 
@@ -154,9 +287,7 @@ Business Rule 변경 → /change
 
 Projection 직접 수정은 Canonical을 자동 변경하지 않는다.
 
-## 8. Custom Profile 위치
-
-프로젝트별 Custom은 한 곳을 우선 사용한다.
+## 14. Custom Profile 위치
 
 ```text
 sdlc/custom/project/
@@ -166,13 +297,11 @@ sdlc/custom/project/
    └─ customer/
 ```
 
-Framework 표준(`sdlc/tailoring/standard`, `sdlc/templates/...`)을 고객 프로젝트에서 직접 고치지 않는다.
+Framework 표준을 고객 프로젝트에서 직접 고치지 않는다.
 
-자세한 Custom Profile/Template 규칙은 `03_TAILORING_설정가이드.md`, `04_TEMPLATE_및_산출물_가이드.md`를 따른다.
+## 15. 사람이 직접 관리하지 않는 파일
 
-## 9. 사람이 직접 관리하지 않는 파일
-
-다음은 Runtime이 생성하거나 Legacy 호환을 위해 유지하는 Machine artifact다.
+다음은 Runtime이 생성한다.
 
 ```text
 .sdlc/runtime/effective/project-profile.json
@@ -181,23 +310,23 @@ Framework 표준(`sdlc/tailoring/standard`, `sdlc/templates/...`)을 고객 프�
 .sdlc/runtime/effective/agent-provider.json
 .sdlc/runtime/effective/project-context.json
 .sdlc/runtime/effective/config-usage.json
+sdlc/runtime/change-level/<TARGET>.json
 ```
 
-새 프로젝트에서 위 파일을 여러 개 나눠 수정해 설정을 바꾸지 않는다.
+Target Change Level Runtime state도 이력 확인용이지 사용자가 JSON을 직접 수정하는 파일이 아니다. 변경은 Project Config 또는 `set-level/clear-level` 경계로 수행한다.
 
-## 10. 설정 검증
-
-일반 사용자는 다음만 사용한다.
+## 16. 설정 검증
 
 ```bash
 python sdlc/scripts/harness.py check --setup
 ```
 
-Framework 관리자가 Profile을 검증할 때만 직접 Tailoring validator를 사용한다.
+Framework 관리자가 Profile을 검증할 때:
 
 ```bash
 python sdlc/scripts/tailoring_runtime.py validate-profile --profile ENGINEERING_SDD_COMPACT
 python sdlc/scripts/tailoring_runtime.py validate-profile --profile CUSTOMER_STANDARD_3
+python sdlc/scripts/tailoring_runtime.py validate-profile --profile CUSTOM_HRIS_HUNEL_ENGINEERING
 ```
 
 `INTERACTIVE_HANDOFF_READY`나 `PLAN_READY`는 완료가 아니다. Artifact와 Stage Result를 만든 뒤 동일한 Validator/Target Graph/Business Truth/Canonical Guard를 통과해야 완료다.
