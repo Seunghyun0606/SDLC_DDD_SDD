@@ -106,7 +106,7 @@ class CanonicalProjectionInvariantV19Test(unittest.TestCase):
             self.assertIn("INTERNAL_IT", human)
             self.assertIn("CUSTOMER", human)
             self.assertIn("L1~L5 invariant: `PASS`", human)
-            self.assertIn("독립 Business Truth", human)
+            self.assertIn("Business Truth 권위를 갖지 않는다", human)
 
 
 if __name__ == "__main__":
