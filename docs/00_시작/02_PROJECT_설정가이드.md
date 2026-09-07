@@ -13,6 +13,20 @@ python sdlc/scripts/harness.py check --setup
 
 `setup`은 Repository에서 확인 가능한 Source root, Build/Test, Language/Framework/DB 후보를 먼저 탐색하고 확인할 수 없는 값은 `unresolved`로 남긴다.
 
+이 문서는 **설정 순서와 운영 방법**을 설명한다. 각 Config Key의 역할, 허용값, 기본값, Runtime 적용 여부, 주의사항을 모두 보려면 `02A_PROJECT_CONFIG_옵션_상세가이드.md`를 사용한다.
+
+특히 Config Key는 다음을 구분한다.
+
+```text
+Runtime Switch
+Resolved Policy
+Document / Agent Context
+Extension Config
+Dead Config
+```
+
+지원하지 않는 일반 Key는 조용히 무시하지 않고 Dead Config로 실패시킨다.
+
 ## 2. Agent 실행 방식
 
 Project Config에는 특정 Agent 제품명을 고정하지 않는다. 같은 Repository를 Cursor, Codex, Claude Code 등 서로 다른 Host에서 사용할 수 있기 때문이다.
@@ -28,6 +42,8 @@ agent:
 - `HEADLESS`: CI/Batch 등에서 Harness가 설정된 외부 Provider를 실행한다.
 
 두 모드는 Agent 시작 방식만 다르고 Target Graph Guard, Business Truth Guard, Stage Result Validator, Canonical Apply는 같다.
+
+`HEADLESS`를 선택했다면 `agent.provider.command`가 필요하다. 반대로 `INTERACTIVE`에서 `agent.provider.*`를 같이 쓰면 Config 오류다. 상세 옵션은 `02A_PROJECT_CONFIG_옵션_상세가이드.md`를 본다.
 
 ## 3. 문서 Projection 설정
 
@@ -70,6 +86,8 @@ Engineering 3 / Customer 5
 Engineering 5 / Customer 3
 Custom Engineering N / Custom Customer M
 ```
+
+Customer direct Canonical 입력은 Allowlist-first다. Canonical Relation/Revision/Provenance/Confidence 같은 Machine detail을 고객 문서 생성 입력으로 먼저 펼친 뒤 숨기는 방식이 아니라, 고객에게 허용된 의미 필드만 선택하고 Sanitizer를 2차 방어로 사용한다.
 
 ## 4. Legacy 설정은 신규 작성에 사용하지 않는다
 
@@ -127,6 +145,8 @@ change:
 
 Agent/Runtime이 Canonical 구조와 Typed Evidence로 Level을 판정한다. `minimum_level`을 L2 또는 L3로 두면 AUTO가 그 아래로 내려가지 않는다.
 
+`minimum_level`은 AUTO 판정의 하한이지 모든 명시적 Override의 절대 하한은 아니다. Evidence 기반 실제 안전 하한은 `safety_floor`다.
+
 ### 프로젝트 전체 MANUAL
 
 ```yaml
@@ -135,7 +155,7 @@ change:
   default_level: L3
 ```
 
-모든 Target의 기본 Level을 사람이 정해야 하는 프로젝트에서 사용한다.
+모든 Target의 기본 Level을 사람이 정해야 하는 프로젝트에서 사용한다. Target별 Level과 Human Runtime Override가 있으면 그것들이 우선한다.
 
 ## 7. Target별 사전 Level 지정
 
@@ -196,6 +216,15 @@ python sdlc/scripts/change_execution_runtime.py set-level \
   --target RQ-001 --level L2 \
   --reason "검토 결과 Cross-domain 영향 없음" \
   --accept-below-safety-floor
+```
+
+현재 우선순위는 다음처럼 이해한다.
+
+```text
+Human Runtime Override
+→ project.yaml target_levels
+→ MANUAL default_level
+→ AUTO classification + minimum_level
 ```
 
 ## 9. Level 이력은 어디에 남는가
@@ -259,7 +288,7 @@ L5    → 두 문서 모두 유지, FULL
 
 L1/DEVELOPMENT이면 `02_작업지시서`가 주 편집 문서일 수 있지만 `01_업무정의서`도 짧게 갱신한다. 예를 들어 실제 근거가 그렇다면 `업무 정책 변경 없음`, `국소 조회조건 수정`, `주변 영향 없음` 정도로 기록한다. 상세 Process를 억지로 만들어내지는 않는다.
 
-즉 **문서 수를 줄이는 것과 분석 깊이를 줄이는 것은 다른 문제이며, Profile-required 문서를 없애는 것과도 다른 문제다.**
+즉 **분석 깊이를 줄이는 것과 Profile-required 문서를 없애는 것은 다른 문제다.** Profile의 topology를 유지할지 Stage-match로 조건부 생성할지는 Profile이 결정한다.
 
 ## 12. Customer Scope
 
@@ -270,8 +299,10 @@ documents:
 ```
 
 - `RQ`: 요구사항 단위 협의
-- `MILESTONE`: Release/Milestone 제출
-- `PROJECT`: 최종 프로젝트 제출
+- `MILESTONE`: Release/Milestone 수준으로 운영하려는 정책
+- `PROJECT`: 프로젝트 최종 수준으로 운영하려는 정책
+
+주의: 현재 low-level Customer Projection Runtime은 `--target`을 받는 Target 단위 생성기다. `scope: MILESTONE` 또는 `PROJECT`만 적는다고 여러 RQ가 자동 병합되는 것은 아니다. 실제 집계는 선택 Profile이나 상위 Orchestration이 구현해야 한다.
 
 ## 13. 직접 수정 정책
 
@@ -293,6 +324,8 @@ Business Rule 변경 → /change
 
 Projection 직접 수정은 Canonical을 자동 변경하지 않는다.
 
+`manual_edit_policy`는 Lifecycle 정책이지 OS File Permission이 아니다. `HUMAN_REVIEW`를 사용해도 의미 변경은 Canonical Round-trip이 필요하다.
+
 ## 14. Custom Profile 위치
 
 ```text
@@ -305,6 +338,8 @@ sdlc/custom/project/
 
 Framework 표준을 고객 프로젝트에서 직접 고치지 않는다.
 
+실제 artifact output path의 권위는 선택한 Profile의 `output_path`다. `documents.*.output_root`만 바꿔 Profile 경로가 자동 치환된다고 가정하지 않는다.
+
 ## 15. 사람이 직접 관리하지 않는 파일
 
 다음은 Runtime이 생성한다.
@@ -316,6 +351,7 @@ Framework 표준을 고객 프로젝트에서 직접 고치지 않는다.
 .sdlc/runtime/effective/agent-provider.json
 .sdlc/runtime/effective/project-context.json
 .sdlc/runtime/effective/config-usage.json
+.sdlc/runtime/effective/tailoring-config.json
 sdlc/runtime/change-level/<TARGET>.json
 ```
 
@@ -327,6 +363,14 @@ Target Change Level Runtime state도 이력 확인용이지 사용자가 JSON을
 python sdlc/scripts/harness.py check --setup
 ```
 
+설정이 실제로 어느 범주로 소비되는지 확인하려면 다음을 본다.
+
+```text
+.sdlc/runtime/effective/config-usage.json
+```
+
+`dead`에 Key가 남아 있으면 설정이 적용된 것으로 간주하지 않는다.
+
 Framework 관리자가 Profile을 검증할 때:
 
 ```bash
@@ -336,3 +380,22 @@ python sdlc/scripts/tailoring_runtime.py validate-profile --profile CUSTOM_HRIS_
 ```
 
 `INTERACTIVE_HANDOFF_READY`나 `PLAN_READY`는 완료가 아니다. Artifact와 Stage Result를 만든 뒤 동일한 Validator/Target Graph/Business Truth/Canonical Guard를 통과해야 완료다.
+
+## 17. 옵션별 상세 Reference
+
+다음 항목을 개별적으로 확인해야 하면 `02A_PROJECT_CONFIG_옵션_상세가이드.md`를 사용한다.
+
+- `schema_version`
+- `project.*`
+- `delivery.profile`
+- `change.*` 전체와 Level 우선순위
+- `agent.execution / agent.provider.*`
+- `technology.build / test`
+- `source.roots / test_roots / resource_roots / excludes`
+- `git.*`
+- `architecture.* / coding.* / data.* / interface.* / security.* / deployment.*`
+- `documents.engineering/customer/pm/machine.*`
+- `documents.customer.projection_contract / projection_config`
+- `unresolved`
+- `extensions.*`
+- Runtime / Document Context / Dead Config 분류
