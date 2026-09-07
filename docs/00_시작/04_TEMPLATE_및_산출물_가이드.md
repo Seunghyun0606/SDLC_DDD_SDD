@@ -79,9 +79,21 @@ Functional/Work Unit Spec = 무엇을 왜 어떻게 동작시킬 것인가
 Program Spec              = 실제 어떤 Source에 어떤 Delta를 구현할 것인가
 ```
 
+기본 Readiness 정책은 **Core Required 6 + Risk-triggered Conditional**이다. Data, Transaction, Interface, Security, Migration 같은 조건이 실제로 있을 때만 Conditional 항목을 추가하며, `LEGACY_FULL_17`은 기존 Formal/Legacy 계약을 위한 호환 모드다.
+
 Source에서 다시 생성 가능한 Query/Table/Symbol/Locator/Hash는 Machine-derived Evidence로 관리한다.
 
-## 5. Engineering 직접 편집
+## 5. Fast Path에서도 없어지지 않는 분석
+
+L1/L2가 문서 수를 줄여도 Source 변경 전 다음 의미 검증은 유지한다.
+
+- Requirement Intent Decomposition
+- AS-IS Source Analysis
+- Impact Check
+
+내부 Runtime에서는 각각 `INTENT_DECOMPOSED`, `AS_IS_SOURCE_ANALYZED`, `IMPACT_CHECKED` Gate로 확인한다. 일반 사용자가 이 상수를 직접 관리할 필요는 없다.
+
+## 6. Engineering 직접 편집
 
 Engineering Template 상단에는 다음 원칙이 표시된다.
 
@@ -93,7 +105,7 @@ Requirement/Business Rule/TO-BE → /change
 
 Generated hash와 파일이 다르면 Projection Lifecycle에서 `MANUAL_EDIT_DETECTED` 경고가 가능하며, 그 사실만으로 Canonical을 자동 변경하지 않는다.
 
-## 6. Customer Template
+## 7. Customer Template
 
 기본 3종은 다음 목적에 맞춘다.
 
@@ -103,7 +115,7 @@ Generated hash와 파일이 다르면 Projection Lifecycle에서 `MANUAL_EDIT_DE
 
 `CUSTOMER_WATERFALL_FULL`은 같은 semantic contract를 8개의 제출 단위로 split한 예시다. 프로젝트는 Custom Profile로 다른 N종을 만들 수 있다.
 
-## 7. Customer Final Human Edit
+## 8. Customer Final Human Edit
 
 진행 중 문서는 Agent-generated View다. Final Submission 직전 `FINAL_REVIEW`에서 표현/레이아웃을 사람이 다듬을 수 있다.
 
@@ -113,7 +125,7 @@ Generated hash와 파일이 다르면 Projection Lifecycle에서 `MANUAL_EDIT_DE
 
 Rich Text Merge Engine을 따로 만들지 않는다.
 
-## 8. Template을 추가할 때 체크
+## 9. Template을 추가할 때 체크
 
 Engineering Template:
 
@@ -129,7 +141,7 @@ Customer Template:
 - 어떤 `projection_type`의 의미를 표현하는가?
 - Engineering 파일명/순번에 의존하지 않는가?
 
-## 9. Framework Standard / Project Custom / Generated 구분
+## 10. Framework Standard / Project Custom / Generated 구분
 
 ```text
 Framework Standard
