@@ -30,6 +30,8 @@ class HarnessStructureTest(unittest.TestCase):
             'sdlc/scripts/tailored_work.py',
             'sdlc/scripts/tailored_check.py',
             'sdlc/scripts/tailoring_runtime.py',
+            'sdlc/scripts/change_execution_runtime.py',
+            'sdlc/config/change-execution-policy.json',
             'sdlc/scripts/interactive_work.py',
             'sdlc/scripts/interactive_change.py',
             'sdlc/agent/skills/work/SKILL.md',
@@ -41,6 +43,8 @@ class HarnessStructureTest(unittest.TestCase):
             'sdlc/tailoring/standard/PM_STANDARD.yaml',
         ]:
             self.assertIn(rel, core)
+        self.assertNotIn('sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml', set(self.contract['default_tailoring_assets']))
+        self.assertIn('sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml', set(self.contract['compatibility_tailoring_assets']))
         self.assertNotIn('sdlc/scripts/render_customer_document.py', core)
         self.assertNotIn('sdlc/scripts/detect_source_drift.py', core)
 
@@ -103,7 +107,8 @@ class HarnessStructureTest(unittest.TestCase):
             self.assertEqual('PLAN_READY',work_result['status'])
             self.assertEqual('DESIGN',work_result['plan']['selection']['stage'])
             self.assertTrue(work_result['plan']['selection']['artifact_path'].startswith('docs/10_산출물/'))
-            self.assertEqual('STAGE_ORIENTED_FULL',work_result['plan']['tailoring']['profiles']['internal'])
+            self.assertEqual('STANDARD_5',work_result['plan']['tailoring']['profiles']['internal'])
+            self.assertIn('execution_policy', work_result['plan'])
 
     def test_all_source_enabled_stages_have_evidence_templates(self):
         stages=[k for k,x in self.contract['stage_contracts'].items() if x.get('source_evidence')]
