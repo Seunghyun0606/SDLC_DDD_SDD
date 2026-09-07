@@ -61,6 +61,8 @@ documents:
 
 신규 프로젝트에서는 `documents.engineering.profile`을 사용한다. `STANDARD_3`, `STANDARD_5`, `STAGE_ORIENTED_FULL`은 기존 Formal 문서 체계를 유지해야 할 때만 사용하는 Legacy Profile이며 신규 기본값이 아니다.
 
+설정 순서와 Change Level/Profile 선택은 `02_PROJECT_설정가이드.md`, **모든 Config Key의 역할·허용값·기본값·주의사항은 `02A_PROJECT_CONFIG_옵션_상세가이드.md`**를 본다.
+
 ## 4. Engineering 기본 문서
 
 `ENGINEERING_SDD_COMPACT`의 기본 구조는 다음과 같다.
@@ -88,7 +90,7 @@ Engineering Projection은 `semantic_owner: CANONICAL`, `projection_owner: AGENT`
 
 필요하면 `CUSTOMER_WATERFALL_FULL` 8종을 선택할 수 있고, 프로젝트 Custom Profile로 1/3/5/8/13/N종을 정의할 수 있다.
 
-Customer Runtime은 Engineering Profile ID, Engineering 문서 수/순번, expected path를 사용하지 않는다. Customer Profile + Canonical/Semantic metadata/Evidence를 사용한다.
+Customer Runtime은 Engineering Profile ID, Engineering 문서 수/순번, expected path를 사용하지 않는다. Customer Profile + **Customer-safe Canonical allowlist + Semantic/Evidence 입력**을 사용한다. Canonical Relation/Provenance/Revision 같은 Machine detail은 direct Customer input에서 기본 차단한다.
 
 ## 6. Semantic Template과 Human Projection은 다르다
 
@@ -153,7 +155,7 @@ FINAL_REVIEW + Canonical Change
 - Stage = 내부 Execution Semantic
 - Projection Profile = 사람에게 어떤 Artifact를 보여줄지
 
-따라서 `Stage = Document`, `Change Level = Document Count`로 해석하지 않는다.
+따라서 `Stage = Document`, `Change Level = Document Count`로 해석하지 않는다. `PROFILE_PRIMARY_SET` Profile에서는 L1/L2라도 required 문서를 삭제하지 않고 필요한 내용만 `CONCISE`하게 유지한다.
 
 ## 10. Framework와 배포 Project의 경계
 
@@ -171,6 +173,7 @@ python sdlc/scripts/build_project_scaffold.py --root . --output <outside-target-
 
 - Input 자료 준비: `11_INPUT_자료_준비가이드.md`
 - 프로젝트 설정: `02_PROJECT_설정가이드.md`
+- Config 옵션 상세 Reference: `02A_PROJECT_CONFIG_옵션_상세가이드.md`
 - Profile/Customizing: `03_TAILORING_설정가이드.md`
 - Semantic/Engineering/Customer Template: `04_TEMPLATE_및_산출물_가이드.md`
 - 이해관계자별 사용: `05_이해관계자별_작업가이드.md`
