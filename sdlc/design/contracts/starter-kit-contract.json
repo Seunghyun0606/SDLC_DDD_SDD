@@ -1,9 +1,9 @@
 {
-  "schema_version": 4,
-  "candidate_design": "v1.7-session-first-integration-v0.1",
+  "schema_version": 5,
+  "candidate_design": "v1.10-projection-separation",
   "user_onboarding": {
     "entrypoint": "docs/00_시작/START_HERE.md",
-    "project_setup_guide": "docs/00_시작/프로젝트_설정_가이드.md",
+    "project_setup_guide": "docs/00_시작/02_PROJECT_설정가이드.md",
     "project_config": ".sdlc/project.yaml",
     "internal_framework_structure_required_for_user": false,
     "primary_setup_inputs": ["project_name", "project_mode", "delivery_profile"],
