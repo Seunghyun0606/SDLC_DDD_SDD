@@ -20,7 +20,7 @@ class SixWBusinessScenarioTest(unittest.TestCase):
         self.assertTrue(SIXW["rules"]["program_spec_must_trace_to_business_scenario"])
 
     def test_process_template_has_sixw_business_definition(self):
-        text = (ROOT / "sdlc/templates/core/process-analysis.md").read_text(encoding="utf-8")
+        text = (ROOT / "sdlc/templates/semantic/process-analysis.md").read_text(encoding="utf-8")
         for marker in ["누가(Who)", "언제(When)", "어디서(Where)", "무엇을(What)", "어떻게(How)", "왜(Why)"]:
             self.assertIn(marker, text)
         self.assertIn("자연어 업무 정의", text)
@@ -35,12 +35,12 @@ class SixWBusinessScenarioTest(unittest.TestCase):
 
 class DeveloperSpecificationTest(unittest.TestCase):
     def test_functional_design_contains_semantic_required_markers(self):
-        text = (ROOT / "sdlc/templates/core/functional-design.md").read_text(encoding="utf-8")
+        text = (ROOT / "sdlc/templates/semantic/functional-design.md").read_text(encoding="utf-8")
         for marker in DEV["functional_design_required_markers"]:
             self.assertIn(marker, text)
 
     def test_program_spec_contains_only_implementation_delta_markers(self):
-        text = (ROOT / "sdlc/templates/core/program-spec.md").read_text(encoding="utf-8")
+        text = (ROOT / "sdlc/templates/semantic/program-spec.md").read_text(encoding="utf-8")
         for marker in DEV["program_spec_required_markers"]:
             self.assertIn(marker, text)
         for old_duplicate in [
