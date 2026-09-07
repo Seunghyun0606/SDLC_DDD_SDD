@@ -1,5 +1,5 @@
 {
-  "schema_version": 6,
+  "schema_version": 7,
   "contract_id": "PROJECT_SCAFFOLD_V110_ASSET_BOUNDARY",
   "source_package_contract": "sdlc/design/contracts/harness-package-contract.json",
   "purpose": "v1.10 Framework에서 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide만 배포하고 Framework 개발/검증 자산은 제외한다.",
@@ -8,6 +8,9 @@
     "sdlc/scripts/project_config.py",
     "sdlc/config/change-execution-policy.json",
     "sdlc/scripts/change_execution_runtime.py",
+    "sdlc/design/contracts/change-level-contract.json",
+    "sdlc/design/contracts/artifact-tailoring-contract.json",
+    "sdlc/agent/skills/work/references/change-level.md",
     "sdlc/scripts/delivery_status_runtime.py",
     "sdlc/scripts/component_state_runtime.py",
     "sdlc/scripts/impact_learning_runtime.py",
@@ -111,6 +114,7 @@
     "PROJECT_REQUIRED": [
       ".sdlc/project.yaml",
       "Harness runtime",
+      "Change Level control contract/reference",
       "sdlc/templates/semantic",
       "ENGINEERING_SDD_COMPACT",
       "CUSTOMER_STANDARD_3",
