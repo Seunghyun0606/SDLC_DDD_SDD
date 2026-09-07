@@ -10,7 +10,7 @@ generated_by:
 sources: []
 generated_at: "{{generated_at}}"
 ---
-<!-- Legacy compatibility only. 신규 Workflow는 sdlc/templates/core/requirement.md 하나에서 원문/FR/BR 후보/AC를 함께 관리한다. 이 View에 새 업무정보를 작성하지 않는다. -->
+<!-- Legacy compatibility only. 신규 Workflow는 sdlc/templates/semantic/requirement.md 하나에서 원문/FR/BR 후보/AC를 함께 관리한다. 이 View에 새 업무정보를 작성하지 않는다. -->
 # {{representative_id}} {{short_name}} 요구사항 분석 — 호환용 View
 
 ## 문서 목적
