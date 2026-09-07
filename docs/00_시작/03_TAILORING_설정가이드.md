@@ -134,6 +134,10 @@ documents:
 
 모두 `GENERATED_VIEW`이며 독립 Business Truth가 아니다. Internal/Canonical 변경 시 `STALE_VIEW`가 되고 재생성/Review 후 `CURRENT`가 된다.
 
+Customer Projection의 Source는 **Stage/Canonical 의미 기준**으로 정의한다. `STANDARD_3`의 `business_definition`처럼 특정 Internal Profile에만 존재하는 artifact ID를 Customer Profile에 고정하지 않는다. 그래야 Internal Profile을 `STANDARD_5`나 Custom 5종으로 바꾸어도 Customer Projection 계약이 깨지지 않는다.
+
+Customer Template의 Section과 `customer-document-contract.json`의 `required_base_sections / projection_sections / required_add`는 같은 이름과 의미를 유지해야 한다.
+
 ## 8. Validation
 
 ```bash
@@ -147,5 +151,7 @@ python sdlc/scripts/tailoring_runtime.py validate-profile --profile STAGE_ORIENT
 1. Profile Template 경로가 실제 존재한다.
 2. Audience/authoring이 명확하다.
 3. Customer Profile의 artifact ID/template/stage 범위가 Customer Document Contract와 모순되지 않는다.
-4. Tailoring이 Change Level Semantic Work를 우회하지 않는다.
-5. 신규 기본값은 `STANDARD_5`, Full은 compatibility로 유지된다.
+4. Customer Profile이 특정 Internal Profile artifact ID에 종속되지 않는다.
+5. Customer Template의 필수/Projection Section이 Contract와 일치한다.
+6. Tailoring이 Change Level Semantic Work를 우회하지 않는다.
+7. 신규 기본값은 `STANDARD_5`, Full은 compatibility로 유지된다.
