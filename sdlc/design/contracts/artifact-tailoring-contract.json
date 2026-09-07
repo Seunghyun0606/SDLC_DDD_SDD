@@ -1,93 +1,92 @@
 {
-  "schema_version": 2,
-  "contract_id": "ARTIFACT_TAILORING_V1",
-  "candidate_design": "v1.9.0-tailoring-control-plane",
-  "purpose": "Harness 내부 Stage/Canonical/Evidence와 사람이 사용하는 Artifact의 문서 체계를 분리한다.",
+  "schema_version": 3,
+  "contract_id": "ARTIFACT_TAILORING_V2",
+  "candidate_design": "v1.10.1-change-level-topology-separation",
+  "purpose": "Harness 내부 Stage/Canonical/Evidence와 사람이 사용하는 Artifact 문서체계를 분리하고, Change Level이 Profile의 필수 Human Artifact 존재 여부를 임의로 제거하지 못하게 한다.",
   "principles": {
     "stage_is_internal_execution_semantics": true,
     "template_defines_expression_shape": true,
     "tailoring_defines_projection_mapping": true,
+    "profile_defines_human_artifact_topology": true,
+    "change_level_controls_semantic_depth_evidence_review": true,
+    "change_level_does_not_own_profile_primary_artifact_existence": true,
     "core_stage_contracts_must_not_be_duplicated_per_customer": true,
     "custom_template_only_is_not_sufficient": true,
     "canonical_semantic_identity_is_change_level_invariant": true,
-    "change_level_controls_work_and_projection_density_not_business_truth_schema": true,
     "projection_omission_does_not_mean_canonical_semantic_deletion": true
+  },
+  "projection_topologies": {
+    "STAGE_MATCHED": "기존 호환 방식. 현재 Stage와 sources.stages가 일치하는 Artifact만 Materialize 후보가 된다.",
+    "PROFILE_PRIMARY_SET": "Profile의 PRIMARY Engineering Artifact 집합을 Human topology로 유지한다. 현재 Stage 일치 여부는 편집 초점만 정하고 문서 존재 여부를 제거하지 않는다."
+  },
+  "level_projection_detail": {
+    "allowed": ["CONCISE", "STANDARD", "FULL"],
+    "meaning": "같은 Profile 문서를 유지하면서 Change Level에 따라 작성 밀도만 조절한다."
   },
   "audiences": ["MACHINE", "INTERNAL_IT", "PM_REVIEW", "CUSTOMER"],
   "mapping_cardinality": ["N_STAGE_TO_1_ARTIFACT", "1_STAGE_TO_N_ARTIFACT", "N_STAGE_TO_N_ARTIFACT"],
   "artifact_fields": {
     "required": ["id", "audience", "template", "sources", "visibility", "authoring"],
-    "optional": ["condition", "change_levels", "output_path", "sections", "freshness_policy"]
+    "optional": ["condition", "change_levels", "min_change_level", "output_path", "sections", "freshness_policy"]
   },
+  "profile_fields_optional": ["projection_topology", "level_projection_detail"],
   "source_selectors": {
-    "stages": "One or more internal Stage names",
+    "stages": "One or more internal Stage names. PROFILE_PRIMARY_SET에서는 현재 편집 초점/관련성 판단에 사용한다.",
     "canonical": "Canonical entity/field selectors",
     "evidence": "Machine evidence selectors",
     "artifact": "Previously generated Internal IT artifact references"
   },
   "visibility": ["PRIMARY", "SECONDARY", "HIDDEN_MACHINE"],
-  "authoring": [
-    "AGENT_DRAFT_HUMAN_REVIEW",
-    "HUMAN_AUTHORITATIVE",
-    "GENERATED_VIEW",
-    "MACHINE_ONLY"
-  ],
-  "conditions": [
-    "ALWAYS",
-    "HAS_UI",
-    "HAS_INTERFACE",
-    "HAS_BATCH",
-    "HAS_DATA_CHANGE",
-    "HAS_SECURITY_IMPACT",
-    "CHANGE_LEVEL_AT_LEAST"
-  ],
+  "authoring": ["AGENT_DRAFT_HUMAN_REVIEW", "HUMAN_AUTHORITATIVE", "GENERATED_VIEW", "MACHINE_ONLY"],
+  "conditions": ["ALWAYS", "HAS_UI", "HAS_INTERFACE", "HAS_BATCH", "HAS_DATA_CHANGE", "HAS_SECURITY_IMPACT", "CHANGE_LEVEL_AT_LEAST"],
+  "resolution_output": {
+    "primary_work_artifact": "현재 Stage와 가장 잘 맞는 주 편집 문서",
+    "required_engineering_artifacts": "PROFILE_PRIMARY_SET에서 해당 Target/Level에 반드시 유지·갱신할 Engineering PRIMARY 문서 집합",
+    "projection_update_set": "이번 /work 이후 Canonical/Evidence 기준으로 갱신해야 하는 Human Projection 집합",
+    "stage_match": "현재 내부 Stage와 Artifact sources.stages의 직접 일치 여부",
+    "projection_required": "Stage 일치와 별개로 Profile topology상 문서를 유지해야 하는지",
+    "projection_detail": "CONCISE | STANDARD | FULL"
+  },
   "canonical_projection_invariant": {
     "canonical_authority": "Canonical Business/Design Truth and accepted decisions remain authoritative regardless of L1-L5.",
-    "change_level_effect": "L1-L5 selects required Semantic Work, Evidence, Review depth and which Human Artifacts need to be materialized; it never deletes or rewrites Canonical semantics merely because the level is lower.",
+    "change_level_effect": "L1-L5 selects required Semantic Work, Evidence, Review and content depth; it never deletes Profile-required Human artifacts merely because the level is lower.",
     "internal_it_layer": {
-      "default_profile": "STANDARD_5",
+      "default_profile": "ENGINEERING_SDD_COMPACT",
       "role": "DESIGN_DEVELOPMENT_HUMAN_REVIEW_SURFACE",
       "default_authoring": "AGENT_DRAFT_HUMAN_REVIEW",
-      "may_hide_or_collapse_irrelevant_sections": true,
-      "omitted_section_means": "VIEW_NOT_MATERIALIZED_OR_NOT_APPLICABLE; not Canonical deletion"
+      "profile_may_require_primary_set": true,
+      "concise_fast_path_document_allowed": true,
+      "concise_means_omit_document": false
     },
     "customer_layer": {
       "default_profile": "CUSTOMER_STANDARD_3",
       "role": "GENERATED_COMMUNICATION_VIEW",
       "default_authoring": "GENERATED_VIEW",
-      "may_rephrase_or_hide_internal_ids_and_machine_detail": true,
       "business_truth_authority": false,
       "customer_edit_auto_updates_canonical": false,
-      "content_may_use_internal_or_canonical_evidence": true,
-      "topology_is_not_coupled_to_internal_document_count": true
+      "topology_is_not_coupled_to_engineering_document_count": true
     },
-    "required_trace": ["target_id", "canonical_revision"],
-    "recommended_validation": "target-scoped canonical semantic fingerprint must remain identical across L1-L5 projection resolution"
+    "required_trace": ["target_id", "canonical_revision"]
   },
   "runtime_requirements": {
     "profile_selected_from_project_config": true,
-    "profile_id_only_in_project_yaml": true,
     "template_path_not_required_from_normal_user": true,
     "stage_selection_not_required_from_normal_user": true,
     "projection_must_not_create_new_business_truth": true,
-    "machine_evidence_default_hidden_from_primary_artifacts": true,
     "change_level_must_not_mutate_canonical_during_projection_resolution": true,
-    "customer_projection_topology_must_remain_independent_of_internal_document_count": true,
-    "customer_projection_content_may_depend_on_selected_internal_or_canonical_evidence": true
+    "profile_primary_set_must_survive_entry_stage_change": true,
+    "level_change_requires_projection_refresh_plan": true,
+    "customer_projection_topology_must_remain_independent_of_engineering_document_count": true
   },
-  "profile_resolution_order": [
-    "sdlc/custom/project/tailoring",
-    "sdlc/tailoring/standard",
-    "explicit_extension_registry"
-  ],
+  "profile_resolution_order": ["sdlc/custom/project/tailoring", "sdlc/tailoring/standard", "explicit_extension_registry"],
   "validation": {
     "unknown_stage_fails": true,
     "unknown_audience_fails": true,
+    "unknown_projection_topology_fails": true,
+    "invalid_projection_detail_fails": true,
     "missing_template_fails": true,
     "duplicate_artifact_id_fails": true,
-    "customer_projection_without_canonical_or_internal_source_fails": true,
-    "stage_removal_by_tailoring_forbidden": true,
     "canonical_identity_change_caused_only_by_level_resolution_fails": true,
-    "customer_generated_view_claiming_business_truth_fails": true
+    "profile_primary_set_document_omitted_only_because_entry_stage_differs_fails": true
   }
 }
