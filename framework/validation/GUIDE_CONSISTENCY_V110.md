@@ -88,8 +88,22 @@ sdlc/tailoring/standard/*.yaml    = Artifact 조립/선택 Profile
 - Compatibility Notice 01/06이 신규 Project Scaffold에서 제외되는지
 - Template 가이드가 Semantic / Projection / Tailoring Profile 역할을 구분하는지
 
+## 최종 자동 검증
+
+최종 보고서 반영 직전 Head `cc001f1be05434707e4b2fd4ff86ab377ee86279`에서 다음 PR Workflow가 모두 성공했다.
+
+- P0 P1 Production Readiness #321 — SUCCESS
+- Worklist sync quality #1235 — SUCCESS
+- Docs quality #485 — SUCCESS
+- Greenfield Work Executor E2E #331 — SUCCESS
+- Public Brownfield Pilot #344 — SUCCESS
+
+`Worklist sync quality`의 전체 unittest에는 Guide consistency 6개가 포함되어 모두 통과했다.
+
 ## 판정
 
-Guide 구조는 v1.10 Projection Separation, Semantic Template 역할, Project Scaffold asset boundary와 일치하도록 현행화했다.
+**GUIDE_CONSISTENCY_PASS_WITH_AUTOMATED_REGRESSION**
 
-최종 판정은 이 보고서가 포함된 Branch Head의 전체 CI 결과를 근거로 한다.
+Guide 구조는 v1.10 Projection Separation, Semantic Template 역할, Project Scaffold asset boundary와 일치하도록 현행화되었고 자동 회귀가 추가되었다.
+
+이 판정은 Repository/Runtime/Contract/Test 일관성 범위이며 실제 신규 사용자 관찰 기반 사용성 Pilot을 대체하지 않는다.
