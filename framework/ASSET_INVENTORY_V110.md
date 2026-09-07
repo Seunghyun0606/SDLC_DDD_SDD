@@ -2,118 +2,118 @@
 
 기준 Branch: `SDLC_DESIGN_SESSION_FIRST/projection-separation/v1.10.0`
 
-이 문서는 Repository 안의 자산을 **실제 프로젝트 배포 대상**과 **SDLC Framework 개발/검증 자산**으로 분리하기 위한 기준이다.
+이 문서는 Repository 자산을 **실제 프로젝트 배포 대상**과 **SDLC Framework 개발/검증 자산**으로 구분하는 현재 기준이다. 과거 경로 설명이 아니라 **현재 물리 구조**를 기준으로 한다.
 
 ## 1. 분류값
 
-- `PROJECT_REQUIRED`: 기본 프로젝트 Scaffold에서 반드시 필요
-- `PROJECT_OPTIONAL`: 특정 기능/고객/브라운필드/도구를 사용할 때만 필요
-- `FRAMEWORK_ONLY`: Framework 개발, Pilot, Test, 비교 Sample, CI, 설계이력. 프로젝트에 배포하지 않음
-- `COMPATIBILITY_ONLY`: 신규 기본 구조에는 필요 없지만 Legacy 입력/실행 호환 때문에 아직 제거하지 못함
-- `MOVE_CANDIDATE`: 역할은 명확하나 현재 물리 위치가 역할과 맞지 않아 다음 정리 대상
+- `PROJECT_REQUIRED`: 기본 Project Scaffold에 반드시 포함
+- `PROJECT_OPTIONAL`: 선택 기능/고객/Brownfield/Extension을 사용할 때만 포함
+- `FRAMEWORK_ONLY`: Framework 개발, Test, Pilot, Validation, 비교 Sample, 설계이력
+- `COMPATIBILITY_ONLY`: 신규 기본 구조에는 필요 없지만 기존 참조 호환 때문에 남아 있음
+- `GENERATED`: 프로젝트 실행 중 생성되는 상태/문서
 
-## 2. 최상위 구조 판정
+## 2. 최상위 경계
 
-| 경로 | 판정 | 설명 / 조치 |
+| 경로 | 판정 | 현재 역할 |
 |---|---|---|
-| `.cursor/rules/` | PROJECT_REQUIRED(Cursor) | Cursor host가 직접 읽는 Rule adapter. Cursor 프로젝트에서는 필요 |
-| `.cursor/skills/` | PROJECT_REQUIRED(Cursor) | Cursor host용 Skill adapter. `sdlc/agent/skills`와 역할 중복이 아니라 host adapter 역할 |
-| `sdlc/agent/skills/` | PROJECT_REQUIRED | Vendor-neutral Agent 실행 지침의 Core. 현재 work/change와 공통 reference가 존재 |
-| `sdlc/config/` | MIXED | Runtime policy, optional profile, example, framework test config가 섞여 있어 파일별 분류 필요 |
-| `sdlc/custom/` | PROJECT_OPTIONAL | 프로젝트/도메인별 Overlay, Custom Tailoring, Adapter 위치 |
-| `sdlc/design/contracts/` | PROJECT_REQUIRED + OPTIONAL | 이름은 design이지만 일부 Contract를 Runtime/validator가 실제 읽음. 단순 설계문서가 아님 |
-| `sdlc/design/baselines/` | FRAMEWORK_ONLY | 과거 Full Design baseline |
-| `sdlc/design/candidates/` | FRAMEWORK_ONLY | 설계 변경 이력/RC delta |
-| `sdlc/design/reviews/` | FRAMEWORK_ONLY | Framework review 기록 |
-| `sdlc/design/validations/` | FRAMEWORK_ONLY | Framework validation 기록 |
-| `sdlc/design/CHANGELOG.md`, `branch-version.yaml` | FRAMEWORK_ONLY | Framework release/branch metadata |
-| `sdlc/guides/` | REMOVE_CANDIDATE | `docs/00_시작`과 중복된 compatibility link. 신규 SoT가 아니므로 제거 대상 |
-| `sdlc/runtime/` | GENERATED | 실행 중 생성되는 machine state. 배포 source가 아님 |
-| `sdlc/samples/` | FRAMEWORK_ONLY / MOVE_CANDIDATE | 비교/교육/fixture. Runtime Profile 탐색 경로가 아니므로 `framework/samples/`로 이동 |
-| `sdlc/scripts/` | MIXED | Project Runtime / optional extension / framework validation script가 혼재 |
-| `sdlc/starter-kits/` | PROJECT_REQUIRED | setup 시 Greenfield/Brownfield 시작 자료 |
-| `sdlc/tailoring/standard/` | PROJECT_REQUIRED + COMPATIBILITY | 신규 기본 Profile과 Legacy Profile이 함께 있음 |
-| `sdlc/templates/` | PROJECT_REQUIRED + COMPATIBILITY | 신규 Engineering/Customer template과 Legacy template이 함께 있음 |
-| `docs/00_시작/` | PROJECT_REQUIRED | 프로젝트 사용자용 Primary Guide SoT |
-| `docs/00_관리/` | MIXED / MOVE_CANDIDATE | Project-generated 관리 출력 경로와 Framework 검증/작업목록이 충돌. Framework 파일은 이동 대상 |
-| `docs/99_파일럿/` | FRAMEWORK_ONLY / MOVE_CANDIDATE | Pilot evidence. 프로젝트 Scaffold에서는 제외하며 장기적으로 `framework/pilots/` 이동 |
-| `tests/` | FRAMEWORK_ONLY | Framework regression/contract/pilot test. 일반 프로젝트에 배포하지 않음 |
-| `.github/` | FRAMEWORK_ONLY | Framework CI. 일반 프로젝트 Scaffold에서 제외 |
-| `framework/` | FRAMEWORK_ONLY | 이 Branch부터 명시적인 Framework-only 물리 경계 |
+| `.cursor/rules/` | PROJECT_REQUIRED(Cursor) | Cursor host rule adapter |
+| `.cursor/skills/` | PROJECT_REQUIRED(Cursor) | Cursor host skill adapter |
+| `sdlc/agent/skills/` | PROJECT_REQUIRED | Vendor-neutral Agent Core skill |
+| `sdlc/config/` | MIXED | Runtime policy + optional project config + compatibility alias |
+| `sdlc/custom/` | PROJECT_OPTIONAL | Project/Domain overlay, custom tailoring, adapter |
+| `sdlc/design/contracts/` | PROJECT_REQUIRED + OPTIONAL | Runtime/validator가 실제 읽는 Contract |
+| `sdlc/scripts/` | MIXED | Project Runtime + Extension + Framework utility |
+| `sdlc/starter-kits/` | PROJECT_REQUIRED | Greenfield/Brownfield starter assets |
+| `sdlc/tailoring/standard/` | PROJECT_REQUIRED + COMPATIBILITY | 신규 기본 Profile + Legacy Profile |
+| `sdlc/templates/` | PROJECT_REQUIRED + COMPATIBILITY | Engineering/Customer template + Legacy template |
+| `sdlc/runtime/` | GENERATED | 실행 중 machine state |
+| `docs/00_시작/` | PROJECT_REQUIRED | 프로젝트 사용자 가이드의 Primary SoT |
+| `docs/00_관리/` | GENERATED | Project-generated / PM-facing 관리 출력 전용 |
+| `framework/` | FRAMEWORK_ONLY | Framework 개발/검증 자산의 물리 경계 |
+| `tests/` | FRAMEWORK_ONLY | Framework regression/contract/pilot tests |
+| `.github/` | FRAMEWORK_ONLY | Framework CI |
 
-## 3. `.cursor/skills` vs `sdlc/agent/skills`
-
-현재 의도는 다음과 같다.
+## 3. Framework-only 물리 구조
 
 ```text
-sdlc/agent/skills       = vendor-neutral Core
-        ↓ host adaptation / compatibility
-.cursor/skills          = Cursor가 직접 읽는 Host adapter
+framework/
+├─ README.md
+├─ ASSET_INVENTORY_V110.md
+├─ design/                  # baseline/candidate/review/session/validation 설계 이력
+├─ management/              # Framework 자체 worklist/관리자료
+├─ pilots/                  # Pilot 및 과거 pilot history
+├─ samples/                 # 비교/교육/검증 fixture
+└─ validation/              # validation report + assets/provider/fixture
 ```
 
-`work/references/*`는 두 경로가 동일해야 한다는 parity test가 이미 존재한다. 반면 Skill 본문은 host별 adapter 내용이 달라질 수 있다.
+이동 완료 항목:
 
-현재 Gap:
+- 기존 `sdlc/design/baselines|candidates|reviews|session|validations` → `framework/design/`
+- 기존 `docs/99_파일럿` → `framework/pilots/history/`
+- 기존 `docs/00_관리`의 Framework validation/pilot/worklist/sample → `framework/validation|pilots|management|samples`
+- 기존 `sdlc/samples` 비교/교육 fixture → `framework/samples/`
+- 기존 `sdlc/validation` 실내용 → `framework/validation/assets/`
+- 중복 `sdlc/guides` → 제거
 
-- `sdlc/agent/skills`: work, change 중심
-- `.cursor/skills`: work, change 외 setup/check/open-resolve/sop-extract도 존재
+## 4. Compatibility 경계
 
-따라서 **둘 중 하나를 지금 삭제하면 안 된다.** 후속 목표는 모든 vendor-neutral Skill을 `sdlc/agent/skills`에 두고 `.cursor/skills`는 thin adapter/생성 mirror로 제한하는 것이다.
+과거 참조를 살리기 위해 **내용 복제를 다시 만들지 않는다**.
 
-## 4. `sdlc/config` 파일별 분류
+현재 compatibility 경계:
 
-| 파일 | 판정 | 이유 |
-|---|---|---|
-| `change-execution-policy.json` | PROJECT_REQUIRED | Change Level / Fast Path 실행 정책 |
-| `program-spec-readiness.json` | PROJECT_REQUIRED | Program Spec readiness validator/runtime 사용 |
-| `customer-document-profile.example.json` | PROJECT_REQUIRED(현재) | `render_customer_document.py`의 기본 profile 경로. 이름은 example이지만 현재 default runtime dependency이므로 향후 이름 변경 필요 |
-| `architecture-rules.json` | PROJECT_OPTIONAL | `arch-check` enhancement 사용 시 필요 |
-| `impact-adapter-profile.example.yaml` | PROJECT_OPTIONAL | Brownfield impact adapter 구성 예시 |
-| `requirement-intake-columns.example.yaml` | PROJECT_OPTIONAL | 비표준 고객 요구사항 컬럼 매핑 시 사용 |
-| `open-resolution-profile.example.yaml` | PROJECT_OPTIONAL | OPEN resolution customizing 시 참조 |
-| `terminology-profile.example.json` | PROJECT_OPTIONAL | 문서/용어 customizing 시 사용 |
-| `br-intake-profile.example.json` | PROJECT_OPTIONAL | BR/document ingest 확장용 |
-| `project-profile.example.yaml` | COMPATIBILITY_ONLY | `.sdlc/project.yaml` 이전 구조의 참고/legacy profile |
-| `source-profile.example.yaml` | COMPATIBILITY_ONLY | 새 프로젝트에서는 effective source profile이 Runtime에서 생성됨 |
-| `project.example.yaml` | FRAMEWORK_ONLY | Project Config 예시/테스트. 실제 사용자 SSOT는 `.sdlc/project.yaml` |
-| `agent-repeatability-profile.example.json` | FRAMEWORK_ONLY | External Agent repeatability experiment |
-| `overlay-resolution.example.json` | FRAMEWORK_ONLY | Overlay resolver test/example |
-| `worklist-columns.yaml` | FRAMEWORK_ONLY | Framework worklist/sync 관리도구용 |
+```text
+sdlc/validation
+  -> framework/validation/assets
 
-정리 후보:
+sdlc/config/customer-document-profile.example.json
+  -> customer-document-profile.json
+```
 
-1. `customer-document-profile.example.json`은 실제 기본 dependency인데 이름에 `example`이 붙어 있다. `customer-document-profile.json` 같은 Runtime 이름으로 바꾸는 것이 맞다.
-2. `*.example.*`는 자동 실행 dependency가 아니라면 `framework/examples/config/` 또는 `sdlc/custom/project/...example`로 이동한다.
+신규 Runtime과 신규 Project Scaffold는 항상 정식 경로를 사용한다. Compatibility 경로는 Project Scaffold에서 제외한다.
 
-## 5. `sdlc/design`
+## 5. `sdlc/config` 판정
 
-`design` 전체를 Framework-only로 보면 안 된다.
+### PROJECT_REQUIRED
 
-### 실제 Runtime/Project dependency
+- `change-execution-policy.json`
+- `program-spec-readiness.json`
+- `customer-document-profile.json`
 
-`sdlc/design/contracts/` 중 다음 계열은 실제 Runtime/validator가 읽는다.
+`customer-document-profile.json`이 Customer Projection Runtime의 정식 기본 Config다. `.example.json`은 호환 alias일 뿐 신규 배포 의존성이 아니다.
 
-- `agent-execution-contract.json`
-- `business-scenario-sixw-contract.json`
-- `developer-spec-contract.json`
-- `customer-document-contract.json`
-- Brownfield/Source Drift/Document Extraction 등 선택 Extension Contract
+### PROJECT_OPTIONAL
 
-따라서 `contracts/`는 구현 과정에서 사용된다.
+- `architecture-rules.json`
+- `impact-adapter-profile.example.yaml`
+- `requirement-intake-columns.example.yaml`
+- `open-resolution-profile.example.yaml`
+- `terminology-profile.example.json`
+- `br-intake-profile.example.json`
 
-### Framework-only
+### COMPATIBILITY_ONLY / FRAMEWORK_ONLY
 
-- `baselines/`
-- `candidates/`
-- `reviews/`
-- `validations/`
-- `CHANGELOG.md`
-- `branch-version.yaml`
-- 이전 `config-usage-inventory.json`
+- `project-profile.example.yaml`: legacy project profile 참고
+- `source-profile.example.yaml`: legacy/effective source profile 참고
+- `project.example.yaml`: Framework test/example
+- repeatability/overlay/worklist 계열 config: Framework validation/management 용도
 
-장기적으로 `sdlc/design/contracts`를 `sdlc/contracts`로 옮기면 의도가 가장 명확하지만 참조 범위가 넓으므로 별도 major cleanup으로 수행한다.
+## 6. Runtime Contract 경계
 
-## 6. `sdlc/scripts` 분류
+`sdlc/design/contracts/`는 이름과 달리 단순 설계문서가 아니다. 다음과 같은 Contract는 Runtime/validator가 직접 사용하므로 Project 배포 대상이다.
+
+- Agent execution
+- Business scenario 6W
+- Developer specification
+- Customer document projection
+- Open resolution
+- Starter kit
+- Brownfield/source drift
+- Document extraction
+- Project scaffold/package contract 중 배포 선택용 Contract는 Framework distribution tool과 함께 Framework에서 관리
+
+설계 이력은 모두 `framework/design/`으로 분리한다.
+
+## 7. Script 분류
 
 ### PROJECT_REQUIRED — 기본 실행 경로
 
@@ -142,11 +142,6 @@ validate_agent_stage_result.py
 validate_program_spec.py
 delivery_status_runtime.py
 capture_customer_decision.py
-```
-
-### PROJECT_REQUIRED — 기본 Customer Projection을 사용하는 현재 Scaffold
-
-```text
 customer_projection_runtime.py
 render_customer_document.py
 ```
@@ -169,11 +164,11 @@ resolve_overlay.py
 run_knowledge_promotion.py
 ```
 
-### FRAMEWORK_ONLY — Project Scaffold에서 제외해야 함
+### FRAMEWORK_ONLY
 
 ```text
-build_project_scaffold.py                 # Framework → Project 배포 도구; 배포된 Project 자체에는 불필요
-generate_tailoring_profile_comparison.py  # Tailoring 구조 비교
+build_project_scaffold.py
+generate_tailoring_profile_comparison.py
 empirical_pilot_runtime.py
 run_agent_repeatability_experiment.py
 run_work_repeatability_experiment.py
@@ -183,108 +178,87 @@ validate_empirical_pilot_evidence.py
 validate_canonical_projection_invariant.py
 validate_document_experience.py
 validate_harness_structure.py
-normalize_mermaid.py                       # Framework docs/CI quality
-sync_worklist.py                           # Framework 관리 Worklist
+normalize_mermaid.py
+sync_worklist.py
 ```
 
-### COMPATIBILITY_ONLY — 아직 삭제 금지
+### COMPATIBILITY_ONLY
 
-```text
-runtime_config_v19.py
-```
+- `runtime_config_v19.py`: `project_config.py`를 re-export하는 thin compatibility wrapper. 신규 business rule 구현 위치가 아니다.
 
-`runtime_config_v19.py`는 현재 business rule 구현체가 아니라 `project_config.py`를 re-export하는 compatibility wrapper지만 여러 기존 Runtime import가 남아 있어 즉시 삭제하면 안 된다. 후속 단계에서 import를 `project_config.py`로 직접 전환한 뒤 제거한다.
+## 8. Tailoring/Profile 경계
 
-## 7. `sdlc/samples/tailoring` vs `sdlc/tailoring/standard`
+신규 기본:
 
-두 폴더의 목적은 다르다.
+- Engineering: `ENGINEERING_SDD_COMPACT`
+- Customer: `CUSTOMER_STANDARD_3`
+- Customer Full 선택: `CUSTOMER_WATERFALL_FULL`
+- PM: `PM_STANDARD`
 
-```text
-sdlc/tailoring/standard/
-  = Runtime이 실제 Profile ID로 탐색하는 Framework Standard Profile
-
-sdlc/custom/project/tailoring/
-  = 프로젝트별 Custom Profile
-
-sdlc/samples/tailoring/
-  = 비교/교육/검증용 fixture. Runtime은 이 경로를 Profile search root로 사용하지 않음
-```
-
-즉 `.sdlc/project.yaml`에서 `profile: STANDARD_5`라고 쓰면 `sdlc/tailoring/standard/STANDARD_5.yaml`을 찾는다. `sdlc/samples/tailoring/project-standard-5.example.yaml`을 읽는 것이 아니다.
-
-따라서 `sdlc/samples/tailoring`은 `framework/samples/tailoring`로 이동한다.
-
-## 8. `docs/00_관리`
-
-현재 두 의미가 충돌한다.
-
-1. Runtime이 `요구사항_인입결과.md` 같은 **Project-generated 관리 View**를 생성하는 위치
-2. Framework Repository가 Pilot 검증보고서/실증결과/전체작업목록을 커밋해 둔 위치
-
-이 상태는 유지하지 않는 것이 맞다.
-
-목표:
-
-```text
-docs/00_관리/          = Project-generated / PM-facing output만
-framework/pilots/      = Pilot 결과
-framework/validation/  = Framework 검증보고서
-framework/management/  = Framework 자체 worklist
-```
-
-기존 `docs/00_관리`의 Framework 파일은 참조/바이너리 이동 영향 확인 후 순차 이동한다. Generated `요구사항_인입결과.md`는 Framework source repository에 고정 sample로 남기지 않는 것이 원칙이다.
-
-## 9. `docs/00_시작` vs `sdlc/guides`
-
-현재 Primary SoT는 `docs/00_시작`이다.
-
-`sdlc/guides/01~04`는 이미 상세내용을 제거한 compatibility link일 뿐이며 신규 Project Scaffold의 필수파일도 아니다. 따라서 중복 경로를 유지할 이유가 없고 **삭제 대상**으로 분류한다.
-
-`docs/00_시작`에서도 성격을 다시 나눈다.
-
-- 프로젝트 사용 가이드: `START_HERE`, `02`, `03`, `04`, `05`, `07`
-- Framework 배포/Scaffold 관리자 가이드: `01_STANDARD_SCAFFOLD`, `06_CUSTOM_SCAFFOLD` → 향후 `framework/guides/` 이동 후보
-
-## 10. Default Tailoring Profile 분류
-
-### 신규 기본
-
-- `ENGINEERING_SDD_COMPACT`
-- `CUSTOMER_STANDARD_3`
-- `CUSTOMER_WATERFALL_FULL` (Customer Full 선택)
-- `PM_STANDARD`
-
-### Legacy Compatibility
+Legacy compatibility:
 
 - `STANDARD_3`
 - `STANDARD_5`
 - `STAGE_ORIENTED_FULL`
+- `sdlc/templates/tailoring/standard/` Legacy templates
 
-Legacy Profile과 `sdlc/templates/tailoring/standard/` Legacy template은 기본 Project Scaffold에서 제외하고 `--include-legacy-compatibility`일 때만 포함하는 것이 목표다.
+Legacy profile/template은 기본 Project Scaffold에서 제외하고 명시적 compatibility opt-in일 때만 배포한다.
 
-## 11. 실제 Project Scaffold에 포함하지 않을 것
+## 9. Guide SoT
+
+프로젝트 사용자용 문서의 SoT는 `docs/00_시작/`이다.
+
+현재 핵심 문서:
+
+- `START_HERE.md`
+- `02_PROJECT_설정가이드.md`
+- `03_TAILORING_설정가이드.md`
+- `04_TEMPLATE_및_산출물_가이드.md`
+- `05_이해관계자별_작업가이드.md`
+- `07_BROWNFIELD_SSOT_현행화가이드.md`
+- `11_INPUT_자료_준비가이드.md`
+
+과거 `sdlc/guides`는 제거됐고, 과거 Scaffold 전용 가이드 경로가 꼭 필요할 때만 최소 compatibility notice를 사용한다.
+
+## 10. Project Scaffold 제외 규칙
+
+기본 Project Scaffold에는 다음을 넣지 않는다.
 
 ```text
 framework/**
 tests/**
 .github/**
-docs/99_파일럿/**
-Framework repo에 커밋된 docs/00_관리 validation/pilot evidence
-sdlc/design/baselines/**
-sdlc/design/candidates/**
-sdlc/design/reviews/**
-sdlc/design/validations/**
-Legacy comparison sample
-Framework validation/pilot scripts
+Framework validation/pilot/sample/design-history assets
+sdlc/validation compatibility path
+sdlc/guides compatibility path
+Legacy STANDARD_3/STANDARD_5/STAGE_ORIENTED_FULL
+Legacy tailoring templates
+Framework distribution tool 자체
 ```
 
-## 12. 정리 순서
+프로젝트에는 선택된 Runtime/Contract/Profile/Template/User Guide만 배포한다.
 
-1. `sdlc/guides` 삭제
-2. `sdlc/samples/tailoring` → `framework/samples/tailoring` 이동
-3. Project Scaffold에서 Framework 배포도구/Legacy 기본자산 제외 강화
-4. `docs/00_관리`의 Pilot/Framework 관리파일 이동
-5. `docs/99_파일럿` → `framework/pilots` 이동
-6. `sdlc/design`의 History와 Runtime Contract 물리 분리 검토
-7. `.cursor/skills` thin host adapter화 후 vendor-neutral Skill을 `sdlc/agent/skills`에 완성
-8. `runtime_config_v19.py` import 제거 후 compatibility wrapper 삭제
+## 11. Generated 경계
+
+프로젝트 실행 중 생성되는 대표 경로:
+
+```text
+sdlc/runtime/**
+sdlc/canonical/store.json
+docs/00_관리/**
+docs/10_engineering/**
+docs/20_customer/**
+```
+
+Framework Repository의 source 문서와 Generated 프로젝트 산출물을 같은 폴더 의미로 혼용하지 않는다.
+
+## 12. v1.10 정리 판정
+
+- Framework-only 문서/fixture의 주요 물리 이동: 완료
+- `sdlc/guides` 중복 제거: 완료
+- Customer Projection 기본 Config 정식 이름 전환: 완료
+- Legacy Customer config 이름: compatibility alias로 축소
+- `sdlc/validation` 실내용: Framework로 이동, legacy path는 compatibility symlink
+- `sdlc/design`: Runtime Contract만 유지, 설계 이력은 Framework로 분리
+- Project Scaffold: Framework/Legacy 기본 자산 제외 정책 유지
+- 최종 회귀 판정: 최신 PR CI 결과를 별도 Validation Report에서 기록
