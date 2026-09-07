@@ -103,6 +103,18 @@ class ProjectionVisibilityHygieneV110Test(unittest.TestCase):
             self.assertIn("기술_상세_부록", override["disable_optional"])
             self.assertIn("근거_상세_부록", override["disable_optional"])
 
+    def test_customer_contract_maps_safe_canonical_fields_without_machine_relations(self):
+        contract = json.loads(read("sdlc/design/contracts/customer-document-contract.json"))
+        projection = contract["projection"]
+        self.assertEqual("ALLOWLIST_ONLY", projection["direct_canonical_visibility"])
+        self.assertFalse(projection["direct_relation_expansion"])
+        self.assertEqual("SECONDARY_DEFENSE", projection["sanitizer_role"])
+        solution = contract["document_types"]["solution_agreement"]["projection_sections"]
+        self.assertIn("original_requirement", solution["요청 및 기대 결과"])
+        self.assertIn("desired_outcome", solution["요청 및 기대 결과"])
+        self.assertIn("business_rule", solution["주요 기능과 업무 규칙"])
+        self.assertIn("scope", projection["catalog_section_sources"]["범위와_제외범위"])
+
     def test_customer_readme_defines_machine_side_trace_and_allowlist_first(self):
         text = read("sdlc/templates/customer/README.md")
         self.assertIn("Machine-side Mapping", text)
@@ -110,7 +122,7 @@ class ProjectionVisibilityHygieneV110Test(unittest.TestCase):
         self.assertIn("Sanitizer", text)
         self.assertIn("기술 상세와 근거 상세는 기본 OFF", text)
 
-    def test_customer_direct_canonical_input_is_allowlist_only_and_does_not_expand_relations(self):
+    def test_customer_direct_canonical_input_reads_safe_nested_fields_only_and_does_not_expand_relations(self):
         runtime = load_customer_runtime()
         contract = json.loads(read("sdlc/design/contracts/customer-document-contract.json"))
         row = {"sources": {"stages": ["DECOMPOSE", "CLARIFY"]}}
@@ -118,17 +130,22 @@ class ProjectionVisibilityHygieneV110Test(unittest.TestCase):
             "entities": {
                 "RQ-001": {
                     "id": "RQ-001",
-                    "type": "RQ",
-                    "title": "급여 마감 정책 변경",
-                    "summary": "월 마감 이후 재계산 정책을 명확히 한다.",
-                    "business_rule": "급여 마감 이후 자동 재계산을 허용하지 않는다.",
+                    "entity_type": "RQ",
+                    "truth_status": "CANDIDATE",
+                    "fields": {
+                        "title": "급여 마감 정책 변경",
+                        "original_requirement": "월 마감 이후 재계산 처리 기준을 명확히 해주세요.",
+                        "desired_outcome": "급여 마감 이후 자동 재계산을 차단한다.",
+                        "scope": "급여 재계산 기능",
+                        "business_rule": "급여 마감 이후 자동 재계산을 허용하지 않는다.",
+                        "confidence": "HIGH",
+                        "source_hash": "abc123",
+                        "queue_id": "HITL-RQ-001-01",
+                        "unrelated_internal_field": "do not expose",
+                    },
                     "revision": 42,
                     "provenance": {"source": "internal-secret"},
-                    "confidence": "HIGH",
-                    "source_hash": "abc123",
-                    "queue_id": "HITL-RQ-001-01",
                     "change_level": "L4",
-                    "unrelated_internal_field": "do not expose",
                 }
             },
             "relations": [
@@ -147,12 +164,16 @@ class ProjectionVisibilityHygieneV110Test(unittest.TestCase):
         artifact = artifacts[0]
         self.assertEqual(artifact["visibility_policy"], "ALLOWLIST_ONLY")
         self.assertEqual(artifact["semantic_source"], "CANONICAL_ALLOWLIST")
+        self.assertEqual(artifact["title"], "급여 마감 정책 변경")
         fields = artifact["fields"]
-        self.assertEqual(fields["summary"], "월 마감 이후 재계산 정책을 명확히 한다.")
+        self.assertEqual(fields["original_requirement"], "월 마감 이후 재계산 처리 기준을 명확히 해주세요.")
+        self.assertEqual(fields["desired_outcome"], "급여 마감 이후 자동 재계산을 차단한다.")
+        self.assertEqual(fields["scope"], "급여 재계산 기능")
         self.assertIn("business_rule", fields)
         for forbidden in [
             "id",
-            "type",
+            "entity_type",
+            "truth_status",
             "revision",
             "provenance",
             "confidence",
@@ -166,6 +187,42 @@ class ProjectionVisibilityHygieneV110Test(unittest.TestCase):
         serialized = json.dumps(artifact, ensure_ascii=False)
         self.assertNotIn("BR-009", serialized)
         self.assertNotIn("HAS_RULE", serialized)
+        self.assertNotIn("internal-secret", serialized)
+
+    def test_safe_nested_canonical_values_land_in_customer_sections(self):
+        runtime = load_customer_runtime()
+        contract = json.loads(read("sdlc/design/contracts/customer-document-contract.json"))
+        profile = json.loads(read("sdlc/config/customer-document-profile.json"))
+        row = {"sources": {"stages": ["DECOMPOSE", "CLARIFY", "PROCESS", "DESIGN"]}}
+        fake_store = {
+            "entities": {
+                "RQ-001": {
+                    "id": "RQ-001",
+                    "entity_type": "RQ",
+                    "fields": {
+                        "title": "급여 마감 정책 변경",
+                        "original_requirement": "월 마감 이후 재계산 처리 기준을 명확히 해주세요.",
+                        "desired_outcome": "급여 마감 이후 자동 재계산을 차단한다.",
+                        "business_rule": "급여 마감 이후 자동 재계산을 허용하지 않는다.",
+                    },
+                    "provenance": [{"source": "internal-secret"}],
+                }
+            },
+            "relations": [],
+        }
+        original = runtime.TAILOR.load_store
+        runtime.TAILOR.load_store = lambda _root: fake_store
+        try:
+            artifact = runtime._canonical_artifact(ROOT, "RQ-001", row, contract)[0]
+        finally:
+            runtime.TAILOR.load_store = original
+
+        projected = runtime.RENDER.project("solution_agreement", contract, profile, [artifact])
+        self.assertIn("월 마감 이후 재계산 처리 기준", projected["요청 및 기대 결과"])
+        self.assertIn("자동 재계산을 차단", projected["요청 및 기대 결과"])
+        self.assertIn("자동 재계산을 허용하지 않는다", projected["주요 기능과 업무 규칙"])
+        serialized = json.dumps(projected, ensure_ascii=False)
+        self.assertNotIn("internal-secret", serialized)
 
 
 if __name__ == "__main__":
