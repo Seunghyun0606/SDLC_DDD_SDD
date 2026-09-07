@@ -14,8 +14,8 @@ def validate(root: Path) -> list[str]:
     for rel in c['core_required_files']:
         if not (root/rel).is_file(): errors.append(f'missing core file: {rel}')
 
-    if c.get('candidate_design') != 'v1.9.0-redteam-simplified':
-        errors.append('active package contract must identify v1.9.0-redteam-simplified')
+    if c.get('candidate_design') != 'v1.10.0-projection-separation':
+        errors.append('active package contract must identify v1.10.0-projection-separation')
     for rel in ['sdlc/scripts/change_execution_runtime.py','sdlc/config/change-execution-policy.json']:
         if rel not in core_required:
             errors.append(f'change execution core dependency missing from package: {rel}')
