@@ -1,5 +1,5 @@
 {
-  "schema_version": 7,
+  "schema_version": 8,
   "contract_id": "PROJECT_SCAFFOLD_V110_ASSET_BOUNDARY",
   "source_package_contract": "sdlc/design/contracts/harness-package-contract.json",
   "purpose": "v1.10 Framework에서 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide만 배포하고 Framework 개발/검증 자산은 제외한다.",
@@ -21,6 +21,8 @@
     "sdlc/design/contracts/customer-document-contract.json",
     "sdlc/design/contracts/projection-visibility-contract.json",
     "sdlc/config/customer-document-profile.json",
+    "sdlc/scripts/rq_worklist.py",
+    "sdlc/design/contracts/project-rq-worklist-contract.json",
     "sdlc/tailoring/standard/ENGINEERING_SDD_COMPACT.yaml",
     "sdlc/templates/engineering/standard/00_work-map.md",
     "sdlc/templates/engineering/standard/work-unit-sdd.md",
@@ -31,6 +33,7 @@
     "sdlc/scripts/sdlc_metrics_runtime.py",
     "docs/00_시작/02A_PROJECT_CONFIG_옵션_상세가이드.md",
     "docs/00_시작/11_INPUT_자료_준비가이드.md",
+    "docs/00_시작/12_RQ_작업목록_운영가이드.md",
     "sdlc/templates/README.md",
     "sdlc/templates/semantic/requirement.md",
     "sdlc/templates/semantic/requirement-analysis.md",
@@ -117,6 +120,7 @@
       "Harness runtime",
       "Change Level control contract/reference",
       "Project Config option reference",
+      "Project RQ assignment/worklist runtime and guide",
       "sdlc/templates/semantic",
       "ENGINEERING_SDD_COMPACT",
       "CUSTOMER_STANDARD_3",
@@ -141,6 +145,7 @@
     "GENERATED": [
       "sdlc/runtime/",
       "sdlc/canonical/store.json",
+      ".sdlc/management/rq-planning.json",
       "docs/00_관리/",
       "docs/10_engineering/",
       "docs/20_customer/"
