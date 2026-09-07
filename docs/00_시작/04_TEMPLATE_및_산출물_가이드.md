@@ -25,7 +25,7 @@ sdlc/tailoring/standard/*.yaml    # 조립/선택 규칙
 Engineering / Customer Projection
 ```
 
-기존 `sdlc/templates/core`는 v1.9 Runtime/외부 참조 호환을 위해 `semantic`을 가리키는 symlink alias로만 유지한다. 신규 코드와 가이드는 `sdlc/templates/semantic/`을 기준으로 한다.
+v1.10부터 Stage Semantic Template의 정식 경로는 `sdlc/templates/semantic/` 하나뿐이다. 별도 alias나 symlink 경로를 두지 않으며 Runtime, Contract, Test, Guide도 이 경로를 직접 사용한다.
 
 ## 2. 문서는 두 종류로 생각한다
 
@@ -189,8 +189,7 @@ Framework Standard
 - sdlc/templates/engineering/
 - sdlc/templates/customer/
 
-Legacy Compatibility
-- sdlc/templates/core -> semantic symlink alias
+Legacy/Formal Projection
 - sdlc/templates/tailoring/standard/
 - STANDARD_3 / STANDARD_5 / STAGE_ORIENTED_FULL
 
