@@ -8,9 +8,9 @@
 
 `/change`의 기본 UX도 Template 입력 방식이 아니다.
 
-> Agent가 현재 Canonical/문서 Block/Source Evidence를 먼저 읽고 변경 전후를 정리한 뒤, 사람 판단이 필요한 부분만 질문한다. 사용자는 질문에 답하거나 특정 Block의 변경을 자연어로 지시한다.
+> Agent가 현재 Canonical/문서 Block/Source Evidence를 먼저 읽고 변경 전후를 정리한 뒤, 사람 판단이 필요한 부분만 질문한다. 사용자는 질문에 답하거나 특정 Block의 변경을 자연어로 지시한다. 사용자가 즉시 답하지 못하면 그 질문을 Human Decision Queue로 이월하고 다음 Semantic Work에서 재확인한다.
 
-공통 HITL 질문/Block 규칙은 `sdlc/agent/skills/work/references/hitl.md`를 따른다.
+공통 HITL 질문/Queue/Block 규칙은 `sdlc/agent/skills/work/references/hitl.md`를 따른다.
 
 ## 실행 모드
 
@@ -54,34 +54,54 @@ Agent는 먼저 요청을 다음 중 하나로 판정한다.
 
 문서가 수정 대상이라는 이유만으로 Business Truth 변경으로 간주하지 않는다.
 
-## HITL 질문 규칙
+## HITL 질문 및 Deferred Queue 규칙
 
 Agent는 사용자에게 "Template을 열고 빈칸을 작성해 달라"고 요구하지 않는다.
 
 변경 요청을 받은 뒤 다음 순서로 처리한다.
 
 1. Target과 지정 Block의 현재 Canonical 의미를 확인한다.
-2. 관련 Source/Decision/Evidence를 조사한다.
-3. `Before → Requested After → 영향 후보`를 Agent가 먼저 정리한다.
-4. 표현 수정인지 Semantic 변경인지 판정한다.
-5. 기존 `CONFIRMED_BUSINESS` 변경에 사람의 명시적 authorization이 필요하거나, 요청 내용에 두 가지 해석이 있을 때만 질문한다.
-6. 질문은 한 턴 기본 최대 3개이며 답변이 반영될 Block과 이유를 함께 보여준다.
-7. 답변을 받은 뒤 `GIVEN`/Decision provenance와 Canonical Delta를 연결한다.
-8. Canonical Apply 후 관련 Projection을 갱신한다.
+2. Target/Artifact에 기존 미해결 Human Decision Queue가 있는지 확인한다.
+3. 관련 Source/Decision/Evidence를 조사한다.
+4. `Before → Requested After → 영향 후보`를 Agent가 먼저 정리한다.
+5. 표현 수정인지 Semantic 변경인지 판정한다.
+6. 현재 `Recheck At`에 도달한 기존 Queue가 있으면 신규 질문보다 먼저 재확인한다.
+7. 기존 `CONFIRMED_BUSINESS` 변경에 사람의 명시적 authorization이 필요하거나, 요청 내용에 두 가지 해석이 있을 때만 질문한다.
+8. 질문은 한 턴 기본 최대 3개이며 답변이 반영될 Block과 이유를 함께 보여준다.
+9. 답변을 받은 뒤 `GIVEN`/Decision provenance와 Canonical Delta를 연결한다.
+10. Canonical Apply 후 관련 Projection을 갱신한다.
 
 사람에게 물어볼 수 있는 것은 정책/범위/업무 예외/권한/Acceptance 같은 Business Authority 영역이다. Java Method, XML Query, Table Column처럼 Source에서 확인할 수 있는 값은 Agent가 조사한다.
+
+### 사용자가 지금 답하지 못하는 경우
+
+`확인 후 답하겠다`, `모르겠다`, `다음 단계에서 다시 확인하자`라는 답은 변경 승인도 변경 거절도 아니다.
+
+Agent는 다음과 같이 처리한다.
+
+- 기존 Question ID를 유지한 채 Human Decision Queue에 기록한다.
+- 관련 Stable Block, 현재 확인값/제안, 결정 담당, 영향 분류, `Recheck At`을 기록한다.
+- 기존 OPEN 해소 계약의 `OPEN` 또는 `DEFERRED`를 사용하고, 명시적 보류는 resolution method `DEFER`로 연결한다.
+- 변경 요청과 충돌하는 기존 `CONFIRMED_BUSINESS`를 임의로 덮어쓰지 않는다.
+- `SOURCE_BLOCK`이면 해당 변경에 의존하는 Source/Action만 제한한다.
+- `ITERATE`/`ALERT`라면 가능한 분석/설계는 계속하고 다음 의미 경계에서 Queue를 다시 확인한다.
+- 다음 `/work` 또는 `/change` 진입 시 `Recheck At`에 도달한 Queue를 신규 질문보다 먼저 재확인한다.
+- 재확인에서도 답이 없으면 새 Question ID를 만들지 않고 같은 Queue 행의 상태와 다음 `Recheck At`만 갱신한다.
+
+문서 Queue는 Review Surface이며 별도의 Business Truth 원장이 아니다. 실제 의미 상태는 Canonical OPEN/Decision/Provenance에 유지한다.
 
 ## INTERACTIVE 흐름
 
 1. `python sdlc/scripts/harness.py change --target <TARGET> --change "<변경 요청>"`
 2. `INTERACTIVE_CHANGE_HANDOFF_READY`를 확인한다.
 3. 반환된 `change-context.json` 또는 `work-context.json`에서 현재 Target/Graph/Change Request/Artifact/Canonical baseline을 읽는다.
-4. 변경 Target Block과 현재 값을 확인하고 Source/Evidence를 먼저 조사한다.
-5. 필요한 경우 HITL 질문을 생성해 사용자 답변을 받는다.
-6. 변경 분류(`CLARIFICATION / BEHAVIOR_CHANGE / TECHNICAL_CHANGE / NEW_REQUIREMENT`)와 근거를 정리한다.
-7. 선택된 Change Artifact와 `stage-result.json`을 작성한다.
-8. finalize 명령을 실행한다.
-9. Harness가 `APPLIED / IDEMPOTENT / NO_CHANGE / DRY_RUN_VALIDATED`를 반환한 경우에만 완료로 보고한다.
+4. 변경 Target Block과 현재 값을 확인하고 기존 Queue 및 Source/Evidence를 먼저 조사한다.
+5. 현재 단계에서 재확인할 Queue가 있으면 먼저 처리하고, 그 뒤 필요한 새 HITL 질문을 생성한다.
+6. 사용자가 답하지 못하면 Queue + OPEN/DEFERRED로 carry-forward한다.
+7. 변경 분류(`CLARIFICATION / BEHAVIOR_CHANGE / TECHNICAL_CHANGE / NEW_REQUIREMENT`)와 근거를 정리한다.
+8. 선택된 Change Artifact와 `stage-result.json`을 작성한다.
+9. finalize 명령을 실행한다.
+10. Harness가 `APPLIED / IDEMPOTENT / NO_CHANGE / DRY_RUN_VALIDATED`를 반환한 경우에만 완료로 보고한다.
 
 `INTERACTIVE_CHANGE_HANDOFF_READY`와 `HITL_REQUIRED`는 준비/질문 상태이며 Canonical 변경 성공이 아니다.
 
@@ -95,6 +115,8 @@ Agent는 사용자에게 "Template을 열고 빈칸을 작성해 달라"고 요�
 - protected branch / stale Git HEAD / stale Canonical revision을 우회하지 않는다.
 - Change 분석 Artifact만 만들고 Canonical 적용이 끝났다고 말하지 않는다.
 - 사용자의 HITL 답변을 Projection Text에만 반영하고 Canonical/Provenance 갱신을 생략하지 않는다.
+- 사용자의 미응답/보류를 임의의 Business Truth 승인으로 해석하지 않는다.
+- 미응답 질문을 대화 기록에만 남기고 다음 단계로 넘기지 않는다.
 
 ## Stage Result
 
@@ -107,6 +129,7 @@ Change도 공통 Stage Result Envelope를 사용한다.
 - `canonical_delta.source_artifact`: `artifact_path`와 동일
 - `quality_gate`, `alerts`, `uncertainty`를 숨기지 않는다.
 - HITL 답변이 Semantic 변경 근거라면 관련 `GIVEN`/Decision provenance를 포함한다.
+- 미응답 HITL은 관련 Artifact Queue와 OPEN/DEFERRED 상태에 남겨 다음 Semantic Work가 재확인할 수 있게 한다.
 
 문서 표현만 바뀌고 Semantic Delta가 없다면 `operations: []` + `no_change_reason`을 사용한다.
 
@@ -128,6 +151,7 @@ DELETE는 자동 지원하지 않는다.
 - `/change`에서도 사용자가 실제 업무 확정을 명시하지 않았다면 `--allow-business-truth-change`를 사용하지 않는다.
 - Source가 기존 업무정책과 다르게 동작해도 Source 관찰을 Business Truth로 자동 승격하지 않는다.
 - 값 변경 없이 현행 근거를 연결할 때는 `ADD_PROVENANCE`를 우선한다.
+- `DEFERRED`는 확정 Evidence가 아니며 Business Truth 변경 권한을 만들지 않는다.
 
 ## Source Version / Write Guard
 
@@ -140,6 +164,7 @@ DELETE는 자동 지원하지 않는다.
 - DEVELOPMENT Source write는 필요한 build/test Guard를 따른다.
 - Stage/Canonical 실패 시 Canonical 적용을 중단한다.
 - Canonical은 file lock → 최신 revision 재읽기 → atomic replace 경계를 사용한다.
+- Human Decision Queue의 `SOURCE_BLOCK`은 해당 결정에 의존하는 Source/Action에 반영한다.
 
 Repository hosting의 Branch Protection 설정까지 이 Script가 대신하는 것은 아니다. 프로젝트 GitHub/GitLab 정책에서도 default branch 보호를 별도로 활성화한다.
 
@@ -153,7 +178,7 @@ Source 변경은 자동 Business Truth 변경이 아니다. Program Reverse Cand
 
 고객 문서 검토 결과는 Customer Decision Round-trip으로 CONFIRMED provenance에 연결할 수 있다. 실제 업무 필드 변경은 명시적 field update와 Business Change authorization이 함께 있을 때만 적용한다.
 
-고객이 문서에서 특정 문구를 바꾸고 싶다고 말하면 가능한 경우 Customer 문서의 Section/Block을 식별한 뒤 연결된 Canonical 의미를 찾아 `/change`로 처리한다.
+고객이 문서에서 특정 문구를 바꾸고 싶다고 말하면 가능한 경우 Customer 문서의 Section/Block을 식별한 뒤 연결된 Canonical 의미를 찾아 `/change`로 처리한다. 고객이 즉시 결정하지 못하면 관련 질문을 Human Decision Queue에 남기고 다음 합의/설계 경계에서 재확인한다.
 
 ## Do Not
 
@@ -163,3 +188,5 @@ Source 변경은 자동 Business Truth 변경이 아니다. Program Reverse Cand
 - 사람에게 Template 전체를 작성하도록 넘기지 않는다.
 - 기술적으로 조사 가능한 질문을 사람에게 묻지 않는다.
 - HITL 답변을 문서에만 반영하고 Canonical Delta/Provenance를 누락하지 않는다.
+- 미응답 질문을 단계마다 새 ID로 복제하지 않는다.
+- `DEFERRED`를 의미 확정으로 취급하지 않는다.
