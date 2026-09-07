@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 """Execute one AI-SDLC /work stage with fail-closed provider and version guards.
 
-Target identity and Stage/document selection remain independent. P0/P1 hardening adds:
-- FAST/STANDARD/FULL delivery policy consumption from the project profile
-- Provider unavailable is NOT a successful execution
-- Git HEAD/branch/dirty-worktree/write-scope guards
-- a repository write lock around Provider source/document mutation
-- configured build/test commands for DEVELOPMENT before Canonical commit
-- rollback of Provider changes when validation/build/test/Canonical commit fails
-- locked atomic Canonical apply through apply_canonical_delta.apply_delta_to_store
-- Git baseline + Canonical revision in the work context and Canonical provenance
+Target identity and Stage/document selection remain independent. Runtime hardening includes delivery
+policy, Provider/Git/write-scope guards, optional source build/test verification, Canonical scope
+checks and atomic Canonical apply. DEVELOPMENT does not imply a Source change: build/test and the
+L1/L2 pre-write analysis gate are required only when Source actually changed (or cannot be proven
+unchanged in a non-Git project with configured source roots).
 
 The runtime does not auto-commit Source and does not auto-merge branches.
 """
@@ -282,6 +278,37 @@ def _path_allowed(path: str, prefixes: list[str], exact: set[str]) -> bool:
     return any(normalized == prefix or normalized.startswith(prefix.rstrip("/") + "/") for prefix in prefixes if prefix)
 
 
+def _source_changed_paths(changed_paths: set[str], source_roots: list[str]) -> list[str]:
+    """Return only actual Source-root changes; docs/runtime files do not trigger build/test."""
+    return sorted(path for path in changed_paths if _path_allowed(path, source_roots, set()))
+
+
+def validate_fast_path_prewrite_analysis(
+    plan: dict[str, Any], stage_result: dict[str, Any], *, source_changed: bool
+) -> list[dict[str, Any]]:
+    """Validate the compact machine summary of mandatory L1/L2 analysis.
+
+    This does not create new user steps or documents. The current Agent writes the summary inside
+    stage-result.json from work it already had to perform. It is checked only when Source changed.
+    """
+    policy = plan.get("execution_policy") or {}
+    required = list(policy.get("source_write_preconditions") or [])
+    if not source_changed or not policy.get("fast_path") or not required:
+        return []
+    observed = stage_result.get("pre_write_analysis")
+    observed = observed if isinstance(observed, dict) else {}
+    errors: list[dict[str, Any]] = []
+    for key in required:
+        item = observed.get(key)
+        if not isinstance(item, dict) or str(item.get("status") or "").upper() != "PASS":
+            errors.append({"code": "FAST_PATH_PREWRITE_ANALYSIS_MISSING", "precondition": key})
+            continue
+        refs = item.get("evidence_refs")
+        if not isinstance(refs, list) or not any(str(x).strip() for x in refs):
+            errors.append({"code": "FAST_PATH_PREWRITE_EVIDENCE_MISSING", "precondition": key})
+    return errors
+
+
 def _rollback_git_changes(root: Path, paths: set[str]) -> None:
     if not paths or not git_metadata(root)["available"]:
         return
@@ -536,6 +563,10 @@ def execute_plan(
             changed_after = git_changed_paths(root)
             provider_changes = changed_after - changed_before
             execution["provider_changed_files"] = sorted(provider_changes)
+            source_changed_files = _source_changed_paths(provider_changes, allowed_source_roots) if git_before.get("available") else []
+            source_change_unknown = bool(stage == "DEVELOPMENT" and not git_before.get("available") and allowed_source_roots)
+            execution["source_changed_files"] = source_changed_files
+            execution["source_change_detection"] = "GIT_DIFF" if git_before.get("available") else ("UNKNOWN_NON_GIT_WITH_SOURCE_ROOTS" if source_change_unknown else "NO_SOURCE_ROOTS")
             if completed.returncode != 0 or not result_path.is_file():
                 return _execution_failure(execution, "FAIL_PROVIDER_COMMAND_OR_RESULT_MISSING", root=root, provider_changes=provider_changes)
 
@@ -564,6 +595,12 @@ def execute_plan(
                 execution["selected_artifact"], execution["actual_artifact"] = artifact_rel, stage_result.get("artifact_path")
                 return _execution_failure(execution, "FAIL_SELECTED_ARTIFACT_MISMATCH", root=root, provider_changes=provider_changes)
 
+            source_changed = bool(source_changed_files or source_change_unknown)
+            prewrite_errors = validate_fast_path_prewrite_analysis(plan, stage_result, source_changed=source_changed)
+            if prewrite_errors:
+                execution["pre_write_analysis_errors"] = prewrite_errors
+                return _execution_failure(execution, "FAIL_FAST_PATH_PREWRITE_ANALYSIS", root=root, provider_changes=provider_changes)
+
             store = APPLY.load_store(store_path)
             if store["revision"] != plan["canonical"]["base_revision"]:
                 execution["planned_revision"], execution["current_revision"] = plan["canonical"]["base_revision"], store["revision"]
@@ -591,7 +628,7 @@ def execute_plan(
             if validation["status"] != "PASS" or not validation["executable"]:
                 return _execution_failure(execution, "FAIL_STAGE_RESULT_VALIDATION", root=root, provider_changes=provider_changes)
 
-            if stage == "DEVELOPMENT" and not dry_run:
+            if stage == "DEVELOPMENT" and not dry_run and source_changed:
                 build_commands = CONFIG.command_list(CONFIG.nested(source_profile, "build", "commands", default=[]))
                 test_commands = CONFIG.command_list(CONFIG.nested(source_profile, "test", "commands", default=[]))
                 if not build_commands and not test_commands and not provider_config.get("allow_unverified_source_write", False):
@@ -605,6 +642,9 @@ def execute_plan(
                 execution["source_verification"] = verification
                 if verification and verification[-1]["exit_code"] != 0:
                     return _execution_failure(execution, "FAIL_BUILD_OR_TEST", root=root, provider_changes=provider_changes)
+            elif stage == "DEVELOPMENT":
+                execution["source_verification"] = []
+                execution["source_verification_skipped_reason"] = "NO_SOURCE_CHANGE"
 
             canonical_check = validation.get("canonical_check") or {}
             if dry_run:
