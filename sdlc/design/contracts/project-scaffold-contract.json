@@ -1,8 +1,8 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "contract_id": "PROJECT_SCAFFOLD_V110_ASSET_BOUNDARY",
   "source_package_contract": "sdlc/design/contracts/harness-package-contract.json",
-  "purpose": "Framework 개발/검증/배포도구를 제외하고 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide만 기존 Scaffold 경로로 배포한다.",
+  "purpose": "Framework 개발/검증/배포도구와 compatibility notice를 제외하고 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide만 배포한다.",
   "base_file_set": "core_required_files",
   "add_required_files": [
     "sdlc/scripts/project_config.py",
@@ -16,7 +16,7 @@
     "sdlc/scripts/customer_projection_runtime.py",
     "sdlc/scripts/render_customer_document.py",
     "sdlc/design/contracts/customer-document-contract.json",
-    "sdlc/config/customer-document-profile.example.json",
+    "sdlc/config/customer-document-profile.json",
     "sdlc/tailoring/standard/ENGINEERING_SDD_COMPACT.yaml",
     "sdlc/templates/engineering/standard/00_work-map.md",
     "sdlc/templates/engineering/standard/work-unit-sdd.md",
@@ -24,12 +24,15 @@
     "sdlc/tailoring/standard/CUSTOMER_WATERFALL_FULL.yaml",
     "sdlc/scripts/architecture_check.py",
     "sdlc/config/architecture-rules.json",
-    "sdlc/scripts/sdlc_metrics_runtime.py"
+    "sdlc/scripts/sdlc_metrics_runtime.py",
+    "docs/00_시작/11_INPUT_자료_준비가이드.md"
   ],
   "exclude_exact": [
     "sdlc/tailoring/standard/STANDARD_3.yaml",
     "sdlc/tailoring/standard/STANDARD_5.yaml",
-    "sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml"
+    "sdlc/tailoring/standard/STAGE_ORIENTED_FULL.yaml",
+    "docs/00_시작/01_STANDARD_SCAFFOLD_사용가이드.md",
+    "docs/00_시작/06_CUSTOM_SCAFFOLD_적용가이드.md"
   ],
   "exclude_prefixes": [
     "framework/",
@@ -38,6 +41,7 @@
     "sdlc/design/baselines/",
     "sdlc/design/candidates/",
     "sdlc/design/reviews/",
+    "sdlc/design/session/",
     "sdlc/design/validations/",
     "sdlc/validation/",
     "sdlc/samples/",
@@ -73,20 +77,18 @@
     "documents_internal_profile_is_compatibility_alias": true,
     "legacy_customer_01_08_in_new_scaffold": false,
     "CUSTOMER_STANDARD_3_active": true,
-    "CUSTOMER_WATERFALL_FULL_active": true
+    "CUSTOMER_WATERFALL_FULL_active": true,
+    "old_scaffold_guides_are_framework_compatibility_notices": true
   },
   "distribution_boundary": {
     "FRAMEWORK_ONLY": [
       "framework/",
-      "docs/00_관리/",
+      "docs/00_관리/ committed framework contents",
       "docs/99_파일럿/",
       "tests/",
       "sdlc/samples/",
       "sdlc/guides/",
-      "sdlc/design/baselines/",
-      "sdlc/design/candidates/",
-      "sdlc/design/reviews/",
-      "sdlc/design/validations/",
+      "sdlc/design history except contracts",
       ".github/",
       "framework distribution tools"
     ],
@@ -97,7 +99,8 @@
       "CUSTOMER_STANDARD_3",
       "selected active templates",
       "runtime contracts",
-      "user skills"
+      "user skills",
+      "active docs/00_시작 guides"
     ],
     "PROJECT_OPTIONAL": [
       "CUSTOMER_WATERFALL_FULL",
@@ -109,7 +112,8 @@
       "STANDARD_3",
       "STANDARD_5",
       "STAGE_ORIENTED_FULL",
-      "legacy tailoring templates"
+      "legacy tailoring templates",
+      "old scaffold guide path notices"
     ],
     "GENERATED": [
       "sdlc/runtime/",
