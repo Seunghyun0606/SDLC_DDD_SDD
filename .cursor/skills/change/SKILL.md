@@ -99,9 +99,11 @@ Block ID가 없지만 대상이 명확하면 Agent가 해석한 Block을 먼저 
 
 실제 변경 전에 범위와 기준점만 확인하려면 `--plan-only`를 사용한다. Plan은 Target graph, Canonical base revision, Git baseline, 변경 원문, 허용 Entity 범위, Source write root, Business Truth Guard를 보여준다.
 
-## Stage Result / Canonical 적용
+## 변경 Stage Result 검증
 
-변경 분석도 `/work`와 같은 Stage Result Validator와 locked atomic Canonical apply 경계를 사용한다.
+변경 분석도 `/work`와 같은 Stage Result Validator 경계를 사용한다. `stage-result.json`의 Stage/Artifact/Canonical Delta 일치 여부를 검증한 뒤에만 Canonical 적용을 진행한다.
+
+Canonical 적용 경계는 `sdlc/scripts/apply_canonical_delta.py`이며 locked atomic apply, stale revision, idempotency, Business Truth Guard를 우회하지 않는다.
 
 지원 Operation:
 
