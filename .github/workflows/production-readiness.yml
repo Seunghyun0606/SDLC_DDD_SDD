@@ -55,7 +55,13 @@ jobs:
         run: |
           python -m unittest \
             tests.test_projection_separation_v110 \
-            tests.test_canonical_projection_invariant_v19 -v
+            tests.test_canonical_projection_invariant_v19 \
+            tests.test_projection_visibility_hygiene_v110 -v
+      - name: v1.10 guide and project config reference regression
+        run: |
+          python -m unittest \
+            tests.test_guide_consistency_v110 \
+            tests.test_project_config_reference_v110 -v
       - name: v1.9 tailoring, intake and contract consistency regression
         run: |
           python -m unittest \
