@@ -82,6 +82,12 @@ validation_boundary:
   ci_is_external_agent_empirical_evidence: false
   public_source_impact_is_not_confirmed_business_reconciliation: true
   production_ready_claimed: false
+inherited_validation_boundary:
+  note: "v1.8/v1.9 regression compatibility marker. 현재 v1.10 active source 상태와 별개이며 External Agent/Human empirical validation은 여전히 별도 Evidence가 필요하다."
+  status: P0_P1_CI_BEHAVIORAL_AND_INTEGRATION_PASS_EXTERNAL_EMPIRICAL_PENDING
+  verdict: CONTROLLED_PILOT_READY_CI_PASS_EXTERNAL_AGENT_HUMAN_VALIDATION_PENDING
+  self_assessment_is_not_validation: true
+  production_ready_claimed: false
 merge_policy:
   main_merge_allowed: false
   draft_pr_validation_only: true
