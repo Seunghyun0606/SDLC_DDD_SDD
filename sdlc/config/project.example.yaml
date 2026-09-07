@@ -2,7 +2,8 @@
 # setup이 만든 .sdlc/project.yaml 한 파일만 유지합니다.
 # 모르는 값을 예시 값으로 복사하지 말고 unresolved에 남깁니다.
 # agent 항목은 생략하면 INTERACTIVE가 기본입니다.
-# Change Level은 RQ별 영향 크기이며 Delivery Profile/문서 개수와 다른 개념입니다.
+# Change Level은 실행 깊이/Evidence/Review 필요성이며 문서 개수와 다른 개념입니다.
+# Engineering과 Customer 문서 topology는 서로 독립적으로 선택합니다.
 schema_version: 1
 project:
   name: "order-service"
@@ -58,10 +59,16 @@ deployment:
   environment: "dev/test/prod"
 documents:
   language: "ko-KR"
-  internal:
-    profile: "STANDARD_5"
+  engineering:
+    profile: "ENGINEERING_SDD_COMPACT"
+    manual_edit_policy: "TYPO_ONLY"
+    freshness: "CANONICAL_REVISION"
   customer:
     profile: "CUSTOMER_STANDARD_3"
+    scope: "RQ"
+    freshness: "CANONICAL_AND_AS_BUILT"
+    final_review:
+      human_editable: true
   pm:
     profile: "PM_STANDARD"
   machine:
