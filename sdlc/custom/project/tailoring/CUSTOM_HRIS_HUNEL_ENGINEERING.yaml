@@ -4,6 +4,16 @@ name: "HRIS hunel Engineering 2-Document"
 projection_role: ENGINEERING
 output_root: "docs/10_engineering"
 
+# 이 Profile은 문서 2종 자체가 프로젝트의 Human Artifact topology이다.
+# Change Level은 작성 깊이를 바꾸지만 PRIMARY 문서 존재 여부를 없애지 않는다.
+projection_topology: PROFILE_PRIMARY_SET
+level_projection_detail:
+  L1: CONCISE
+  L2: CONCISE
+  L3: STANDARD
+  L4: STANDARD
+  L5: FULL
+
 artifacts:
   business_definition:
     audience: INTERNAL_IT
