@@ -1,4 +1,5 @@
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -7,6 +8,10 @@ ROOT = Path(__file__).parents[1]
 
 def read(rel: str) -> str:
     return (ROOT / rel).read_text(encoding="utf-8")
+
+
+def visible_text(text: str) -> str:
+    return re.sub(r"<!--.*?-->", "", text, flags=re.S)
 
 
 class HitlBlockEditUxTest(unittest.TestCase):
@@ -65,7 +70,7 @@ class HitlBlockEditUxTest(unittest.TestCase):
             self.assertIn("DEFERRED", text)
             self.assertIn("Recheck At", text)
 
-    def test_standard_engineering_templates_have_stable_queue_blocks(self):
+    def test_standard_engineering_templates_keep_hidden_queue_blocks_but_humanize_body(self):
         work_map = read("sdlc/templates/engineering/standard/00_work-map.md")
         work_unit = read("sdlc/templates/engineering/standard/work-unit-sdd.md")
         program = read("sdlc/templates/engineering/standard/program-spec.md")
@@ -92,14 +97,26 @@ class HitlBlockEditUxTest(unittest.TestCase):
         ]:
             self.assertIn(marker, program)
 
-        for text in [work_map, work_unit, program]:
+        for raw in [work_map, work_unit, program]:
+            text = visible_text(raw)
             self.assertIn("빈칸을", text)
             self.assertIn("Agent", text)
-            self.assertIn("Human Decision Queue", text)
-            self.assertIn("Recheck At", text)
-            self.assertIn("SOURCE_BLOCK / ITERATE / ALERT", text)
+            self.assertIn("추가 확인이 필요한 사항", text)
+            self.assertIn("다시 확인할 시점", text)
+            self.assertIn("개발 전 확인 필요", text)
+            for machine_term in [
+                "Human Decision Queue",
+                "Recheck At",
+                "Queue ID",
+                "SOURCE_BLOCK",
+                "ITERATE",
+                "ALERT",
+                "NEXT_SEMANTIC_WORK",
+                "BEFORE_SOURCE_WRITE",
+            ]:
+                self.assertNotIn(machine_term, text)
 
-    def test_hris_custom_templates_define_queue_review_blocks(self):
+    def test_hris_custom_templates_keep_hidden_blocks_and_humanize_queue(self):
         business = read("sdlc/custom/project/templates/hris-hunel/01_업무정의서.md")
         instruction = read("sdlc/custom/project/templates/hris-hunel/02_작업지시서.md")
 
@@ -113,19 +130,23 @@ class HitlBlockEditUxTest(unittest.TestCase):
             self.assertIn(marker, business)
 
         for marker in [
-            "[BLOCK:B-PROC]",
-            "[BLOCK:D.1]",
-            "B-AUTH",
-            "B-MIGRATION",
+            "BLOCK_ID: B-PROC",
+            "BLOCK_ID: D.1",
+            "BLOCK_ID: B-AUTH",
+            "BLOCK_ID: B-MIGRATION",
             "BLOCK_ID: HITL-QUEUE",
         ]:
             self.assertIn(marker, instruction)
 
         self.assertIn("빈칸을 직접 채우지 않습니다", business)
-        self.assertIn("표/빈칸을 직접 작성하지 않습니다", instruction)
-        for text in [business, instruction]:
-            self.assertIn("Human Decision Queue", text)
-            self.assertIn("Recheck At", text)
+        self.assertIn("표나 빈칸을 직접 작성하지 않습니다", instruction)
+        for raw in [business, instruction]:
+            text = visible_text(raw)
+            self.assertIn("추가 확인이 필요한 사항", text)
+            self.assertIn("다시 확인할 시점", text)
+            self.assertIn("개발 전 확인 필요", text)
+            for machine_term in ["Human Decision Queue", "Recheck At", "Queue ID", "SOURCE_BLOCK", "ITERATE", "ALERT"]:
+                self.assertNotIn(machine_term, text)
 
     def test_user_guides_explain_defer_and_block_round_trip_to_canonical(self):
         template_guide = read("docs/00_시작/04_TEMPLATE_및_산출물_가이드.md")
