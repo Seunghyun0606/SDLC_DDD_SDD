@@ -101,9 +101,32 @@ Block ID가 없지만 대상이 명확하면 Agent가 해석한 Block을 먼저 
 
 ## 변경 Stage Result 검증
 
-변경 분석도 `/work`와 같은 Stage Result Validator 경계를 사용한다. `stage-result.json`의 Stage/Artifact/Canonical Delta 일치 여부를 검증한 뒤에만 Canonical 적용을 진행한다.
+변경 분석도 `/work`와 동일한 Machine 실행 경계를 사용한다.
 
-Canonical 적용 경계는 `sdlc/scripts/apply_canonical_delta.py`이며 locked atomic apply, stale revision, idempotency, Business Truth Guard를 우회하지 않는다.
+```bash
+python sdlc/scripts/validate_agent_stage_result.py \
+  --result <change-result.json> \
+  --store sdlc/canonical/store.json \
+  --out <validation-result.json>
+```
+
+- `validation.status = PASS`이면서 `validation.executable = true`인 경우에만 Canonical 적용 단계로 이동한다.
+- Artifact/Delta Stage 불일치, source_artifact 불일치, stale revision, 미해결 Template placeholder가 있으면 적용하지 않는다.
+- 동일 변경의 반복 실행 의미를 비교할 때는 `--compare`와 semantic fingerprint를 사용할 수 있다.
+- 이 비교는 **LLM 자체의 결정론을 보장하지 않으며** 실제 생성 결과의 의미 차이를 검출하기 위한 것이다.
+
+## Canonical 변경 적용
+
+검증된 Delta는 `sdlc/scripts/apply_canonical_delta.py`의 locked atomic write 경계를 사용한다. 일반 `/change`는 이 경계를 자동 사용하며, 독립 적용 가능성 확인이 필요할 때만 low-level dry-run을 사용한다.
+
+```bash
+python sdlc/scripts/apply_canonical_delta.py \
+  --store sdlc/canonical/store.json \
+  --delta <canonical-delta.json> \
+  --dry-run
+```
+
+`--dry-run`은 Canonical 적용 가능성만 확인하며 Store를 쓰지 않는다.
 
 지원 Operation:
 
