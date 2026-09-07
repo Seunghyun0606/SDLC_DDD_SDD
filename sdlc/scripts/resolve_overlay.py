@@ -15,7 +15,7 @@ from typing import Any
 
 CORE_RULE_ROOT = Path('.cursor/rules')
 CORE_SKILL_ROOT = Path('.cursor/skills')
-CORE_TEMPLATE_ROOT = Path('sdlc/templates/core')
+SEMANTIC_TEMPLATE_ROOT = Path('sdlc/templates/semantic')
 
 # v1.5.5 changed human-visible headings to Korean-first wording. Existing project/domain
 # overlays may still reference pre-v1.5.5 headings, so those anchors remain valid aliases.
@@ -140,7 +140,7 @@ def materialize(root: Path, config_path: Path, output: Path) -> dict[str, Any]:
 
     _copy_tree(root / CORE_RULE_ROOT, output / 'rules')
     _copy_tree(root / CORE_SKILL_ROOT, output / 'skills')
-    _copy_tree(root / CORE_TEMPLATE_ROOT, output / 'templates')
+    _copy_tree(root / SEMANTIC_TEMPLATE_ROOT, output / 'templates')
 
     provenance: list[dict[str, Any]] = [{"layer": "core", "path": "builtin"}]
     applied_files: list[dict[str, Any]] = []
