@@ -24,7 +24,7 @@ flowchart LR
 | Project Rule | Profile/Overlay resolution |
 | User Skill | `/work /change /check /setup` |
 | Work References | requirement~verify 10개 |
-| Core Templates | Requirement~Verification + Operations Knowledge |
+| Semantic Templates | Requirement~Verification + Operations Knowledge |
 | Source Profile | Source root/build/test/evidence/write policy |
 | Overlay | Project/Domain 차이 분리 |
 | Validator | Stage별 Reference/Template/Evidence contract 자동 검사 |
@@ -46,10 +46,10 @@ flowchart LR
 
 ## 4. Portable / Custom 경계
 
-### 그대로 이식하는 Core
+### 그대로 이식하는 Framework Standard
 - `.cursor/rules/00-core.mdc`
 - `.cursor/skills/**`
-- `sdlc/templates/core/**`
+- `sdlc/templates/semantic/**`
 - `sdlc/design/contracts/harness-package-contract.json`
 - `sdlc/scripts/validate_harness_structure.py`
 
@@ -64,11 +64,11 @@ flowchart LR
 
 ## 5. 중요한 검증 결론
 
-1. Source 경로/Framework를 Core Skill에 하드코딩하면 이식성이 깨지므로 Source Profile로 분리해야 한다.
+1. Source 경로/Framework를 공통 Skill에 하드코딩하면 이식성이 깨지므로 Source Profile로 분리해야 한다.
 2. Rule은 짧은 invariant, Skill은 실행 절차, Template는 산출물 구조로 역할을 분리해야 한다.
 3. Source-enabled Stage는 `Artifact/File + Symbol/Locator + Source Hash + Confidence/Status`가 산출물에 들어갈 자리가 반드시 있어야 한다.
 4. Source 구현은 `OBSERVED`이며 Business Rule `CONFIRMED`와 분리해야 한다.
-5. Project Custom은 Core copy/fork보다 Overlay가 기본이어야 유지보수와 Baseline upgrade가 가능하다.
+5. Project Custom은 Framework Standard copy/fork보다 Overlay가 기본이어야 유지보수와 Baseline upgrade가 가능하다.
 6. Template를 프로젝트마다 통째로 복사하면 Upgrade diff가 커지므로 Section-level 차이만 Overlay하는 방향이 적합하다.
 
 ## 6. 아직 실제 Source가 필요한 검증
@@ -80,6 +80,4 @@ flowchart LR
 - Standard Resolver의 Stack별 Section 선택
 - 실제 `/work TASK` Source write scope correctness
 
-추가로 Project/Domain Overlay의 폴더와 precedence는 검증했지만 실제 Template Section merge/Rule materialization을 수행하는 Runtime Overlay Resolver는 아직 구현하지 않았다.
-
-따라서 현재 결과는 Structure/Contract에는 PASS이고, **Runtime Overlay Resolution과 실제 프로젝트 Source 의미 검증은 다음 단계에서 수행한다.**
+이 문서는 2026-09-01 시점의 구조 검증 기록이다. 당시 후속 과제로 남아 있던 Runtime Overlay Resolution은 이후 버전에서 별도 구현/검증되었으므로, 최신 실행 상태는 현재 Branch의 Runtime/Test/CI를 기준으로 판단한다.
