@@ -45,6 +45,8 @@ V19_RUNTIME_PATHS = {
     "change.default_level",
     "documents.internal.profile",
     "documents.customer.profile",
+    "documents.customer.projection_contract",
+    "documents.customer.projection_config",
     "documents.pm.profile",
     "documents.machine.visibility",
 }
@@ -97,6 +99,10 @@ def _validate_v19(project: dict[str, Any]) -> None:
         profile = nested(project, "documents", audience, "profile", default=None)
         if profile is not None and (not isinstance(profile, str) or not profile.strip()):
             raise ValueError(f"documents.{audience}.profile must be a non-empty profile id")
+    for key in ["projection_contract", "projection_config"]:
+        value = nested(project, "documents", "customer", key, default=None)
+        if value is not None and (not isinstance(value, str) or not value.strip()):
+            raise ValueError(f"documents.customer.{key} must be a non-empty repository path")
     visibility = str(nested(project, "documents", "machine", "visibility", default="HIDDEN") or "HIDDEN").upper()
     if visibility not in {"HIDDEN", "DEBUG"}:
         raise ValueError("documents.machine.visibility must be HIDDEN or DEBUG")
