@@ -53,8 +53,6 @@ class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
         for audience, profile_id in EXPECTED_PROJECT_PROFILES.items():
             self.assertEqual(profile_id, CONFIG.nested(example, "documents", audience, "profile"))
 
-        # Legacy internal alias must resolve to the same effective Engineering profile rather than
-        # becoming a second source of truth.
         self.assertEqual(
             EXPECTED_PROJECT_PROFILES["engineering"],
             CONFIG.nested(example, "documents", "internal", "profile"),
@@ -100,8 +98,6 @@ class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
 
         start = self.read("docs/00_시작/START_HERE.md")
         project_guide = self.read("docs/00_시작/02_PROJECT_설정가이드.md")
-        # Human guides must retain the semantic meaning; exact machine gate identifiers are not the
-        # user-facing contract outside the implementation-oriented template guide.
         for phrase in ["Requirement Intent Decomposition", "AS-IS Source Analysis", "Impact Check"]:
             self.assertIn(phrase, project_guide)
         self.assertIn("AS-IS Source", start)
@@ -128,8 +124,6 @@ class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
             self.assertIn(row["trigger"], template, row["field_id"])
 
     def test_standard_internal_profile_is_five_real_human_templates(self):
-        # STANDARD_5 remains a valid Legacy/Formal compatibility profile; it is simply no longer
-        # the new-project Engineering default.
         profile = self.profile("STANDARD_5")
         artifacts = profile["artifacts"]
         self.assertEqual(5, len(artifacts))
@@ -185,7 +179,8 @@ class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
         self.assertIn("Business Truth", skill)
         self.assertIn("Customer Runtime", guide)
         self.assertNotIn("internal_profile_id", runtime)
-        self.assertNotIn("expected Engineering filename", runtime)
+        self.assertNotIn("_internal_expected_paths", runtime)
+        self.assertNotIn("_annotate_profile_stages", runtime)
 
 
 if __name__ == "__main__":
