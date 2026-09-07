@@ -1,6 +1,6 @@
 {
-  "schema_version": 3,
-  "candidate_design": "v1.6.0-rc.1",
+  "schema_version": 4,
+  "candidate_design": "v1.9.0-redteam-simplified",
   "language": "ko-KR",
   "principles": [
     "고객 문서는 내부 Canonical 및 기존 단계 산출물에서 파생하며 새로운 업무 사실을 임의 생성하지 않는다.",
@@ -9,6 +9,7 @@
     "기술 상세, Source Hash, 내부 신뢰도 상태는 기본적으로 고객 본문에서 숨기고 필요 시 부록으로 선택한다.",
     "고객 문서 종류를 단계마다 하나씩 만들지 않고 고객과 실제로 합의·공유·인수하는 목적 기준의 3개 표준 View로 통합한다.",
     "Projection은 내부 산출물의 의미 있는 Section을 재사용하되 Machine metadata와 근거 관리용 표현을 고객 본문에서 제거한다.",
+    "기본 Customer Projection은 특정 Internal Profile의 artifact ID에 고정하지 않고 Stage/Canonical 의미를 기준으로 입력을 선택한다.",
     "구형 산출물은 파일명/제목에서 Stage를 안전하게 추론할 수 있으나 추론되지 않은 문서는 기본 Projection 입력에서 제외한다.",
     "구형 산출물의 단일 본문 fallback은 Stage별로 지정된 고객 Section에만 사용하며 여러 고객 Section에 임의 복제하지 않는다."
   ],
