@@ -3,10 +3,10 @@
 
 Customer assembly is driven by the selected Customer Profile plus semantic artifact metadata.
 It never resolves an Engineering/Internal profile, expected Engineering filename, artifact order, or
-Engineering document count.  Legacy Stage inference remains available inside the renderer only as a
+Engineering document count. Legacy Stage inference remains available inside the renderer only as a
 compatibility fallback for old inputs that do not yet carry semantic metadata.
 
-Business Truth authority remains Canonical.  Source/Engineering/Test evidence may enrich a Customer
+Business Truth authority remains Canonical. Source/Engineering/Test evidence may enrich a Customer
 view but can never overwrite Confirmed Business Truth through this runtime.
 """
 from __future__ import annotations
@@ -310,6 +310,9 @@ def generate(
         "status": "CUSTOMER_VIEW_GENERATED",
         "target_id": target,
         "document_type": semantic_type,
+        # artifact_id is retained as the stable public/runtime compatibility key. The explicit
+        # customer_artifact_id alias makes clear that this ID belongs only to Customer topology.
+        "artifact_id": artifact_id,
         "customer_artifact_id": artifact_id,
         "artifact_path": output_rel,
         "template_path": template_rel,
