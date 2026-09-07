@@ -71,16 +71,19 @@ class BootstrapAndProfileTest(unittest.TestCase):
             self.assertEqual([], CONFIG.source_roots(source))
             provider = json.loads((root / "sdlc/config/agent-provider.json").read_text(encoding="utf-8"))
             self.assertFalse(provider["enabled"])
-            # Provider disabled is expected for the default INTERACTIVE execution mode.
             self.assertFalse(result["provider_ready"])
 
-    def test_fast_standard_full_are_runtime_policies(self):
+    def test_delivery_profile_and_program_readiness_are_separate_runtime_policies(self):
         project = {"project": {"mode": "BROWNFIELD"}, "delivery": {"profile": "FAST"}}
         fast = CONFIG.delivery_policy(project)
         self.assertEqual("FAST", fast["profile"])
         self.assertIn("IMPACT", fast["enabled_stages"])
         self.assertNotIn("PROCESS", fast["enabled_stages"])
-        self.assertEqual(7, len(json.loads((ROOT / "sdlc/config/program-spec-readiness.json").read_text(encoding="utf-8"))["profiles"]["FAST"]["required_field_ids"]))
+
+        readiness = json.loads((ROOT / "sdlc/config/program-spec-readiness.json").read_text(encoding="utf-8"))
+        self.assertEqual("CORE_PLUS_RISK_TRIGGERED_CONDITIONAL", readiness["representation"])
+        self.assertEqual(6, len(readiness["core_required_field_ids"]))
+        self.assertEqual(17, len(readiness["legacy_compatibility"]["required_field_ids"]))
 
 
 class CanonicalConcurrencyTest(unittest.TestCase):
@@ -156,13 +159,16 @@ class WorkRuntimeSafetyTest(unittest.TestCase):
 
 
 class FastProgramSpecTest(unittest.TestCase):
-    def test_fast_accepts_seven_core_readiness_items_while_standard_does_not(self):
+    def test_core_readiness_is_small_and_risk_fields_are_conditional(self):
         config = json.loads((ROOT / "sdlc/config/program-spec-readiness.json").read_text(encoding="utf-8"))
-        ids = config["profiles"]["FAST"]["required_field_ids"]
         markers = {row["id"]: row["marker"] for row in config["required_fields"]}
-        text = "\n".join(markers[i] for i in ids)
-        self.assertEqual([], PROGRAM.validate_text(text, config, "FAST"))
-        self.assertTrue(PROGRAM.validate_text(text, config, "STANDARD"))
+        text = "\n".join(markers[field_id] for field_id in config["core_required_field_ids"])
+
+        self.assertEqual([], PROGRAM.validate_text(text, config, "STANDARD", "L1", {}))
+        interface_errors = PROGRAM.validate_text(text, config, "STANDARD", "L2", {"HAS_INTERFACE": "YES"})
+        self.assertTrue(any(x.startswith("MISSING_READINESS_ITEM:integration") for x in interface_errors))
+        legacy_errors = PROGRAM.validate_text(text, config, "LEGACY_FULL_17", "L3", {})
+        self.assertTrue(any(x.startswith("MISSING_READINESS_ITEM:transaction") for x in legacy_errors))
 
 
 class RawDocumentEvidenceTest(unittest.TestCase):
@@ -171,7 +177,7 @@ class RawDocumentEvidenceTest(unittest.TestCase):
             path = Path(tmp) / "brief.pptx"
             with zipfile.ZipFile(path, "w") as zf:
                 zf.writestr("ppt/slides/slide1.xml", '''<?xml version="1.0" encoding="UTF-8"?>
-<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>주문 취소 후 환불 상태를 조회한다</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>''')
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>주문 취소 후 환불 상태를 조회한다</a:t></a:r></a:p></txBody></p:sp></p:spTree></p:cSld></p:sld>''')
             result = EXTRACT.extract(path)
             self.assertEqual("EXTRACTED", result["extraction_status"])
             self.assertEqual("slide 1", result["evidence_chunks"][0]["locator"])
@@ -250,6 +256,8 @@ interface OrderRepository extends JpaRepository<OrderEntity, Long> {}
         core = set(harness["core_required_files"])
         self.assertNotIn("sdlc/scripts/render_customer_document.py", core)
         self.assertNotIn("sdlc/scripts/detect_source_drift.py", core)
+        self.assertIn("sdlc/scripts/change_execution_runtime.py", core)
+        self.assertIn("sdlc/config/change-execution-policy.json", core)
         self.assertIn("sdlc/scripts/harness.py", core)
         self.assertEqual(["core", "project_overlay", "local_override"], harness["overlay_precedence"])
 
