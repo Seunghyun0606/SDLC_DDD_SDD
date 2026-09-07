@@ -65,7 +65,7 @@ def validate(root: Path) -> list[str]:
     execution_markers=agent_contract.get('execution_contract_required_markers', [])
 
     refs=root/'.cursor/skills/work/references'
-    templates=root/'sdlc/templates/core'
+    templates=root/'sdlc/templates/semantic'
     for stage,spec in c['stage_contracts'].items():
         rp=refs/spec['reference']; tp=templates/spec['template']
         if not rp.is_file(): errors.append(f'{stage}: missing reference {spec["reference"]}')
