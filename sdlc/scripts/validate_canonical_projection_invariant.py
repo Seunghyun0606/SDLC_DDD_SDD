@@ -1,17 +1,9 @@
 #!/usr/bin/env python3
-"""Validate that Change Level never changes Canonical semantics, only projection/work density.
+"""Validate Canonical invariance and Engineering/Customer topology independence.
 
-This validator uses one Canonical target and resolves the Standard developer/customer projection
-profiles for L1..L5. It proves structural invariants only:
-
-- target-scoped Canonical semantic fingerprint is identical for every Change Level,
-- Artifact Tailoring resolution never mutates the Canonical store,
-- the Standard INTERNAL_IT document topology is stable across levels,
-- the Standard CUSTOMER document topology is stable across levels,
-- Customer documents remain GENERATED_VIEW and never become Business Truth.
-
-It does not claim independently Agent-authored prose is semantically equivalent. That remains a
-Human/Empirical validation boundary.
+The validator deliberately does not assert a fixed Engineering or Customer document count.
+Change Level controls execution/evidence/review depth; audience-local Profiles control Human Artifact
+topology.  Projection resolution must not mutate Canonical meaning.
 """
 from __future__ import annotations
 
@@ -39,6 +31,8 @@ def _load(name: str, filename: str):
 TAILOR = _load("canonical_projection_invariant_tailoring", "tailoring_runtime.py")
 LEVELS = ["L1", "L2", "L3", "L4", "L5"]
 STAGES = [stage for stage in TAILOR.STAGES if stage != "INTAKE"]
+ENGINEERING_PROFILES = ["ENGINEERING_SDD_COMPACT", "STANDARD_3", "STANDARD_5"]
+CUSTOMER_PROFILES = ["CUSTOMER_STANDARD_3", "CUSTOMER_WATERFALL_FULL"]
 
 
 def _canonical_payload(store: dict[str, Any], target: str) -> dict[str, Any]:
@@ -48,7 +42,8 @@ def _canonical_payload(store: dict[str, Any], target: str) -> dict[str, Any]:
     relations = [
         row
         for row in (store.get("relations") or [])
-        if str(row.get("from") or "") == target or str(row.get("to") or "") == target
+        if str(row.get("from") or row.get("source") or "") == target
+        or str(row.get("to") or row.get("target") or "") == target
     ]
     return {
         "target": entity,
@@ -69,25 +64,32 @@ def canonical_fingerprint(store: dict[str, Any], target: str) -> str:
     return "sha256:" + hashlib.sha256(raw).hexdigest()
 
 
-def _project(profile_internal: str = "STANDARD_5") -> dict[str, Any]:
+def _project(engineering_profile: str, customer_profile: str) -> dict[str, Any]:
+    # `internal` is a runtime compatibility alias. Engineering remains the preferred project key.
     return {
         "documents": {
             "language": "ko-KR",
-            "internal": {"profile": profile_internal},
-            "customer": {"profile": "CUSTOMER_STANDARD_3"},
+            "engineering": {"profile": engineering_profile},
+            "internal": {"profile": engineering_profile},
+            "customer": {"profile": customer_profile},
             "pm": {"profile": "PM_STANDARD"},
             "machine": {"visibility": "HIDDEN"},
         }
     }
 
 
-def _collect_level(root: Path, store: dict[str, Any], target: str, level: str) -> dict[str, Any]:
-    project = _project()
-    internal: dict[str, dict[str, Any]] = {}
+def _collect_layer(
+    root: Path,
+    store: dict[str, Any],
+    target: str,
+    level: str,
+    engineering_profile: str,
+    customer_profile: str,
+) -> dict[str, Any]:
+    project = _project(engineering_profile, customer_profile)
+    engineering: dict[str, dict[str, Any]] = {}
     customer: dict[str, dict[str, Any]] = {}
-    canonical_selectors: set[str] = set()
-    stage_rows: list[dict[str, Any]] = []
-
+    selectors: set[str] = set()
     for stage in STAGES:
         resolved = TAILOR.resolve_artifacts(
             root,
@@ -100,41 +102,30 @@ def _collect_level(root: Path, store: dict[str, Any], target: str, level: str) -
         if resolved.get("projection_creates_business_truth") is not False:
             raise ValueError(f"projection truth boundary violated at {level}/{stage}")
         for row in resolved["affected_artifacts"]["internal"]:
-            internal[str(row["id"])] = row
+            engineering[str(row["id"])] = row
         for row in resolved["affected_artifacts"]["customer"]:
             customer[str(row["id"])] = row
             for selector in (row.get("sources") or {}).get("canonical", []) or []:
-                canonical_selectors.add(str(selector))
-        stage_rows.append(
-            {
-                "stage": stage,
-                "internal": sorted(str(row["id"]) for row in resolved["affected_artifacts"]["internal"]),
-                "customer": sorted(str(row["id"]) for row in resolved["affected_artifacts"]["customer"]),
-            }
-        )
-
+                selectors.add(str(selector))
     return {
         "change_level": level,
+        "engineering_profile": engineering_profile,
+        "customer_profile": customer_profile,
         "canonical_fingerprint": canonical_fingerprint(store, target),
-        "developer_layer": {
-            "audience": "INTERNAL_IT",
-            "artifact_ids": sorted(internal),
-            "artifact_count": len(internal),
-            "authoring_modes": sorted({str(row.get("authoring") or "") for row in internal.values()}),
-            "templates": sorted({str(row.get("template") or "") for row in internal.values()}),
-            "projection_role": "DESIGN_DEVELOPMENT_HUMAN_REVIEW_SURFACE",
+        "engineering_layer": {
+            "projection_role": "ENGINEERING",
+            "artifact_ids": sorted(engineering),
+            "artifact_count": len(engineering),
+            "authoring_modes": sorted({str(row.get("authoring") or "") for row in engineering.values()}),
         },
         "customer_layer": {
-            "audience": "CUSTOMER",
+            "projection_role": "CUSTOMER",
             "artifact_ids": sorted(customer),
             "artifact_count": len(customer),
             "authoring_modes": sorted({str(row.get("authoring") or "") for row in customer.values()}),
-            "templates": sorted({str(row.get("template") or "") for row in customer.values()}),
-            "canonical_selectors": sorted(canonical_selectors),
-            "projection_role": "GENERATED_COMMUNICATION_VIEW",
+            "canonical_selectors": sorted(selectors),
             "business_truth_authority": False,
         },
-        "stage_projection_map": stage_rows,
     }
 
 
@@ -142,102 +133,112 @@ def validate(root: Path, *, store: dict[str, Any], target: str) -> dict[str, Any
     root = root.resolve()
     before = copy.deepcopy(store)
     fingerprint = canonical_fingerprint(store, target)
-    levels = [_collect_level(root, store, target, level) for level in LEVELS]
-    after = store
 
-    fingerprints = {row["canonical_fingerprint"] for row in levels}
-    developer_sets = {tuple(row["developer_layer"]["artifact_ids"]) for row in levels}
-    customer_sets = {tuple(row["customer_layer"]["artifact_ids"]) for row in levels}
-    developer_modes = {tuple(row["developer_layer"]["authoring_modes"]) for row in levels}
-    customer_modes = {tuple(row["customer_layer"]["authoring_modes"]) for row in levels}
+    level_rows = [
+        _collect_layer(root, store, target, level, "ENGINEERING_SDD_COMPACT", "CUSTOMER_STANDARD_3")
+        for level in LEVELS
+    ]
+    canonical_level_invariant = {row["canonical_fingerprint"] for row in level_rows} == {fingerprint}
 
-    canonical_unchanged = before == after
-    invariant_pass = (
-        fingerprints == {fingerprint}
-        and len(developer_sets) == 1
-        and len(customer_sets) == 1
-        and developer_modes == {("AGENT_DRAFT_HUMAN_REVIEW",)}
-        and customer_modes == {("GENERATED_VIEW",)}
-        and all(row["customer_layer"]["business_truth_authority"] is False for row in levels)
-        and canonical_unchanged
+    matrix: list[dict[str, Any]] = []
+    for engineering_profile in ENGINEERING_PROFILES:
+        for customer_profile in CUSTOMER_PROFILES:
+            matrix.append(
+                _collect_layer(root, store, target, "L3", engineering_profile, customer_profile)
+            )
+
+    baseline_customer = next(
+        row["customer_layer"]["artifact_ids"]
+        for row in matrix
+        if row["engineering_profile"] == "ENGINEERING_SDD_COMPACT"
+        and row["customer_profile"] == "CUSTOMER_STANDARD_3"
     )
+    customer_when_engineering_changes = {
+        tuple(row["customer_layer"]["artifact_ids"])
+        for row in matrix
+        if row["customer_profile"] == "CUSTOMER_STANDARD_3"
+    }
+    customer_independent = customer_when_engineering_changes == {tuple(baseline_customer)}
 
-    developer = levels[0]["developer_layer"]
-    customer = levels[0]["customer_layer"]
+    baseline_engineering = next(
+        row["engineering_layer"]["artifact_ids"]
+        for row in matrix
+        if row["engineering_profile"] == "ENGINEERING_SDD_COMPACT"
+        and row["customer_profile"] == "CUSTOMER_STANDARD_3"
+    )
+    engineering_when_customer_changes = {
+        tuple(row["engineering_layer"]["artifact_ids"])
+        for row in matrix
+        if row["engineering_profile"] == "ENGINEERING_SDD_COMPACT"
+    }
+    engineering_independent = engineering_when_customer_changes == {tuple(baseline_engineering)}
+
+    canonical_unchanged = before == store
+    customer_truth_boundary = all(
+        row["customer_layer"]["business_truth_authority"] is False for row in matrix
+    )
+    no_fixed_count_rule = len({row["engineering_layer"]["artifact_count"] for row in matrix}) > 1 and len(
+        {row["customer_layer"]["artifact_count"] for row in matrix}
+    ) > 1
+
+    invariant_pass = all([
+        canonical_level_invariant,
+        canonical_unchanged,
+        customer_independent,
+        engineering_independent,
+        customer_truth_boundary,
+        no_fixed_count_rule,
+    ])
     return {
-        "schema_version": 1,
-        "validation_type": "CANONICAL_CHANGE_LEVEL_PROJECTION_INVARIANT",
+        "schema_version": 2,
+        "validation_type": "CANONICAL_AND_AUDIENCE_TOPOLOGY_INDEPENDENCE",
         "target_id": target,
         "canonical_revision": int(store.get("revision") or 0),
         "canonical_fingerprint": fingerprint,
         "change_levels": LEVELS,
-        "canonical_change_level_invariant": len(fingerprints) == 1,
+        "canonical_change_level_invariant": canonical_level_invariant,
         "canonical_store_unchanged_by_projection_resolution": canonical_unchanged,
-        "developer_projection_topology_invariant": len(developer_sets) == 1,
-        "customer_projection_topology_invariant": len(customer_sets) == 1,
-        "developer_layer": developer,
-        "customer_layer": customer,
-        "levels": levels,
+        "engineering_topology_independent_from_customer": engineering_independent,
+        "customer_topology_independent_from_engineering": customer_independent,
+        "fixed_artifact_count_is_not_an_invariant": no_fixed_count_rule,
+        "customer_business_truth_authority": False,
+        "level_rows": level_rows,
+        "profile_matrix": matrix,
         "invariant_pass": invariant_pass,
         "interpretation": {
-            "canonical": "L1~L5는 동일 Canonical semantic identity를 공유한다. Change Level은 Canonical 필드 삭제/변경이 아니라 필요한 Semantic Work/Evidence/Review와 문서 물질화 밀도를 결정한다.",
-            "developer": "INTERNAL_IT는 설계/개발자가 검토하는 Agent Draft + Human Review 문서 계층이다. 문서 Section이 축약되어도 Canonical 의미가 삭제된 것으로 해석하지 않는다.",
-            "customer": "CUSTOMER는 동일 Canonical/내부 근거를 고객 자연어로 재구성한 GENERATED_VIEW다. 내부 ID/기술 상세를 숨길 수 있지만 독립 Business Truth가 아니며 고객 수정은 Canonical 자동 변경이 아니다.",
+            "canonical": "Change Level과 Projection Profile 해석은 Canonical semantic fingerprint를 변경하지 않는다.",
+            "engineering": "Engineering Profile은 개발용 Living Spec topology만 결정하며 Customer 문서 수/순번을 결정하지 않는다.",
+            "customer": "Customer Profile은 제출/합의용 topology만 결정하며 Engineering 문서 수/순번을 결정하지 않는다.",
         },
-        "semantic_claim_boundary": "구조적 Canonical/Projection 불변성만 검증한다. 실제 Agent 작성 본문의 의미동등성·가독성·누락 여부는 External Agent/Human Pilot에서 별도 검증한다.",
+        "semantic_claim_boundary": "구조적 불변성만 검증한다. Agent 작성 본문의 의미동등성과 실제 Source/Test 품질은 별도 E2E/Pilot 검증 대상이다.",
     }
 
 
 def render_markdown(result: dict[str, Any]) -> str:
-    dev = result["developer_layer"]
-    cust = result["customer_layer"]
     lines = [
-        "# Canonical Change Level / Projection 불변성 검증",
+        "# Canonical / Engineering / Customer Projection 불변성 검증",
         "",
         f"- Target: `{result['target_id']}`",
-        f"- Canonical revision: `{result['canonical_revision']}`",
         f"- Canonical fingerprint: `{result['canonical_fingerprint']}`",
-        f"- L1~L5 invariant: `{'PASS' if result['invariant_pass'] else 'FAIL'}`",
+        f"- Overall: `{'PASS' if result['invariant_pass'] else 'FAIL'}`",
+        f"- Change Level → Canonical invariant: `{result['canonical_change_level_invariant']}`",
+        f"- Engineering ← Customer topology independent: `{result['engineering_topology_independent_from_customer']}`",
+        f"- Customer ← Engineering topology independent: `{result['customer_topology_independent_from_engineering']}`",
+        f"- Fixed document count is NOT invariant: `{result['fixed_artifact_count_is_not_an_invariant']}`",
         "",
-        "## 핵심 구조",
+        "## Profile Matrix (L3)",
         "",
-        "```mermaid",
-        "flowchart LR",
-        "    C[\"Canonical Spec<br>동일 semantic identity\"] --> D[\"INTERNAL_IT<br>설계/개발자 문서\"]",
-        "    C --> U[\"CUSTOMER<br>고객 Generated View\"]",
-        "    L[\"Change Level L1~L5\"] --> W[\"Semantic Work / Evidence / Review 밀도\"]",
-        "    W --> D",
-        "    W -. 문서 밀도만 영향 .-> U",
-        "    U -. 자동 변경 금지 .-> C",
-        "```",
-        "",
-        "## 설계/개발자 Layer",
-        "",
-        f"- Audience: `{dev['audience']}`",
-        f"- 문서군: {dev['artifact_count']}종 — " + ", ".join(f"`{x}`" for x in dev["artifact_ids"]),
-        f"- Authoring: {', '.join(f'`{x}`' for x in dev['authoring_modes'])}",
-        "- 목적: 설계/개발 검토 표면. Canonical 의미를 기술·구현 문맥으로 상세화한다.",
-        "",
-        "## 고객 Layer",
-        "",
-        f"- Audience: `{cust['audience']}`",
-        f"- 문서군: {cust['artifact_count']}종 — " + ", ".join(f"`{x}`" for x in cust["artifact_ids"]),
-        f"- Authoring: {', '.join(f'`{x}`' for x in cust['authoring_modes'])}",
-        f"- Canonical selector union: {', '.join(f'`{x}`' for x in cust['canonical_selectors'])}",
-        "- 목적: 고객 의사소통용 자연어 View. 내부 ID·Machine Evidence·구현 상세는 숨길 수 있다.",
-        "- 고객 문서 자체는 Business Truth 권위를 갖지 않는다.",
-        "",
-        "## L1~L5 확인",
-        "",
-        "| Level | Canonical fingerprint | Internal 문서군 | Customer 문서군 |",
+        "| Engineering Profile | Customer Profile | Engineering Count | Customer Count |",
         "|---|---|---:|---:|",
     ]
-    for row in result["levels"]:
+    for row in result["profile_matrix"]:
         lines.append(
-            f"| `{row['change_level']}` | `{row['canonical_fingerprint']}` | "
-            f"{row['developer_layer']['artifact_count']} | {row['customer_layer']['artifact_count']} |"
+            f"| `{row['engineering_profile']}` | `{row['customer_profile']}` | "
+            f"{row['engineering_layer']['artifact_count']} | {row['customer_layer']['artifact_count']} |"
         )
     lines.extend([
+        "",
+        "Customer Projection은 Business Truth 권위를 갖지 않는다.",
         "",
         "## 판정 경계",
         "",
@@ -248,7 +249,7 @@ def render_markdown(result: dict[str, Any]) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Validate Canonical invariance and audience projection topology across L1..L5.")
+    ap = argparse.ArgumentParser(description="Validate Canonical invariance and audience-local Projection topology.")
     ap.add_argument("--root", default=".")
     ap.add_argument("--store", default="sdlc/canonical/store.json")
     ap.add_argument("--target", required=True)
@@ -280,8 +281,8 @@ def main(argv: list[str] | None = None) -> int:
             "status": "PASS" if result["invariant_pass"] else "FAIL",
             "target_id": result["target_id"],
             "canonical_fingerprint": result["canonical_fingerprint"],
-            "developer_artifact_count": result["developer_layer"]["artifact_count"],
-            "customer_artifact_count": result["customer_layer"]["artifact_count"],
+            "engineering_customer_independent": result["engineering_topology_independent_from_customer"],
+            "customer_engineering_independent": result["customer_topology_independent_from_engineering"],
             "out_json": args.out_json,
             "out_md": args.out_md,
         }, ensure_ascii=False, indent=2))
