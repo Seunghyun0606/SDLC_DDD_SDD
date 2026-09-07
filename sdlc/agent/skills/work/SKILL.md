@@ -66,6 +66,12 @@ L1/L2는 Stage를 여러 번 실행하지 않아도 되지만 Source write 전�
 
 이 세 항목은 별도 Human 문서를 강제하지 않는다. 실제 Source를 수정하는 run에서는 `stage-result.json`의 `pre_write_analysis` Machine Evidence로 요약한다.
 
+Runtime이 검사하는 key는 Policy의 `source_write_preconditions`와 동일하다.
+
+- `INTENT_DECOMPOSED`
+- `AS_IS_SOURCE_ANALYZED`
+- `IMPACT_CHECKED`
+
 L1/L2에서 불확실성이 커지거나 Interface/Batch/Schema/Security/Architecture/Cross-domain 영향이 확인되면 Runtime의 Change Level escalation을 따른다. 자동 downgrade는 하지 않는다.
 
 ### L3~L5
@@ -109,9 +115,9 @@ Source를 실제 수정한 L1/L2 예:
 ```json
 {
   "pre_write_analysis": {
-    "intent": {"status": "CONFIRMED_OR_BOUNDED", "evidence_refs": ["RQ-001"]},
-    "as_is_source": {"status": "OBSERVED", "evidence_refs": ["src/.../Service.java#method"]},
-    "impact": {"status": "CHECKED", "evidence_refs": ["PGM-001"], "coverage": "COMPLETE_OR_PARTIAL"}
+    "INTENT_DECOMPOSED": {"status": "PASS", "evidence_refs": ["RQ-001"]},
+    "AS_IS_SOURCE_ANALYZED": {"status": "PASS", "evidence_refs": ["src/.../Service.java#method"]},
+    "IMPACT_CHECKED": {"status": "PASS", "evidence_refs": ["PGM-001"]}
   }
 }
 ```
