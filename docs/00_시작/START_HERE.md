@@ -30,6 +30,8 @@ python sdlc/scripts/harness.py check RQ-001
 
 설계/Evidence/Program Mapping을 보완할 때는 `/work` 흐름을 사용한다. 요구사항, Business Rule, Scope, TO-BE Behavior가 바뀌면 `/change` 흐름을 사용한다.
 
+L1/L2 Fast Path에서 Source를 수정하기 전에도 최소 분석은 생략하지 않는다. Agent는 **Requirement Intent Decomposition → AS-IS Source Analysis → Impact Check** 순서로 의도, 현행 근거, 영향 범위를 확인한 뒤 Source 변경으로 진행한다.
+
 일반 사용자는 내부 Stage 전체 taxonomy, Canonical JSON Schema, Runtime Python 호출 관계를 배울 필요가 없다.
 
 ## 3. 신규 Project Config 기본값
