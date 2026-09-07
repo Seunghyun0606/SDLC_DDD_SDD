@@ -51,7 +51,7 @@
 | 미확정/실패 처리 | OCR/구조 손실은 PARTIAL, 모순은 CONFLICT, 권위 미확정 규칙은 REVIEW_REQUIRED로 둔다. |
 
 ## Output
-- Template: `sdlc/templates/core/sop-extraction-result.md`
+- Template: `sdlc/templates/semantic/sop-extraction-result.md`
 - Canonical에 바로 확정하지 않고 Candidate Set을 생성한다.
 
 ## Quality Check
