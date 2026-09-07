@@ -3,7 +3,12 @@
 > 이 문서는 Canonical Spec 기반의 개발/설계용 Living Spec입니다. 사람이 일반 제출문서처럼 별도 원장으로 유지하지 않습니다. 오탈자만 직접 수정하고, 설계/Evidence 보완은 `/work`, 업무 의미·정책·TO-BE 동작 변경은 `/change`로 처리합니다.
 >
 > 이 문서는 **업무 의미를 다시 만드는 문서가 아니라**, 개발자가 변경 경계·근거·목표 동작·검증 조건을 한 화면에서 확인하는 Engineering Projection입니다.
+>
+> **사용자는 이 Template의 빈칸을 처음부터 작성하지 않습니다.** Agent가 Canonical/Source를 먼저 분석해 초안을 만들고, 사람 결정이 필요한 Gap만 질문합니다. 수정 요청은 `이 문서의 [BLOCK:WU-BUSINESS-RULE]을 ...로 바꿔줘`처럼 Block을 지정합니다.
 
+**Block ID:** `WU-INTENT`, `WU-ASIS`, `WU-TOBE`, `WU-BUSINESS-RULE`, `WU-IMPACT`, `WU-MAPPING`, `WU-TECH-IMPACT`, `WU-DEV-CONTRACT`, `WU-AC-TEST`, `WU-OPEN-GUARD`, `WU-ASBUILT`, `WU-VERIFY`
+
+<!-- BLOCK_ID: WU-INTENT -->
 ## 1. 목적 / Functional Intent
 - 이 Work Unit이 해결하는 문제:
 - 사용자가 얻어야 하는 결과:
@@ -16,6 +21,7 @@
 
 > Work Unit은 화면 수나 CRUD 수가 아니라 함께 변경·검증되는 업무/기능 경계를 기준으로 한다. 구현 Program은 1:N일 수 있다.
 
+<!-- BLOCK_ID: WU-ASIS -->
 ## 2. AS-IS Evidence / Coverage Gap
 | Evidence | 구분 | 위치/식별자 | 관찰 내용 | 신뢰/상태 |
 |---|---|---|---|---|
@@ -28,6 +34,7 @@
 
 > 확인하지 못한 영역을 임의로 `영향 없음`으로 바꾸지 않는다.
 
+<!-- BLOCK_ID: WU-TOBE -->
 ## 3. TO-BE Spec
 - 목표 동작:
 
@@ -39,38 +46,45 @@
 - Validation / 상태 / 예외:
 - 변경되지 않아야 하는 동작:
 
+<!-- BLOCK_ID: WU-BUSINESS-RULE -->
 ## 4. Business Rule / Decision
 | Rule/Decision | 상태 | 근거 | 영향 |
 |---|---|---|---|
 |  | CONFIRMED / OPEN |  |  |
 
+<!-- BLOCK_ID: WU-IMPACT -->
 ## 5. 영향 범위
 - Business / Functional Impact:
 - Technical Impact:
 - 변경되지 않는 범위:
 
+<!-- BLOCK_ID: WU-MAPPING -->
 ## 6. 구현 Mapping
 | TASK | PGM | Source/Symbol | 변경 유형 | 책임/역할 | 상태 |
 |---|---|---|---|---|---|
 |  |  |  | ADD/MOD/DEL/VERIFY |  |  |
 
+<!-- BLOCK_ID: WU-TECH-IMPACT -->
 ## 7. Program / Data / Interface / Authorization 영향
 - Program 책임 변화:
 - Data/Table/Column 영향:
 - Interface/Batch/Transaction 영향:
 - 인증/인가·Data Scope 영향:
 
+<!-- BLOCK_ID: WU-DEV-CONTRACT -->
 ## 8. Development Contract
 - 구현 순서:
 - 적용 표준 / Deviation:
 - Source Write 허용 경계:
 - 예상 밖 영향 발견 시 처리:
 
+<!-- BLOCK_ID: WU-AC-TEST -->
 ## 9. AC / Test
 | AC | TC/Scenario | Evidence | Result |
 |---|---|---|---|
 |  |  |  |  |
 
+<!-- BLOCK_ID: WU-OPEN-GUARD -->
 ## 10. Open / Risk / Execution Guard
 | Open/Risk | 분류 | Source Write 영향 | 담당 | 상태 |
 |---|---|---|---|---|
@@ -82,12 +96,14 @@
 - `ALERT`: 추적은 필요하지만 현재 구현을 제한하지 않는 확인/주의 항목이다.
 - Framework의 Hard Block 정책과 충돌하면 Hard Block이 우선한다.
 
+<!-- BLOCK_ID: WU-ASBUILT -->
 ## 11. AS-BUILT
 - 실제 구현 결과:
 - 설계 대비 차이:
 - Source-derived 기술 정보:
 - 추가로 발견된 영향:
 
+<!-- BLOCK_ID: WU-VERIFY -->
 ## 12. Verification
 - Build/Test/Regression:
 - Canonical과 Source Drift 여부:
