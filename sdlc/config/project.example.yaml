@@ -1,5 +1,6 @@
 # 작성 완료 예시입니다. 새 프로젝트에서는 이 파일 자체를 수정하지 말고
 # setup이 만든 .sdlc/project.yaml 한 파일만 유지합니다.
+# 옵션별 역할/허용값/Runtime 적용 여부: docs/00_시작/02A_PROJECT_CONFIG_옵션_상세가이드.md
 # 모르는 값을 예시 값으로 복사하지 말고 unresolved에 남깁니다.
 # agent 항목은 생략하면 INTERACTIVE가 기본입니다.
 # Change Level은 실행 깊이/Evidence/Review 필요성이며 문서 개수와 다른 개념입니다.
