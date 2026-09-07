@@ -1,13 +1,32 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "policy_id": "CHANGE_EXECUTION_POLICY_V1_9_REDTEAM",
   "principle": "Change Level -> Required Semantic Work -> Required Evidence -> Required Human Review -> Artifact Projection",
   "levels": {
     "L1": {
       "name": "MICRO",
       "default_entry_stage": "DEVELOPMENT",
-      "semantic_work": ["INTENT", "IMPACT_SANITY_CHECK", "IMPLEMENTATION", "TEST", "RECONCILE"],
-      "required_evidence": ["INTENT_EVIDENCE", "LOCAL_IMPACT_EVIDENCE", "SOURCE_DIFF", "TEST_RESULT"],
+      "semantic_work": [
+        "INTENT_DECOMPOSITION",
+        "AS_IS_SOURCE_ANALYSIS",
+        "IMPACT_SANITY_CHECK",
+        "IMPLEMENTATION_DELTA",
+        "SOURCE_CHANGE",
+        "TEST",
+        "RECONCILE"
+      ],
+      "required_evidence": [
+        "INTENT_EVIDENCE",
+        "AS_IS_SOURCE_EVIDENCE",
+        "LOCAL_IMPACT_EVIDENCE",
+        "SOURCE_DIFF",
+        "TEST_RESULT"
+      ],
+      "source_write_preconditions": [
+        "INTENT_DECOMPOSED",
+        "AS_IS_SOURCE_ANALYZED",
+        "IMPACT_CHECKED"
+      ],
       "required_human_review": ["INTENT_CONFIRM_IF_UNCERTAIN", "RELEASE_BLOCKER_ONLY"],
       "stage_allowlist": ["DEVELOPMENT", "TEST", "VERIFY", "KNOWLEDGE_PROMOTION"],
       "program_spec_mode": "CORE_ONLY",
@@ -16,8 +35,27 @@
     "L2": {
       "name": "LOCAL",
       "default_entry_stage": "DEVELOPMENT",
-      "semantic_work": ["INTENT", "IMPACT", "IMPLEMENTATION_DELTA", "TEST", "RECONCILE"],
-      "required_evidence": ["INTENT_EVIDENCE", "LOCAL_IMPACT_EVIDENCE", "SOURCE_DIFF", "TEST_RESULT"],
+      "semantic_work": [
+        "INTENT_DECOMPOSITION",
+        "AS_IS_SOURCE_ANALYSIS",
+        "IMPACT",
+        "IMPLEMENTATION_DELTA",
+        "SOURCE_CHANGE",
+        "TEST",
+        "RECONCILE"
+      ],
+      "required_evidence": [
+        "INTENT_EVIDENCE",
+        "AS_IS_SOURCE_EVIDENCE",
+        "LOCAL_IMPACT_EVIDENCE",
+        "SOURCE_DIFF",
+        "TEST_RESULT"
+      ],
+      "source_write_preconditions": [
+        "INTENT_DECOMPOSED",
+        "AS_IS_SOURCE_ANALYZED",
+        "IMPACT_CHECKED"
+      ],
       "required_human_review": ["BUSINESS_RULE_IF_CHANGED", "RELEASE_BLOCKER_ONLY"],
       "stage_allowlist": ["IMPACT", "DEVELOPMENT", "TEST", "VERIFY", "KNOWLEDGE_PROMOTION"],
       "program_spec_mode": "CORE_PLUS_TRIGGERED",
@@ -60,6 +98,8 @@
     "automatic_downgrade_allowed": false,
     "skipped_internal_stage_is_not_failed_stage": true,
     "artifact_count_is_not_semantic_work_count": true,
-    "machine_evidence_is_not_human_maintenance": true
+    "machine_evidence_is_not_human_maintenance": true,
+    "fast_path_skips_stage_documents_not_semantic_analysis": true,
+    "source_write_requires_fast_path_preconditions_when_source_changes": true
   }
 }
