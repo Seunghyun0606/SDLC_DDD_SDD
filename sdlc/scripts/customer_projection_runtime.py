@@ -283,17 +283,39 @@ def _contract_customer_field_allowlist(contract: dict[str, Any] | None) -> set[s
     return {x for x in allowed if x}
 
 
+def _customer_safe_value(value: Any) -> str:
+    """Fail closed for structured Canonical values; expose scalar meaning only.
+
+    A safe field name is not enough to make arbitrary nested objects customer-safe. Dict payloads
+    can contain IDs, status or evidence metadata, so direct Canonical projection drops them. Lists
+    preserve scalar items only. Rich structured meaning should arrive through reviewed semantic
+    artifacts where customer section mapping and sanitization are explicit.
+    """
+    if value is None or isinstance(value, dict):
+        return ""
+    if isinstance(value, list):
+        rows: list[str] = []
+        for item in value:
+            if item is None or isinstance(item, (dict, list)):
+                continue
+            text = RENDER._to_text(item)
+            if text:
+                rows.append(text if text.startswith(("-", "*", "|")) else f"- {text}")
+        return "\n".join(rows)
+    return RENDER._to_text(value)
+
+
 def _customer_safe_entity_fields(entity: dict[str, Any], allowed: set[str], denied: set[str]) -> dict[str, str]:
-    """Flatten only the Canonical semantic ``fields`` payload plus explicitly safe top-level values."""
+    """Flatten only safe Canonical semantic fields plus explicitly safe legacy top-level values."""
     candidates: list[tuple[str, Any]] = []
     semantic_fields = entity.get("fields")
     if isinstance(semantic_fields, dict):
         candidates.extend((str(key), value) for key, value in semantic_fields.items())
 
-    # Some legacy stores keep semantic values directly on the entity. Preserve only exact allowlisted
-    # values and never flatten arbitrary nested top-level metadata.
+    # Some legacy stores keep semantic values directly on the entity. Exact key allowlisting below
+    # is the authority, so safe scalar/list values may still be preserved while arbitrary metadata is dropped.
     for key, value in entity.items():
-        if key == "fields" or isinstance(value, (dict, list)):
+        if key == "fields":
             continue
         candidates.append((str(key), value))
 
@@ -302,7 +324,7 @@ def _customer_safe_entity_fields(entity: dict[str, Any], allowed: set[str], deni
         normalized = _visibility_key(key)
         if not normalized or normalized in denied or normalized not in allowed:
             continue
-        text = RENDER._to_text(value)
+        text = _customer_safe_value(value)
         if text:
             fields[key] = text
     return fields
@@ -335,17 +357,17 @@ def _canonical_artifact(
 
     semantic_fields = entity.get("fields") if isinstance(entity.get("fields"), dict) else {}
     title = (
-        semantic_fields.get("title")
-        or semantic_fields.get("name")
-        or entity.get("title")
-        or entity.get("name")
+        _customer_safe_value(semantic_fields.get("title"))
+        or _customer_safe_value(semantic_fields.get("name"))
+        or _customer_safe_value(entity.get("title"))
+        or _customer_safe_value(entity.get("name"))
         or "프로젝트 변경"
     )
     return [{
         "source": "sdlc/canonical/store.json#" + target,
         "artifact_type": "CANONICAL_JSON_BUNDLE",
         "stage": stage,
-        "title": str(title),
+        "title": title,
         "sections": {},
         "fields": fields,
         "semantic_source": "CANONICAL_ALLOWLIST",
