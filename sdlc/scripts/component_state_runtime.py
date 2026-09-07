@@ -166,7 +166,11 @@ def append_delta(data: dict[str, Any], component_id: str, *, change_id: str, bas
     component.setdefault("deltas", []).append(row)
     if status == ACCEPTED: component["current_revision"] = result_revision
     component["updated_at"] = now()
-    return {"status": "DELTA_RECORDED", **row}
+    return {
+        "status": "DELTA_RECORDED",
+        "delta_status": status,
+        **{key: value for key, value in row.items() if key != "status"},
+    }
 
 
 def compact(data: dict[str, Any], component_id: str, release_id: str) -> dict[str, Any]:
