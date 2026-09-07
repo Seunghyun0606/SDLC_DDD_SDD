@@ -85,7 +85,8 @@ class HarnessStructureTest(unittest.TestCase):
             check_result=json.loads(check.stdout)
             self.assertEqual('READY',check_result['status'])
             self.assertEqual('INTERACTIVE',check_result['setup']['agent_execution']['execution_mode'])
-            self.assertEqual('ENGINEERING_SDD_COMPACT', check_result['project']['engineering_profile'])
+            self.assertEqual('ENGINEERING_SDD_COMPACT', check_result['setup']['engineering_profile'])
+            self.assertEqual('ENGINEERING_SDD_COMPACT', check_result['setup']['tailoring_profiles']['internal'])
 
             tailoring=root/'sdlc/scripts/tailoring_runtime.py'
             for profile in ['ENGINEERING_SDD_COMPACT','STANDARD_3','STANDARD_5','STAGE_ORIENTED_FULL','CUSTOMER_STANDARD_3','PM_STANDARD']:
