@@ -202,8 +202,12 @@ def _record_projections(root: Path, plan: dict[str, Any]) -> dict[str, Any]:
     configured_policy = CONFIG.nested(project, "documents", "engineering", "manual_edit_policy", default="TYPO_ONLY")
     metadata: list[str] = []
     missing: list[str] = []
-    for row in _projection_rows(plan):
+    rows = _projection_rows(plan)
+    single_projection_compat = len(rows) == 1
+    for row in rows:
         artifact_path = str(row.get("output_path") or "")
+        if not artifact_path and single_projection_compat:
+            artifact_path = str((plan.get("selection") or {}).get("artifact_path") or "")
         if not artifact_path or not (root / artifact_path).is_file():
             missing.append(artifact_path or str(row.get("id") or "artifact")); continue
         artifact_id = str(row.get("id") or "artifact")
@@ -279,7 +283,7 @@ def _interactive(args: list[str], root: Path, *, explicit_stage: bool) -> int:
         "execution_policy": plan.get("execution_policy"),
         "tailoring": plan.get("tailoring"),
         "required_projection_targets": plan.get("required_projection_targets"),
-        "instruction": "Change Level은 Semantic/Evidence/Review 깊이만 결정한다. primary_work_artifact를 중심으로 작업하되 tailoring.required_engineering_artifacts를 모두 projection_detail 수준으로 갱신한다. Canonical/Trace/Provenance/Source Hash/Stage Result는 사람이 수동 유지하지 않는다.",
+        "instruction": "Change Level이 선택한 Semantic Work/Evidence/Review 깊이를 수행한다. primary_work_artifact를 중심으로 작업하되 tailoring.required_engineering_artifacts를 모두 projection_detail 수준으로 갱신한다. Canonical/Trace/Provenance/Source Hash/Stage Result는 사람이 수동 유지하지 않는다.",
     })
     plan_out = _value(args, "--plan-out")
     if plan_out:
