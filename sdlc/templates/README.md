@@ -5,7 +5,7 @@
 | 경로 | 역할 | 신규 프로젝트에서의 의미 |
 |---|---|---|
 | `semantic/` | SDLC Stage 의미 구조 | Requirement/Analysis/Impact/Design/Program/Test/Verify 등 Agent의 Stage 실행용 Semantic Template |
-| `engineering/` | Engineering Projection | 개발자/설계자가 검토하는 Work Map, Work-unit SDD, Program Spec |
+| `engineering/` | Engineering Projection | 개발자/설계자가 검토하는 개발·설계 View |
 | `customer/` | Customer Projection | 고객 합의/범위/인수 등 고객 커뮤니케이션용 Generated View |
 | `management/` | PM/관리 View | 요구사항 검토 등 관리 관점 Template |
 | `br-intake/` | 외부 BR 입력 보조 | 비정형 고객문서/BR 인입 검토용 Template |
@@ -29,6 +29,38 @@ Tailoring Profile         # 조립/선택 규칙
 engineering/ | customer/ | tailoring/standard/
                             # 최종 Projection Template
 ```
+
+## Projection Visibility 원칙
+
+Machine-side에서 Canonical ID와 Stage/Relation/Provenance를 사용하더라도 최종 Projection은 그 내부 구조를 그대로 노출하지 않는다.
+
+### Engineering Projection
+
+개발자가 실제 구현에 필요한 정보는 충분히 보여준다.
+
+- 업무 목적과 규칙
+- 시나리오와 예외
+- 개발 범위
+- Program / Source / Method / Query / Table / Column
+- Interface / Batch / Procedure / Transaction / 권한
+- 구현 순서와 테스트 방법
+- 개발 전에 확인할 사항과 실제 구현 결과
+
+반대로 Canonical Entity ID 체계, Revision, Provenance, Confidence, Stage taxonomy, Change Level, Runtime Guard/Queue Code는 기본적으로 사람용 본문에서 숨기거나 자연어로 변환한다.
+
+### Customer Projection
+
+고객에게는 요청 배경, 기대 결과, 현재/개선 업무, 업무 규칙, 범위, 업무 영향, 합의·미확정 사항, 테스트·인수·운영 등 고객이 이해하고 결정할 내용만 보여준다.
+
+- Canonical ID / Relation / Revision / Provenance는 Machine-side에서만 추적한다.
+- 기술 상세와 내부 근거 상세는 기본 OFF이며 프로젝트가 명시적으로 요구할 때만 선택 부록으로 켠다.
+- Customer Runtime은 Canonical 전체를 먼저 펼치지 않고 고객용 Allowlist로 필요한 의미만 선택한 뒤 Sanitizer를 2차 방어로 적용한다.
+
+### Stable Block ID
+
+Agent가 문서의 특정 부분을 안정적으로 수정할 수 있도록 `<!-- BLOCK_ID: ... -->` HTML comment는 유지할 수 있다. 하지만 Block ID 목록이나 Queue ID 같은 내부 식별자를 일반 사용자에게 입력값으로 강요하지 않는다. 사용자가 절 제목이나 내용을 자연어로 지정하면 Agent가 내부 Block에 매핑한다.
+
+세부 경계는 `sdlc/design/contracts/projection-visibility-contract.json`을 따른다.
 
 ## `tailoring/standard/*.md`의 목적
 
