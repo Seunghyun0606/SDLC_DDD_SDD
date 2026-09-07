@@ -1,8 +1,8 @@
 {
-  "schema_version": 5,
+  "schema_version": 6,
   "contract_id": "PROJECT_SCAFFOLD_V110_ASSET_BOUNDARY",
   "source_package_contract": "sdlc/design/contracts/harness-package-contract.json",
-  "purpose": "Framework 개발/검증/배포도구와 compatibility notice를 제외하고 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide만 배포한다.",
+  "purpose": "v1.10 Framework에서 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide만 배포하고 Framework 개발/검증 자산은 제외한다.",
   "base_file_set": "core_required_files",
   "add_required_files": [
     "sdlc/scripts/project_config.py",
@@ -60,19 +60,9 @@
     "sdlc/validation/",
     "sdlc/samples/",
     "sdlc/guides/",
-    "sdlc/templates/core/",
     "sdlc/templates/tailoring/standard/",
     "tests/",
     ".github/"
-  ],
-  "compatibility_aliases": [
-    {
-      "path": "sdlc/templates/core",
-      "target": "semantic",
-      "type": "DIRECTORY_SYMLINK",
-      "fallback": "COPYTREE_IF_SYMLINK_UNAVAILABLE",
-      "purpose": "v1.9 Runtime/contract/external path compatibility only"
-    }
   ],
   "default_engineering_profile": "ENGINEERING_SDD_COMPACT",
   "default_internal_profile": "ENGINEERING_SDD_COMPACT",
@@ -103,7 +93,6 @@
     "CUSTOMER_STANDARD_3_active": true,
     "CUSTOMER_WATERFALL_FULL_active": true,
     "old_scaffold_guides_are_framework_compatibility_notices": true,
-    "templates_core_is_compatibility_alias": true,
     "templates_semantic_is_primary_stage_template_root": true
   },
   "distribution_boundary": {
@@ -136,7 +125,6 @@
       "enhancement extensions"
     ],
     "COMPATIBILITY_ONLY": [
-      "sdlc/templates/core -> semantic alias",
       "STANDARD_3",
       "STANDARD_5",
       "STAGE_ORIENTED_FULL",
