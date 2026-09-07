@@ -1,6 +1,16 @@
-# /change
+# Cursor Adapter — /change
 
-자연어 변경을 `CLARIFICATION / BEHAVIOR_CHANGE / TECHNICAL_CHANGE / NEW_REQUIREMENT`로 구조화한다. 실제 실행 Runtime은 `sdlc/scripts/run_change.py`이며 일반 사용자는 다음 단일 진입점을 사용한다.
+이 파일은 Cursor 전용 `/change` 진입 Adapter다. 실제 업무 규칙은 다음 Core Skill을 사용한다.
+
+`@sdlc/agent/skills/change/SKILL.md`
+
+HITL 질문/Block Target 규칙은 다음 Reference를 사용한다.
+
+`@sdlc/agent/skills/work/references/hitl.md`
+
+## 일반 사용자 입력
+
+사용자는 변경 내용을 자연어로 말하면 된다.
 
 ```bash
 python sdlc/scripts/harness.py change \
@@ -8,151 +18,101 @@ python sdlc/scripts/harness.py change \
   --change '<변경 요청 원문>'
 ```
 
-## 실행 원칙
-1. Target과 변경 원문을 보존한다.
-2. Target 중심 Canonical relation graph만 변경 권한 범위로 사용한다.
-3. 변경 요청을 분류하되 분류 자체가 Business Truth 확정 권한을 만들지 않는다.
-4. Source 관찰과 고객/업무 확정을 구분한다.
-5. 확정 Business Truth 변경은 명시적 승인 없이 적용하지 않는다.
-6. Provider 실행은 `/work`와 같은 Git HEAD/branch/dirty/write-scope Guard 안에서 수행한다.
-7. 변경 결과는 Stage Result Validator를 통과한 뒤에만 locked/atomic Canonical Runtime으로 반영한다.
-8. 실패하면 이번 Provider 실행이 만든 Git working-tree 변경을 rollback한다. 자동 Merge/commit은 하지 않는다.
+이미 생성된 문서의 일부를 바꾸려면 **문서 + Block을 지정하는 방식**을 권장한다.
+
+```text
+RQ-0042 Work Unit SDD의 [BLOCK:WU-BUSINESS-RULE]에서
+월 마감 정책을 "급여 마감 전까지만 재계산 허용"으로 변경해줘.
+```
+
+```text
+HRIS 업무정의서의 [BLOCK:HRIS-DATA-AUTH]에서
+급여담당 프로파일은 조회만 가능하도록 바꿔줘.
+```
+
+## HITL UX
+
+Cursor Agent는 Template 전체를 사용자에게 작성시키지 않는다.
+
+기본 흐름:
+
+```text
+/change 요청
+→ Agent가 Target/Block의 현재 Canonical 의미 확인
+→ 관련 Source/Decision/Evidence 조사
+→ Before / Requested After / 영향 후보 정리
+→ 정말 필요한 Business Decision만 질문
+→ 사용자 답변
+→ Canonical Delta + Provenance 작성
+→ 관련 Projection 갱신
+→ finalize
+```
+
+질문은 한 턴 최대 3개를 기본으로 하고 다음을 함께 보여준다.
+
+- 왜 이 질문이 필요한지
+- 현재 확인된 사실
+- 답변이 반영될 `[BLOCK:...]`
+- 미응답 시 변경을 보류하는지, Assumption/Alert로 진행 가능한지
+
+Source에서 확인할 수 있는 Java Method, XML Query, Table/Column, 기존 호출관계는 사람에게 묻지 않고 Agent가 조사한다.
+
+## Block Routing
+
+- `SEMANTIC_CHANGE` → `/change` 계속 진행, Canonical Delta 필요
+- `EVIDENCE_REFRESH` → `/work`로 전환
+- `PROJECTION_ONLY` → 오탈자/표현만 변경, Canonical Delta 없음
+
+Block ID가 없지만 대상이 명확하면 Agent가 해석한 Block을 먼저 알려주고 진행한다. 여러 Block 후보가 있으면 적용 전에 Block 선택만 짧게 확인한다.
+
+## INTERACTIVE 흐름
+
+1. `python sdlc/scripts/harness.py change --target <TARGET> --change "<변경 요청>"`
+2. `INTERACTIVE_CHANGE_HANDOFF_READY`를 확인한다. 완료가 아니다.
+3. Context에서 Target/Graph/Change Request/Artifact/Canonical baseline을 읽는다.
+4. 관련 Canonical/Source/Evidence를 먼저 조사한다.
+5. 사람 판단 Gap이 있으면 HITL 질문을 생성한다.
+6. 답변을 `GIVEN`/Decision provenance로 구조화한다.
+7. 변경을 `CLARIFICATION / BEHAVIOR_CHANGE / TECHNICAL_CHANGE / NEW_REQUIREMENT`로 분류한다.
+8. Change Artifact와 `stage-result.json`을 작성한다.
+9. finalize를 실행한다.
+10. `APPLIED / IDEMPOTENT / NO_CHANGE / DRY_RUN_VALIDATED`일 때만 완료로 보고한다.
+
+## Business Truth 안전 규칙
+
+- Source 관찰은 `OBSERVED`이며 TO-BE Business Truth가 아니다.
+- 기존 `CONFIRMED_BUSINESS` 변경에는 명시적 사용자 authorization과 근거가 필요하다.
+- Block을 지정했다는 사실만으로 상위 Requirement 전체 변경 권한이 생기지 않는다.
+- 사용자 답변을 문서 Text에만 반영하고 Canonical/Provenance 반영을 빼먹지 않는다.
+- 표현 수정이면 억지 Canonical Delta를 만들지 않는다.
 
 ## Plan Only
-실제 Provider 실행 전에 변경 범위와 기준점을 확인할 수 있다.
 
-```bash
-python sdlc/scripts/harness.py change \
-  --target RQ-001 \
-  --change '환불 상태 조회를 추가한다' \
-  --plan-only
-```
+실제 변경 전에 범위와 기준점만 확인하려면 `--plan-only`를 사용한다. Plan은 Target graph, Canonical base revision, Git baseline, 변경 원문, 허용 Entity 범위, Source write root, Business Truth Guard를 보여준다.
 
-Plan에는 최소 다음이 들어간다.
-- Target graph
-- Canonical base revision
-- Git commit/branch baseline
-- 변경 원문
-- 허용된 기존 Canonical entity 범위
-- Source write root
-- Business Truth Guard
+## Stage Result / Canonical 적용
 
-## 변경 Stage Result 검증
-변경 분석도 `/work`와 동일한 Machine 실행 경계를 사용한다.
-
-```json
-{
-  "schema_version": 1,
-  "stage": "CHANGE",
-  "artifact_path": "sdlc/runtime/change/RQ-001/CHANGE_change-analysis.md",
-  "canonical_delta": {},
-  "quality_gate": {"status": "PASS", "failures": []},
-  "alerts": [],
-  "uncertainty": []
-}
-```
-
-검증:
-
-```bash
-python sdlc/scripts/validate_agent_stage_result.py \
-  --result <change-result.json> \
-  --store sdlc/canonical/store.json \
-  --out <validation-result.json>
-```
-
-- `validation.status = PASS`이면서 `validation.executable = true`인 경우에만 Canonical 적용 단계로 이동한다.
-- Artifact/Delta Stage 불일치, source_artifact 불일치, stale revision, 미해결 Template placeholder가 있으면 적용하지 않는다.
-- 동일 변경의 반복 실행 의미를 비교할 때는 `--compare`와 semantic fingerprint를 사용할 수 있다.
-- 이 비교는 **LLM 자체의 결정론을 보장하지 않으며** 실제 생성 결과의 의미 차이를 검출하기 위한 것이다.
-
-## Canonical 변경 적용
-검증된 Delta는 `sdlc/scripts/apply_canonical_delta.py`의 locked atomic write 경계를 사용한다.
-
-일반 `/change` 실행에서는 `run_change.py`가 이 경계를 자동 사용한다. Delta만 독립 검증하거나 기존 자동화와 호환해야 할 때는 아래 low-level dry-run 경로를 유지한다.
-
-```bash
-python sdlc/scripts/apply_canonical_delta.py \
-  --store sdlc/canonical/store.json \
-  --delta <canonical-delta.json> \
-  --dry-run
-```
-
-`--dry-run`은 Canonical 적용 가능성만 확인하며 Store를 쓰지 않는다. Source write 안전성까지 확인하려면 `/change --plan-only` 또는 실제 orchestrated `/change` Guard를 사용한다.
+변경 분석도 `/work`와 같은 Stage Result Validator와 locked atomic Canonical apply 경계를 사용한다.
 
 지원 Operation:
+
 - `UPSERT_ENTITY`
 - `UPSERT_RELATION`
 - `ADD_PROVENANCE`
 
-DELETE는 자동 지원하지 않는다.
+문서 표현만 바뀌면 `operations: []`과 `no_change_reason`을 사용한다.
 
-### Business Truth 안전 규칙
-- 기존 `CONFIRMED_BUSINESS`를 바꾸려면 `evidence_class: CONFIRMED`가 필요하다.
-- `/change`에서도 사용자가 실제 업무 확정을 명시하지 않았다면 `--allow-business-truth-change`를 사용하지 않는다.
-- Source가 기존 업무정책과 다르게 동작해도 Source 관찰을 Business Truth로 자동 승격하지 않는다.
-- 값 변경 없이 현행 근거를 연결할 때는 `ADD_PROVENANCE`를 우선한다.
+## Source Drift / Customer Decision
 
-## Source Version / Write Guard
-`run_change.py`는 공통 `/work` executor를 사용하므로 다음 Guard를 공유한다.
+Source 변화는 자동 Business Truth 변경이 아니다. Reverse Candidate는 Review 후보이며 자동 적용하지 않는다.
 
-- 기본 `main/master` 직접 쓰기 금지
-- 실행 시작 시 Git HEAD/branch 기록
-- 이미 dirty working tree이면 기본 중단
-- Provider가 HEAD를 변경하면 중단
-- 허용 Source root/선택 Artifact 밖의 파일 변경 차단
-- DEVELOPMENT Source write는 build/test command가 없으면 기본 중단
-- Stage/Canonical 실패 시 이번 실행에서 생긴 Git 변경 rollback
-- Canonical은 file lock → 최신 revision 재읽기 → atomic replace
-
-Repository hosting의 Branch Protection 설정까지 이 Script가 대신하는 것은 아니다. 프로젝트 GitHub/GitLab 정책에서도 default branch 보호를 별도로 활성화한다.
-
-## Source Drift Reverse 처리
-외부에서 Source가 변경됐거나 Merge/Rebase 이후 기준점이 바뀐 경우:
-
-```bash
-python sdlc/scripts/run_source_reverse_check.py \
-  --source-root <source-root> \
-  --artifact-root <artifact-root> \
-  --source-ref <commit-or-ref> \
-  --baseline sdlc/runtime/reverse/baseline.json \
-  --output sdlc/runtime/reverse/result.json
-```
-
-- `STALE_SOURCE_EVIDENCE`: 직접 Source evidence가 달라진 산출물
-- `STALE_PROPAGATED`: 명시적 stale propagation
-- `CHECK_REQUIRED_REVERSE`: 상위 업무/설계가 다시 확인되어야 하는 후보
-- Source 변경은 자동 Business Truth 변경이 아니다.
-
-## Program Spec Semantic Reverse Candidate
-Program Binding과 before/after impact graph가 있으면:
-
-```bash
-python sdlc/scripts/generate_program_spec_reverse_candidate.py \
-  --baseline-impact <before-impact.json> \
-  --observed-impact <after-impact.json> \
-  --program-bindings <program-bindings.json> \
-  --output <program-reverse-candidate.json>
-```
-
-Candidate는 실제 Program Spec 파일을 자동 수정하지 않는다.
-- `review_required: true`
-- `auto_apply: false`
-- 구현 Target/Mapping/Query/Table/Transaction/Integration/기술 제어만 후보화
-- 업무 시나리오/업무 규칙/Business Truth 자동 변경 금지
-
-## Customer Decision Round Trip
-고객 문서 검토 결과를 다시 근거로 남겨야 할 때:
-
-```bash
-python sdlc/scripts/capture_customer_decision.py \
-  --input <customer-decision.json>
-```
-
-고객 `ACCEPT/REJECT/REQUEST_CHANGE/ACKNOWLEDGE`는 CONFIRMED provenance로 남길 수 있다. 실제 업무 필드 변경은 `field_updates`와 명시적 `--apply-business-change`가 함께 있을 때만 허용한다.
+Customer Projection에서 받은 실제 업무 변경 의견은 연결된 Canonical Block/의미를 찾은 뒤 `/change` Round Trip으로 반영한다. 단순 문구 수정은 Projection-only로 처리한다.
 
 ## Do Not
+
 - Source hash 변화만으로 업무 규칙이 바뀌었다고 판단하지 않는다.
-- Change classification만으로 권한을 획득했다고 간주하지 않는다.
-- 자동 Merge/commit으로 동시 작업 충돌을 숨기지 않는다.
-- 실패한 Provider의 Source 변경을 working tree에 남겨 성공처럼 보이지 않는다.
+- Change classification만으로 변경 권한을 얻었다고 간주하지 않는다.
+- 자동 Merge/commit으로 충돌을 숨기지 않는다.
+- `INTERACTIVE_CHANGE_HANDOFF_READY`나 `HITL_REQUIRED`를 완료로 표현하지 않는다.
+- 사용자에게 Template 전체를 작성하도록 요구하지 않는다.
+- 기술적으로 조사 가능한 질문을 사용자에게 넘기지 않는다.
