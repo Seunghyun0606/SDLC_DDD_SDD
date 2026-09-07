@@ -1,157 +1,155 @@
 # Tailoring 설정 가이드
 
-## 1. 문서 목적
+## 1. Tailoring이 결정하는 것
 
-프로젝트마다 3종/5종/호환 Full 등 서로 다른 Human Artifact 체계를 사용하면서도 같은 Canonical/Evidence/Guard를 유지하는 방법을 설명한다.
+Tailoring Profile은 **어떤 의미를 어떤 Human Artifact로 보여줄지** 결정한다. Canonical 의미나 Change Level을 바꾸지 않는다.
 
-핵심 식은 다음이다.
+Engineering과 Customer Tailoring은 서로 독립이다.
 
-> `Semantic Work / Canonical / Evidence → Tailoring Profile → Human Artifact`
-
-Tailoring은 **문서 Projection 정책**이다. Change Level의 필수 분석을 삭제하는 정책이 아니다.
-
-## 2. 반드시 구분할 것
-
-- **Change Level**: 실제로 해야 하는 Semantic Work/Evidence/Review를 결정한다.
-- **Tailoring Profile**: 그 결과를 어떤 사람용 문서로 보여줄지 결정한다.
-- **Template**: 각 문서의 Section 구조를 정의한다.
-
-따라서 L1/L2에서 별도 Stage 문서를 줄여도 `Intent → AS-IS Source → Impact` 분석은 남는다. 반대로 STANDARD_3를 선택했다고 내부 Semantic Work가 3단계가 되는 것도 아니다.
-
-```mermaid
-flowchart LR
-    C["Change Level"] --> W["Required Semantic Work"]
-    W --> E["Evidence/Review"]
-    E --> T["Tailoring"]
-    T --> A["Human Artifact"]
+```text
+Canonical Spec
+├─ Engineering Profile → 개발용 Living Spec
+└─ Customer Profile    → 고객 제출/합의 문서
 ```
 
-## 3. 기본 Profile
+## 2. 표준 Profile
 
-신규 프로젝트 기본값:
+### Engineering
 
-- Internal: `STANDARD_5`
-- Customer: `CUSTOMER_STANDARD_3`
-- PM: `PM_STANDARD`
+- `ENGINEERING_SDD_COMPACT`: 신규 기본. Work Map + Work Unit SDD + 조건부 Program Spec
+- `STANDARD_3`: Legacy/Formal 내부 3종
+- `STANDARD_5`: Legacy/Formal 내부 5종
+- `STAGE_ORIENTED_FULL`: Legacy/Formal Compatibility
 
-`STAGE_ORIENTED_FULL`은 다음 경우에만 사용한다.
+### Customer
 
-- Legacy compatibility
-- Formal contract compatibility
-- Existing customer document mapping
+- `CUSTOMER_STANDARD_3`: 기본 3종
+- `CUSTOMER_WATERFALL_FULL`: Full Waterfall 8종
 
-신규 프로젝트에서 Full을 기본값으로 두지 않는다.
+문서 수는 Project Size나 Change Level로 Runtime이 임의 추측하지 않는다.
 
-## 4. 실제 Profile 예제
-
-```yaml
-schema_version: 1
-profile_id: HRIS_UNIT_3
-name: "HRIS Unit 3종"
-output_root: "docs/10_산출물"
-
-artifacts:
-  business_definition:
-    audience: INTERNAL_IT
-    template: "sdlc/custom/project/templates/unit/01_업무정의서.md"
-    output_path: "docs/10_산출물/{target}/01_업무정의서.md"
-    visibility: PRIMARY
-    authoring: AGENT_DRAFT_HUMAN_REVIEW
-    order: 10
-    sources:
-      stages: [DECOMPOSE, CLARIFY, PROCESS, DISCOVERY, IMPACT]
-
-  detail_design:
-    audience: INTERNAL_IT
-    template: "sdlc/custom/project/templates/unit/02_상세설계서.md"
-    output_path: "docs/10_산출물/{target}/02_상세설계서.md"
-    visibility: PRIMARY
-    authoring: AGENT_DRAFT_HUMAN_REVIEW
-    order: 20
-    sources:
-      stages: [DESIGN, PROGRAM, DEVELOPMENT, TEST, VERIFY]
-
-  screen_design:
-    audience: INTERNAL_IT
-    template: "sdlc/custom/project/templates/unit/03_화면설계서.md"
-    output_path: "docs/10_산출물/{target}/03_화면설계서.md"
-    condition: HAS_UI
-    visibility: PRIMARY
-    authoring: AGENT_DRAFT_HUMAN_REVIEW
-    order: 30
-    sources:
-      stages: [DESIGN, PROGRAM, DEVELOPMENT, TEST]
-```
-
-Project Config에는 Mapping 전체를 복사하지 않는다.
+## 3. Profile 선택
 
 ```yaml
 documents:
-  internal:
-    profile: HRIS_UNIT_3
+  engineering:
+    profile: ENGINEERING_SDD_COMPACT
+  customer:
+    profile: CUSTOMER_STANDARD_3
 ```
 
-## 5. 3종 / 5종 / Compatibility Full
+예를 들어 고객 제출물이 많아져도 Engineering을 바꿀 필요가 없다.
 
-| Profile | 사람에게 보이는 구조 | 용도 |
-|---|---|---|
-| `STANDARD_3` | 업무정의/상세설계/화면설계 | Unit 중심 프로젝트 |
-| `STANDARD_5` | 요구/Process/기능·화면/Program/Test·인수 | 일반 SI/SM 기본 |
-| `STAGE_ORIENTED_FULL` | Stage별 세분 문서 | 기존 계약/고객 양식 호환 |
+```yaml
+documents:
+  engineering:
+    profile: ENGINEERING_SDD_COMPACT
+  customer:
+    profile: CUSTOMER_WATERFALL_FULL
+```
 
-문서 수가 달라도 Business Truth, Source Evidence, Guard의 의미는 같아야 한다.
+## 4. Engineering Custom
 
-## 6. Mapping 패턴
+프로젝트 Custom Profile 예:
 
-### N Stage → 1 Artifact
+```text
+sdlc/custom/project/tailoring/CUSTOM_A_ENGINEERING.yaml
+sdlc/custom/project/templates/engineering/...
+```
 
-여러 내부 의미를 하나의 사람 문서에 Projection한다. 이것은 Stage를 하나로 합치는 것이 아니다.
+Profile에서 독립적으로 정할 수 있다.
 
-### 1 Stage → N Artifact
+- artifact id
+- template
+- output path
+- visibility
+- source selector
+- 조건부 생성 기준
 
-하나의 내부 의미가 Internal/PM/Customer 여러 View를 stale하게 만들 수 있다.
+Engineering 문서를 Customer 문서와 같은 번호로 맞추지 않는다.
 
-### Conditional Artifact
+## 5. Customer Custom
 
-대표 조건:
+Customer artifact는 `projection_type`을 사용해 표준 의미를 여러 제출문서로 split하거나 하나로 merge할 수 있다.
 
-- `HAS_UI`
-- `HAS_INTERFACE`
-- `HAS_BATCH`
-- `HAS_DATA_CHANGE`
-- `HAS_SECURITY_IMPACT`
-- `CHANGE_LEVEL_AT_LEAST_L4`
+예:
 
-조건이 없다고 빈 문서나 N/A 문서를 생성하지 않는다.
+```yaml
+artifacts:
+  requirements_agreement:
+    projection_type: solution_agreement
+    audience: CUSTOMER
+    template: sdlc/custom/project/templates/customer/requirements.md
+    output_path: docs/20_customer/{target}/01_요구사항합의서.md
+    authoring: GENERATED_VIEW
+    sources:
+      stages: [INTAKE, DECOMPOSE, CLARIFY]
+      canonical: [RQ, FR, BR, AC]
 
-## 7. Customer Projection
+  functional_design:
+    projection_type: solution_agreement
+    audience: CUSTOMER
+    template: sdlc/custom/project/templates/customer/functional.md
+    output_path: docs/20_customer/{target}/04_기능설계서.md
+    authoring: GENERATED_VIEW
+    sources:
+      stages: [DESIGN]
+      canonical: [FR, BR, FTR, AC]
+```
 
-`CUSTOMER_STANDARD_3`의 active View는 다음 세 가지다.
+두 artifact가 같은 `solution_agreement` 의미군을 쓰더라도 파일 수/이름/Section은 Customer Profile이 독립적으로 결정한다.
 
-- `solution_agreement` → A01 요구·업무·기능 합의
-- `delivery_scope` → A02 영향·개발범위 공유
-- `acceptance_handover` → A03 테스트·인수·운영 결과
+## 6. Customer Runtime이 사용하지 않는 것
 
-모두 `GENERATED_VIEW`이며 독립 Business Truth가 아니다. Internal/Canonical 변경 시 `STALE_VIEW`가 되고 재생성/Review 후 `CURRENT`가 된다.
+다음은 Customer artifact 선택 기준이 아니다.
 
-Customer Projection의 Source는 **Stage/Canonical 의미 기준**으로 정의한다. `STANDARD_3`의 `business_definition`처럼 특정 Internal Profile에만 존재하는 artifact ID를 Customer Profile에 고정하지 않는다. 그래야 Internal Profile을 `STANDARD_5`나 Custom 5종으로 바꾸어도 Customer Projection 계약이 깨지지 않는다.
+- Engineering Profile ID
+- Engineering 문서 개수
+- Engineering artifact order
+- Engineering expected path
+- 같은 파일 순번
 
-Customer Template의 Section과 `customer-document-contract.json`의 `required_base_sections / projection_sections / required_add`는 같은 이름과 의미를 유지해야 한다.
+Customer 입력은 우선 다음 의미 계층을 사용한다.
 
-## 8. Validation
+1. Canonical Spec
+2. Canonical Relation
+3. Semantic-tagged Engineering Projection
+4. Verified Source Evidence
+5. Test / Verification Result
+6. Operations Knowledge
+
+구형 문서는 Stage metadata/제목/파일명 추론을 compatibility fallback으로만 사용할 수 있다.
+
+## 7. Profile 작성 규칙
+
+최소 필드:
+
+```yaml
+schema_version: 1
+profile_id: MY_PROFILE
+artifacts:
+  my_artifact:
+    audience: CUSTOMER
+    template: ...
+    output_path: ...
+    authoring: GENERATED_VIEW
+    sources:
+      stages: [...]
+```
+
+Engineering Profile은 기본적으로 Canonical semantic owner와 Agent projection owner를 사용한다.
+
+```yaml
+semantic_owner: CANONICAL
+projection_owner: AGENT
+manual_edit_policy: TYPO_ONLY
+```
+
+## 8. 검증
 
 ```bash
-python sdlc/scripts/tailoring_runtime.py validate-profile --profile STANDARD_3
-python sdlc/scripts/tailoring_runtime.py validate-profile --profile STANDARD_5
-python sdlc/scripts/tailoring_runtime.py validate-profile --profile STAGE_ORIENTED_FULL
+python sdlc/scripts/tailoring_runtime.py validate-profile --profile ENGINEERING_SDD_COMPACT
+python sdlc/scripts/tailoring_runtime.py validate-profile --profile CUSTOMER_WATERFALL_FULL
 ```
 
-완료 기준:
-
-1. Profile Template 경로가 실제 존재한다.
-2. Audience/authoring이 명확하다.
-3. Customer Profile의 artifact ID/template/stage 범위가 Customer Document Contract와 모순되지 않는다.
-4. Customer Profile이 특정 Internal Profile artifact ID에 종속되지 않는다.
-5. Customer Template의 필수/Projection Section이 Contract와 일치한다.
-6. Tailoring이 Change Level Semantic Work를 우회하지 않는다.
-7. 신규 기본값은 `STANDARD_5`, Full은 compatibility로 유지된다.
+고정 문서 수를 PASS 조건으로 두지 않는다. Profile A를 바꿨을 때 다른 audience topology가 바뀌지 않는지가 핵심 불변조건이다.
