@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Shared projection lifecycle for Engineering/Customer/PM views.
 
-Canonical meaning remains authoritative.  Projection files may become stale or may be manually
-edited, but neither condition mutates Canonical automatically.  Customer FINAL_REVIEW preserves the
+Canonical meaning remains authoritative. Projection files may become stale or may be manually
+edited, but neither condition mutates Canonical automatically. Customer FINAL_REVIEW preserves the
 reviewed human wording; a later Canonical revision marks that view STALE_VIEW instead of overwriting
-it.  This is lifecycle metadata, not a new workflow engine.
+it. This is lifecycle metadata, not a new workflow engine.
 """
 from __future__ import annotations
 
@@ -97,11 +97,13 @@ def _manual_edit_state(root: Path, row: dict[str, Any]) -> str | None:
     if not artifact_path:
         return None
     current_hash = _hash(root / artifact_path)
-    if current_hash is None:
-        return "MISSING_PROJECTION"
-    lifecycle = str(row.get("lifecycle") or "CURRENT").upper()
-    reviewed_hash = row.get("reviewed_content_hash")
     generated_hash = row.get("generated_content_hash")
+    reviewed_hash = row.get("reviewed_content_hash")
+    if current_hash is None:
+        # Compatibility metadata created before hash tracking may not prove that a file ever existed.
+        # Treat only a previously hashed projection as missing; otherwise preserve its lifecycle state.
+        return "MISSING_PROJECTION" if generated_hash or reviewed_hash else None
+    lifecycle = str(row.get("lifecycle") or "CURRENT").upper()
     if lifecycle == "FINAL_REVIEW" and reviewed_hash:
         return None if current_hash == reviewed_hash else "MANUAL_EDIT_DETECTED"
     if generated_hash and current_hash != generated_hash:
