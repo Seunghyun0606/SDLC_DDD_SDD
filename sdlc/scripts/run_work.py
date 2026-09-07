@@ -393,7 +393,7 @@ def build_plan(
 
     reference = None
     template = None
-    semantic_root = "sdlc/templates/semantic" if (root / "sdlc/templates/semantic").is_dir() else "sdlc/templates/core"
+    semantic_root = "sdlc/templates/semantic"
     harness_path = root / "sdlc/design/contracts/harness-package-contract.json"
     if harness_path.is_file():
         harness = load_json(harness_path)
