@@ -1,0 +1,87 @@
+# HRIS/hunel Custom Engineering Profile 적용 예시입니다.
+# 이 파일 자체를 Runtime Config로 사용하지 말고 프로젝트 root의 .sdlc/project.yaml에 실제 값만 반영합니다.
+# Core Config는 수정하지 않습니다. Engineering Profile 선택만 프로젝트 Config에서 변경합니다.
+schema_version: 1
+
+project:
+  name: "hris-hunel-project"
+  mode: "BROWNFIELD"
+  description: "JSP + hunel 5.0 기반 HRIS Brownfield 프로젝트"
+
+delivery:
+  profile: "STANDARD"
+
+change:
+  level_policy: "AUTO"
+
+agent:
+  execution: "INTERACTIVE"
+
+technology:
+  language: "Java"
+  framework: "JSP + HUNEL Servlet (hunel 5.0)"
+  build:
+    - "ant -f build.xml"
+  test: []
+
+source:
+  roots:
+    - "src/biz"
+  test_roots: []
+  resource_roots:
+    - "WebRoot"
+    - "src/biz"
+  excludes:
+    - ".git/**"
+    - "build/**"
+    - "dist/**"
+
+architecture:
+  style: "hunel Program 3-file set (JSP + Java + SQLResource XML)"
+  modules: []
+
+git:
+  branch_strategy: "feature-branch + pull-request"
+  protected_branches:
+    - "main"
+
+coding:
+  convention: "HRIS 소스개발표준 및 기존 Source Convention 유지"
+  naming: "기존 Program ID / package / class / method naming 유지"
+
+data:
+  database: "Oracle"
+  orm_mapper: "HUNEL XmlQuery + SQLResource XML"
+  migration: "DBA/운영 검토 후 SQL Script 적용"
+
+interface:
+  api: "Servlet doAction / HCG request pattern"
+  event: "없음 또는 프로젝트 실제 값"
+  batch: "프로젝트 실제 Batch 정책"
+
+security:
+  standard: "프로파일 기반 메뉴/CRUD/Data Scope 권한 + 프로젝트 보안 가이드"
+
+deployment:
+  environment: "dev/test/prod"
+
+documents:
+  language: "ko-KR"
+  engineering:
+    profile: "CUSTOM_HRIS_HUNEL_ENGINEERING"
+    manual_edit_policy: "HUMAN_REVIEW"
+    freshness: "CANONICAL_REVISION"
+  customer:
+    profile: "CUSTOMER_STANDARD_3"
+    scope: "RQ"
+    freshness: "CANONICAL_AND_AS_BUILT"
+    final_review:
+      human_editable: true
+  pm:
+    profile: "PM_STANDARD"
+  machine:
+    visibility: "HIDDEN"
+
+unresolved:
+  - "실제 build/test 명령과 Source root를 프로젝트 Repository 기준으로 재확인"
+  - "Procedure DDL Source 관리 방식과 DBA 적용 절차를 프로젝트 기준으로 확정"
