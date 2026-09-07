@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
 SCRIPT = ROOT / "sdlc/scripts/validate_canonical_projection_invariant.py"
-FIXTURE = ROOT / "sdlc/samples/tailoring/comparison-canonical.example.json"
+FIXTURE = ROOT / "framework/samples/tailoring/comparison-canonical.example.json"
 
 spec = importlib.util.spec_from_file_location("canonical_projection_invariant_tested", SCRIPT)
 validator = importlib.util.module_from_spec(spec)
