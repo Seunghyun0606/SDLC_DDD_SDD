@@ -12,7 +12,16 @@ project:
 delivery:
   profile: "STANDARD"
 change:
+  # AUTO: Evidence 기반 자동 판정. minimum_level보다 낮아지지 않습니다.
+  # MANUAL: default_level 또는 Target별 level을 사람이 정합니다.
   level_policy: "AUTO"
+  minimum_level: "L1"
+  # 프로젝트 시작 전에 특정 요구사항의 Level을 고정해야 할 때 사용합니다.
+  # target_levels:
+  #   RQ-001:
+  #     level: "L3"
+  #     reason: "업무정의서 수준의 기능 영향 검토가 필요한 요구사항"
+  # 안전 하한보다 낮게 강제해야 하는 특별한 경우에만 accept_below_safety_floor를 명시합니다.
 agent:
   execution: "INTERACTIVE"
 technology:
