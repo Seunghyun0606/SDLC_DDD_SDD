@@ -218,6 +218,17 @@ def _record_projections(root: Path, plan: dict[str, Any]) -> dict[str, Any]:
     return {"metadata": metadata, "missing_required": missing, "complete": not missing}
 
 
+def _record_projection(root: Path, plan: dict[str, Any]) -> str | None:
+    """Compatibility helper for callers that historically registered one primary projection.
+
+    New PROFILE_PRIMARY_SET flows use ``_record_projections`` so every required Engineering
+    projection is registered. Existing callers/tests that expect the first metadata path keep the
+    previous helper contract.
+    """
+    registration = _record_projections(root, plan)
+    return registration["metadata"][0] if registration["metadata"] else None
+
+
 def _apply_projection_completion(result: dict[str, Any], registration: dict[str, Any]) -> None:
     result["projection_metadata_set"] = registration["metadata"]
     result["required_projection_missing"] = registration["missing_required"]
