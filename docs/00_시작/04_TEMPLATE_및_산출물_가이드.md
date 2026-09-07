@@ -1,6 +1,33 @@
 # Template 및 산출물 가이드
 
-## 1. 문서는 두 종류로 생각한다
+## 1. Template과 Tailoring Profile을 먼저 구분한다
+
+둘은 같은 종류의 문서가 아니다.
+
+| 위치 | 역할 |
+|---|---|
+| `sdlc/templates/semantic/` | Requirement/Analysis/Impact/Design/Program/Test/Verify 등 **Stage에서 어떤 의미를 작성할지** 정의 |
+| `sdlc/templates/engineering/` | 개발자/설계자용 Engineering Projection Template |
+| `sdlc/templates/customer/` | 고객 커뮤니케이션용 Customer Projection Template |
+| `sdlc/templates/management/` | PM/관리 View Template |
+| `sdlc/templates/tailoring/standard/` | `STANDARD_3/5`, `STAGE_ORIENTED_FULL`용 Legacy Compatibility Template |
+| `sdlc/tailoring/standard/*.yaml` | Template이 아니라 **어떤 산출물을 어떤 Template/Stage/출력경로로 조립할지 정하는 Profile** |
+
+따라서 다음처럼 이해한다.
+
+```text
+Canonical + Stage Evidence
+        ↓
+sdlc/templates/semantic/          # 단계별 의미 구조
+        ↓
+sdlc/tailoring/standard/*.yaml    # 조립/선택 규칙
+        ↓
+Engineering / Customer Projection
+```
+
+기존 `sdlc/templates/core`는 v1.9 Runtime/외부 참조 호환을 위해 `semantic`을 가리키는 symlink alias로만 유지한다. 신규 코드와 가이드는 `sdlc/templates/semantic/`을 기준으로 한다.
+
+## 2. 문서는 두 종류로 생각한다
 
 ### Engineering Projection
 
@@ -30,7 +57,7 @@ docs/20_고객/<TARGET>/
 
 Profile에 따라 `docs/20_customer/...` 같은 Custom output root를 사용할 수 있다.
 
-## 2. Work Map
+## 3. Work Map
 
 목적은 상세설계를 반복하는 것이 아니라 다음 질문에 빨리 답하는 것이다.
 
@@ -47,7 +74,7 @@ RQ → FR/FTR → WP → Design TASK / Development TASK / Test TASK
    → PGM → ART/Source → AC → TC
 ```
 
-## 3. Work Unit SDD
+## 4. Work Unit SDD
 
 Stage 문서를 이어 붙인 문서가 아니다. 하나의 기능/업무 단위가 Lifecycle을 따라 발전한다.
 
@@ -70,7 +97,7 @@ CHANGE → IMPACT → SPEC → PLAN → IMPLEMENT → VERIFY → AS-BUILT
 11. AS-BUILT
 12. Verification
 
-## 4. Program Spec
+## 5. Program Spec
 
 Program Spec은 Functional 의미를 다시 쓰는 문서가 아니다.
 
@@ -83,7 +110,7 @@ Program Spec              = 실제 어떤 Source에 어떤 Delta를 구현할 �
 
 Source에서 다시 생성 가능한 Query/Table/Symbol/Locator/Hash는 Machine-derived Evidence로 관리한다.
 
-## 5. Fast Path에서도 없어지지 않는 분석
+## 6. Fast Path에서도 없어지지 않는 분석
 
 L1/L2가 문서 수를 줄여도 Source 변경 전 다음 의미 검증은 유지한다.
 
@@ -93,7 +120,7 @@ L1/L2가 문서 수를 줄여도 Source 변경 전 다음 의미 검증은 유�
 
 내부 Runtime에서는 각각 `INTENT_DECOMPOSED`, `AS_IS_SOURCE_ANALYZED`, `IMPACT_CHECKED` Gate로 확인한다. 일반 사용자가 이 상수를 직접 관리할 필요는 없다.
 
-## 6. Engineering 직접 편집
+## 7. Engineering 직접 편집
 
 Engineering Template 상단에는 다음 원칙이 표시된다.
 
@@ -105,7 +132,7 @@ Requirement/Business Rule/TO-BE → /change
 
 Generated hash와 파일이 다르면 Projection Lifecycle에서 `MANUAL_EDIT_DETECTED` 경고가 가능하며, 그 사실만으로 Canonical을 자동 변경하지 않는다.
 
-## 7. Customer Template
+## 8. Customer Template
 
 기본 3종은 다음 목적에 맞춘다.
 
@@ -115,7 +142,7 @@ Generated hash와 파일이 다르면 Projection Lifecycle에서 `MANUAL_EDIT_DE
 
 `CUSTOMER_WATERFALL_FULL`은 같은 semantic contract를 8개의 제출 단위로 split한 예시다. 프로젝트는 Custom Profile로 다른 N종을 만들 수 있다.
 
-## 8. Customer Final Human Edit
+## 9. Customer Final Human Edit
 
 진행 중 문서는 Agent-generated View다. Final Submission 직전 `FINAL_REVIEW`에서 표현/레이아웃을 사람이 다듬을 수 있다.
 
@@ -125,7 +152,13 @@ Generated hash와 파일이 다르면 Projection Lifecycle에서 `MANUAL_EDIT_DE
 
 Rich Text Merge Engine을 따로 만들지 않는다.
 
-## 9. Template을 추가할 때 체크
+## 10. Template을 추가할 때 체크
+
+Semantic Template:
+
+- 특정 Stage의 의미와 Evidence 구조를 정의하는가?
+- 최종 제출 문서 형식을 강제하고 있지는 않은가?
+- Canonical Business Truth를 임의로 만들지 않는가?
 
 Engineering Template:
 
@@ -141,12 +174,25 @@ Customer Template:
 - 어떤 `projection_type`의 의미를 표현하는가?
 - Engineering 파일명/순번에 의존하지 않는가?
 
-## 10. Framework Standard / Project Custom / Generated 구분
+Tailoring Profile:
+
+- 실제 Template 경로가 존재하는가?
+- Stage/Canonical source selector가 의도와 맞는가?
+- Engineering/Customer Profile을 서로의 문서 수나 파일명에 의존시키지 않는가?
+
+## 11. Framework Standard / Project Custom / Generated 구분
 
 ```text
 Framework Standard
 - sdlc/tailoring/standard/
-- sdlc/templates/
+- sdlc/templates/semantic/
+- sdlc/templates/engineering/
+- sdlc/templates/customer/
+
+Legacy Compatibility
+- sdlc/templates/core -> semantic symlink alias
+- sdlc/templates/tailoring/standard/
+- STANDARD_3 / STANDARD_5 / STAGE_ORIENTED_FULL
 
 Project Custom
 - sdlc/custom/project/
