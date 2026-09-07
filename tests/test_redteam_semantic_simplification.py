@@ -41,8 +41,20 @@ class RedTeamSemanticSimplificationTest(unittest.TestCase):
         self.assertTrue(plan["fast_path"])
         self.assertEqual("DEVELOPMENT", plan["default_entry_stage"])
         self.assertEqual(
-            ["INTENT", "IMPACT_SANITY_CHECK", "IMPLEMENTATION", "TEST", "RECONCILE"],
+            [
+                "INTENT_DECOMPOSITION",
+                "AS_IS_SOURCE_ANALYSIS",
+                "IMPACT_SANITY_CHECK",
+                "IMPLEMENTATION_DELTA",
+                "SOURCE_CHANGE",
+                "TEST",
+                "RECONCILE",
+            ],
             plan["required_semantic_work"],
+        )
+        self.assertEqual(
+            ["INTENT_DECOMPOSED", "AS_IS_SOURCE_ANALYZED", "IMPACT_CHECKED"],
+            plan["source_write_preconditions"],
         )
         for heavy in ["DECOMPOSE", "CLARIFY", "PROCESS", "DISCOVERY", "DESIGN", "PROGRAM"]:
             self.assertNotIn(heavy, plan["required_semantic_work"])
