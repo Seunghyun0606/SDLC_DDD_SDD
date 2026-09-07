@@ -1,15 +1,8 @@
 #!/usr/bin/env python3
 """Canonical project configuration resolver for SDLC Harness.
 
-This module extends the stable low-level ``runtime_config.py`` parser/resolver with the
-human control-plane settings used by projection tailoring.  Version-specific compatibility
-modules must delegate here instead of copying project-config rules.
-
-Resolution rules for document profiles:
-1. ``documents.engineering.profile`` is the preferred Engineering projection selector.
-2. ``documents.internal.profile`` remains a legacy alias during migration.
-3. If neither is supplied, Engineering defaults to ``ENGINEERING_SDD_COMPACT``.
-4. Engineering and Customer profile selection are independent.
+Human control-plane settings live in one project entry file. Change Level controls execution depth;
+Engineering/Customer profiles independently control Human Artifact topology.
 """
 from __future__ import annotations
 
@@ -51,10 +44,12 @@ legacy_to_project = BASE.legacy_to_project
 DEFAULT_ENGINEERING_PROFILE = "ENGINEERING_SDD_COMPACT"
 DEFAULT_CUSTOMER_PROFILE = "CUSTOMER_STANDARD_3"
 DEFAULT_PM_PROFILE = "PM_STANDARD"
+LEVELS = {"L1", "L2", "L3", "L4", "L5"}
 
 CONTROL_RUNTIME_PATHS = {
     "change.level_policy",
     "change.default_level",
+    "change.minimum_level",
     "documents.engineering.profile",
     "documents.engineering.manual_edit_policy",
     "documents.engineering.freshness",
@@ -68,6 +63,7 @@ CONTROL_RUNTIME_PATHS = {
     "documents.pm.profile",
     "documents.machine.visibility",
 }
+CONTROL_RUNTIME_PREFIXES = ("change.target_levels.",)
 CONTROL_DOCUMENT_PATHS = {
     "documents.engineering.output_root",
     "documents.internal.output_root",
@@ -87,11 +83,6 @@ def _flatten_leaves(value: Any, prefix: str = "") -> list[str]:
 
 
 def normalize_document_profiles(project: dict[str, Any]) -> dict[str, Any]:
-    """Return a runtime copy with Engineering/Internal compatibility aliases resolved.
-
-    The alias is materialized only in the in-memory/effective runtime view.  It does not turn
-    ``documents.internal`` into a second source of truth and does not couple Customer topology.
-    """
     normalized = copy.deepcopy(project)
     documents = normalized.setdefault("documents", {})
     if not isinstance(documents, dict):
@@ -122,7 +113,6 @@ def normalize_document_profiles(project: dict[str, Any]) -> dict[str, Any]:
         effective_engineering = DEFAULT_ENGINEERING_PROFILE
 
     engineering["profile"] = effective_engineering
-    # Compatibility alias only; runtime consumers that still read `internal` see the same profile.
     internal["profile"] = effective_engineering
     engineering.setdefault("manual_edit_policy", "TYPO_ONLY")
     engineering.setdefault("freshness", "CANONICAL_REVISION")
@@ -139,33 +129,54 @@ def normalize_document_profiles(project: dict[str, Any]) -> dict[str, Any]:
 
 
 def classify_project_config(project: dict[str, Any]) -> dict[str, list[str]]:
-    """Classify project config leaves while preserving fail-closed DEAD_CONFIG semantics."""
     result = {"runtime": [], "extension": [], "document": [], "dead": []}
     base_runtime = set(BASE.RUNTIME_CONSUMED_PATHS)
     base_doc = set(BASE.DOCUMENT_ONLY_PATHS)
     for path in sorted(set(_flatten_leaves(project))):
-        if path in base_runtime or path in CONTROL_RUNTIME_PATHS:
+        if path in base_runtime or path in CONTROL_RUNTIME_PATHS or any(path.startswith(p) for p in CONTROL_RUNTIME_PREFIXES):
             result["runtime"].append(path)
         elif any(path.startswith(prefix) for prefix in BASE.EXTENSION_PREFIXES):
             result["extension"].append(path)
-        elif (
-            path in base_doc
-            or path in CONTROL_DOCUMENT_PATHS
-            or any(path.startswith(prefix) for prefix in BASE.DOCUMENT_CONTEXT_PREFIXES)
-        ):
+        elif path in base_doc or path in CONTROL_DOCUMENT_PATHS or any(path.startswith(prefix) for prefix in BASE.DOCUMENT_CONTEXT_PREFIXES):
             result["document"].append(path)
         else:
             result["dead"].append(path)
     return result
 
 
+def _valid_level(value: Any, label: str) -> None:
+    if value is not None and str(value).upper() not in LEVELS:
+        raise ValueError(f"{label} must be one of L1..L5")
+
+
 def _validate_control_plane(project: dict[str, Any]) -> None:
     policy = str(nested(project, "change", "level_policy", default="AUTO") or "AUTO").upper()
     if policy not in {"AUTO", "MANUAL"}:
         raise ValueError("change.level_policy must be AUTO or MANUAL")
-    default_level = nested(project, "change", "default_level", default=None)
-    if default_level is not None and str(default_level).upper() not in {"L1", "L2", "L3", "L4", "L5"}:
-        raise ValueError("change.default_level must be one of L1..L5")
+    _valid_level(nested(project, "change", "default_level", default=None), "change.default_level")
+    _valid_level(nested(project, "change", "minimum_level", default=None), "change.minimum_level")
+
+    target_levels = nested(project, "change", "target_levels", default={}) or {}
+    if not isinstance(target_levels, dict):
+        raise ValueError("change.target_levels must be a mapping keyed by target id")
+    for target, raw in target_levels.items():
+        if not str(target).strip():
+            raise ValueError("change.target_levels target id must not be empty")
+        if isinstance(raw, str):
+            _valid_level(raw, f"change.target_levels.{target}")
+            continue
+        if not isinstance(raw, dict):
+            raise ValueError(f"change.target_levels.{target} must be a level string or mapping")
+        unknown = set(raw) - {"level", "reason", "accept_below_safety_floor"}
+        if unknown:
+            raise ValueError(f"change.target_levels.{target} has unsupported key(s): {', '.join(sorted(unknown))}")
+        _valid_level(raw.get("level"), f"change.target_levels.{target}.level")
+        if not raw.get("level"):
+            raise ValueError(f"change.target_levels.{target}.level is required")
+        if raw.get("reason") is not None and (not isinstance(raw.get("reason"), str) or not str(raw.get("reason")).strip()):
+            raise ValueError(f"change.target_levels.{target}.reason must be non-empty text")
+        if raw.get("accept_below_safety_floor") is not None and not isinstance(raw.get("accept_below_safety_floor"), bool):
+            raise ValueError(f"change.target_levels.{target}.accept_below_safety_floor must be boolean")
 
     for audience in ["engineering", "internal", "customer", "pm"]:
         profile = nested(project, "documents", audience, "profile", default=None)
@@ -208,20 +219,12 @@ def project_to_legacy_profiles(project: dict[str, Any]) -> tuple[dict[str, Any],
     return project_profile, source_profile
 
 
-def resolve_runtime_config(
-    root: Path,
-    *,
-    project_config_path: Path | None = None,
-    legacy_project_path: Path | None = None,
-    legacy_source_path: Path | None = None,
-    validate_usage: bool = True,
-) -> dict[str, Any]:
+def resolve_runtime_config(root: Path, *, project_config_path: Path | None = None,
+                           legacy_project_path: Path | None = None, legacy_source_path: Path | None = None,
+                           validate_usage: bool = True) -> dict[str, Any]:
     resolved = BASE.resolve_runtime_config(
-        root,
-        project_config_path=project_config_path,
-        legacy_project_path=legacy_project_path,
-        legacy_source_path=legacy_source_path,
-        validate_usage=False,
+        root, project_config_path=project_config_path, legacy_project_path=legacy_project_path,
+        legacy_source_path=legacy_source_path, validate_usage=False,
     )
     raw_project = resolved.get("project") or {}
     if raw_project:
@@ -242,16 +245,13 @@ def resolve_runtime_config(
             "customer": nested(project, "documents", "customer", "profile"),
             "pm": nested(project, "documents", "pm", "profile"),
             "engineering_customer_topology_independent": True,
+            "change_level_projection_topology_independent": True,
         }
     return resolved
 
 
-def materialize_effective_profiles(
-    root: Path,
-    resolved: dict[str, Any] | None = None,
-    *,
-    provider_config_path: Path | None = None,
-) -> dict[str, Path]:
+def materialize_effective_profiles(root: Path, resolved: dict[str, Any] | None = None,
+                                   *, provider_config_path: Path | None = None) -> dict[str, Path]:
     root = root.resolve()
     resolved = resolved or resolve_runtime_config(root)
     paths = BASE.materialize_effective_profiles(root, resolved, provider_config_path=provider_config_path)
@@ -259,7 +259,7 @@ def materialize_effective_profiles(
     tailoring_path = effective / "tailoring-config.json"
     project = resolved.get("project") or {}
     payload = {
-        "schema_version": 2,
+        "schema_version": 3,
         "change": project.get("change", {"level_policy": "AUTO"}),
         "documents": project.get("documents", {}),
         "profile_resolution": resolved.get("document_profile_resolution", {}),
