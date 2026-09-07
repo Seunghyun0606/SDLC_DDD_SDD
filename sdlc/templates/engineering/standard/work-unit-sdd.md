@@ -4,9 +4,9 @@
 >
 > 이 문서는 **업무 의미를 다시 만드는 문서가 아니라**, 개발자가 변경 경계·근거·목표 동작·검증 조건을 한 화면에서 확인하는 Engineering Projection입니다.
 >
-> **사용자는 이 Template의 빈칸을 처음부터 작성하지 않습니다.** Agent가 Canonical/Source를 먼저 분석해 초안을 만들고, 사람 결정이 필요한 Gap만 질문합니다. 수정 요청은 `이 문서의 [BLOCK:WU-BUSINESS-RULE]을 ...로 바꿔줘`처럼 Block을 지정합니다.
+> **사용자는 이 Template의 빈칸을 처음부터 작성하지 않습니다.** Agent가 Canonical/Source를 먼저 분석해 초안을 만들고, 사람 결정이 필요한 Gap만 질문합니다. 수정 요청은 `이 문서의 [BLOCK:WU-BUSINESS-RULE]을 ...로 바꿔줘`처럼 Block을 지정합니다. 즉시 답할 수 없는 질문은 Agent가 `WU-HITL-QUEUE`에 남기고 `Recheck At`에서 다시 확인합니다.
 
-**Block ID:** `WU-INTENT`, `WU-ASIS`, `WU-TOBE`, `WU-BUSINESS-RULE`, `WU-IMPACT`, `WU-MAPPING`, `WU-TECH-IMPACT`, `WU-DEV-CONTRACT`, `WU-AC-TEST`, `WU-OPEN-GUARD`, `WU-ASBUILT`, `WU-VERIFY`
+**Block ID:** `WU-INTENT`, `WU-ASIS`, `WU-TOBE`, `WU-BUSINESS-RULE`, `WU-IMPACT`, `WU-MAPPING`, `WU-TECH-IMPACT`, `WU-DEV-CONTRACT`, `WU-AC-TEST`, `WU-OPEN-GUARD`, `WU-HITL-QUEUE`, `WU-ASBUILT`, `WU-VERIFY`
 
 <!-- BLOCK_ID: WU-INTENT -->
 ## 1. 목적 / Functional Intent
@@ -96,16 +96,26 @@
 - `ALERT`: 추적은 필요하지만 현재 구현을 제한하지 않는 확인/주의 항목이다.
 - Framework의 Hard Block 정책과 충돌하면 Hard Block이 우선한다.
 
+<!-- BLOCK_ID: WU-HITL-QUEUE -->
+## 11. Human Decision Queue
+
+> 사용자가 바로 답하지 못한 HITL 질문을 Agent가 기록·갱신합니다. 같은 질문은 단계가 바뀌어도 같은 Queue ID를 유지하며, `Recheck At`에 도달하면 다음 Agent가 신규 질문보다 먼저 재확인합니다. 이 표는 Canonical SSOT가 아니라 OPEN/DEFERRED의 Human View입니다.
+
+| Queue ID | 관련 Block | 질문 / 결정 필요사항 | 현재 확인값 / 제안 | 결정 담당 | 영향 분류 | Recheck At | 상태 |
+|---|---|---|---|---|---|---|---|
+|  |  |  |  |  | SOURCE_BLOCK / ITERATE / ALERT | NEXT_SEMANTIC_WORK / BEFORE_SOURCE_WRITE / BEFORE_TEST / BEFORE_VERIFY / Stage | 미확정 / 확인중 / 제안 / 보류 / 확정 |
+
 <!-- BLOCK_ID: WU-ASBUILT -->
-## 11. AS-BUILT
+## 12. AS-BUILT
 - 실제 구현 결과:
 - 설계 대비 차이:
 - Source-derived 기술 정보:
 - 추가로 발견된 영향:
 
 <!-- BLOCK_ID: WU-VERIFY -->
-## 12. Verification
+## 13. Verification
 - Build/Test/Regression:
 - Canonical과 Source Drift 여부:
 - Coverage Gap 해소 여부:
+- 미해결 Human Decision Queue와 다음 Recheck At:
 - 최종 판정 및 남은 작업:
