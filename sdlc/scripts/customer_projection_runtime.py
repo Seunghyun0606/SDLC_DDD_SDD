@@ -8,6 +8,10 @@ compatibility fallback for old inputs that do not yet carry semantic metadata.
 
 Business Truth authority remains Canonical. Source/Engineering/Test evidence may enrich a Customer
 view but can never overwrite Confirmed Business Truth through this runtime.
+
+Customer visibility is allowlist-first: direct Canonical input exposes only explicitly customer-safe
+semantic fields. Internal identifiers, relations, provenance and runtime metadata stay machine-side.
+Renderer sanitization remains a second defense layer, not the primary visibility boundary.
 """
 from __future__ import annotations
 
@@ -40,6 +44,36 @@ TAILOR = _load("customer_projection_tailoring", "tailoring_runtime.py")
 DEFAULT_CONTRACT = "sdlc/design/contracts/customer-document-contract.json"
 DEFAULT_PROJECTION_CONFIG = "sdlc/config/customer-document-profile.json"
 DEFAULT_CUSTOMER_PROFILE = "CUSTOMER_STANDARD_3"
+
+# Direct Canonical access is deliberately narrower than the Canonical schema. These are semantic
+# values that can legitimately seed a customer view. Additional customer-facing headings/candidates
+# are derived from the selected customer-document contract below.
+CUSTOMER_CANONICAL_SAFE_FIELDS = {
+    "title", "name", "short_name", "summary", "description", "statement",
+    "request", "request_text", "request_summary", "request_background", "background",
+    "intent", "purpose", "reason", "problem", "business_goal", "expected_result",
+    "expected_outcome", "scope", "in_scope", "out_of_scope", "business_impact",
+    "functional_impact", "as_is", "to_be", "current_state", "target_state",
+    "current_process", "target_process", "business_rule", "business_rules", "rules",
+    "process", "processes", "scenario", "scenarios", "acceptance", "acceptance_criteria",
+    "customer_questions", "confirmed_items", "agreed_items", "open_items",
+    "next_step", "next_steps", "risk", "risks", "operations", "handover",
+    "업무명", "요약", "설명", "요청", "요청내용", "요청배경", "변경배경", "현재문제",
+    "기대결과", "기대효과", "업무목표", "목적", "범위", "포함범위", "제외범위",
+    "업무영향", "기능영향", "현재업무방식", "개선후업무방식", "현재상태", "목표상태",
+    "업무규칙", "업무규칙들", "프로세스", "업무흐름", "시나리오", "인수기준",
+    "고객과함께확인할내용", "합의된내용", "확정된내용", "미확정사항", "다음단계",
+    "위험과대응", "운영인수", "운영절차",
+}
+
+CUSTOMER_CANONICAL_DENIED_FIELDS = {
+    "id", "entity_id", "entity_type", "type", "revision", "canonical_revision",
+    "relation", "relations", "relation_type", "provenance", "provenances",
+    "evidence", "evidence_class", "evidence_refs", "confidence", "confidence_score",
+    "stage", "stage_status", "change_level", "status", "resolution_status",
+    "queue_id", "block_id", "guard", "guard_code", "hash", "source_hash", "locator",
+    "generated_by", "generated_at", "created_at", "updated_at", "schema_version",
+}
 
 
 def _repo_file(root: Path, raw: str) -> tuple[Path, str]:
@@ -215,41 +249,82 @@ def _annotate_unclassified_inputs(row: dict[str, Any], artifacts: list[dict[str,
             artifact["stage_inference"] = "CUSTOMER_PROFILE_SEMANTIC_FALLBACK"
 
 
-def _canonical_artifact(root: Path, target: str, row: dict[str, Any]) -> list[dict[str, Any]]:
-    """Expose direct Canonical meaning as a semantic input without changing the Canonical store."""
+def _visibility_key(value: Any) -> str:
+    return re.sub(r"[^0-9A-Za-z가-힣]+", "", str(value)).lower()
+
+
+def _contract_customer_field_allowlist(contract: dict[str, Any] | None) -> set[str]:
+    """Build an exact-key allowlist from customer semantic selectors, never from Canonical schema."""
+    allowed = {_visibility_key(x) for x in CUSTOMER_CANONICAL_SAFE_FIELDS}
+    if not isinstance(contract, dict):
+        return allowed
+
+    projection = contract.get("projection") or {}
+    for group_name in ("base_section_sources", "catalog_section_sources"):
+        group = projection.get(group_name) or {}
+        if not isinstance(group, dict):
+            continue
+        for section, candidates in group.items():
+            allowed.add(_visibility_key(section))
+            if isinstance(candidates, list):
+                allowed.update(_visibility_key(x) for x in candidates)
+
+    for spec in (contract.get("document_types") or {}).values():
+        if not isinstance(spec, dict):
+            continue
+        sections = spec.get("projection_sections") or {}
+        if not isinstance(sections, dict):
+            continue
+        for section, candidates in sections.items():
+            allowed.add(_visibility_key(section))
+            if isinstance(candidates, list):
+                allowed.update(_visibility_key(x) for x in candidates)
+    return {x for x in allowed if x}
+
+
+def _canonical_artifact(
+    root: Path,
+    target: str,
+    row: dict[str, Any],
+    contract: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """Expose only customer-safe Canonical meaning as a semantic input.
+
+    Canonical IDs, relation topology, revision/provenance/evidence metadata and runtime state remain
+    machine-side by default. No relation expansion is performed here. Renderer sanitization is kept
+    as defense-in-depth for allowed semantic values and external legacy artifacts.
+    """
     store = TAILOR.load_store(root)
     entities = store.get("entities") or {}
     entity = entities.get(target)
     if not isinstance(entity, dict):
         return []
+
     sources = row.get("sources") or {}
     stages = [str(x).upper() for x in sources.get("stages", [])] if isinstance(sources, dict) else []
     stage = stages[-1] if stages else None
+    allowed = _contract_customer_field_allowlist(contract)
+    denied = {_visibility_key(x) for x in CUSTOMER_CANONICAL_DENIED_FIELDS}
+
     fields: dict[str, str] = {}
     for key, value in entity.items():
+        normalized = _visibility_key(key)
+        if not normalized or normalized in denied or normalized not in allowed:
+            continue
         text = RENDER._to_text(value)
         if text:
             fields[str(key)] = text
-    related: list[str] = []
-    for rel in store.get("relations") or []:
-        if not isinstance(rel, dict):
-            continue
-        source = str(rel.get("source") or rel.get("from") or "")
-        destination = str(rel.get("target") or rel.get("to") or "")
-        if target in {source, destination}:
-            other = destination if source == target else source
-            relation_type = str(rel.get("type") or rel.get("relation") or "RELATED")
-            related.append(f"{target} -[{relation_type}]- {other}")
-    if related:
-        fields["관련 ID 및 추적성"] = "\n".join(f"- {x}" for x in sorted(set(related)))
+
+    title = entity.get("title") or entity.get("name") or "프로젝트 변경"
     return [{
         "source": "sdlc/canonical/store.json#" + target,
         "artifact_type": "CANONICAL_JSON_BUNDLE",
         "stage": stage,
-        "title": str(entity.get("title") or entity.get("name") or target),
+        "title": str(title),
         "sections": {},
         "fields": fields,
-        "semantic_source": "CANONICAL",
+        "semantic_source": "CANONICAL_ALLOWLIST",
+        "visibility_policy": "ALLOWLIST_ONLY",
     }]
 
 
@@ -284,7 +359,7 @@ def generate(
     local_contract = _contract_for_artifact(settings["contract"], semantic_type, selected)
 
     artifacts: list[dict[str, Any]] = []
-    artifacts.extend(_canonical_artifact(root, target, selected))
+    artifacts.extend(_canonical_artifact(root, target, selected, local_contract))
     external_artifacts: list[dict[str, Any]] = []
     for raw in inputs:
         path = Path(raw)
@@ -349,6 +424,8 @@ def generate(
             "TEST_VERIFICATION",
             "OPERATIONS_KNOWLEDGE",
         ],
+        "canonical_direct_input_visibility": "ALLOWLIST_ONLY",
+        "canonical_relation_expansion": False,
         "engineering_profile_dependency": False,
         "customer_topology_source": "CUSTOMER_PROFILE_ONLY",
         "lifecycle": metadata["lifecycle"],
