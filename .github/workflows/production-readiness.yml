@@ -26,6 +26,7 @@ jobs:
             sdlc/scripts/tailoring_runtime.py \
             sdlc/scripts/tailored_work.py \
             sdlc/scripts/tailored_check.py \
+            sdlc/scripts/rq_worklist.py \
             sdlc/scripts/intake_explainable.py \
             sdlc/scripts/bootstrap_project.py \
             sdlc/scripts/harness.py \
@@ -57,11 +58,12 @@ jobs:
             tests.test_projection_separation_v110 \
             tests.test_canonical_projection_invariant_v19 \
             tests.test_projection_visibility_hygiene_v110 -v
-      - name: v1.10 guide and project config reference regression
+      - name: v1.10 guide, config and RQ worklist regression
         run: |
           python -m unittest \
             tests.test_guide_consistency_v110 \
-            tests.test_project_config_reference_v110 -v
+            tests.test_project_config_reference_v110 \
+            tests.test_project_rq_worklist_v110 -v
       - name: v1.9 tailoring, intake and contract consistency regression
         run: |
           python -m unittest \
