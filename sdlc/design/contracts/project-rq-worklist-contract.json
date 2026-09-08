@@ -2,6 +2,11 @@
   "schema_version": 2,
   "contract_id": "PROJECT_RQ_WORKLIST_V110",
   "purpose": "PM/이해관계자가 RQ 배정·계획과 Evidence 기반 진행상태를 한 화면에서 관리하되 Canonical Business Truth와 PM 계획을 분리한다.",
+  "authority": {
+    "business_truth": "sdlc/canonical/store.json",
+    "pm_planning": ".sdlc/management/rq-planning.json",
+    "runtime_status": "tailored_check + delivery + projection lifecycle"
+  },
   "sources": {
     "business_truth": "sdlc/canonical/store.json",
     "pm_planning": ".sdlc/management/rq-planning.json",
@@ -18,36 +23,16 @@
     "custom_columns_affect_canonical": false
   },
   "planning_fields": [
-    "priority",
-    "pm_owner",
-    "business_owner",
-    "engineering_owner",
-    "test_owner",
-    "customer_decision_owner",
-    "milestone",
-    "planned_start",
-    "planned_end",
-    "note"
+    "priority", "pm_owner", "business_owner", "engineering_owner", "test_owner",
+    "customer_decision_owner", "milestone", "planned_start", "planned_end", "note"
   ],
   "planning_fields_policy": "LEGACY_CONVENIENCE_ONLY_NOT_CLOSED_SCHEMA",
   "system_derived_columns": [
-    "working_state",
-    "change_level",
-    "human_decision_count",
-    "evidence_passed",
-    "projection_state",
-    "next_action"
+    "working_state", "change_level", "human_decision_count", "evidence_passed", "projection_state", "next_action"
   ],
   "derived_columns": [
-    "rq_id",
-    "title",
-    "external_requirement_ids",
-    "working_state",
-    "change_level",
-    "human_decision_count",
-    "evidence_passed",
-    "projection_state",
-    "next_action"
+    "rq_id", "title", "external_requirement_ids", "working_state", "change_level",
+    "human_decision_count", "evidence_passed", "projection_state", "next_action"
   ],
   "rules": {
     "pm_planning_never_mutates_business_truth": true,
