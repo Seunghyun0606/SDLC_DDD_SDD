@@ -4,7 +4,7 @@
 Common path:
   python sdlc/scripts/harness.py setup --name my-project --mode AUTO
   python sdlc/scripts/harness.py intake requirements.xlsx
-  python sdlc/scripts/harness.py rq-list refresh
+  python sdlc/scripts/harness.py rq-list export --format xlsx --output docs/00_관리/RQ_작업관리.xlsx
   python sdlc/scripts/harness.py work --target RQ-001
   python sdlc/scripts/harness.py check RQ-001
 
@@ -73,8 +73,8 @@ def _run_setup(args: list[str]) -> int:
             if execution["execution_mode"] == "INTERACTIVE": result["status"] = "READY_FOR_PLAN"; result["provider_ready"] = False; result["open_items"] = [x for x in result.get("open_items", []) if x != "실제 Agent Provider command"]; result["message"] = "INTERACTIVE 실행 준비 완료. 별도 Provider 설정은 필요하지 않습니다."; code = 0
             elif execution.get("ready"): result["status"] = "READY_FOR_PLAN"; code = 0
         except (OSError, ValueError, json.JSONDecodeError) as exc: result["status"] = "SETUP_FAILED"; result["error"] = str(exc); code = 2
-        result["user_entrypoint"] = {"start_here": "docs/00_시작/START_HERE.md", "project_setup_guide": "docs/00_시작/02_PROJECT_설정가이드.md", "tailoring_guide": "docs/00_시작/03_TAILORING_설정가이드.md", "rq_worklist_guide": "docs/00_시작/12_RQ_작업목록_운영가이드.md", "zero_to_one_intake": "CONNECTED_WITH_RQ_EXTRACTION_MANIFEST", "work_model": "CHANGE_LEVEL_SEMANTIC_POLICY"}
-        result["next_commands"] = ["python sdlc/scripts/harness.py check --setup", "python sdlc/scripts/harness.py intake <requirement-file.xlsx>", "python sdlc/scripts/harness.py rq-list refresh"]; result.pop("next_if_target_exists", None); result.pop("next_if_no_target", None)
+        result["user_entrypoint"] = {"start_here": "docs/00_시작/START_HERE.md", "project_setup_guide": "docs/00_시작/02_PROJECT_설정가이드.md", "tailoring_guide": "docs/00_시작/03_TAILORING_설정가이드.md", "rq_worklist_guide": "docs/00_시작/12_RQ_작업목록_운영가이드.md", "rq_reference_guide": "docs/00_시작/13_RQ_참고문서_레지스트리_가이드.md", "zero_to_one_intake": "CONNECTED_WITH_RQ_EXTRACTION_MANIFEST", "work_model": "CHANGE_LEVEL_SEMANTIC_POLICY"}
+        result["next_commands"] = ["python sdlc/scripts/harness.py check --setup", "python sdlc/scripts/harness.py intake <requirement-file.xlsx>", "python sdlc/scripts/harness.py rq-list export --format xlsx --output docs/00_관리/RQ_작업관리.xlsx"]; result.pop("next_if_target_exists", None); result.pop("next_if_no_target", None)
         result_path = root / "sdlc/runtime/setup/setup-result.json"; result_path.parent.mkdir(parents=True, exist_ok=True); result_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"); print(json.dumps(result, ensure_ascii=False, indent=2)); return code
     print(raw); return code
 
@@ -89,11 +89,12 @@ def _run_check(args: list[str]) -> int:
 def main(argv: list[str] | None = None) -> int:
     args = list(argv if argv is not None else sys.argv[1:])
     if not args or args[0] in {"-h", "--help", "help"}:
-        print(__doc__.strip()); print("\nCommands: setup | intake | rq-list | work | review | change | check | execution-plan | discover-impact | impact-history | component | delivery | customer-view | projection | arch-check | metrics"); return 0
+        print(__doc__.strip()); print("\nCommands: setup | intake | rq-list | rq-ref | work | review | change | check | execution-plan | discover-impact | impact-history | component | delivery | customer-view | projection | arch-check | metrics"); return 0
     command = args.pop(0).lower()
     if command == "setup": return _run_setup(args)
     if command == "intake": return _load("harness_intake_explainable", "intake_explainable.py").main(args)
     if command == "rq-list": return _load("harness_rq_worklist", "rq_worklist.py").main(args)
+    if command == "rq-ref": return _load("harness_rq_reference_registry", "rq_reference_registry.py").main(args)
     if command == "review": return _load("harness_review", "review_work.py").main(args)
     if command in {"work", "change"}:
         try: args, resolved = _runtime_profile_args(args)
