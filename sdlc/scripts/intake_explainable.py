@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Explainable Requirement Intake wrapper for v1.9.
+"""Explainable Requirement Intake wrapper for v1.10.
 
 The existing intake remains the authoritative parser/Canonical writer. This wrapper adds an RQ
 Extraction Manifest so a PM can understand why each RQ was formed without opening runtime JSON.
+When supporting PPTX/XLSX/DOCX/PDF/CSV/MD/TXT files are provided with the Requirement source, the
+wrapper also prepares an RQ <-> reference-document review draft. That draft is non-canonical and
+must be reviewed by the interactive Agent/human before it is treated as a confirmed reference plan.
 After configured-project intake, the PM RQ worklist is refreshed as a non-authoritative View.
 """
 from __future__ import annotations
@@ -27,6 +30,7 @@ def _load(name: str, filename: str):
 
 
 INTAKE = _load("explainable_intake_core", "intake_requirements.py")
+REFERENCE_DRAFT = _load("explainable_intake_reference_draft", "intake_reference_draft.py")
 
 
 def _path(root: Path, raw: str | None) -> Path | None:
@@ -150,12 +154,41 @@ def _refresh_project_worklist(root: Path, candidate_only: bool) -> dict[str, Any
         worklist = _load("explainable_intake_rq_worklist", "rq_worklist.py")
         return worklist.refresh(root)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
-        # Management-view refresh must not roll back a successful Canonical intake.
         return {"status": "RQ_WORKLIST_REFRESH_REQUIRED", "error": str(exc), "next_command": "python sdlc/scripts/harness.py rq-list refresh"}
 
 
+def _prepare_reference_draft(
+    root: Path,
+    requirement_file: Path,
+    targets: list[str],
+    references: list[str],
+    reference_dirs: list[str],
+    candidate_only: bool,
+) -> dict[str, Any] | None:
+    if candidate_only or not targets or (not references and not reference_dirs):
+        return None
+    try:
+        paths = REFERENCE_DRAFT.collect_reference_paths(
+            root,
+            references=references,
+            reference_dirs=reference_dirs,
+            primary_requirement=requirement_file,
+        )
+        if not paths:
+            return None
+        return REFERENCE_DRAFT.draft(root, targets, paths)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        # Supporting-document draft failure must not roll back a successful Requirement Intake.
+        return {
+            "status": "RQ_REFERENCE_DRAFT_REVIEW_REQUIRED",
+            "error": str(exc),
+            "canonical_mutated": False,
+            "next_action": "첨부문서 등록/추출 상태를 확인한 뒤 RQ 참고문서 초안을 다시 생성한다.",
+        }
+
+
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Requirement intake with per-RQ extraction explainability.")
+    ap = argparse.ArgumentParser(description="Requirement intake with per-RQ extraction explainability and optional supporting-document draft.")
     ap.add_argument("xlsx")
     ap.add_argument("--root", default=".")
     ap.add_argument("--profile")
@@ -164,6 +197,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--report-out", default="docs/00_관리/요구사항_인입결과.md")
     ap.add_argument("--manifest-json", default="sdlc/runtime/intake/rq-extraction-manifest.json")
     ap.add_argument("--manifest-report", default="docs/00_관리/RQ_생성근거.md")
+    ap.add_argument("--reference", action="append", default=[], help="Supporting PPTX/XLSX/DOCX/PDF/CSV/MD/TXT delivered with the Requirement source. Repeatable.")
+    ap.add_argument("--reference-dir", action="append", default=[], help="Directory containing supporting documents. Repeatable; Requirement source itself is excluded.")
     ap.add_argument("--candidate-only", action="store_true")
     args = ap.parse_args(argv)
     root = Path(args.root).resolve()
@@ -184,15 +219,21 @@ def main(argv: list[str] | None = None) -> int:
         )
         data = result["data"]
         targets = list((data.get("canonical") or {}).get("rq_target_ids") or [])
+        reference_draft = _prepare_reference_draft(root, xlsx, targets, list(args.reference), list(args.reference_dir), args.candidate_only)
         worklist = _refresh_project_worklist(root, args.candidate_only)
         out = {
-            "status": "INTAKE_READY_FOR_WORK" if targets else ("INTAKE_CANDIDATE_ONLY" if args.candidate_only else "INTAKE_NO_TARGET"),
+            "status": "INTAKE_READY_FOR_REFERENCE_REVIEW" if reference_draft and targets else ("INTAKE_READY_FOR_WORK" if targets else ("INTAKE_CANDIDATE_ONLY" if args.candidate_only else "INTAKE_NO_TARGET")),
             "import_result": data.get("import_result"),
             "canonical": data.get("canonical"),
             "first_target": targets[0] if targets else None,
             "rq_extraction_manifest": args.manifest_json,
             "human_manifest_report": args.manifest_report,
+            "rq_reference_draft": reference_draft,
             "rq_worklist": worklist,
+            "agent_next_action": (
+                "Review supporting-document evidence and RQ reference proposals before first /work; confirm/exclude/edit rows without changing Canonical Business Truth."
+                if reference_draft else None
+            ),
             "next_command": f"python sdlc/scripts/harness.py work --target {targets[0]}" if targets else None,
         }
         print(json.dumps(out, ensure_ascii=False, indent=2))
