@@ -109,10 +109,10 @@ def _utf16_without_bom_candidate(data: bytes) -> str | None:
     return None
 
 
-def _valid_decoded_text(text: str, encoding: str) -> bool:
+def _valid_decoded_text(text: str, encoding: str, *, allow_nul: bool = False) -> bool:
     if "\ufffd" in text:
         return False
-    if "\x00" in text and not encoding.lower().startswith("utf-16"):
+    if "\x00" in text and not allow_nul and not encoding.lower().startswith("utf-16"):
         return False
     return True
 
@@ -121,6 +121,7 @@ def decode_process_bytes(
     data: bytes | None,
     *,
     preferred_encodings: Sequence[str] | None = None,
+    allow_nul: bool = False,
 ) -> DecodeResult:
     raw = bytes(data or b"")
     digest = _sha256_bytes(raw)
@@ -138,7 +139,7 @@ def decode_process_bytes(
                 text = raw.decode(decoder, errors="strict")
             except UnicodeDecodeError as exc:
                 return DecodeResult("", "UNDECODABLE", reported, False, len(raw), digest, str(exc))
-            if not _valid_decoded_text(text, reported):
+            if not _valid_decoded_text(text, reported, allow_nul=allow_nul):
                 return DecodeResult("", "UNDECODABLE", reported, False, len(raw), digest, "invalid decoded text")
             return DecodeResult(text, "DECODED_BOM", reported, False, len(raw), digest)
 
@@ -159,7 +160,7 @@ def decode_process_bytes(
         except UnicodeDecodeError as exc:
             errors.append(f"{encoding}:{exc.start}")
             continue
-        if not _valid_decoded_text(text, encoding):
+        if not _valid_decoded_text(text, encoding, allow_nul=allow_nul):
             errors.append(f"{encoding}:invalid-text")
             continue
         status = "DECODED_PRIMARY" if codecs.lookup(encoding).name == "utf-8" else "DECODED_STRICT_FALLBACK"
@@ -244,6 +245,7 @@ def run_process(
     env: Mapping[str, str] | None = None,
     platform_name: str | None = None,
     preferred_encodings: Sequence[str] | None = None,
+    allow_nul: bool = False,
     which_fn: Callable[[str], str | None] = shutil.which,
 ) -> ProcessResult:
     original = [str(part) for part in command]
@@ -267,8 +269,16 @@ def run_process(
         check=False,
         env=child_env,
     )
-    stdout_decoded = decode_process_bytes(completed.stdout, preferred_encodings=preferred_encodings)
-    stderr_decoded = decode_process_bytes(completed.stderr, preferred_encodings=preferred_encodings)
+    stdout_decoded = decode_process_bytes(
+        completed.stdout,
+        preferred_encodings=preferred_encodings,
+        allow_nul=allow_nul,
+    )
+    stderr_decoded = decode_process_bytes(
+        completed.stderr,
+        preferred_encodings=preferred_encodings,
+        allow_nul=allow_nul,
+    )
     return ProcessResult(
         original_command=original,
         resolved_command=resolved,
