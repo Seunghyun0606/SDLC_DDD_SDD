@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "contract_id": "RQ_REFERENCE_REGISTRY_V110",
+  "purpose": "RQ 분석 전에 어떤 원본 문서를 참고해야 하는지 many-to-many로 계획하고 조회한다. 연결 자체는 Business Truth나 Evidence가 아니다.",
+  "sources": {
+    "rq_authority": "sdlc/canonical/store.json",
+    "document_authority": "br-input/manifest.yaml",
+    "planning_store": ".sdlc/management/rq-references.json",
+    "actual_evidence_authority": "Canonical Provenance created after document inspection"
+  },
+  "link_cardinality": "MANY_TO_MANY",
+  "planning_fields": ["rq_id", "document_id", "purpose", "locator_hint", "required", "note"],
+  "editable_file_columns": ["RQ", "문서ID", "사용목적", "참고위치", "필수여부", "비고"],
+  "rules": {
+    "rq_must_exist_in_canonical": true,
+    "document_id_must_exist_in_manifest": true,
+    "link_does_not_mutate_canonical": true,
+    "link_does_not_confirm_business_truth": true,
+    "actual_use_requires_work_evidence": true,
+    "same_document_may_link_to_multiple_rq": true,
+    "same_rq_may_link_to_multiple_documents": true,
+    "original_document_is_not_duplicated_per_rq": true,
+    "bulk_import_is_atomic_after_validation": true
+  },
+  "evidence_states": {
+    "PLANNED": "참고 예정",
+    "OBSERVED_IN_RQ_PROVENANCE": "근거 사용 확인"
+  },
+  "human_view": "docs/00_관리/RQ_참고문서_연결목록.md",
+  "editable_default": "docs/00_관리/RQ_참고문서_연결관리.xlsx",
+  "runtime_view": "sdlc/runtime/management/rq-reference-registry.json"
+}
