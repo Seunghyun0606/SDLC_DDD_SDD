@@ -24,12 +24,14 @@ flowchart LR
 ```bash
 python sdlc/scripts/harness.py setup --name <project> --mode <AUTO|GREENFIELD|BROWNFIELD|HYBRID>
 python sdlc/scripts/harness.py intake <requirements.xlsx>
-python sdlc/scripts/harness.py rq-list refresh
+python sdlc/scripts/harness.py rq-list export --format xlsx --output docs/00_관리/RQ_작업관리.xlsx
 python sdlc/scripts/harness.py work --target RQ-001
 python sdlc/scripts/harness.py check RQ-001
 ```
 
-Requirement Intake 후 PM은 `rq-list assign`으로 담당자·우선순위·마일스톤·계획일을 지정할 수 있고, 모든 참여자는 `docs/00_관리/RQ_작업목록.md`에서 현재 RQ 목록과 Evidence 기반 진행상태를 볼 수 있다. 자세한 내용은 `12_RQ_작업목록_운영가이드.md`를 본다.
+Requirement Intake 후 일반 PM은 `docs/00_관리/RQ_작업관리.xlsx` 또는 CSV를 Export하여 담당자·일정·WBS·메모 등 **프로젝트가 원하는 PM 컬럼을 자유롭게 추가/삭제**한 뒤 다시 Import한다. PM 컬럼은 Canonical Business Truth에 영향을 주지 않는다. 자세한 내용은 `12_RQ_작업목록_운영가이드.md`를 본다.
+
+RQ 분석 전에 참고할 규정·회의록·업무문서를 미리 연결하려면 `rq-ref`와 `13_RQ_참고문서_레지스트리_가이드.md`를 사용한다. 참고 연결 자체는 Business Truth가 아니며 실제 `/work`에서 조사된 내용만 Evidence/Provenance가 된다.
 
 설계/Evidence/Program Mapping을 보완할 때는 `/work` 흐름을 사용한다. Requirement, Business Rule, Scope, TO-BE Behavior가 바뀌면 `/change` 흐름을 사용한다.
 
@@ -176,6 +178,7 @@ python sdlc/scripts/build_project_scaffold.py --root . --output <outside-target-
 
 - Input 자료 준비: `11_INPUT_자료_준비가이드.md`
 - RQ 배정·목록·진척 관리: `12_RQ_작업목록_운영가이드.md`
+- RQ↔참고문서 사전 연결: `13_RQ_참고문서_레지스트리_가이드.md`
 - 프로젝트 설정: `02_PROJECT_설정가이드.md`
 - Config 옵션 상세 Reference: `02A_PROJECT_CONFIG_옵션_상세가이드.md`
 - Profile/Customizing: `03_TAILORING_설정가이드.md`
