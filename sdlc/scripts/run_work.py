@@ -39,6 +39,7 @@ def _load_module(name: str, path: Path):
 APPLY = _load_module("work_apply_canonical", SCRIPT_DIR / "apply_canonical_delta.py")
 VALIDATOR = _load_module("work_stage_validator", SCRIPT_DIR / "validate_agent_stage_result.py")
 CONFIG = _load_module("work_runtime_config", SCRIPT_DIR / "runtime_config.py")
+PROCESS = _load_module("work_process_runner", SCRIPT_DIR / "process_runner.py")
 
 STAGES = [
     "INTAKE", "DECOMPOSE", "CLARIFY", "PROCESS", "DISCOVERY", "IMPACT",
@@ -197,12 +198,16 @@ def _artifact_from_provenance(root: Path, store: dict[str, Any], entity_ids: set
     return sorted(candidates)[-1] if candidates else None
 
 
-def _git(root: Path, *args: str) -> subprocess.CompletedProcess[str] | None:
+def _git(root: Path, *args: str, allow_nul: bool = False) -> Any | None:
     try:
-        cp = subprocess.run(["git", *args], cwd=str(root), text=True, capture_output=True, check=False, timeout=20)
+        return PROCESS.run_process(
+            ["git", "-c", "core.quotepath=false", *args],
+            cwd=root,
+            timeout=20,
+            allow_nul=allow_nul,
+        )
     except (OSError, subprocess.SubprocessError):
         return None
-    return cp
 
 
 def git_metadata(root: Path) -> dict[str, Any]:
@@ -223,10 +228,14 @@ def git_changed_paths(root: Path) -> set[str]:
     if not meta["available"]:
         return set()
     changed: set[str] = set()
-    for args in [("diff", "--name-only"), ("diff", "--cached", "--name-only"), ("ls-files", "--others", "--exclude-standard")]:
-        cp = _git(root, *args)
+    for args in [
+        ("diff", "--name-only", "-z"),
+        ("diff", "--cached", "--name-only", "-z"),
+        ("ls-files", "--others", "--exclude-standard", "-z"),
+    ]:
+        cp = _git(root, *args, allow_nul=True)
         if cp and cp.returncode == 0:
-            changed.update(line.strip() for line in cp.stdout.splitlines() if line.strip())
+            changed.update(path for path in cp.stdout.split("\x00") if path)
     return changed
 
 
@@ -335,13 +344,18 @@ def _rollback_git_changes(root: Path, paths: set[str]) -> None:
 def _run_commands(root: Path, commands: list[list[str]], label: str) -> list[dict[str, Any]]:
     results = []
     for command in commands:
-        cp = subprocess.run(command, cwd=str(root), text=True, capture_output=True, timeout=600, check=False)
+        cp = PROCESS.run_process(command, cwd=root, timeout=600)
         row = {
             "label": label,
             "command": command,
+            "resolved_command": cp.resolved_command,
+            "execution_mode": cp.execution_mode,
             "exit_code": cp.returncode,
             "stdout": cp.stdout[-4000:],
             "stderr": cp.stderr[-4000:],
+            "stdout_decode": cp.stdout_decode.metadata(),
+            "stderr_decode": cp.stderr_decode.metadata(),
+            "output_decode_ok": cp.output_decode_ok,
         }
         results.append(row)
         if cp.returncode != 0:
@@ -553,13 +567,22 @@ def execute_plan(
                     execution["current_git"] = current
                     return execution
             save_json(context_path, plan)
-            completed = subprocess.run(
-                _format_command(command, values), cwd=str(root), text=True, capture_output=True,
-                timeout=int(provider_config.get("timeout_seconds", 120)), check=False,
+            completed = PROCESS.run_process(
+                _format_command(command, values),
+                cwd=root,
+                timeout=int(provider_config.get("timeout_seconds", 120)),
             )
             execution.update({
-                "command_exit_code": completed.returncode, "stdout": completed.stdout[-4000:], "stderr": completed.stderr[-4000:],
-                "context_path": str(context_path), "result_path": str(result_path),
+                "command_exit_code": completed.returncode,
+                "resolved_command": completed.resolved_command,
+                "process_execution_mode": completed.execution_mode,
+                "stdout": completed.stdout[-4000:],
+                "stderr": completed.stderr[-4000:],
+                "stdout_decode": completed.stdout_decode.metadata(),
+                "stderr_decode": completed.stderr_decode.metadata(),
+                "output_decode_ok": completed.output_decode_ok,
+                "context_path": str(context_path),
+                "result_path": str(result_path),
             })
             changed_after = git_changed_paths(root)
             provider_changes = changed_after - changed_before
