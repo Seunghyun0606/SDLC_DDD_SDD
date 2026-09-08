@@ -1,11 +1,22 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "purpose": "비정형 고객문서에서 텍스트/표/셀/슬라이드/구간을 구조를 최대한 보존해 추출하는 Adapter 공통 출력 계약. 이 파일 자체는 PDF/DOCX/PPTX/XLSX parser 구현이 아니다.",
   "supported_registration_formats": ["PDF","DOCX","XLSX","PPTX","MD","TXT","CSV","EMAIL","IMAGE_SCAN","OTHER"],
   "extraction_status": ["EXTRACTED","PARTIAL","EXTRACTION_REQUIRED","UNSUPPORTED","FAILED"],
   "content_kinds": ["PARAGRAPH","HEADING","TABLE","TABLE_ROW","CELL_RANGE","SLIDE","SHAPE","FORM","IMAGE_TEXT","EMAIL_BODY","OTHER"],
   "required_output_fields": ["document_id","locator","raw_text","source_hash","extraction_status","extraction_method","content_kind"],
   "optional_structure_fields": ["structured_content","format_context","parent_locator","sequence","confidence"],
+  "optional_document_fields": ["text_encoding"],
+  "text_encoding_contract": {
+    "scope": ["MD", "TXT", "CSV"],
+    "decode_policy": "LOSSLESS_STRICT_ONLY",
+    "priority": ["UTF-8-SIG_BOM", "UTF-16_BOM", "UTF-8", "CP949", "EUC-KR"],
+    "metadata_fields": ["source_encoding", "encoding_detection", "lossy_decode"],
+    "legacy_fallback_must_be_recorded": true,
+    "replacement_decode_for_evidence_forbidden": true,
+    "unknown_or_lossy_encoding_status": "EXTRACTION_REQUIRED",
+    "notes": "CP949는 EUC-KR의 일반적인 Windows Korean superset이므로 BOM이 없는 동일 바이트열은 원 인코딩을 완전히 식별할 수 없다. source_encoding은 실제 사용한 strict decoder를 기록한다."
+  },
   "structured_content_examples": {
     "XLSX": {"sheet":"근무계획","range":"A1:F12","headers":["항목","값"],"rows":[["근무유형","탄력"]]},
     "PPTX": {"slide":7,"shape_id":"3","shape_type":"TABLE","reading_order":2},
@@ -24,6 +35,9 @@
     "추출 결과는 반드시 원본 document_id와 locator로 되돌아갈 수 있어야 한다.",
     "표/셀/슬라이드/도형의 관계를 추출할 수 있으면 structured_content와 format_context로 보존한다.",
     "raw_text만으로 구조가 손실되는 표/양식은 구조 정보 없이 EXTRACTED로 과장하지 않는다.",
+    "MD/TXT/CSV는 strict decode만 허용하고 errors=replace 같은 손실 디코딩 결과를 Evidence로 사용하지 않는다.",
+    "UTF-8 이외 CP949/EUC-KR fallback을 사용한 경우 실제 사용 decoder와 detection 방식을 기록한다.",
+    "안전하게 인코딩을 판별하거나 디코딩할 수 없으면 EXTRACTION_REQUIRED로 처리하고 업무 규칙 부재로 해석하지 않는다.",
     "신뢰할 수 없는 OCR/추출 결과는 PARTIAL 또는 EXTRACTION_REQUIRED로 표시한다.",
     "추출 실패를 업무 규칙 부재로 해석하지 않는다.",
     "Adapter별 구현은 프로젝트/도구 Overlay에서 교체 가능해야 한다.",
