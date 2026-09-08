@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "contract_id": "PROCESS_EXECUTION_ENCODING_V110",
+  "purpose": "Build/Test/Git/Headless Provider 등 외부 프로세스 실행 시 OS locale에 의존하지 않고 stdout/stderr를 lossless하게 해석하며 Windows CMD/PowerShell 실행을 안전하게 지원한다.",
+  "runner": "sdlc/scripts/process_runner.py",
+  "capture_policy": {
+    "capture_mode": "BYTES_FIRST",
+    "text_true_for_captured_output_forbidden": true,
+    "stdout_stderr_decoded_independently": true,
+    "replacement_decode_for_evidence_forbidden": true,
+    "exit_code_preserved_even_when_output_decode_fails": true,
+    "raw_output_hash_recorded": true
+  },
+  "decode_policy": {
+    "bom_priority": ["UTF-8-SIG", "UTF-16-LE", "UTF-16-BE"],
+    "strict_candidates": ["UTF-8", "UTF-16_HEURISTIC", "PREFERRED", "WINDOWS_OEM_CP", "WINDOWS_ANSI_CP", "CP949", "EUC-KR"],
+    "lossy_decode": false,
+    "undecodable_status": "UNDECODABLE",
+    "undecodable_text_is_not_trusted_evidence": true
+  },
+  "shell_policy": {
+    "shell_true_forbidden": true,
+    "direct_argv_default": true,
+    "cmd_bat_on_windows": "COMSPEC /d /s /c",
+    "ps1_auto_host_order_windows": ["pwsh.exe", "pwsh", "powershell.exe", "powershell"],
+    "ps1_auto_host_order_non_windows": ["pwsh"],
+    "powershell_flags": ["-NoLogo", "-NoProfile", "-NonInteractive", "-File"],
+    "explicit_cmd_or_powershell_command_is_preserved": true,
+    "execution_policy_bypass_is_not_injected": true
+  },
+  "git_policy": {
+    "quotepath_false": true,
+    "nul_delimited_changed_paths": true,
+    "korean_file_names_must_not_depend_on_console_locale": true
+  },
+  "rules": [
+    "Build/Test/Provider stdout/stderr는 bytes로 먼저 수집한 뒤 strict decoder로 해석한다.",
+    "한글이 깨진 문자열을 errors=replace 방식으로 정상 Evidence로 저장하지 않는다.",
+    "출력 디코딩에 실패해도 프로세스 exit code와 실행 실패/성공 자체를 버리지 않는다.",
+    ".cmd/.bat는 Windows에서 shell=True 대신 COMSPEC를 명시적으로 호출한다.",
+    ".ps1는 사용 가능한 PowerShell host를 명시적으로 호출하며 조직의 ExecutionPolicy를 우회하기 위한 Bypass를 자동 주입하지 않는다.",
+    "Git 변경 파일명은 core.quotepath=false와 NUL delimiter를 사용해 한글 경로 손상을 줄인다."
+  ]
+}
