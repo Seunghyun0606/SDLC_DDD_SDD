@@ -23,6 +23,7 @@ The richer resolver remains ``runtime_config_v19.py``.
 from __future__ import annotations
 
 import json
+import os
 import shlex
 from pathlib import Path
 from typing import Any
@@ -258,16 +259,34 @@ def delivery_policy(project: dict[str, Any], *, resolved_mode: str | None = None
     return base
 
 
+def _strip_command_quotes(value: str) -> str:
+    text = str(value)
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in {"'", '"'}:
+        return text[1:-1]
+    return text
+
+
+def split_command_string(value: str, *, platform_name: str | None = None) -> list[str]:
+    """Split configured commands without eating Windows backslashes.
+
+    POSIX keeps normal shlex semantics. Windows uses non-POSIX shlex so ``.\\mvnw.cmd`` and
+    ``.\\scripts\\build.ps1`` keep their path separators; outer token quotes are removed after split.
+    """
+    windows = (platform_name or os.name) == "nt"
+    parts = shlex.split(str(value), posix=not windows)
+    return [_strip_command_quotes(part) for part in parts] if windows else parts
+
+
 def command_list(value: Any) -> list[list[str]]:
     if value in (None, "", []):
         return []
     if isinstance(value, str):
-        return [shlex.split(value)]
+        return [split_command_string(value)]
     if isinstance(value, list):
         result: list[list[str]] = []
         for row in value:
             if isinstance(row, str):
-                result.append(shlex.split(row))
+                result.append(split_command_string(row))
             elif isinstance(row, list) and row and all(isinstance(x, str) for x in row):
                 result.append(row)
         return result
@@ -279,7 +298,7 @@ def provider_command(project: dict[str, Any]) -> list[str]:
     if raw in (None, "", []):
         return []
     if isinstance(raw, str):
-        return shlex.split(raw)
+        return split_command_string(raw)
     if isinstance(raw, list) and all(isinstance(x, str) and x.strip() for x in raw):
         return [str(x) for x in raw]
     raise ValueError("agent.provider.command must be a command string or a list of non-empty strings")
