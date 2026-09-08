@@ -2,7 +2,8 @@
 """Many-to-many RQ <-> reference-document planning registry.
 
 The registry tells people and Agents which source documents should be consulted for an RQ. It is
-not Business Truth. Only evidence actually inspected during /work becomes Canonical Provenance.
+not Business Truth. Intake-time auto proposals remain review drafts until Agent/human review.
+Only evidence actually inspected during /work becomes Canonical Provenance.
 """
 from __future__ import annotations
 
@@ -22,7 +23,8 @@ RUNTIME_PATH = "sdlc/runtime/management/rq-reference-registry.json"
 VIEW_PATH = "docs/00_관리/RQ_참고문서_연결목록.md"
 MANIFEST_PATH = "br-input/manifest.yaml"
 DEFAULT_EDITABLE_XLSX = "docs/00_관리/RQ_참고문서_연결관리.xlsx"
-COLUMNS = ["RQ", "문서ID", "사용목적", "참고위치", "필수여부", "비고"]
+COLUMNS = ["RQ", "문서ID", "사용목적", "참고위치", "필수여부", "검토상태", "제안이유", "비고"]
+REVIEW_STATES = {"제안", "확정", "제외"}
 
 
 def _load_module(name: str, filename: str):
@@ -126,6 +128,19 @@ def _truthy(value: Any) -> bool:
     return str(value or "").strip().lower() in {"1", "true", "yes", "y", "필수", "예"}
 
 
+def _review_state(value: Any, default: str = "확정") -> str:
+    raw = str(value or "").strip()
+    aliases = {
+        "PROPOSED": "제안", "DRAFT": "제안", "제안": "제안",
+        "CONFIRMED": "확정", "APPROVED": "확정", "확정": "확정",
+        "EXCLUDED": "제외", "REJECTED": "제외", "제외": "제외",
+    }
+    state = aliases.get(raw.upper(), aliases.get(raw, default))
+    if state not in REVIEW_STATES:
+        raise ValueError(f"unsupported review status: {raw}")
+    return state
+
+
 def _evidence_used(entity: dict[str, Any], document_id: str, doc: dict[str, str]) -> bool:
     needles = {document_id.lower()}
     for key in ("path", "title"):
@@ -157,6 +172,8 @@ def build_rows(root: Path) -> tuple[list[dict[str, Any]], int]:
         doc_id = str(link.get("document_id") or "")
         entity = (canonical.get("entities") or {}).get(rq_id) or {}
         doc = docs.get(doc_id) or {}
+        review_status = _review_state(link.get("review_status"), "확정")
+        evidence_state = "연결 제외" if review_status == "제외" else ("근거 사용 확인" if _evidence_used(entity, doc_id, doc) else "참고 예정")
         rows.append({
             "rq_id": rq_id,
             "rq_title": _title(entity),
@@ -166,7 +183,10 @@ def build_rows(root: Path) -> tuple[list[dict[str, Any]], int]:
             "purpose": str(link.get("purpose") or ""),
             "locator_hint": str(link.get("locator_hint") or doc.get("locator_hint") or ""),
             "required": bool(link.get("required")),
-            "evidence_state": "근거 사용 확인" if _evidence_used(entity, doc_id, doc) else "참고 예정",
+            "review_status": review_status,
+            "proposal_reason": str(link.get("proposal_reason") or ""),
+            "origin": str(link.get("origin") or ""),
+            "evidence_state": evidence_state,
             "note": str(link.get("note") or ""),
             "updated_at": str(link.get("updated_at") or ""),
         })
@@ -184,13 +204,13 @@ def render(rows: list[dict[str, Any]], revision: int) -> str:
     columns = [
         ("rq_id", "RQ"), ("rq_title", "요구사항명"), ("document_id", "문서ID"),
         ("document_title", "문서명"), ("document_path", "원본경로"), ("purpose", "사용목적"),
-        ("locator_hint", "참고위치"), ("required", "필수여부"), ("evidence_state", "Evidence 상태"),
-        ("note", "비고"),
+        ("locator_hint", "참고위치"), ("required", "필수여부"), ("review_status", "검토상태"),
+        ("proposal_reason", "제안이유"), ("evidence_state", "Evidence 상태"), ("note", "비고"),
     ]
     lines = [
         "# RQ 참고문서 연결 목록", "",
-        "> RQ가 분석될 때 참고해야 할 원본 문서를 미리 연결한 Management View다. 연결만으로 Business Truth가 되지 않으며, 실제 `/work`에서 조사된 내용만 Evidence/Provenance가 된다.",
-        "", f"- Canonical Revision: `{revision}`", f"- 연결 수: **{len(rows)}**", f"- 생성시각: `{now()}`", "",
+        "> RQ 분석 시 참고할 원본 문서의 Management View다. Intake 자동 연결은 `제안` 상태로 시작하며 Agent/사람 검토 전에는 확정 연결이나 Business Truth로 간주하지 않는다.",
+        "", f"- Canonical Revision: `{revision}`", f"- 행 수: **{len(rows)}**", f"- 생성시각: `{now()}`", "",
         "| " + " | ".join(label for _, label in columns) + " |",
         "|" + "|".join("---" for _ in columns) + "|",
     ]
@@ -207,13 +227,21 @@ def refresh(root: Path) -> dict[str, Any]:
     view = root / VIEW_PATH
     view.parent.mkdir(parents=True, exist_ok=True)
     view.write_text(render(rows, revision), encoding="utf-8")
+    active = [row for row in rows if row.get("review_status") != "제외"]
+    proposed = [row for row in rows if row.get("review_status") == "제안"]
+    confirmed = [row for row in rows if row.get("review_status") == "확정"]
     _save(root / RUNTIME_PATH, {
-        "schema_version": 1, "generated_at": now(), "canonical_revision": revision,
-        "link_count": len(rows), "rows": rows, "planning_source": STORE_PATH,
+        "schema_version": 2, "generated_at": now(), "canonical_revision": revision,
+        "row_count": len(rows), "active_link_count": len(active), "proposed_count": len(proposed),
+        "confirmed_count": len(confirmed), "rows": rows, "planning_source": STORE_PATH,
         "document_manifest": MANIFEST_PATH, "business_truth_authority": False,
         "actual_evidence_authority": "CANONICAL_PROVENANCE",
     })
-    return {"status": "RQ_REFERENCE_REGISTRY_REFRESHED", "link_count": len(rows), "human_view": VIEW_PATH, "planning_store": STORE_PATH, "canonical_mutated": False}
+    return {
+        "status": "RQ_REFERENCE_REGISTRY_REFRESHED", "link_count": len(active), "proposed_count": len(proposed),
+        "confirmed_count": len(confirmed), "human_view": VIEW_PATH, "planning_store": STORE_PATH,
+        "canonical_mutated": False,
+    }
 
 
 def link(root: Path, rq_id: str, document_id: str, *, purpose: str = "", locator_hint: str = "", required: bool = False, note: str = "") -> dict[str, Any]:
@@ -229,7 +257,10 @@ def link(root: Path, rq_id: str, document_id: str, *, purpose: str = "", locator
     if current is None:
         current = {"rq_id": rq_id, "document_id": document_id}
         links.append(current)
-    current.update({"purpose": purpose, "locator_hint": locator_hint, "required": bool(required), "note": note, "updated_at": now()})
+    current.update({
+        "purpose": purpose, "locator_hint": locator_hint, "required": bool(required), "note": note,
+        "review_status": "확정", "origin": "MANUAL_OR_AGENT_LINK", "updated_at": now(),
+    })
     registry["updated_at"] = now()
     _save(root / STORE_PATH, registry)
     result = refresh(root)
@@ -249,8 +280,57 @@ def unlink(root: Path, rq_id: str, document_id: str) -> dict[str, Any]:
     return {**result, "status": "RQ_REFERENCE_UNLINKED", "rq_id": rq_id, "document_id": document_id}
 
 
+def _md_cells(line: str) -> list[str]:
+    text = line.strip().strip("|")
+    cells: list[str] = []
+    buf: list[str] = []
+    escaped = False
+    for char in text:
+        if escaped:
+            buf.append(char); escaped = False
+        elif char == "\\":
+            escaped = True
+        elif char == "|":
+            cells.append("".join(buf).strip()); buf = []
+        else:
+            buf.append(char)
+    cells.append("".join(buf).strip())
+    return [cell.replace("<br>", "\n") for cell in cells]
+
+
+def _read_markdown_table(path: Path) -> tuple[list[str], list[list[str]]]:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    header_at = None
+    headers: list[str] = []
+    for index, line in enumerate(lines[:-1]):
+        if not line.lstrip().startswith("|"):
+            continue
+        candidate = _md_cells(line)
+        if "RQ" not in candidate or "문서ID" not in candidate:
+            continue
+        separators = _md_cells(lines[index + 1]) if lines[index + 1].lstrip().startswith("|") else []
+        if separators and all(re.fullmatch(r":?-{3,}:?", cell.strip()) for cell in separators):
+            header_at, headers = index, candidate
+            break
+    if header_at is None:
+        raise ValueError("reference Markdown table not found")
+    matrix: list[list[str]] = []
+    for line in lines[header_at + 2:]:
+        if not line.lstrip().startswith("|"):
+            if matrix:
+                break
+            continue
+        row = _md_cells(line)
+        if any(cell.strip() for cell in row):
+            matrix.append(row)
+    return headers, matrix
+
+
 def _read_rows(path: Path) -> list[dict[str, str]]:
-    headers, matrix = RQW._read_table(path)
+    if path.suffix.lower() == ".md":
+        headers, matrix = _read_markdown_table(path)
+    else:
+        headers, matrix = RQW._read_table(path)
     missing = [h for h in ["RQ", "문서ID"] if h not in headers]
     if missing:
         raise ValueError(f"reference file missing column(s): {', '.join(missing)}")
@@ -260,6 +340,9 @@ def _read_rows(path: Path) -> list[dict[str, str]]:
     result = []
     for row in matrix:
         if not any(str(x).strip() for x in row):
+            continue
+        first = str(row[0] if row else "").strip()
+        if first in {"연결 초안 없음", "연결 없음"}:
             continue
         result.append({h: str(row[i] if i < len(row) else "").strip() for i, h in enumerate(headers) if h})
     return result
@@ -287,6 +370,8 @@ def import_registry(root: Path, input_path: Path) -> dict[str, Any]:
         prepared.append({
             "rq_id": rq_id, "document_id": doc_id, "purpose": row.get("사용목적", ""),
             "locator_hint": row.get("참고위치", ""), "required": _truthy(row.get("필수여부")),
+            "review_status": _review_state(row.get("검토상태"), "확정"),
+            "proposal_reason": row.get("제안이유", ""), "origin": "REVIEW_IMPORT",
             "note": row.get("비고", ""), "updated_at": now(),
         })
     _save(root / STORE_PATH, {"schema_version": 1, "updated_at": now(), "links": prepared})
@@ -300,7 +385,8 @@ def export_registry(root: Path, output: Path, fmt: str = "xlsx") -> dict[str, An
     registry = _load_store(root / STORE_PATH)
     matrix = [[
         str(x.get("rq_id") or ""), str(x.get("document_id") or ""), str(x.get("purpose") or ""),
-        str(x.get("locator_hint") or ""), "필수" if x.get("required") else "선택", str(x.get("note") or ""),
+        str(x.get("locator_hint") or ""), "필수" if x.get("required") else "선택",
+        _review_state(x.get("review_status"), "확정"), str(x.get("proposal_reason") or ""), str(x.get("note") or ""),
     ] for x in registry.get("links", []) if isinstance(x, dict)]
     output.parent.mkdir(parents=True, exist_ok=True)
     fmt = fmt.lower()
