@@ -34,6 +34,7 @@ jobs:
             sdlc/scripts/harness.py \
             sdlc/scripts/import_requirements.py \
             sdlc/scripts/intake_requirements.py \
+            sdlc/scripts/process_runner.py \
             sdlc/scripts/run_work.py \
             sdlc/scripts/interactive_work.py \
             sdlc/scripts/run_change.py \
@@ -60,7 +61,7 @@ jobs:
             tests.test_projection_separation_v110 \
             tests.test_canonical_projection_invariant_v19 \
             tests.test_projection_visibility_hygiene_v110 -v
-      - name: v1.10 guide, config, RQ management and document encoding regression
+      - name: v1.10 guide, config, RQ management and encoding regression
         run: |
           python -m unittest \
             tests.test_guide_consistency_v110 \
@@ -68,7 +69,8 @@ jobs:
             tests.test_project_rq_worklist_v110 \
             tests.test_pm_bulk_and_rq_reference_registry_v110 \
             tests.test_intake_reference_draft_v110 \
-            tests.test_document_encoding_v110 -v
+            tests.test_document_encoding_v110 \
+            tests.test_process_runner_v110 -v
       - name: v1.9 tailoring, intake and contract consistency regression
         run: |
           python -m unittest \
