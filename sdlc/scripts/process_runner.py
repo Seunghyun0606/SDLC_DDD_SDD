@@ -20,20 +20,28 @@ import locale
 import os
 import shutil
 import subprocess
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
 
-@dataclass(frozen=True)
 class DecodeResult:
-    text: str
-    status: str
-    encoding: str | None
-    lossy: bool
-    byte_length: int
-    sha256: str
-    error: str | None = None
+    def __init__(
+        self,
+        text: str,
+        status: str,
+        encoding: str | None,
+        lossy: bool,
+        byte_length: int,
+        sha256: str,
+        error: str | None = None,
+    ) -> None:
+        self.text = text
+        self.status = status
+        self.encoding = encoding
+        self.lossy = lossy
+        self.byte_length = byte_length
+        self.sha256 = sha256
+        self.error = error
 
     def metadata(self) -> dict[str, Any]:
         return {
@@ -46,16 +54,27 @@ class DecodeResult:
         }
 
 
-@dataclass(frozen=True)
 class ProcessResult:
-    original_command: list[str]
-    resolved_command: list[str]
-    execution_mode: str
-    returncode: int
-    stdout: str
-    stderr: str
-    stdout_decode: DecodeResult
-    stderr_decode: DecodeResult
+    def __init__(
+        self,
+        *,
+        original_command: list[str],
+        resolved_command: list[str],
+        execution_mode: str,
+        returncode: int,
+        stdout: str,
+        stderr: str,
+        stdout_decode: DecodeResult,
+        stderr_decode: DecodeResult,
+    ) -> None:
+        self.original_command = original_command
+        self.resolved_command = resolved_command
+        self.execution_mode = execution_mode
+        self.returncode = returncode
+        self.stdout = stdout
+        self.stderr = stderr
+        self.stdout_decode = stdout_decode
+        self.stderr_decode = stderr_decode
 
     @property
     def output_decode_ok(self) -> bool:
