@@ -2,13 +2,15 @@
 """Raw customer-document -> Evidence Chunk adapter.
 
 Supported without third-party dependencies: TXT/MD/CSV, DOCX, PPTX, XLSX (OOXML XML).
-PDF uses pypdf or PyPDF2 when installed; otherwise it fails closed as TOOL_REQUIRED rather
-than pretending that an unread PDF contains no business rule. Image OCR is intentionally
-not implemented here.
+Direct text formats are decoded strictly: BOM-aware Unicode first, then UTF-8 and Korean legacy
+fallbacks. Lossy replacement decoding is forbidden for Evidence. PDF uses pypdf or PyPDF2 when
+installed; otherwise it fails closed rather than pretending that an unread PDF contains no business
+rule. Image OCR is intentionally not implemented here.
 """
 from __future__ import annotations
 
 import argparse
+import codecs
 import csv
 import hashlib
 import io
@@ -23,6 +25,11 @@ NS_A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 NS_W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 NS_S = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
 NS_R = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
+DIRECT_TEXT_FALLBACKS = ("utf-8", "cp949", "euc-kr")
+
+
+class TextEncodingError(ValueError):
+    """Raised when a text file cannot be decoded losslessly by the supported policy."""
 
 
 def sha256(path: Path) -> str:
@@ -58,27 +65,117 @@ def _chunk(document_id: str, source_hash: str, locator: str, raw_text: str, *,
     return row
 
 
-def extract_text(path: Path, document_id: str, source_hash: str) -> list[dict[str, Any]]:
-    text = path.read_text(encoding="utf-8", errors="replace")
+def _validate_decoded_text(text: str, encoding: str) -> None:
+    if "\ufffd" in text:
+        raise TextEncodingError(f"replacement character detected after {encoding} decode")
+    if "\x00" in text:
+        raise TextEncodingError(
+            f"NUL character detected after {encoding} decode; UTF-16 without BOM or binary input suspected"
+        )
+
+
+def _decode_text_bytes(data: bytes) -> tuple[str, dict[str, Any]]:
+    """Decode direct text input without ever replacing undecodable bytes.
+
+    Byte sequences valid in both EUC-KR and CP949 cannot be distinguished reliably. CP949 is checked
+    first because it is the common Windows Korean superset; the detected value therefore describes
+    the decoder used, not a forensic guarantee of the file's original encoding label.
+    """
+    bom_cases = [
+        (codecs.BOM_UTF8, "utf-8-sig", "utf-8-sig"),
+        (codecs.BOM_UTF16_LE, "utf-16", "utf-16-le"),
+        (codecs.BOM_UTF16_BE, "utf-16", "utf-16-be"),
+    ]
+    for bom, decoder, reported in bom_cases:
+        if data.startswith(bom):
+            try:
+                text = data.decode(decoder, errors="strict")
+            except UnicodeDecodeError as exc:
+                raise TextEncodingError(f"invalid {reported} text after BOM detection") from exc
+            _validate_decoded_text(text, reported)
+            return text, {
+                "source_encoding": reported,
+                "encoding_detection": "BOM",
+                "lossy_decode": False,
+            }
+
+    attempted: list[str] = []
+    for encoding in DIRECT_TEXT_FALLBACKS:
+        attempted.append(encoding)
+        try:
+            text = data.decode(encoding, errors="strict")
+        except UnicodeDecodeError:
+            continue
+        try:
+            _validate_decoded_text(text, encoding)
+        except TextEncodingError:
+            continue
+        return text, {
+            "source_encoding": encoding,
+            "encoding_detection": "STRICT_PRIMARY" if encoding == "utf-8" else "STRICT_LEGACY_FALLBACK",
+            "lossy_decode": False,
+        }
+    raise TextEncodingError(
+        "safe text decoding failed; supported direct-text decoders: " + ", ".join(attempted)
+    )
+
+
+def _read_text_strict(path: Path) -> tuple[str, dict[str, Any]]:
+    return _decode_text_bytes(path.read_bytes())
+
+
+def _extract_text_with_encoding(
+    path: Path, document_id: str, source_hash: str
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    text, encoding_meta = _read_text_strict(path)
     chunks = []
     for idx, paragraph in enumerate(re.split(r"\n\s*\n", text), start=1):
         raw = paragraph.strip()
         if raw:
             kind = "HEADING" if raw.startswith("#") else "PARAGRAPH"
-            chunks.append(_chunk(document_id, source_hash, f"paragraph {idx}", raw, kind=kind, method="UTF8_TEXT", sequence=idx))
+            chunks.append(_chunk(
+                document_id,
+                source_hash,
+                f"paragraph {idx}",
+                raw,
+                kind=kind,
+                method="STRICT_TEXT",
+                format_context=dict(encoding_meta),
+                sequence=idx,
+            ))
+    return chunks, encoding_meta
+
+
+def extract_text(path: Path, document_id: str, source_hash: str) -> list[dict[str, Any]]:
+    """Compatibility wrapper returning only chunks."""
+    chunks, _ = _extract_text_with_encoding(path, document_id, source_hash)
     return chunks
 
 
-def extract_csv(path: Path, document_id: str, source_hash: str) -> list[dict[str, Any]]:
-    text = path.read_text(encoding="utf-8-sig", errors="replace")
+def _extract_csv_with_encoding(
+    path: Path, document_id: str, source_hash: str
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    text, encoding_meta = _read_text_strict(path)
     rows = list(csv.reader(io.StringIO(text)))
     chunks = []
     if rows:
         chunks.append(_chunk(
-            document_id, source_hash, "table 1", "\n".join(" | ".join(row) for row in rows),
-            kind="TABLE", method="CSV_READER", structured={"headers": rows[0], "rows": rows[1:]},
-            format_context={"delimiter": ","}, sequence=1,
+            document_id,
+            source_hash,
+            "table 1",
+            "\n".join(" | ".join(row) for row in rows),
+            kind="TABLE",
+            method="CSV_READER_STRICT_TEXT",
+            structured={"headers": rows[0], "rows": rows[1:]},
+            format_context={"delimiter": ",", **encoding_meta},
+            sequence=1,
         ))
+    return chunks, encoding_meta
+
+
+def extract_csv(path: Path, document_id: str, source_hash: str) -> list[dict[str, Any]]:
+    """Compatibility wrapper returning only chunks."""
+    chunks, _ = _extract_csv_with_encoding(path, document_id, source_hash)
     return chunks
 
 
@@ -233,10 +330,31 @@ def extract(path: Path, document_id: str | None = None) -> dict[str, Any]:
     source_hash = sha256(path)
     suffix = path.suffix.lower()
     notes: list[str] = []
+    text_encoding: dict[str, Any] | None = None
     if suffix in {".txt", ".md"}:
-        chunks, status = extract_text(path, document_id, source_hash), "EXTRACTED"
+        try:
+            chunks, text_encoding = _extract_text_with_encoding(path, document_id, source_hash)
+            status = "EXTRACTED"
+        except TextEncodingError as exc:
+            chunks, status = [], "EXTRACTION_REQUIRED"
+            text_encoding = {
+                "source_encoding": None,
+                "encoding_detection": "FAILED",
+                "lossy_decode": False,
+            }
+            notes.append(str(exc))
     elif suffix == ".csv":
-        chunks, status = extract_csv(path, document_id, source_hash), "EXTRACTED"
+        try:
+            chunks, text_encoding = _extract_csv_with_encoding(path, document_id, source_hash)
+            status = "EXTRACTED"
+        except TextEncodingError as exc:
+            chunks, status = [], "EXTRACTION_REQUIRED"
+            text_encoding = {
+                "source_encoding": None,
+                "encoding_detection": "FAILED",
+                "lossy_decode": False,
+            }
+            notes.append(str(exc))
     elif suffix == ".docx":
         chunks, status = extract_docx(path, document_id, source_hash), "EXTRACTED"
     elif suffix == ".pptx":
@@ -251,8 +369,8 @@ def extract(path: Path, document_id: str | None = None) -> dict[str, Any]:
     if not chunks and status == "EXTRACTED":
         status = "PARTIAL"
         notes.append("파일은 열었지만 의미 있는 Evidence Chunk를 만들지 못함")
-    return {
-        "schema_version": 1,
+    result = {
+        "schema_version": 2,
         "document_id": document_id,
         "source_file": str(path),
         "source_hash": source_hash,
@@ -262,6 +380,9 @@ def extract(path: Path, document_id: str | None = None) -> dict[str, Any]:
         "evidence_chunks": chunks,
         "notes": notes,
     }
+    if text_encoding is not None:
+        result["text_encoding"] = text_encoding
+    return result
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -273,7 +394,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         result = extract(Path(args.input), args.document_id)
     except (OSError, ValueError, zipfile.BadZipFile, ET.ParseError) as exc:
-        result = {"schema_version": 1, "extraction_status": "FAILED", "error": str(exc), "evidence_chunks": []}
+        result = {"schema_version": 2, "extraction_status": "FAILED", "error": str(exc), "evidence_chunks": []}
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
