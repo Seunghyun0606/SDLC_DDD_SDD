@@ -60,18 +60,40 @@ documents:
 
 정확도를 높이려면 문서 제목, 종류, 권위, 유효 여부, 담당부서, 적용범위, 관련 시스템, 페이지/Sheet/Slide 등의 Locator 정보를 추가한다. 모르는 값은 비우거나 `UNKNOWN`으로 둔다.
 
-### 2.1 참고문서를 RQ와 연결하는 기준
+### 2.1 참고문서를 RQ와 미리 연결하기
 
-폴더를 RQ별로 복제해서 같은 원본을 여러 번 보관하지 않는다. 원본은 하나만 유지하고 **RQ가 그 문서를 실제 근거로 사용할 때 Canonical Provenance로 연결**한다.
-
-권장 사용자 요청 예:
+폴더를 RQ별로 복제해서 같은 원본을 여러 번 보관하지 않는다. 원본은 하나만 유지하고 `document_id`를 이용해 RQ와 many-to-many로 연결한다.
 
 ```text
-RQ-012를 분석할 때 br-input/originals/근태규정.pdf의 DOC-003을 참고근거로 사용해줘.
-특히 4장 근무계획 규칙을 확인하고, 확인한 위치와 원본 hash를 RQ Evidence에 연결해줘.
+DOC-003 근태규정.pdf
+├─ RQ-001
+├─ RQ-004
+└─ RQ-012
 ```
 
-Agent는 문서를 조사한 뒤 관련 의미를 `/work` Evidence로 사용하고 `document_id / locator / source_hash / evidence class`를 Canonical Provenance 또는 Stage Evidence에 남긴다. **문서가 폴더에 존재한다는 사실만으로 특정 RQ의 Business Truth가 되지는 않는다.**
+사전 연결은 `RQ 참고문서 Registry`를 사용한다.
+
+```bash
+python sdlc/scripts/harness.py rq-ref export \
+  --format xlsx \
+  --output docs/00_관리/RQ_참고문서_연결관리.xlsx
+
+python sdlc/scripts/harness.py rq-ref import docs/00_관리/RQ_참고문서_연결관리.xlsx
+```
+
+상세 방법은 `13_RQ_참고문서_레지스트리_가이드.md`를 본다.
+
+Registry 연결은 **참고 계획**이지 Business Truth가 아니다. 실제 RQ 작업에서 해당 문서를 조사한 뒤 관련 의미를 `/work` Evidence로 사용하고 `document_id / locator / source_hash / evidence class`를 Canonical Provenance 또는 Stage Evidence에 남긴다.
+
+즉 다음 두 상태를 구분한다.
+
+```text
+Registry 연결
+= 이 RQ에서 이 문서를 참고해야 한다
+
+Canonical Provenance
+= 실제로 이 문서를 읽어 특정 사실의 근거로 사용했다
+```
 
 문서의 기계 추출이 필요한 경우 `DOCUMENT_INGEST_EXTENSION`의 `extract_document_evidence.py`를 사용할 수 있다. 이 Extension이 프로젝트 배포본에 포함되지 않았다면 Agent/연결된 문서 도구가 원본을 읽고 동일한 Evidence/Locator 원칙을 지켜야 한다.
 
@@ -118,6 +140,7 @@ BR 후보에서는 가능한 범위에서 조건, 주체, 행동/판단, 기대�
 docs/00_관리/요구사항_인입결과.md        # 사람이 보는 Project-generated View
 docs/00_관리/RQ_생성근거.md             # RQ Grouping/원본 행 설명
 docs/00_관리/RQ_작업목록.md             # PM/이해관계자용 RQ 배정·진척 목록
+docs/00_관리/RQ_참고문서_연결목록.md    # RQ↔문서 참고 계획 View
 sdlc/runtime/intake/...                  # Machine Runtime 결과
 sdlc/canonical/store.json                # Canonical Candidate/Truth Store
 ```
@@ -129,11 +152,11 @@ sdlc/canonical/store.json                # Canonical Candidate/Truth Store
 Intake가 반환한 실제 Target을 그대로 사용한다.
 
 ```bash
-python sdlc/scripts/harness.py rq-list refresh
+python sdlc/scripts/harness.py rq-list export --format xlsx --output docs/00_관리/RQ_작업관리.xlsx
 python sdlc/scripts/harness.py work --target RQ-001
 ```
 
-담당자 배정과 RQ List 운영은 `12_RQ_작업목록_운영가이드.md`를 따른다.
+담당자 배정과 RQ List 운영은 `12_RQ_작업목록_운영가이드.md`, 참고문서 사전 연결은 `13_RQ_참고문서_레지스트리_가이드.md`를 따른다.
 
 Source Repository가 아직 제공되지 않은 Brownfield 프로젝트라면 Source Evidence가 필요한 Impact/Implementation 확정은 보류하고, 확인 가능한 Requirement/Business Context까지만 Candidate로 진행한다.
 
@@ -144,9 +167,12 @@ Source Repository가 아직 제공되지 않은 Brownfield 프로젝트라면 So
 ```bash
 python sdlc/scripts/harness.py intake 추가요구사항.xlsx
 python sdlc/scripts/harness.py rq-list refresh
+python sdlc/scripts/harness.py rq-ref refresh
 ```
 
 기존 RQ는 stable key를 기준으로 재사용하고 새 RQ는 새 ID를 받는다. 기존 `CONFIRMED_BUSINESS`는 재-Intake 자료만으로 덮어쓰거나 낮추지 않는다.
+
+새 문서를 특정 RQ에서 사용해야 한다면 Manifest에 먼저 등록한 뒤 RQ Reference Registry에 연결한다.
 
 ## 8. 완성 예시
 
