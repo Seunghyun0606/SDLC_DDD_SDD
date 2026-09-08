@@ -1,32 +1,60 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "contract_id": "RQ_REFERENCE_REGISTRY_V110",
-  "purpose": "RQ 분석 전에 어떤 원본 문서를 참고해야 하는지 many-to-many로 계획하고 조회한다. 연결 자체는 Business Truth나 Evidence가 아니다.",
+  "purpose": "Requirement Intake 이후 생성된 RQ와 함께 전달된 원본 참고문서를 Agent가 연결 초안으로 만들고, 사람/Agent가 검토·수정한 many-to-many 참고 계획을 유지한다. 연결 자체는 Business Truth나 Evidence가 아니다.",
   "sources": {
     "rq_authority": "sdlc/canonical/store.json",
     "document_authority": "br-input/manifest.yaml",
     "planning_store": ".sdlc/management/rq-references.json",
+    "intake_reference_evidence": "sdlc/runtime/intake/reference-evidence/",
+    "agent_review_context": "sdlc/runtime/intake/rq-reference-agent-review.json",
     "actual_evidence_authority": "Canonical Provenance created after document inspection"
   },
   "link_cardinality": "MANY_TO_MANY",
-  "planning_fields": ["rq_id", "document_id", "purpose", "locator_hint", "required", "note"],
-  "editable_file_columns": ["RQ", "문서ID", "사용목적", "참고위치", "필수여부", "비고"],
+  "intake_draft": {
+    "supported_reference_formats": ["PPTX", "XLSX", "DOCX", "PDF", "CSV", "MD", "TXT"],
+    "rq_exists_after_requirement_intake": true,
+    "supporting_documents_may_arrive_in_same_intake_package": true,
+    "runtime_prefilter_is_not_semantic_confirmation": true,
+    "interactive_agent_must_review_actual_extracted_content": true,
+    "initial_review_status": "제안",
+    "review_states": ["제안", "확정", "제외"],
+    "review_surface": "docs/00_관리/RQ_참고문서_초안검토.md",
+    "review_surface_is_editable": true,
+    "markdown_review_can_be_reimported": true,
+    "excel_csv_review_supported": true,
+    "unmatched_rq_must_remain_visible": true,
+    "canonical_mutation": false
+  },
+  "planning_fields": [
+    "rq_id", "document_id", "purpose", "locator_hint", "required", "review_status",
+    "proposal_reason", "origin", "note"
+  ],
+  "editable_file_columns": [
+    "RQ", "문서ID", "사용목적", "참고위치", "필수여부", "검토상태", "제안이유", "비고"
+  ],
   "rules": {
     "rq_must_exist_in_canonical": true,
     "document_id_must_exist_in_manifest": true,
     "link_does_not_mutate_canonical": true,
     "link_does_not_confirm_business_truth": true,
+    "proposal_is_not_confirmed_reference": true,
     "actual_use_requires_work_evidence": true,
     "same_document_may_link_to_multiple_rq": true,
     "same_rq_may_link_to_multiple_documents": true,
     "original_document_is_not_duplicated_per_rq": true,
-    "bulk_import_is_atomic_after_validation": true
+    "bulk_import_is_atomic_after_validation": true,
+    "agent_may_correct_add_remove_links_after_intake": true,
+    "human_may_review_by_markdown_excel_or_natural_language": true
   },
   "evidence_states": {
+    "PROPOSED": "연결 제안",
     "PLANNED": "참고 예정",
+    "EXCLUDED": "연결 제외",
     "OBSERVED_IN_RQ_PROVENANCE": "근거 사용 확인"
   },
   "human_view": "docs/00_관리/RQ_참고문서_연결목록.md",
+  "intake_review_view": "docs/00_관리/RQ_참고문서_초안검토.md",
   "editable_default": "docs/00_관리/RQ_참고문서_연결관리.xlsx",
   "runtime_view": "sdlc/runtime/management/rq-reference-registry.json"
 }
