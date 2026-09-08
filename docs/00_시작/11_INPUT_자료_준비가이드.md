@@ -1,6 +1,6 @@
 # 프로젝트 Input 자료 준비 가이드
 
-이 문서는 요구사항 Excel과 기존 고객 문서처럼 **프로젝트 시작 시 Harness에 제공하는 자료**를 준비하는 방법만 설명한다. 원본을 Harness 전용 Template으로 다시 작성하지 않는 것이 기본 원칙이다.
+이 문서는 요구사항 Excel과 기존 고객 문서처럼 **프로젝트 시작 시 또는 진행 중 Harness에 제공하는 자료**를 준비하는 방법을 설명한다. 원본을 Harness 전용 Template으로 다시 작성하지 않는 것이 기본 원칙이다.
 
 ## 1. 정형 요구사항 Excel
 
@@ -29,9 +29,11 @@ sdlc/config/requirement-intake-columns.example.yaml
 
 이 파일은 복사해야 하는 필수 프로젝트 설정이 아니라 **비표준 입력을 위한 선택 Mapping 예시**다.
 
-## 2. 비정형 고객 문서 / BR 자료
+## 2. 비정형 고객 문서 / BR / 요구사항 참고자료
 
 PDF, DOCX, XLSX, PPTX, Markdown, TXT, CSV 등은 특정 BR Template로 다시 작성하도록 요구하지 않는다. 원본은 원형 그대로 보존하고 최소 Manifest만 함께 둔다.
+
+Setup 이후 새 참고자료가 들어와도 같은 원칙을 사용한다.
 
 권장 구조:
 
@@ -58,7 +60,43 @@ documents:
 
 정확도를 높이려면 문서 제목, 종류, 권위, 유효 여부, 담당부서, 적용범위, 관련 시스템, 페이지/Sheet/Slide 등의 Locator 정보를 추가한다. 모르는 값은 비우거나 `UNKNOWN`으로 둔다.
 
-## 3. 원문과 정규화 결과의 관계
+### 2.1 참고문서를 RQ와 연결하는 기준
+
+폴더를 RQ별로 복제해서 같은 원본을 여러 번 보관하지 않는다. 원본은 하나만 유지하고 **RQ가 그 문서를 실제 근거로 사용할 때 Canonical Provenance로 연결**한다.
+
+권장 사용자 요청 예:
+
+```text
+RQ-012를 분석할 때 br-input/originals/근태규정.pdf의 DOC-003을 참고근거로 사용해줘.
+특히 4장 근무계획 규칙을 확인하고, 확인한 위치와 원본 hash를 RQ Evidence에 연결해줘.
+```
+
+Agent는 문서를 조사한 뒤 관련 의미를 `/work` Evidence로 사용하고 `document_id / locator / source_hash / evidence class`를 Canonical Provenance 또는 Stage Evidence에 남긴다. **문서가 폴더에 존재한다는 사실만으로 특정 RQ의 Business Truth가 되지는 않는다.**
+
+문서의 기계 추출이 필요한 경우 `DOCUMENT_INGEST_EXTENSION`의 `extract_document_evidence.py`를 사용할 수 있다. 이 Extension이 프로젝트 배포본에 포함되지 않았다면 Agent/연결된 문서 도구가 원본을 읽고 동일한 Evidence/Locator 원칙을 지켜야 한다.
+
+## 3. 프로젝트 전반 공통 참고자료
+
+RQ 하나에 종속되지 않는 자료는 성격을 구분한다.
+
+```text
+sdlc/custom/project/standards/   # Java/DB/Test/Security/개발 표준, 코딩·운영 가이드
+sdlc/custom/project/rules/       # Agent가 지켜야 할 프로젝트 금지사항/Architecture 규칙
+br-input/originals/              # 회사 내규, 업무규정, 운영매뉴얼, 정책 원본 등 Evidence 자료
+br-input/context.md              # 프로젝트/업무 배경을 설명하는 선택 Context
+br-input/glossary.csv            # 프로젝트/고객 용어집
+```
+
+구분 원칙:
+
+- **개발자가 따라야 하는 Normative Standard** → `sdlc/custom/project/standards/`
+- **Agent 실행/설계에 강제할 Rule** → `sdlc/custom/project/rules/`
+- **업무 판단의 근거가 될 원본 회사 규정/내규** → `br-input/originals/`
+- **단순 배경 설명** → `br-input/context.md`
+
+Core Framework 파일에 고객사 표준 전체를 직접 넣지 않는다.
+
+## 4. 원문과 정규화 결과의 관계
 
 원문을 덮어쓰지 않는다.
 
@@ -72,29 +110,45 @@ Canonical Spec
 
 BR 후보에서는 가능한 범위에서 조건, 주체, 행동/판단, 기대결과, 예외, 적용기간, 원본 위치를 분리한다. 서로 다른 문서가 충돌하면 자동으로 최신 문서를 정답으로 선택하지 않고 `BR_CONFLICT`와 확인 질문을 만든다.
 
-## 4. 사람이 보는 결과와 Machine 결과
+## 5. 사람이 보는 결과와 Machine 결과
 
 대표 결과는 다음처럼 분리된다.
 
 ```text
 docs/00_관리/요구사항_인입결과.md        # 사람이 보는 Project-generated View
+docs/00_관리/RQ_생성근거.md             # RQ Grouping/원본 행 설명
+docs/00_관리/RQ_작업목록.md             # PM/이해관계자용 RQ 배정·진척 목록
 sdlc/runtime/intake/...                  # Machine Runtime 결과
 sdlc/canonical/store.json                # Canonical Candidate/Truth Store
 ```
 
 `docs/00_관리`는 Framework 검증보고서를 보관하는 폴더가 아니라 **실제 프로젝트에서 생성되는 PM/사용자용 관리 View 위치**로 사용한다.
 
-## 5. Intake 다음 작업
+## 6. Intake 다음 작업
 
 Intake가 반환한 실제 Target을 그대로 사용한다.
 
 ```bash
+python sdlc/scripts/harness.py rq-list refresh
 python sdlc/scripts/harness.py work --target RQ-001
 ```
 
+담당자 배정과 RQ List 운영은 `12_RQ_작업목록_운영가이드.md`를 따른다.
+
 Source Repository가 아직 제공되지 않은 Brownfield 프로젝트라면 Source Evidence가 필요한 Impact/Implementation 확정은 보류하고, 확인 가능한 Requirement/Business Context까지만 Candidate로 진행한다.
 
-## 6. 완성 예시
+## 7. 프로젝트 진행 중 요구사항/참고자료가 추가된 경우
+
+최초 Intake가 일회성이라는 전제는 없다. 새 요구사항은 다시 Intake하고, 새 참고자료는 기존 `br-input`에 원본을 추가한다.
+
+```bash
+python sdlc/scripts/harness.py intake 추가요구사항.xlsx
+python sdlc/scripts/harness.py rq-list refresh
+```
+
+기존 RQ는 stable key를 기준으로 재사용하고 새 RQ는 새 ID를 받는다. 기존 `CONFIRMED_BUSINESS`는 재-Intake 자료만으로 덮어쓰거나 낮추지 않는다.
+
+## 8. 완성 예시
 
 - `examples/요구사항_인입_완성예시.md`
 - `examples/요구사항_정의_완성예시.md`
