@@ -1,5 +1,5 @@
 {
-  "schema_version": 10,
+  "schema_version": 11,
   "contract_id": "PROJECT_SCAFFOLD_V110_ASSET_BOUNDARY",
   "source_package_contract": "sdlc/design/contracts/harness-package-contract.json",
   "purpose": "v1.10 Framework에서 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide만 배포하고 Framework 개발/검증 자산은 제외한다.",
@@ -25,6 +25,7 @@
     "sdlc/design/contracts/project-rq-worklist-contract.json",
     "sdlc/scripts/rq_reference_registry.py",
     "sdlc/scripts/intake_reference_draft.py",
+    "sdlc/scripts/extract_document_evidence.py",
     "sdlc/design/contracts/rq-reference-registry-contract.json",
     "sdlc/tailoring/standard/ENGINEERING_SDD_COMPACT.yaml",
     "sdlc/templates/engineering/standard/00_work-map.md",
@@ -129,7 +130,7 @@
       "Change Level control contract/reference",
       "Project Config option reference",
       "Project RQ spreadsheet planning/worklist runtime and guide",
-      "RQ-reference intake draft + registry runtime and guide",
+      "RQ-reference intake draft + document extraction + registry runtime and guide",
       "Project standards/rules skeleton and BR intake manifest example",
       "sdlc/templates/semantic",
       "ENGINEERING_SDD_COMPACT",
