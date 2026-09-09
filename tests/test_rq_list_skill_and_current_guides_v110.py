@@ -75,7 +75,9 @@ class RqListSkillAndCurrentGuidesV110Test(unittest.TestCase):
             self.assertIn(marker, guide, marker)
         self.assertEqual("BYTES_FIRST", process_contract["capture_policy"]["capture_mode"])
         self.assertTrue(process_contract["capture_policy"]["text_true_for_captured_output_forbidden"])
-        self.assertTrue(doc_contract["text_decoding_policy"]["lossy_replacement_forbidden"])
+        text_encoding = doc_contract["text_encoding_contract"]
+        self.assertEqual("LOSSLESS_STRICT_ONLY", text_encoding["decode_policy"])
+        self.assertTrue(text_encoding["replacement_decode_for_evidence_forbidden"])
 
 
 if __name__ == "__main__":
