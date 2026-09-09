@@ -4,6 +4,7 @@
 Common path:
   python sdlc/scripts/harness.py setup --name my-project --mode AUTO
   python sdlc/scripts/harness.py intake requirements.xlsx
+  python sdlc/scripts/harness.py rq-add --request "추가 요구사항" --title "간단한 제목"
   python sdlc/scripts/harness.py rq-list export --format xlsx --output docs/00_관리/RQ_작업관리.xlsx
   python sdlc/scripts/harness.py work --target RQ-001
   python sdlc/scripts/harness.py check RQ-001
@@ -89,10 +90,11 @@ def _run_check(args: list[str]) -> int:
 def main(argv: list[str] | None = None) -> int:
     args = list(argv if argv is not None else sys.argv[1:])
     if not args or args[0] in {"-h", "--help", "help"}:
-        print(__doc__.strip()); print("\nCommands: setup | intake | rq-list | rq-ref | work | review | change | check | execution-plan | discover-impact | impact-history | component | delivery | customer-view | projection | arch-check | metrics"); return 0
+        print(__doc__.strip()); print("\nCommands: setup | intake | rq-add | rq-list | rq-ref | work | review | change | check | execution-plan | discover-impact | impact-history | component | delivery | customer-view | projection | arch-check | metrics"); return 0
     command = args.pop(0).lower()
     if command == "setup": return _run_setup(args)
     if command == "intake": return _load("harness_intake_explainable", "intake_explainable.py").main(args)
+    if command == "rq-add": return _load("harness_rq_add", "rq_add.py").main(args)
     if command == "rq-list": return _load("harness_rq_worklist", "rq_worklist.py").main(args)
     if command == "rq-ref": return _load("harness_rq_reference_registry", "rq_reference_registry.py").main(args)
     if command == "review": return _load("harness_review", "review_work.py").main(args)
