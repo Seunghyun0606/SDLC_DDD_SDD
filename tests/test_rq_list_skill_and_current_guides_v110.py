@@ -34,36 +34,83 @@ class RqListSkillAndCurrentGuidesV110Test(unittest.TestCase):
         self.assertIn("/rq-list", text)
         self.assertIn("python sdlc/scripts/harness.py rq-list", text)
 
-    def test_project_scaffold_distributes_rq_list_skill_and_new_guides(self):
+    def test_customer_view_core_skill_is_lifecycle_first_and_profile_driven(self):
+        rel = "sdlc/agent/skills/customer-view/SKILL.md"
+        self.assertTrue((ROOT / rel).is_file())
+        text = self.read(rel)
+        for marker in [
+            "python sdlc/scripts/harness.py customer-view",
+            "python sdlc/scripts/harness.py projection status",
+            "Customer Profile의 `artifacts`",
+            "1/3/5/8/13/N종",
+            "FINAL_REVIEW",
+            "MANUAL_EDIT_DETECTED",
+            "자동 덮어쓰기 금지",
+            "Source/DB/Program 현행을 다시 조사해야 함 → `/work`",
+            "Requirement/Business Rule/Scope/TO-BE 변경 → `/change`",
+        ]:
+            self.assertIn(marker, text, marker)
+
+    def test_cursor_customer_view_adapter_points_to_core_skill(self):
+        rel = ".cursor/skills/customer-view/SKILL.md"
+        self.assertTrue((ROOT / rel).is_file())
+        text = self.read(rel)
+        self.assertIn("@sdlc/agent/skills/customer-view/SKILL.md", text)
+        self.assertIn("/customer-view", text)
+        self.assertIn("projection status --target <RQ>", text)
+        self.assertIn("customer-view --target <RQ> --type <customer-artifact-id>", text)
+
+    def test_project_scaffold_distributes_pm_and_customer_skills_and_new_guides(self):
         contract = json.loads(self.read("sdlc/design/contracts/project-scaffold-contract.json"))
         required = set(contract["add_required_files"])
         for rel in [
             "sdlc/agent/skills/rq-list/SKILL.md",
             ".cursor/skills/rq-list/SKILL.md",
+            "sdlc/agent/skills/customer-view/SKILL.md",
+            ".cursor/skills/customer-view/SKILL.md",
             "docs/00_시작/14_한글_인코딩_및_외부명령_가이드.md",
             "docs/00_시작/15_고객문서_미리보기_가이드.md",
         ]:
             self.assertIn(rel, required, rel)
             self.assertTrue((ROOT / rel).is_file(), rel)
+        self.assertIn(
+            "Customer Projection runtime, continuous customer-view skill and customer document guide",
+            contract["distribution_boundary"]["PROJECT_REQUIRED"],
+        )
 
-    def test_start_here_exposes_customer_preview_and_current_guides(self):
+    def test_start_here_exposes_customer_preview_refresh_skill_and_current_guides(self):
         start = self.read("docs/00_시작/START_HERE.md")
         for marker in [
             "customer-view --target RQ-001 --type solution_agreement",
             "customer-view --target RQ-001 --type delivery_scope",
             "customer-view --target RQ-001 --type acceptance_handover",
+            "/customer-view refresh RQ-001",
+            "/customer-view status RQ-001",
+            "sdlc/agent/skills/customer-view/SKILL.md",
+            "FINAL_REVIEW",
+            "MANUAL_EDIT_DETECTED",
             "14_한글_인코딩_및_외부명령_가이드.md",
             "15_고객문서_미리보기_가이드.md",
             "sdlc/agent/skills/rq-list/SKILL.md",
         ]:
             self.assertIn(marker, start, marker)
 
-    def test_customer_preview_guide_matches_customer_standard_3_profile(self):
+    def test_customer_preview_guide_matches_customer_standard_3_and_continuous_refresh_policy(self):
         guide = self.read("docs/00_시작/15_고객문서_미리보기_가이드.md")
         profile = self.read("sdlc/tailoring/standard/CUSTOMER_STANDARD_3.yaml")
         for artifact_id in ["solution_agreement", "delivery_scope", "acceptance_handover"]:
             self.assertIn(artifact_id, guide)
             self.assertIn(artifact_id + ":", profile)
+        for marker in [
+            "/customer-view refresh RQ-001",
+            "/customer-view status RQ-001",
+            "projection status --target RQ-001",
+            "Custom Customer Profile",
+            "FINAL_REVIEW",
+            "MANUAL_EDIT_DETECTED",
+            "자동 덮어쓰기 금지",
+        ]:
+            self.assertIn(marker, guide, marker)
         self.assertIn("docs/20_고객/{target}", profile)
         self.assertIn("docs/20_고객/RQ-001", guide)
 
