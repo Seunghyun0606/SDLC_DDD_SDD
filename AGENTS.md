@@ -17,6 +17,11 @@ Stage별 Reference:
 - `sdlc/design/contracts/human-facing-language-contract.json`
 - `sdlc/agent/skills/work/references/human-language.md`
 
+프로젝트별 개발 규칙/가이드:
+- `sdlc/custom/project/rules/` — 반드시 지켜야 하는 프로젝트 규칙/금지사항/Architecture/Tool 사용 규칙
+- `sdlc/custom/project/standards/` — Java/JSP/DB/SQL/Test/Security/배포 등 개발 가이드와 표준
+- 특정 Domain 작업이면 `sdlc/custom/domain/<domain>/rules/`, `standards/`도 추가 확인
+
 ## Work 요청 해석
 
 다음은 모두 같은 SDLC work 의도로 처리한다.
@@ -31,11 +36,24 @@ Cursor/Codex/Claude Code 등 제품명을 Project Config에 기록하거나 그 
 INTERACTIVE에서는:
 1. `python sdlc/scripts/harness.py work --target <TARGET>` 실행
 2. `INTERACTIVE_HANDOFF_READY`의 context/result/artifact 경로 확인
-3. Core Skill과 Stage Reference에 따라 Artifact + `stage-result.json` 작성
-4. finalize 명령 실행
-5. Harness Validator가 성공 상태를 반환한 경우에만 Stage 완료로 보고
+3. Core Skill과 Stage Reference를 읽는다.
+4. `sdlc/custom/project/rules/`에서 현재 작업에 적용되는 규칙을 먼저 확인한다.
+5. `sdlc/custom/project/standards/`에서 현재 Stage/기술/변경 범위와 관련된 개발 가이드만 선택해서 읽는다. 전체 문서를 무조건 선로딩하지 않는다.
+6. 필요한 경우 Domain rules/standards를 추가로 확인한다.
+7. 위 규칙/가이드와 `work-context.json`을 근거로 Artifact + `stage-result.json` 작성
+8. finalize 명령 실행
+9. Harness Validator가 성공 상태를 반환한 경우에만 Stage 완료로 보고
 
 `.sdlc/project.yaml`에서 `agent.execution: HEADLESS`인 경우에는 현재 Agent가 별도 Provider를 대신 수행하지 말고 Harness의 Headless 경로를 사용한다.
+
+## 프로젝트 개발 가이드 적용 원칙
+
+- `rules/`는 현재 작업에 적용되는 내용이면 MUST로 취급한다.
+- `standards/`는 관련 작업의 구현/검증 기준으로 사용한다.
+- `rules/`와 `standards/`가 충돌하면 강제 규칙인 `rules/`를 우선하되 충돌 사실을 숨기지 않는다.
+- 고객이 제공한 원본 개발표준 PDF/DOCX는 `br-input/originals/`에 보존할 수 있다. 반복 적용할 확정 규칙은 `sdlc/custom/project/rules/` 또는 `standards/`에 정리한다.
+- 가이드에 없는 업무 정책을 개발 편의상 만들어내지 않는다.
+- 개발 가이드의 기술 규칙과 고객/업무 기준 정보가 충돌하면 업무 기준 정보를 자동 변경하지 않고 확인이 필요한 사항으로 남긴다.
 
 ## 사람에게 보여주는 표현
 
