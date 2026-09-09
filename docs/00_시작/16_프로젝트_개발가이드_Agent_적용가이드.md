@@ -1,22 +1,23 @@
 # 프로젝트 개발가이드 Agent 적용 가이드
 
-## 1. 목적
+이 문서는 프로젝트별 Java/DB/Test/Security/배포 가이드와 Architecture 규칙을 **어디에 두고 Agent가 어떤 순서로 참고해야 하는지** 설명한다.
 
-프로젝트별 Java/DB/Test/Security/배포 가이드와 Architecture 금지사항을 Repository에 넣었는데도 Agent가 작업 중 놓치는 문제를 방지하기 위한 가이드다.
-
-핵심 원칙은 간단하다.
+## 1. 위치를 먼저 구분한다
 
 ```text
-참고하고 따라야 하는 개발 가이드
-→ sdlc/custom/project/standards/
+sdlc/custom/project/standards/
+→ 개발자가 따라야 하는 프로젝트 개발 기준
 
-반드시 지켜야 하는 강제 규칙/금지사항
-→ sdlc/custom/project/rules/
+sdlc/custom/project/rules/
+→ Agent가 반드시 지켜야 하는 프로젝트 규칙/금지사항
+
+br-input/originals/
+→ 고객이 제공한 PDF/DOCX/PPTX/XLSX 원본
 ```
 
-고객이 제공한 원본 PDF/DOCX/PPTX 같은 문서는 `br-input/originals/`에 보존한다.
+Core Framework 파일에 고객 개발표준 전체를 직접 넣지 않는다.
 
-## 2. 권장 폴더 구조
+## 2. 권장 구조
 
 ```text
 sdlc/custom/project/
@@ -32,198 +33,171 @@ sdlc/custom/project/
 │  ├─ database-guide.md
 │  ├─ sql-guide.md
 │  ├─ test-guide.md
-│  └─ deployment-guide.md
+│  ├─ deployment-guide.md
+│  └─ tools/
+│     ├─ static-analysis.md
+│     └─ db-mcp.md
 │
 ├─ config/
 └─ templates/
 ```
 
-## 3. `rules/`와 `standards/`의 차이
+## 3. Rule과 Standard의 차이
 
 ### `rules/`
 
-Agent가 작업하면서 위반하면 안 되는 내용이다.
+위반하면 안 되는 프로젝트 제약이다.
 
 예:
 
 ```text
 - Controller에서 DB에 직접 접근하지 않는다.
-- SQL은 프로젝트에서 지정한 Mapper 계층에 작성한다.
-- 운영 DB에 Write하는 Tool을 사용하지 않는다.
-- Java 영향 분석 전 프로젝트 정적분석 Tool을 우선 사용한다.
+- SQL은 지정된 Mapper 계층에 작성한다.
+- 운영 DB Write Tool을 사용하지 않는다.
 - 인증/권한 공통 모듈을 임의 우회하지 않는다.
 ```
 
-즉 **MUST / 금지 / Architecture Constraint** 성격이다.
-
 ### `standards/`
 
-현재 작업을 어떻게 구현할지 판단할 때 참고하고 따라야 하는 개발 표준이다.
+구현 방법을 판단할 때 따라야 하는 개발 기준이다.
 
 예:
 
 ```text
 java-coding-guide.md
-- Naming
-- Exception 처리
-- Transaction 처리
-- Logging
-- 공통 Utility 사용법
+→ Naming / Exception / Transaction / Logging
 
 database-guide.md
-- Table/Column Naming
-- PK/FK 정책
-- Index 작성 원칙
-- Procedure 작성 기준
+→ Table/Column / PK/FK / Index 기준
 
 test-guide.md
-- 단위 테스트 기준
-- 통합 테스트 기준
-- 테스트 데이터 작성법
+→ 단위/통합 테스트와 테스트 데이터 기준
 ```
 
-## 4. Agent가 실제로 읽는 순서
-
-`/work` 수행 시 다음 순서를 적용한다.
+## 4. `/work`에서 권장하는 읽기 순서
 
 ```text
-Core 안전/권한 규칙
-        ↓
-.sdlc/project.yaml
-        ↓
-sdlc/custom/project/rules/
-        ↓
-현재 작업에 관련된 sdlc/custom/project/standards/
-        ↓
-필요한 경우 Domain Rule/Standard
-        ↓
-br-input/glossary.csv
-        ↓
-현재 RQ와 관련된 Source / DB / Evidence
-        ↓
-설계 / 개발 / 테스트
+Core 안전 규칙
+→ .sdlc/project.yaml
+→ sdlc/custom/project/rules/
+→ 현재 작업에 관련된 project standards
+→ 필요한 경우 domain rules/standards
+→ br-input/glossary.csv
+→ 현재 RQ 관련 Source / DB / Evidence
+→ 설계 / 개발 / 테스트
 ```
 
-`rules/`는 프로젝트에 존재하면 먼저 확인한다.
+`rules/`는 존재하면 작업 전에 확인한다.
 
-`standards/`는 매번 전부 읽지 않고 현재 작업에 관련된 문서만 읽는다. **모든 개발가이드를 매번 무조건 선로딩하지 않는다.**
+`standards/`는 매 작업마다 모든 파일을 무조건 읽지 않고 현재 변경에 관련된 문서를 선택한다.
 
 예:
 
 ```text
 Java Service 변경
+→ architecture/security rule
 → java-coding-guide.md
-→ 관련 architecture/security rule
 
 SQL 변경
+→ DB 관련 rule
 → database-guide.md
 → sql-guide.md
-→ DB Tool 사용 Rule
 
 테스트 작성
 → test-guide.md
 ```
 
-이렇게 해서 Context가 불필요하게 커지는 것을 막는다.
+## 5. 중요한 현재 구현 경계
 
-## 5. 개발 가이드 문서 작성 방법
+이 읽기 순서는 `sdlc/agent/skills/work/references/project-development-context.md`, Host Adapter, Agent Rule을 통해 **Agent 실행 정책으로 요구**한다.
 
-각 Guide는 가능한 한 다음 구조로 간결하게 작성한다.
+현재 Core Runtime이 모든 `/work` 실행마다 파일 시스템 Access Log를 검사해 “어떤 standards 파일을 실제로 열었는가”를 독립적으로 증명하는 기능까지 제공하는 것은 아니다.
+
+따라서 현재 보장 수준은 다음처럼 이해한다.
+
+```text
+Agent Policy / Skill Contract
+→ 관련 Rule/Standard를 읽고 적용하도록 요구
+
+Deterministic Runtime Audit
+→ 모든 Guide read event를 강제로 기록·검증하는 기능은 현재 없음
+```
+
+즉 “문서가 존재하면 Runtime이 자동으로 전부 읽었다”고 가정하지 않는다. Agent는 작업 결과에서 실제 적용한 프로젝트 기준을 간결하게 설명할 수 있어야 한다.
+
+## 6. 개발가이드 작성 방법
+
+각 Guide는 가능한 한 다음 구조로 짧게 작성한다.
 
 ```markdown
 # Java 개발 가이드
 
 ## 목적
-이 프로젝트의 Java 구현 시 따라야 하는 기준을 설명한다.
-
 ## 적용 대상
-- Service
-- DAO
-- Batch
-
 ## 반드시 지킬 내용
-- ...
-
 ## 권장 내용
-- ...
-
 ## 사용하면 안 되는 방식
-- ...
-
 ## 예시
-- ...
-
 ## 관련 Tool
-- Static Analysis Tool
 ```
 
-규칙의 강도를 명확히 표현하는 것을 권장한다.
+강도는 명확히 구분한다.
 
 ```text
-MUST     반드시 적용
-SHOULD   특별한 이유가 없으면 적용
-REFERENCE 참고
+반드시 적용
+권장
+참고
 ```
 
-단, 사람에게 보여주는 가이드 본문에서는 필요한 경우 `반드시`, `권장`, `참고`처럼 쉬운 한국어를 우선한다.
+## 7. 고객 원본 개발표준이 있는 경우
 
-## 6. 고객에게 받은 기존 개발표준 문서가 있는 경우
-
-예를 들어 고객에게 다음 파일을 받았다고 가정한다.
+예:
 
 ```text
 고객_Java개발표준_v3.pdf
 고객_DB표준.docx
 ```
 
-원본은 변경하지 않고 보존한다.
+원본은 그대로 보존한다.
 
 ```text
 br-input/originals/
-├─ 고객_Java개발표준_v3.pdf
-└─ 고객_DB표준.docx
 ```
 
-Agent가 개발하면서 반복해서 따라야 하는 현재 프로젝트 기준은 필요한 부분을 정리하여:
+실제 개발 때 반복 적용할 현재 기준은 필요한 부분을 정리해 다음에 둘 수 있다.
 
 ```text
 sdlc/custom/project/standards/java-coding-guide.md
 sdlc/custom/project/standards/database-guide.md
 ```
 
-에 둔다.
+원본과 정리본이 충돌하면 Agent가 임의로 새 정책을 만들지 않는다. 적용 버전이나 권위가 불명확하면 확인 필요로 남긴다.
 
-원본과 정리본이 충돌하면 Agent가 임의로 새로운 정책을 만들지 않는다. 원본의 적용 버전/권위가 불명확하면 확인 필요로 남긴다.
+## 8. Tool 사용 가이드
 
-## 7. Tool 사용 가이드
-
-정적분석 Tool, DB MCP 등 프로젝트에서 제공된 Tool을 사용해야 한다면 역할을 분리한다.
+정적분석 Tool, DB MCP 등 프로젝트 Tool을 사용한다면 두 역할을 나눈다.
 
 ```text
 sdlc/custom/project/rules/tool-usage.mdc
 → 언제 Tool 사용이 필수인지
 
-sdlc/custom/project/standards/tools/static-analysis.md
-→ Tool 사용 방법과 결과 해석
-
-sdlc/custom/project/standards/tools/db-mcp.md
-→ DB MCP 사용 방법과 제한사항
+sdlc/custom/project/standards/tools/*.md
+→ Tool 사용 방법, 결과 해석, 제한사항
 ```
 
 예:
 
 ```text
 Rule:
-Java 영향 분석 시 정적분석 Tool을 우선 사용한다.
+Java 영향 분석 시 프로젝트 정적분석 Tool을 우선 사용한다.
 
 Standard:
-정적분석 Tool에서 Caller/Callee를 확인하는 방법,
-결과를 Source 근거로 해석하는 방법을 설명한다.
+Caller/Callee 확인 방법과 결과 해석 방법을 설명한다.
 ```
 
-Password, Token, DB 접속 비밀번호는 Guide에 기록하지 않는다.
+Password, Token, DB 비밀번호 같은 Credential은 Repository Guide에 기록하지 않는다.
 
-## 8. Domain 가이드와의 구분
+## 9. Domain 기준과 Project 기준
 
 현재 프로젝트에서만 사용하는 기준:
 
@@ -232,49 +206,46 @@ sdlc/custom/project/standards/
 sdlc/custom/project/rules/
 ```
 
-여러 프로젝트에서 같은 Domain에 반복 적용할 재사용 규칙/표준:
+여러 프로젝트에서 같은 Domain에 재사용할 기준:
 
 ```text
 sdlc/custom/domain/<domain>/standards/
 sdlc/custom/domain/<domain>/rules/
 ```
 
-프로젝트/고객이 실제로 사용하는 업무 용어:
+현재 고객/프로젝트 업무 용어:
 
 ```text
 br-input/glossary.csv
 ```
 
-## 9. Agent 적용 여부 확인
+## 10. 적용 여부 확인 방법
 
-Agent에게 다음처럼 물어볼 수 있다.
-
-```text
-RQ-001 작업 전에 적용해야 하는 프로젝트 개발 가이드와 Rule을 알려줘.
-```
-
-Agent는 현재 작업과 관련해 읽은 문서명을 간결하게 알려줘야 한다.
-
-예:
+Agent에게 다음처럼 요청할 수 있다.
 
 ```text
-이번 작업에 적용할 프로젝트 기준
-- architecture.mdc: Service 계층을 통한 DB 접근
-- java-coding-guide.md: 예외/Transaction 기준
-- database-guide.md: SQL 및 Column 변경 기준
-- tool-usage.mdc: DB 구조 확인 시 DB MCP 사용
+RQ-001 작업 전에 이번 변경에 적용할 프로젝트 Rule과 개발가이드를 알려줘.
 ```
 
-문서가 존재하는데도 적용 가능한 Guide를 읽지 않은 채 Source를 수정하면 정상적인 `/work` 수행으로 보지 않는다.
+작업 후에는 다음을 확인할 수 있다.
 
-## 10. 점검 결과와 현재 Framework 보완
+```text
+이번 Source 변경에 실제 적용한 프로젝트 기준과
+어떤 구현에서 반영했는지 알려줘.
+```
 
-기존 구조에서는 Cursor의 `.cursor/rules/10-project.mdc`가 `sdlc/custom/project/`를 읽도록 안내했지만, 다른 Repository Agent에서는 정확히 `rules/`와 `standards/`를 어떤 순서로 읽을지가 충분히 명확하지 않았다.
+Agent는 현재 작업에 실제 관련된 문서와 적용 내용을 간결하게 설명해야 한다.
 
-현재는 다음 공통 Reference를 추가해 Host와 무관하게 같은 기준을 사용하도록 한다.
+## 11. 관련 Framework Reference
 
 ```text
 sdlc/agent/skills/work/references/project-development-context.md
 ```
 
-`AGENTS.md`와 Host Adapter는 이 Reference 및 프로젝트 Rule/Standard 위치를 작업 시작 Context로 사용한다.
+`AGENTS.md`와 Host Adapter는 이 Reference 및 프로젝트 `rules/`, `standards/` 위치를 작업 Context로 사용한다.
+
+## 12. 관련 문서
+
+- Project 설정: `02_PROJECT_설정가이드.md`
+- Input 원본 보관: `11_INPUT_자료_준비가이드.md`
+- 역할별 작업: `05_이해관계자별_작업가이드.md`
