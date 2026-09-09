@@ -37,9 +37,16 @@ Agent에게 자연어로 다음처럼 요청해도 된다.
 PM용 RQ 관리 엑셀 만들어줘.
 RQ 작업목록 최신 상태로 보여줘.
 수정한 RQ_작업관리.xlsx를 반영해줘.
+
+RQ-001 고객문서 만들어줘.
+RQ-001 고객문서 최신화해줘.
+지금 상태 기준으로 고객문서 다시 보여줘.
+고객문서가 최신인지 확인해줘.
 ```
 
-Cursor에서는 `/rq-list` Skill을 사용할 수 있고, 다른 Agent는 `sdlc/agent/skills/rq-list/SKILL.md`의 같은 규칙을 따른다. 상세 운영법은 `12_RQ_작업목록_운영가이드.md`를 본다.
+Cursor에서는 `/rq-list`와 `/customer-view` Skill을 사용할 수 있다. 다른 Agent는 각각 `sdlc/agent/skills/rq-list/SKILL.md`, `sdlc/agent/skills/customer-view/SKILL.md`의 같은 규칙을 따른다.
+
+RQ 작업목록 상세 운영법은 `12_RQ_작업목록_운영가이드.md`, 고객문서 작성·현행화는 `15_고객문서_미리보기_가이드.md`를 본다.
 
 RQ 분석 전에 참고할 규정·회의록·업무문서를 미리 연결하려면 `rq-ref`와 `13_RQ_참고문서_레지스트리_가이드.md`를 사용한다. 참고 연결 자체는 업무 사실 확정이 아니며 실제 `/work`에서 조사된 내용만 근거로 사용한다.
 
@@ -95,7 +102,7 @@ docs/10_engineering/<TARGET>/
 
 기본 개발자용 생성 문서는 Agent가 관리한다. 오탈자 외 직접 수정은 기준 정보를 자동 변경하지 않으며, 의미 변경은 `/change` 또는 `/work`로 다시 처리해야 한다.
 
-## 5. Customer 기본 문서와 미리보기
+## 5. Customer 기본 문서와 지속 현행화
 
 기본 `CUSTOMER_STANDARD_3`:
 
@@ -122,7 +129,16 @@ docs/20_고객/RQ-001/
 
 Intake 직후에는 A01부터 미리 보는 것이 자연스럽다. A02는 영향/개발범위가 확인된 뒤, A03는 테스트·검증 근거가 생긴 뒤 생성할수록 내용이 충실하다. 없는 사실을 고객문서 생성 과정에서 임의로 채우지 않는다.
 
-상세 옵션과 Engineering 문서를 추가 입력으로 사용하는 방법은 `15_고객문서_미리보기_가이드.md`를 본다.
+프로젝트 진행 중에는 다음처럼 계속 최신화해서 볼 수 있다.
+
+```text
+/customer-view refresh RQ-001
+/customer-view status RQ-001
+```
+
+`/customer-view` Skill은 프로젝트의 실제 Customer Profile N종과 `projection status`를 먼저 확인하고 필요한 문서만 갱신한다. `FINAL_REVIEW` 또는 `MANUAL_EDIT_DETECTED` 문서는 자동으로 덮어쓰지 않는다.
+
+상세 옵션, Lifecycle별 처리, Engineering/Test 근거 추가 방법은 `15_고객문서_미리보기_가이드.md`를 본다.
 
 필요하면 `CUSTOMER_WATERFALL_FULL` 8종을 선택할 수 있고, 프로젝트 Custom Profile로 1/3/5/8/13/N종을 정의할 수 있다.
 
@@ -225,7 +241,7 @@ python sdlc/scripts/build_project_scaffold.py --root . --output <outside-target-
 - RQ 배정·목록·진척 관리: `12_RQ_작업목록_운영가이드.md`
 - RQ↔참고문서 사전 연결: `13_RQ_참고문서_레지스트리_가이드.md`
 - 한글 Encoding / CMD / PowerShell: `14_한글_인코딩_및_외부명령_가이드.md`
-- 고객문서 미리보기: `15_고객문서_미리보기_가이드.md`
+- 고객문서 작성·미리보기·현행화: `15_고객문서_미리보기_가이드.md`
 - 프로젝트 설정: `02_PROJECT_설정가이드.md`
 - Config 옵션 상세 Reference: `02A_PROJECT_CONFIG_옵션_상세가이드.md`
 - Profile/Customizing: `03_TAILORING_설정가이드.md`
