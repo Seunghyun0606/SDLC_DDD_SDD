@@ -69,6 +69,7 @@ jobs:
         run: |
           python -m unittest \
             tests.test_guide_consistency_v110 \
+            tests.test_rq_list_skill_and_current_guides_v110 \
             tests.test_project_config_reference_v110 \
             tests.test_project_rq_worklist_v110 \
             tests.test_pm_bulk_and_rq_reference_registry_v110 \
