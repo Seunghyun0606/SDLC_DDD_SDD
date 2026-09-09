@@ -1,4 +1,4 @@
-# Framework Enhancement TODO — Unit Knowledge / AS-IS Canonical Bootstrap / E2E Suite
+# Framework Enhancement TODO — Unit Knowledge / AS-IS Canonical Bootstrap / E2E Suite / Multi-writer RQ
 
 > 상태: **TODO / 후순위**  
 > 범위: **Framework 설계 Backlog 전용**  
@@ -7,11 +7,12 @@
 
 ## 0. 목적
 
-현재 v1.10 Harness에서 당장 구현하지 않고 후속 Framework 고도화로 남길 세 영역을 명확히 고정한다.
+현재 v1.10 Harness에서 당장 구현하지 않고 후속 Framework 고도화로 남길 네 영역을 명확히 고정한다.
 
 1. KB 형성과 연계한 Work Unit 누적·고도화
 2. AS-IS 시스템 현행 분석을 통한 Canonical Bootstrap
 3. Project-wide E2E 통합테스트 Scenario Suite
+4. 여러 사용자/Agent가 동시에 RQ를 생성할 수 있는 RQ ID/Sequence Allocation
 
 기존 `framework/design/session/KB_LIFECYCLE_TODO.md`의 Knowledge Lifecycle은 이 Backlog와 연계하지만, 이번 범위에서 상태 전이 Runtime을 구현하지 않는다.
 
@@ -162,7 +163,57 @@ Business E2E Scenario
 
 ---
 
-## 4. 우선순위
+## TODO-4. Multi-writer RQ ID / Sequence Allocation
+
+### 현재 문제
+
+현재 `rq-add`와 기존 Requirement Intake의 `RQ-NNN` 생성 방식은 Canonical 현재 파일에서 가장 큰 RQ 번호를 확인하고 다음 번호를 선택한다.
+
+```text
+현재: RQ-001, RQ-002, RQ-003
+→ 다음 후보: RQ-004
+```
+
+Canonical write 자체는 파일 Lock + Revision Guard + Atomic Replace로 보호하지만 **번호 선택 자체를 여러 작성자가 동시에 예약하는 중앙 Sequence Service는 없다.**
+
+따라서 현재 운영은 RQ 생성 담당자 한 명을 전제로 한다. 동시 생성 충돌 시 자동 번호 재선점/재시도를 하지 않고 앞 작업 완료 후 다시 실행한다.
+
+### 목표 방향
+
+향후 여러 사람/Agent가 동시에 RQ를 생성해도 중복 ID, Lost Update, 사용자가 이미 본 ID의 조용한 변경이 발생하지 않는 구조가 필요하다.
+
+```text
+User/Agent A ─┐
+User/Agent B ─┼─> RQ Allocation Boundary ─> Unique RQ ID ─> Canonical Apply
+User/Agent C ─┘
+```
+
+### 후속 설계 항목
+
+- RQ ID 할당을 Canonical current-file max scan과 분리할지 여부
+- File lock 안에서 `read → allocate → apply`를 하나의 원자 경계로 묶는 방식
+- 별도 Sequence Registry / Reservation / Lease 도입 여부
+- Optimistic Compare-And-Swap 기반 ID allocation
+- 생성 요청의 Idempotency Token
+- 충돌 시 사용자에게 보여준 ID를 바꾸는 정책과 금지 조건
+- Reservation 후 실패/취소 시 번호 Gap 허용 여부
+- Branch/Worktree/분산 실행 환경에서의 ID 범위
+- Offline 생성과 중앙 저장소 동기화 정책
+- Audit: 누가 언제 어떤 요청으로 ID를 할당받았는지
+- 동일 자연어 요청의 중복 생성 방지와 실제 별도 RQ 승인 경계
+
+### 완료 조건 후보
+
+- 동시에 N개의 RQ 생성 요청을 실행해도 중복 RQ ID가 없다.
+- Canonical Entity가 Lost Update되지 않는다.
+- 충돌/재시도 동작이 결정적이며 조용히 다른 RQ를 덮어쓰지 않는다.
+- 사용자에게 성공으로 반환한 RQ ID가 뒤에서 자동 변경되지 않는다.
+- 동일 요청 재전송은 Idempotency 정책에 따라 중복 생성되지 않는다.
+- 기존 단일작성자 Project도 추가 운영 부담 없이 동일 Runtime을 사용할 수 있다.
+
+---
+
+## 5. 우선순위
 
 현재 우선순위는 다음과 같이 둔다.
 
@@ -170,6 +221,8 @@ Business E2E Scenario
 현재 v1.10 사용성/실행 안정화
         ↓
 RQ Intake / Reference / PM 운영 UX 안정화
+        ↓
+TODO-4 Multi-writer RQ Allocation
         ↓
 TODO-1 Unit Knowledge History
         ↓
@@ -180,15 +233,16 @@ TODO-3 E2E Scenario Suite
 KB Lifecycle 완성/통합
 ```
 
-단, 실제 Pilot 결과에서 Brownfield Bootstrap 또는 E2E 문제가 더 큰 장애로 확인되면 순서를 재조정할 수 있다.
+단, 실제 Pilot 결과에서 Brownfield Bootstrap, E2E 또는 동시 RQ 생성 문제가 더 큰 장애로 확인되면 순서를 재조정할 수 있다.
 
-## 5. 이번 작업에서 하지 않는 것
+## 6. 이번 작업에서 하지 않는 것
 
 - Stable Unit History Runtime 구현
 - Canonical Event Sourcing 도입
 - Source에서 Business Truth 자동 확정
 - Project-wide E2E Registry Runtime 구현
 - KB Publish/Supersede/Retire Runtime 구현
+- Multi-writer RQ Sequence/Reservation Runtime 구현
 - 기존 테스트/문서를 근거 없이 `VALIDATED` 또는 `PRODUCTION READY`로 승격
 
 이 문서는 구현 완료 선언이 아니라 후속 설계를 위한 명시적 Framework Backlog다.
