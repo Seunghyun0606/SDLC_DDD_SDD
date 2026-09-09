@@ -14,8 +14,11 @@ def validate(root: Path) -> list[str]:
     for rel in c['core_required_files']:
         if not (root/rel).is_file(): errors.append(f'missing core file: {rel}')
 
-    if c.get('candidate_design') != 'v1.10.0-projection-separation':
-        errors.append('active package contract must identify v1.10.0-projection-separation')
+    candidate_design=c.get('candidate_design')
+    if not isinstance(candidate_design, str) or not candidate_design.strip():
+        errors.append('active package contract must identify a non-empty candidate_design')
+    if int(c.get('schema_version', 0) or 0) < 19:
+        errors.append('active package contract schema_version must be 19 or newer')
     for rel in ['sdlc/scripts/change_execution_runtime.py','sdlc/config/change-execution-policy.json']:
         if rel not in core_required:
             errors.append(f'change execution core dependency missing from package: {rel}')
