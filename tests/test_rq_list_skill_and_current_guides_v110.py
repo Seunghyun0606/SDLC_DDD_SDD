@@ -51,6 +51,21 @@ class RqListSkillAndCurrentGuidesV110Test(unittest.TestCase):
         ]:
             self.assertIn(marker, text, marker)
 
+    def test_customer_view_skill_requires_plain_customer_sentences_and_glossary(self):
+        skill = self.read("sdlc/agent/skills/customer-view/SKILL.md")
+        for marker in [
+            "br-input/glossary.csv",
+            "고객 문장 작성 단계 — 필수",
+            "누가 / 어떤 조건에서 / 무엇을 하고 / 결과가 무엇인지",
+            "Runtime 초안을 그대로 완료 결과로 제시하지 않는다",
+            "Java Class/Method",
+            "Table/Column",
+            "업무 의미를 확정할 수 없으면 추측하지 않는다",
+            "projection generated",
+            "생성 문서 hash/lifecycle을 갱신할 뿐",
+        ]:
+            self.assertIn(marker, skill, marker)
+
     def test_cursor_customer_view_adapter_points_to_core_skill(self):
         rel = ".cursor/skills/customer-view/SKILL.md"
         self.assertTrue((ROOT / rel).is_file())
@@ -59,6 +74,9 @@ class RqListSkillAndCurrentGuidesV110Test(unittest.TestCase):
         self.assertIn("/customer-view", text)
         self.assertIn("projection status --target <RQ>", text)
         self.assertIn("customer-view --target <RQ> --type <customer-artifact-id>", text)
+        self.assertIn("br-input/glossary.csv", text)
+        self.assertIn("고객 관점의 짧고 자연스러운 한국어 문장", text)
+        self.assertIn("projection generated", text)
 
     def test_project_scaffold_distributes_pm_and_customer_skills_and_new_guides(self):
         contract = json.loads(self.read("sdlc/design/contracts/project-scaffold-contract.json"))
@@ -109,10 +127,20 @@ class RqListSkillAndCurrentGuidesV110Test(unittest.TestCase):
             "FINAL_REVIEW",
             "MANUAL_EDIT_DETECTED",
             "자동 덮어쓰기 금지",
+            "br-input/glossary.csv",
+            "고객이 읽기 쉬운 한국어 문장",
+            "Java Method/Table/Query",
         ]:
             self.assertIn(marker, guide, marker)
         self.assertIn("docs/20_고객/{target}", profile)
         self.assertIn("docs/20_고객/RQ-001", guide)
+
+    def test_project_glossary_location_matches_input_guide_and_template(self):
+        guide = self.read("docs/00_시작/11_INPUT_자료_준비가이드.md")
+        glossary = self.read("sdlc/templates/br-intake/glossary.example.csv")
+        self.assertIn("br-input/glossary.csv", guide)
+        self.assertIn("프로젝트/고객 용어집", guide)
+        self.assertTrue(glossary.startswith("term,meaning,alias_or_abbreviation,scope,note"))
 
     def test_encoding_guide_matches_lossless_process_policy(self):
         guide = self.read("docs/00_시작/14_한글_인코딩_및_외부명령_가이드.md")
