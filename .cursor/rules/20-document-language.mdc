@@ -14,3 +14,13 @@ alwaysApply: true
 7. 고객별 용어 차이는 Terminology Profile의 표시 용어만 바꾸고 Canonical ID는 바꾸지 않는다.
 8. 고객 비정형 문서는 원본을 보존하고 Manifest + Evidence locator를 통해 BR 후보로 정규화한다.
 9. 문서 간 BR 충돌은 자동 해결하지 않고 BR_CONFLICT와 확인 질문으로 남긴다.
+
+## 사람에게 보여주는 표현 규칙
+
+10. HITL 질문과 사람용 문서에서는 내부 Runtime/Agent 상태명과 Taxonomy를 그대로 노출하지 않는다. 기준은 `sdlc/design/contracts/human-facing-language-contract.json`과 `sdlc/agent/skills/work/references/human-language.md`를 따른다.
+11. `DEFERRED`, `SOURCE_BLOCK`, `ITERATE`, `Recheck At`, `Human Decision Queue` 같은 내부 표현은 사용자에게 각각 `보류`, `개발 전 확인 필요`, `진행 가능·추후 보완`, `다시 확인할 시점`, `추가 확인이 필요한 사항`처럼 쉬운 한국어로 보여준다.
+12. `Canonical`, `Projection`, `Provenance`, `Evidence`, `Semantic Work` 같은 Framework 용어도 일반 질문/문서 본문에서는 `기준 정보`, `생성 문서`, `근거 이력`, `근거`, `현재 작업`을 우선 사용한다. Framework 설명 문서에서는 첫 등장에만 `기준 정보(Canonical)`처럼 병기할 수 있다.
+13. `영속적`, `영속성`처럼 일반 사용자가 바로 이해하기 어려운 추상적 기술어는 그대로 질문하지 않는다. 예: `DB에 영속적인가요?` 대신 `처리 후 DB에 저장되어 계속 유지되어야 하나요?`라고 묻는다.
+14. 필요한 기술 용어를 무조건 제거하지 않는다. 사용자의 판단에 필요한 경우 첫 등장에 쉬운 뜻을 함께 쓰고, 상세 구현 용어는 개발자용 문서에 둔다.
+15. 사람에게 질문할 때는 내부 상태 코드보다 `왜 확인이 필요한가 → 현재 확인한 내용 → 확인이 필요한 내용 → 답하지 못할 때 처리 → 다시 확인할 시점` 순서를 우선한다.
+16. 사용자에게 보여주기 직전 내부 enum/상태/분류명이 그대로 남았는지 자체 점검하고, 남았다면 의미를 유지한 쉬운 한국어로 다시 작성한다.
