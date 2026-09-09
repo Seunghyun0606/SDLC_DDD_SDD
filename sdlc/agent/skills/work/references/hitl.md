@@ -1,5 +1,60 @@
 # HITL Interaction Reference — Agent Question Driven UX
 
+## 0. 사람에게 보여주는 표현이 최우선
+
+HITL 내부 상태와 Runtime 연결에는 기존 machine code를 유지한다. 하지만 **사용자 질문, 답변 안내, 사람용 문서 본문에는 machine code를 그대로 노출하지 않는다.**
+
+표현 기준:
+- `sdlc/design/contracts/human-facing-language-contract.json`
+- `sdlc/agent/skills/work/references/human-language.md`
+
+예:
+
+| 내부 의미 | 사용자에게 보여줄 표현 |
+|---|---|
+| `DEFERRED` | 보류 |
+| `OPEN` | 확인 필요 |
+| `SOURCE_BLOCK` | 개발 전 확인 필요 |
+| `ITERATE` | 진행 가능·추후 보완 |
+| `ALERT` | 주의 필요 |
+| `Recheck At` | 다시 확인할 시점 |
+| `Human Decision Queue` | 추가 확인이 필요한 사항 |
+| `Canonical` | 기준 정보 |
+| `Projection` | 생성 문서 |
+| `Provenance` | 근거 이력 |
+| `Evidence` | 근거 |
+| 영속적 / 영속성 | 저장 후 계속 유지되는 / 저장 여부 |
+
+내부 코드는 Agent/Runtime이 처리한다. 사용자가 해당 코드를 이해해야 답할 수 있는 질문을 만들면 안 된다.
+
+질문은 가능하면 다음처럼 보여준다.
+
+```text
+[질문 1]
+왜 확인이 필요한가: 승인 후 취소 가능 여부에 따라 저장 로직과 테스트 기준이 달라집니다.
+현재 확인한 내용: 현재 시스템에서는 승인 후 취소 기능을 확인하지 못했습니다.
+확인이 필요한 내용: 개선 후 승인 완료 건의 취소를 허용할까요?
+선택 가능한 내용: ① 허용하지 않음 ② 관리자만 허용
+답하지 못할 때 처리: 지금 결정하지 않아도 됩니다. 다만 개발 전에 다시 확인해야 합니다.
+다시 확인할 시점: 개발 시작 전
+```
+
+다음처럼 묻지 않는다.
+
+```text
+이 값을 DB에 영속적으로 보관합니까?
+DEFERRED로 둘까요?
+SOURCE_BLOCK으로 두고 Recheck At을 DEVELOPMENT로 지정할까요?
+```
+
+대신 다음처럼 묻는다.
+
+```text
+이 값은 처리 후 DB에 저장되어 계속 유지되어야 하나요?
+지금 결정하기 어렵다면 보류하고 다음 작업에서 다시 확인할까요?
+이 내용은 개발 전에 확인해야 합니다. 개발 시작 전에 다시 확인할까요?
+```
+
 ## 1. 목적
 
 `/work`와 `/change`에서 사람에게 Template 빈칸을 직접 채우게 하지 않는다.
@@ -52,8 +107,8 @@ Agent는 질문 전에 반드시 다음 순서를 따른다.
 - 승인 후 취소를 허용할 것인가?
 - 월 마감 이후 재계산 정책은 무엇인가?
 - 특정 프로파일이 수정 권한을 가져야 하는가?
-- 두 가지 TO-BE 대안 중 어느 정책을 선택할 것인가?
-- 고객이 요구한 범위를 이번 Release에 포함할 것인가?
+- 두 가지 개선 대안 중 어느 정책을 선택할 것인가?
+- 고객이 요구한 범위를 이번 배포에 포함할 것인가?
 
 ## 3. 질문 묶음 UX
 
@@ -64,41 +119,55 @@ Agent는 질문 전에 반드시 다음 순서를 따른다.
 - Source 조사로 줄일 수 있는 질문은 먼저 제거
 - **현재 단계에 재확인 시점이 도래한 기존 Queue를 신규 질문보다 먼저 제시**
 - 사용자의 앞선 답변으로 파생되는 후속 질문만 다음 턴에 제시
-- 중요하지 않은 UI 표현은 `ITERATE`로 남기고 진행 가능
+- 중요하지 않은 UI 표현은 내부적으로 `ITERATE`로 남기고 진행 가능
 
-질문은 다음 구조를 따른다.
+### 3.1 사용자에게 보여주는 질문 구조
 
-| 필드 | 의미 |
+| 사용자 표시 항목 | 의미 |
+|---|---|
+| 질문 번호 | 같은 질문을 다시 확인할 때 구분하기 위한 번호 |
+| 왜 확인이 필요한가 | 현재 진행에서 이 결정이 필요한 이유 |
+| 현재 확인한 내용 | Source/문서/기존 결정에서 확인한 사실 |
+| 확인이 필요한 내용 | 사용자가 판단할 한 가지 내용 |
+| 선택 가능한 내용 | 실제 근거가 있을 때만 제시; 강제하지 않음 |
+| 답하지 못할 때 처리 | 지금 보류 가능한지, 어떤 작업 전에 결정해야 하는지 |
+| 다시 확인할 시점 | 다음 작업 / 설계 / 개발 시작 전 / 테스트 전 / 최종 검증 전 |
+
+사용자에게는 Machine 필드명을 그대로 강요하지 않고 자연어로 보여준다.
+
+### 3.2 내부 연결 구조
+
+내부적으로는 다음 필드를 유지할 수 있다.
+
+| 내부 필드 | 의미 |
 |---|---|
 | Question ID | `HITL-<TARGET>-<NN>`; Queue로 이월되어도 같은 ID 유지 |
 | 대상 Block | 답변이 반영될 문서/Canonical 의미 Block |
-| 왜 필요한가 | 현재 진행에서 이 결정이 필요한 이유 |
 | 현재 알고 있는 것 | GIVEN / OBSERVED / CONFIRMED / INFERRED 구분 |
-| 질문 | 사용자가 판단할 한 가지 내용 |
-| 선택지 | 실제 근거가 있을 때만 제시; 강제하지 않음 |
 | 미응답 시 처리 | SOURCE_BLOCK / ALERT / ITERATE + OPEN/DEFERRED |
 | Recheck At | 다시 확인할 Semantic Work/실행 경계 |
 
-사용자에게는 Machine 필드명을 그대로 강요하지 않고 자연어로 보여준다.
+이 표는 Agent/Runtime용이다. 일반 사용자에게 그대로 출력하지 않는다.
 
 ## 4. 사용자가 바로 답하지 못하는 경우 — Human Decision Queue
 
 사용자가 `모르겠다`, `확인 후 답하겠다`, `지금 결정하기 어렵다`, `다음 단계에서 다시 보자`처럼 답하면 Agent는 답을 강요하거나 추정하지 않는다.
 
-해당 질문을 **Human Decision Queue**로 전환하고 선택된 Engineering/Customer Review Surface의 Queue Block에 Agent가 기록한다. 사용자가 표를 직접 관리하지 않는다.
+해당 질문을 내부적으로 **Human Decision Queue**로 전환하고 선택된 Engineering/Customer Review Surface의 Queue Block에 Agent가 기록한다. 사용자가 표를 직접 관리하지 않는다.
 
-Queue의 Human View 최소 항목:
+사람용 문서에서는 이 영역의 제목을 `추가 확인이 필요한 사항`으로 표시한다.
 
-| 필드 | 의미 |
+사람이 보는 최소 항목:
+
+| 항목 | 의미 |
 |---|---|
-| Queue ID | 기존 `Question ID`를 그대로 사용하여 중복 생성 방지 |
-| Related Block | 결정이 반영될 Stable Block ID |
-| 질문 / 결정 필요사항 | 사람이 나중에 답해야 할 한 가지 결정 |
-| 현재 확인값 / 제안 | 현재 Evidence와 Agent Proposal; 확정값처럼 쓰지 않음 |
-| 결정 담당 | Business Owner / PO / Architect / QA 등 실제 Authority |
-| 영향 분류 | `SOURCE_BLOCK / ITERATE / ALERT` |
-| Recheck At | 다음에 반드시 재확인할 Semantic Work 또는 실행 경계 |
-| 상태 | Human View는 `미확정 / 확인중 / 제안 / 보류 / 확정` 사용 |
+| 질문 번호 | 기존 질문 번호를 그대로 사용하여 중복 질문 방지 |
+| 확인 필요사항 | 사람이 나중에 답해야 할 한 가지 결정 |
+| 현재 확인 내용 / 제안 | 현재 근거와 Agent 제안; 확정값처럼 쓰지 않음 |
+| 확인 담당 | 실제 결정을 할 담당자 |
+| 개발 영향 | 개발 전 확인 필요 / 진행 가능·추후 보완 / 주의 필요 |
+| 다시 확인할 시점 | 다음에 반드시 재확인할 작업 시점 |
+| 상태 | 확인 필요 / 확인 중 / 제안 / 보류 / 확정 |
 
 Machine 의미는 기존 `sdlc/design/contracts/open-resolution-contract.json`을 재사용한다.
 
@@ -112,13 +181,15 @@ Machine 의미는 기존 `sdlc/design/contracts/open-resolution-contract.json`�
 
 ### 4.1 Recheck At 결정
 
-Agent가 다음 중 가장 이른 의미 있는 경계를 지정한다.
+Agent가 다음 중 가장 이른 의미 있는 경계를 내부적으로 지정한다.
 
-- `NEXT_SEMANTIC_WORK`: 다음 Semantic Work 시작 시
+- `NEXT_SEMANTIC_WORK`: 다음 작업 시작 시
 - 특정 의미 작업: `PROCESS`, `IMPACT`, `DESIGN`, `PROGRAM`, `DEVELOPMENT`, `TEST`, `VERIFY`
-- `BEFORE_SOURCE_WRITE`: Source 변경 전에 반드시 결정 필요
-- `BEFORE_TEST`: 기대결과/AC가 Test 실행 전에 필요
-- `BEFORE_VERIFY`: 최종 승인/위험 수용 판단이 Verify 전에 필요
+- `BEFORE_SOURCE_WRITE`: 소스 변경 전에 반드시 결정 필요
+- `BEFORE_TEST`: 기대결과/AC가 테스트 실행 전에 필요
+- `BEFORE_VERIFY`: 최종 승인/위험 수용 판단이 최종 검증 전에 필요
+
+사용자 문서에는 위 code 대신 `다음 작업`, `상세설계`, `프로그램설계`, `개발 시작 전`, `테스트 전`, `최종 검증 전`처럼 표시한다.
 
 단순히 시간이 지났다는 이유로 `SOURCE_BLOCK`으로 자동 승격하지 않는다. 실제 downstream 실행 위험이 커질 때만 Guard를 강화한다.
 
@@ -136,12 +207,14 @@ Agent가 다음 중 가장 이른 의미 있는 경계를 지정한다.
 
 ### 4.3 미응답 상태에서 진행 가능 범위
 
-- `SOURCE_BLOCK`: **해당 결정에 의존하는 Source/Action만 제한**한다. 관련 없는 분석/설계까지 무조건 중단하지 않는다.
-- `ITERATE`: 큰 방향이 확정되어 다음 단계로 carry-forward 가능하지만 `Recheck At` 이전에 재검토한다.
-- `ALERT`: 현재 실행을 제한하지 않지만 다음 단계 Review Surface에서 계속 노출한다.
+- `SOURCE_BLOCK`: **해당 결정에 의존하는 Source/Action만 제한**한다. 사용자에게는 `개발 전 확인 필요`로 표시한다.
+- `ITERATE`: 큰 방향이 확정되어 다음 단계로 진행 가능하지만 `Recheck At` 이전에 재검토한다. 사용자에게는 `진행 가능·추후 보완`으로 표시한다.
+- `ALERT`: 현재 실행을 제한하지 않지만 다음 단계 Review Surface에서 계속 노출한다. 사용자에게는 `주의 필요`로 표시한다.
 - 업무 Business Truth는 사용자가 답하지 않았다는 이유로 `ASSUMED` 값으로 조용히 확정하지 않는다.
 
 ## 5. Semantic Work별 질문 기준
+
+아래 표는 Agent 내부 기준이다. 사람에게 질문할 때는 작업 단계 code를 빼고 업무 의미만 보여준다.
 
 | Semantic Work / Stage | Agent가 먼저 할 일 | 사람에게 물을 수 있는 핵심 | 기본 미응답 처리 |
 |---|---|---|---|
@@ -171,7 +244,7 @@ Stage 이름은 내부 Taxonomy다. 일반 사용자는 Stage를 고르지 않�
 4. 단순 표현 수정이면 Canonical Delta를 만들지 않는다.
 5. 대응 Queue가 있으면 같은 Queue ID를 `확정` 처리하고 OPEN/DEFERRED를 해소한다.
 6. Canonical Apply가 성공한 뒤 Projection을 갱신한다.
-7. 어떤 답변이 어떤 Block/Canonical 항목에 반영됐는지 사용자에게 짧게 알려준다.
+7. 어떤 답변이 어떤 Block/Canonical 항목에 반영됐는지 사용자에게는 쉬운 한국어로 짧게 알려준다.
 
 ## 7. 문서 Block Target 규칙
 
@@ -235,3 +308,4 @@ HRIS/hunel Custom Projection:
 - 사용자 답변을 문서 Text에만 반영하고 Canonical 갱신을 생략하지 않는다.
 - 문서 수정을 보고 Business Truth 변경으로 자동 해석하지 않는다.
 - Block 지정이 없더라도 Target과 문맥이 명확하면 도움을 거부하지 않는다. 다만 변경 적용 전에 Agent가 해석한 Block을 명시한다.
+- 사용자에게 `DEFERRED`, `SOURCE_BLOCK`, `Recheck At`, `Human Decision Queue`, `영속적` 같은 표현을 설명 없이 그대로 노출하지 않는다.
