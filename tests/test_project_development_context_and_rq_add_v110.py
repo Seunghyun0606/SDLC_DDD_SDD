@@ -74,11 +74,11 @@ class ProjectDevelopmentContextAndRqAddV110Test(unittest.TestCase):
             self.assertEqual("OPEN", store["entities"]["RQ-002"]["fields"]["desired_result"])
             self.assertEqual("OPEN", store["entities"]["RQ-002"]["fields"]["scope"])
 
-    def test_rq_add_duplicate_fails_closed_without_revision_change(self):
+    def test_rq_add_exact_prompt_is_idempotent_without_revision_change(self):
         mod = load_rq_add()
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
-            mod.add_requirement(
+            first = mod.add_requirement(
                 root,
                 title="중복 확인",
                 request="같은 요청을 중복 등록하지 않는다.",
@@ -88,8 +88,32 @@ class ProjectDevelopmentContextAndRqAddV110Test(unittest.TestCase):
             before = json.loads(store_path.read_text(encoding="utf-8"))["revision"]
             result = mod.add_requirement(
                 root,
-                title="중복 확인",
+                title="표시 제목이 달라도 같은 원문",
                 request="같은 요청을 중복 등록하지 않는다.",
+                refresh_worklist=False,
+            )
+            after = json.loads(store_path.read_text(encoding="utf-8"))["revision"]
+            self.assertEqual("RQ_ALREADY_EXISTS", result["status"])
+            self.assertEqual(first["target"], result["target"])
+            self.assertFalse(result["canonical_mutated"])
+            self.assertEqual(before, after)
+
+    def test_rq_add_same_title_different_prompt_requires_review(self):
+        mod = load_rq_add()
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            mod.add_requirement(
+                root,
+                title="근무계획 수정 제한",
+                request="승인 완료 후 일반 사용자는 근무계획을 수정할 수 없게 해줘.",
+                refresh_worklist=False,
+            )
+            store_path = root / "sdlc/canonical/store.json"
+            before = json.loads(store_path.read_text(encoding="utf-8"))["revision"]
+            result = mod.add_requirement(
+                root,
+                title="근무계획 수정 제한",
+                request="마감 완료 후에는 관리자도 근무계획을 수정하지 못하게 해줘.",
                 refresh_worklist=False,
             )
             after = json.loads(store_path.read_text(encoding="utf-8"))["revision"]
