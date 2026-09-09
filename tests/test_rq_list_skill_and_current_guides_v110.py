@@ -57,12 +57,12 @@ class RqListSkillAndCurrentGuidesV110Test(unittest.TestCase):
             "br-input/glossary.csv",
             "고객 문장 작성 단계 — 필수",
             "누가 / 어떤 조건에서 / 무엇을 하고 / 결과가 무엇인지",
-            "Runtime 초안을 그대로 완료 결과로 제시하지 않는다",
+            "그 파일을 그대로 완료 결과로 제시하지 않는다",
             "Java Class/Method",
             "Table/Column",
             "업무 의미를 확정할 수 없으면 추측하지 않는다",
             "projection generated",
-            "생성 문서 hash/lifecycle을 갱신할 뿐",
+            "고객문서 hash/lifecycle을 갱신할 뿐",
         ]:
             self.assertIn(marker, skill, marker)
 
