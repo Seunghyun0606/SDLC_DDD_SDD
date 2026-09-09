@@ -1,5 +1,5 @@
 {
-  "schema_version": 15,
+  "schema_version": 16,
   "contract_id": "PROJECT_SCAFFOLD_V110_ASSET_BOUNDARY",
   "source_package_contract": "sdlc/design/contracts/harness-package-contract.json",
   "purpose": "v1.10 Framework에서 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide/Skill만 배포하고 Framework 개발/검증 자산은 제외한다.",
@@ -180,9 +180,11 @@
       ".sdlc/management/rq-references.json",
       "docs/00_관리/",
       "docs/10_engineering/",
-      "docs/20_customer/"
+      "docs/20_고객/ (CUSTOMER_STANDARD_3 default)",
+      "docs/20_customer/ (CUSTOMER_WATERFALL_FULL or compatible custom profile)"
     ]
   },
+  "customer_output_path_authority": "selected tailoring profile artifact output_path",
   "framework_source_is_single_source_of_truth": true,
   "project_kit_is_distribution_selection_not_source_copy": true,
   "framework_dev_assets_remain_in_framework_repository": true,
