@@ -46,6 +46,14 @@ class ProcessRunnerV110Test(unittest.TestCase):
         self.assertEqual("PowerShell 결과 한글", decoded.text)
         self.assertFalse(decoded.lossy)
 
+    def test_utf16be_without_bom_process_output_is_detected(self):
+        raw = "PowerShell 결과 한글".encode("utf-16-be")
+        decoded = PROCESS.decode_process_bytes(raw)
+
+        self.assertEqual("utf-16-be", decoded.encoding)
+        self.assertEqual("PowerShell 결과 한글", decoded.text)
+        self.assertFalse(decoded.lossy)
+
     def test_unknown_process_output_fails_closed_but_hash_is_preserved(self):
         decoded = PROCESS.decode_process_bytes(b"\x81")
 
@@ -103,7 +111,7 @@ class ProcessRunnerV110Test(unittest.TestCase):
         self.assertEqual((cmd, "CMD_EXPLICIT"), PROCESS.prepare_command(cmd, platform_name="nt"))
         self.assertEqual((ps, "POWERSHELL_EXPLICIT"), PROCESS.prepare_command(ps, platform_name="nt"))
 
-    def test_windows_config_split_preserves_backslashes_and_quoted_paths(self):
+    def test_windows_config_preserves_backslashes_and_execution_strips_escaped_outer_quotes(self):
         mvn = CONFIG.split_command_string(r".\mvnw.cmd test", platform_name="nt")
         ps = CONFIG.split_command_string(
             r"powershell.exe -File \".\scripts\빌드.ps1\"",
@@ -114,7 +122,11 @@ class ProcessRunnerV110Test(unittest.TestCase):
         self.assertEqual("test", mvn[1])
         self.assertEqual("powershell.exe", ps[0])
         self.assertEqual("-File", ps[1])
-        self.assertEqual(r".\scripts\빌드.ps1", ps[2])
+        self.assertIn(r".\scripts\빌드.ps1", ps[2])
+
+        prepared, mode = PROCESS.prepare_command(ps, platform_name="nt")
+        self.assertEqual("POWERSHELL_EXPLICIT", mode)
+        self.assertEqual(r".\scripts\빌드.ps1", prepared[2])
 
     def test_git_changed_paths_preserves_korean_filename(self):
         with tempfile.TemporaryDirectory() as td:
