@@ -11,6 +11,11 @@
 - `sdlc/agent/skills/work/references/human-language.md`
 - `sdlc/design/contracts/human-facing-language-contract.json`
 - `.sdlc/project.yaml`
+- `sdlc/custom/project/rules/`의 현재 작업 적용 규칙
+- `sdlc/custom/project/standards/`의 현재 Stage/기술/변경 범위 관련 가이드
+- 현재 RQ/PGM이 특정 Domain에 속하면 `sdlc/custom/domain/<domain>/rules/`, `standards/`
+
+`rules/`는 현재 작업에 적용되면 강제 규칙으로 취급하고, `standards/`는 관련 개발/검증 기준으로 사용한다. 모든 standards를 무조건 선로딩하지 않고 필요한 문서만 선택한다.
 
 사용자가 `/work --target RQ-001`, `work --target RQ-001`, 또는 동일한 자연어 의도를 요청하면 위 Core Skill을 수행한다.
 
@@ -20,12 +25,20 @@ INTERACTIVE 실행:
 
 1. `python sdlc/scripts/harness.py work --target <TARGET> ...`
 2. `INTERACTIVE_HANDOFF_READY` 확인
-3. 반환된 `work-context.json`과 Core Reference/Template을 근거로 Artifact 작성
+3. 반환된 `work-context.json`, Core Reference/Template, Project rules/standards를 근거로 Artifact 작성
 4. 같은 run directory에 `stage-result.json` 작성
 5. Harness finalize 실행
 6. `APPLIED / IDEMPOTENT / NO_CHANGE / DRY_RUN_VALIDATED`일 때만 완료 보고
 
 `agent.execution: HEADLESS`이면 Harness가 설정된 Provider를 실행하게 하고 Claude Code 세션이 그 Provider 실행을 암묵적으로 대체하지 않는다.
+
+## 프로젝트 개발 가이드 경계
+
+- 고객이 제공한 원본 개발표준 PDF/DOCX는 `br-input/originals/`에 근거로 보존할 수 있다.
+- 반복 적용할 확정 개발표준은 `sdlc/custom/project/standards/`에 정리한다.
+- 반드시 지켜야 하는 Architecture 금지사항/Tool 사용 강제 규칙은 `sdlc/custom/project/rules/`에 둔다.
+- `rules/`와 `standards/`가 충돌하면 `rules/`를 우선하되 충돌을 숨기지 않는다.
+- 개발표준으로 업무 정책을 임의 생성하거나 변경하지 않는다.
 
 ## 사람에게 보여주는 표현
 
