@@ -28,7 +28,7 @@
    - 현재 Canonical과 검증된 Engineering/Source/Test/Operations 근거가 없는 내용은 미확정 또는 확인 필요로 남긴다.
 3. **Customer Profile이 문서 구성을 결정한다.**
    - 기본 `CUSTOMER_STANDARD_3`만 하드코딩하지 않는다.
-   - 프로젝트가 1/3/5/8/13/N종 Custom Profile을 사용하면 해당 Profile의 `artifacts`를 읽어 그 구성을 따른다.
+   - 프로젝트가 1/3/5/8/13/N종 Custom Profile을 사용하면 Customer Profile의 `artifacts`를 읽어 그 구성을 따른다.
 4. **Engineering 문서 구조와 Customer 문서 구조를 직접 묶지 않는다.**
    - Customer Profile은 독립적으로 선택한다.
    - Engineering 문서는 고객문서를 보강하는 근거일 수 있지만 문서 수/순번을 강제하지 않는다.
