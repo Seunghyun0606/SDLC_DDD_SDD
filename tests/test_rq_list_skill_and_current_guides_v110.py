@@ -60,7 +60,7 @@ class RqListSkillAndCurrentGuidesV110Test(unittest.TestCase):
             "그 파일을 그대로 완료 결과로 제시하지 않는다",
             "Java Class/Method",
             "Table/Column",
-            "업무 의미를 확정할 수 없으면 추측하지 않는다",
+            "알 수 없으면 추측하지 않는다",
             "projection generated",
             "고객문서 hash/lifecycle을 갱신할 뿐",
         ]:
