@@ -44,6 +44,7 @@ jobs:
             sdlc/scripts/customer_projection_runtime.py \
             sdlc/scripts/projection_lifecycle_runtime.py \
             sdlc/scripts/validate_canonical_projection_invariant.py \
+            sdlc/scripts/validate_human_facing_language.py \
             sdlc/scripts/extract_document_evidence.py \
             sdlc/scripts/normalize_external_evidence.py \
             sdlc/scripts/capture_customer_decision.py \
@@ -54,14 +55,17 @@ jobs:
           python -m unittest \
             tests.test_change_level_control_plane_v110 \
             tests.test_hris_hunel_custom_engineering_profile \
-            tests.test_hitl_block_edit_ux -v
+            tests.test_hitl_block_edit_ux \
+            tests.test_human_facing_language_v110 -v
+      - name: Human-facing terminology validation
+        run: python sdlc/scripts/validate_human_facing_language.py --root .
       - name: v1.10 projection separation regression
         run: |
           python -m unittest \
             tests.test_projection_separation_v110 \
             tests.test_canonical_projection_invariant_v19 \
             tests.test_projection_visibility_hygiene_v110 -v
-      - name: v1.10 guide, config, RQ management and encoding regression
+      - name: v1.10 guide, config, RQ management and document encoding regression
         run: |
           python -m unittest \
             tests.test_guide_consistency_v110 \
