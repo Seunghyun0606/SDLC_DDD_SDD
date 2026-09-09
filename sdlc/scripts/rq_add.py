@@ -76,16 +76,23 @@ def _rq_entities(store: dict[str, Any]):
             yield str(entity_id), entity
 
 
-def _existing_exact(store: dict[str, Any], *, prompt_key: str, title: str) -> list[str]:
-    wanted_title = _normalize(title)
-    rows: list[str] = []
+def _existing_by_prompt(store: dict[str, Any], prompt_key: str) -> str | None:
     for entity_id, entity in _rq_entities(store):
         fields = entity.get("fields") or {}
         if str(fields.get("direct_requirement_key") or "") == prompt_key:
-            rows.append(entity_id)
-            continue
+            return entity_id
+    return None
+
+
+def _same_title_candidates(store: dict[str, Any], title: str) -> list[str]:
+    wanted_title = _normalize(title)
+    if not wanted_title:
+        return []
+    rows: list[str] = []
+    for entity_id, entity in _rq_entities(store):
+        fields = entity.get("fields") or {}
         existing_title = _normalize(fields.get("name") or fields.get("title") or "")
-        if wanted_title and existing_title == wanted_title:
+        if existing_title == wanted_title:
             rows.append(entity_id)
     return sorted(set(rows))
 
@@ -204,13 +211,35 @@ def add_requirement(root: Path, *, request: str, title: str | None = None,
     store_file = store_file if store_file.is_absolute() else root / store_file
 
     store = APPLY.load_store(store_file)
-    duplicates = _existing_exact(store, prompt_key=prompt_key, title=title)
-    if duplicates and not allow_duplicate:
+
+    # Exact same direct prompt is idempotent even if a later caller supplies a different display title.
+    # Return the existing target without mutating Canonical or consuming a new RQ sequence number.
+    existing = _existing_by_prompt(store, prompt_key)
+    if existing:
+        result = {
+            "status": "RQ_ALREADY_EXISTS",
+            "created": False,
+            "target": existing,
+            "canonical_mutated": False,
+            "original_request_preserved": True,
+            "sequence_policy": "SINGLE_WRITER_FILE_DERIVED",
+            "message": "같은 요청 원문으로 이미 생성된 RQ가 있어 기존 RQ를 사용합니다.",
+            "next_command": f"python sdlc/scripts/harness.py work --target {existing}",
+            "change_existing_requirement": f"python sdlc/scripts/harness.py change --target {existing}",
+        }
+        if refresh_worklist:
+            result["worklist"] = _refresh_worklist(root)
+        return result
+
+    # Same display title with a different original request may be a real duplicate or a separate request.
+    # Do not guess: require review unless the caller explicitly confirmed that a separate RQ is intended.
+    title_duplicates = _same_title_candidates(store, title)
+    if title_duplicates and not allow_duplicate:
         return {
             "status": "RQ_ADD_DUPLICATE_REVIEW_REQUIRED",
             "created": False,
-            "possible_duplicates": duplicates,
-            "message": "같은 요청 원문 또는 같은 요구사항명의 RQ가 이미 있습니다. 기존 RQ인지 확인하세요.",
+            "possible_duplicates": title_duplicates,
+            "message": "같은 요구사항명의 RQ가 이미 있습니다. 기존 RQ 변경인지 별도 신규 RQ인지 확인하세요.",
             "canonical_mutated": False,
             "sequence_policy": "SINGLE_WRITER_FILE_DERIVED",
         }
