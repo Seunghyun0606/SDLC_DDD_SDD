@@ -1,16 +1,30 @@
 ---
-description: Project profile and overlay resolver bridge
+description: Project profile, rules, standards and overlay resolver bridge
 alwaysApply: true
 ---
 # Project Overlay Rule
 
-작업 시작 시 `sdlc/config/project-profile.example.yaml`의 계약을 기준으로 실제 Project Profile을 찾는다.
+작업 시작 시 `.sdlc/project.yaml`을 기준으로 실제 Project Profile을 확인한다.
 
 적용 우선순위:
 
 `Core Default → Preset → Project Profile → Project Overlay → Domain Overlay → Local Override`
 
+## 프로젝트 개발 가이드 로딩 규칙
+
+프로젝트별 개발 규칙/가이드가 있으면 Source 분석·설계·개발·테스트 전에 다음 순서로 확인한다.
+
+1. `sdlc/custom/project/rules/`
+   - 프로젝트 Architecture 금지사항, 반드시 지켜야 하는 규칙, Tool 사용 강제 규칙이다.
+   - 현재 작업에 적용 가능한 파일은 **필수 규칙(MUST)** 으로 취급한다.
+2. `sdlc/custom/project/standards/`
+   - Java/JSP/DB/SQL/Test/Security/배포 등 개발 가이드와 표준이다.
+   - 전체를 무조건 선로딩하지 않고 현재 Stage/기술/변경 범위와 관련된 문서만 읽는다.
+3. 현재 RQ/PGM이 특정 Domain에 속하면 `sdlc/custom/domain/<domain>/rules/`와 `standards/`를 같은 방식으로 추가 확인한다.
+
+프로젝트 개발 가이드가 고객 원본 PDF/DOCX로만 제공되었다면 `br-input/originals/`의 원본은 근거로 보존하고, Agent가 반복해서 따라야 하는 확정 규칙은 `sdlc/custom/project/rules/` 또는 `standards/`에 정리한다.
+
 - `sdlc/custom/project/`가 있으면 Project 차이만 읽는다.
-- 현재 RQ/PGM이 특정 Domain에 속하면 `sdlc/custom/domain/<domain>/`을 추가로 읽는다.
 - Overlay가 Core의 안전/추적성 invariant를 제거하려 하면 `CONFIGURATION_GAP` 또는 `DESIGN_CONTINUITY_WARNING`으로 남긴다.
 - Source root, build/test 명령, 기술 Stack은 Project Profile/Source Profile에서 가져오며 Core Skill/Template에 프로젝트 경로를 하드코딩하지 않는다.
+- `rules/`와 `standards/`에 서로 충돌하는 내용이 있으면 강제 규칙인 `rules/`를 우선하되, 업무 의미를 임의로 확정하지 말고 충돌을 사용자에게 알려야 한다.
