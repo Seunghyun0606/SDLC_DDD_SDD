@@ -1,16 +1,8 @@
 #!/usr/bin/env python3
 """Cross-platform subprocess execution with lossless output decoding.
 
-The Harness never relies on ``text=True`` / host locale for captured process output.
-It captures bytes, decodes stdout/stderr independently, and records the decoder used.
-
-Shell handling is explicit:
-- DIRECT: normal executable argv
-- CMD_AUTO: .cmd/.bat on Windows via COMSPEC /d /s /c
-- POWERSHELL_AUTO / PWSH_AUTO: .ps1 via an available PowerShell host
-- *_EXPLICIT: caller already supplied cmd.exe / powershell.exe / pwsh
-
-``shell=True`` is intentionally not used.
+Captured process output is always bytes-first. The Harness does not rely on ``text=True`` or the
+host locale for stdout/stderr. CMD/PowerShell handling is explicit and ``shell=True`` is forbidden.
 """
 from __future__ import annotations
 
@@ -116,14 +108,24 @@ def _windows_code_page_encodings() -> list[str]:
 
 
 def _utf16_without_bom_candidate(data: bytes) -> str | None:
+    """Detect likely UTF-16 output without a BOM using byte-lane NUL dominance.
+
+    PowerShell/Windows tools can emit UTF-16LE without a BOM. Korean UTF-16 code units may contain
+    an occasional zero byte in the non-dominant lane, so a zero-tolerance threshold is too strict.
+    We require a clearly dominant NUL lane instead of requiring the opposite lane to be almost empty.
+    """
     if len(data) < 4 or len(data) % 2:
         return None
     pairs = max(len(data) // 2, 1)
-    even_nuls = sum(1 for i in range(0, len(data), 2) if data[i] == 0)
-    odd_nuls = sum(1 for i in range(1, len(data), 2) if data[i] == 0)
-    if odd_nuls / pairs >= 0.35 and even_nuls / pairs <= 0.05:
+    even_ratio = sum(1 for i in range(0, len(data), 2) if data[i] == 0) / pairs
+    odd_ratio = sum(1 for i in range(1, len(data), 2) if data[i] == 0) / pairs
+
+    def dominant(primary: float, secondary: float) -> bool:
+        return primary >= 0.30 and (primary - secondary) >= 0.20 and primary >= max(secondary * 3.0, 0.30)
+
+    if dominant(odd_ratio, even_ratio):
         return "utf-16-le"
-    if even_nuls / pairs >= 0.35 and odd_nuls / pairs <= 0.05:
+    if dominant(even_ratio, odd_ratio):
         return "utf-16-be"
     return None
 
@@ -132,6 +134,9 @@ def _valid_decoded_text(text: str, encoding: str, *, allow_nul: bool = False) ->
     if "\ufffd" in text:
         return False
     if "\x00" in text and not allow_nul and not encoding.lower().startswith("utf-16"):
+        return False
+    disallowed_controls = sum(1 for ch in text if ord(ch) < 32 and ch not in "\r\n\t\x00")
+    if disallowed_controls > max(1, len(text) // 20):
         return False
     return True
 
@@ -164,8 +169,8 @@ def decode_process_bytes(
 
     utf16_guess = _utf16_without_bom_candidate(raw)
     candidates: list[str | None] = [
-        "utf-8",
         utf16_guess,
+        "utf-8",
         *(preferred_encodings or []),
         *_windows_code_page_encodings(),
         locale.getpreferredencoding(False),
@@ -196,8 +201,22 @@ def decode_process_bytes(
     )
 
 
+def _strip_outer_command_quotes(value: str) -> str:
+    """Remove one outer quote layer, including config-escaped ``\"path\"`` wrappers.
+
+    Only a quote pair wrapping the entire argv token is removed. Interior escaping is preserved.
+    This makes values surviving JSON/YAML/Windows command configuration safe at the execution edge.
+    """
+    text = str(value)
+    if len(text) >= 4 and text[:2] in {"\\\"", "\\'"} and text[-2:] == text[:2]:
+        return text[2:-2]
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in {"'", '"'}:
+        return text[1:-1]
+    return text
+
+
 def _basename(token: str) -> str:
-    normalized = str(token).strip().strip('"').replace("\\", "/")
+    normalized = _strip_outer_command_quotes(str(token).strip()).replace("\\", "/")
     return normalized.rsplit("/", 1)[-1].lower()
 
 
@@ -216,7 +235,7 @@ def prepare_command(
     env: Mapping[str, str] | None = None,
     which_fn: Callable[[str], str | None] = shutil.which,
 ) -> tuple[list[str], str]:
-    original = [str(part) for part in command]
+    original = [_strip_outer_command_quotes(str(part)) for part in command]
     if not original or not all(part for part in original):
         raise ValueError("process command must contain non-empty argv strings")
 
@@ -267,7 +286,7 @@ def run_process(
     allow_nul: bool = False,
     which_fn: Callable[[str], str | None] = shutil.which,
 ) -> ProcessResult:
-    original = [str(part) for part in command]
+    original = [_strip_outer_command_quotes(str(part)) for part in command]
     child_env = None
     if env is not None:
         child_env = dict(os.environ)
