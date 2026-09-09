@@ -13,6 +13,9 @@
 Stage별 Reference:
 - `sdlc/agent/skills/work/references/`
 
+프로젝트 개발 Context 공통 기준:
+- `sdlc/agent/skills/work/references/project-development-context.md`
+
 사람에게 보여주는 표현 기준:
 - `sdlc/design/contracts/human-facing-language-contract.json`
 - `sdlc/agent/skills/work/references/human-language.md`
@@ -21,6 +24,9 @@ Stage별 Reference:
 - `sdlc/custom/project/rules/` — 반드시 지켜야 하는 프로젝트 규칙/금지사항/Architecture/Tool 사용 규칙
 - `sdlc/custom/project/standards/` — Java/JSP/DB/SQL/Test/Security/배포 등 개발 가이드와 표준
 - 특정 Domain 작업이면 `sdlc/custom/domain/<domain>/rules/`, `standards/`도 추가 확인
+
+프로젝트 진행 중 자연어로 새 RQ를 추가할 때:
+- `sdlc/agent/skills/rq-add/SKILL.md`
 
 ## Work 요청 해석
 
@@ -54,6 +60,22 @@ INTERACTIVE에서는:
 - 고객이 제공한 원본 개발표준 PDF/DOCX는 `br-input/originals/`에 보존할 수 있다. 반복 적용할 확정 규칙은 `sdlc/custom/project/rules/` 또는 `standards/`에 정리한다.
 - 가이드에 없는 업무 정책을 개발 편의상 만들어내지 않는다.
 - 개발 가이드의 기술 규칙과 고객/업무 기준 정보가 충돌하면 업무 기준 정보를 자동 변경하지 않고 확인이 필요한 사항으로 남긴다.
+
+## 새 RQ 간편추가
+
+프로젝트 진행 중 추가 요구사항 한두 건이 자연어로 들어오면 전체 Excel Intake를 반복하지 않고 `rq-add` Skill을 사용한다.
+
+```text
+새 RQ 추가해줘. 승인 완료된 근무계획은 일반 사용자가 수정할 수 없게 해줘.
+```
+
+Agent는 사용자 원문을 보존하고 다음 공식 Runtime으로 새 RQ 후보를 추가한다.
+
+```bash
+python sdlc/scripts/harness.py rq-add --title "<짧은 제목>" --request "<사용자 원문>"
+```
+
+기존 RQ 의미를 변경하는 요청은 새 RQ로 만들지 않고 `/change`로 처리한다. 대량/정형 요구사항은 기존 `/intake`를 사용한다.
 
 ## 사람에게 보여주는 표현
 
