@@ -23,6 +23,8 @@ alwaysApply: true
 3. 현재 RQ/PGM이 특정 Domain에 속하면 `sdlc/custom/domain/<domain>/rules/`와 `standards/`를 같은 방식으로 추가 확인한다.
 4. 프로젝트/고객 업무 용어가 필요하면 `br-input/glossary.csv`를 우선 확인한다.
 
+**Source 수정 전에 반드시 확인**: 현재 변경에 적용되는 Project Rule과 관련 Standard를 확인하고, 적용할 가이드가 없거나 서로 충돌하면 그 사실을 작업 결과에 남긴다.
+
 프로젝트 개발 가이드가 고객 원본 PDF/DOCX로만 제공되었다면 `br-input/originals/`의 원본은 근거로 보존하고, Agent가 반복해서 따라야 하는 확정 규칙은 `sdlc/custom/project/rules/` 또는 `standards/`에 정리한다.
 
 - `sdlc/custom/project/`가 있으면 Project 차이만 읽는다.
