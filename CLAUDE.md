@@ -8,6 +8,7 @@
 
 - `sdlc/agent/skills/work/SKILL.md`
 - 선택 Stage에 해당하는 `sdlc/agent/skills/work/references/<stage>.md`
+- `sdlc/agent/skills/work/references/project-development-context.md`
 - `sdlc/agent/skills/work/references/human-language.md`
 - `sdlc/design/contracts/human-facing-language-contract.json`
 - `.sdlc/project.yaml`
@@ -39,6 +40,22 @@ INTERACTIVE 실행:
 - 반드시 지켜야 하는 Architecture 금지사항/Tool 사용 강제 규칙은 `sdlc/custom/project/rules/`에 둔다.
 - `rules/`와 `standards/`가 충돌하면 `rules/`를 우선하되 충돌을 숨기지 않는다.
 - 개발표준으로 업무 정책을 임의 생성하거나 변경하지 않는다.
+
+## 새 RQ 간편추가
+
+사용자가 프로젝트 진행 중 새 요구사항 한두 건을 자연어로 추가해 달라고 하면 `sdlc/agent/skills/rq-add/SKILL.md`를 따른다.
+
+```text
+새 RQ 추가해줘. 승인 완료된 근무계획은 일반 사용자가 수정할 수 없게 해줘.
+```
+
+Agent는 원문을 보존하고 다음 공식 Runtime을 사용한다.
+
+```bash
+python sdlc/scripts/harness.py rq-add --title "<짧은 제목>" --request "<사용자 원문>"
+```
+
+기존 RQ의 의미 변경은 `/change`, 대량 요구사항은 `/intake`로 처리한다.
 
 ## 사람에게 보여주는 표현
 
