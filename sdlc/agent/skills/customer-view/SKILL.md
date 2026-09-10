@@ -48,6 +48,9 @@
    - 사람 수정 내용이 있는 문서는 재검토 필요를 알리고 `/change` 또는 `/work` 경계부터 판단한다.
 8. **고객문서를 최신이라고 말하기 전에 Lifecycle을 확인한다.**
    - 파일 존재 여부만 보고 최신이라고 판단하지 않는다.
+9. **정식 문서와 미리보기 Lifecycle을 섞지 않는다.**
+   - 공식 `harness.py customer-view`가 `--out`으로 Profile 기본 경로와 다른 파일을 만들면 별도 미리보기로 취급한다.
+   - 미리보기 생성 때문에 정식 Customer artifact의 검토상태를 바꾸지 않는다.
 
 ## 3. 공식 Runtime 진입점
 
@@ -57,6 +60,17 @@
 python sdlc/scripts/harness.py customer-view \
   --target <RQ> \
   --type <customer-artifact-id>
+```
+
+공식 Harness의 `customer-view`는 안전 Facade를 거친다. 정식 고객문서가 최종검토되었거나 사람 수정이 감지된 경우 기본 경로를 자동 덮어쓰지 않는다.
+
+비교 초안이 필요하면 정식 Profile 경로와 다른 `--out`을 사용한다.
+
+```bash
+python sdlc/scripts/harness.py customer-view \
+  --target RQ-001 \
+  --type solution_agreement \
+  --out docs/20_고객/RQ-001/미리보기_A01.md
 ```
 
 고객/Engineering/PM 생성 문서 상태 확인:
@@ -73,7 +87,7 @@ python sdlc/scripts/harness.py check <RQ>
 
 직접 `customer_projection_runtime.py` 또는 Lifecycle JSON을 수정하지 않고 공식 Harness 진입점을 사용한다.
 
-중요: `harness.py customer-view`는 근거를 안전하게 선별·조립하는 Runtime 경계다. **사람에게 보여줄 최종 고객문서는 이 Skill의 `고객 문장 작성 단계`까지 완료한 결과**를 사용한다.
+중요: `harness.py customer-view`는 근거를 안전하게 선별·조립하고 기존 고객문서를 보호하는 Runtime 경계다. **사람에게 보여줄 최종 고객문서는 이 Skill의 `고객 문장 작성 단계`까지 완료한 결과**를 사용한다.
 
 ## 4. 고객문서 작성/현행화 기본 Flow
 
@@ -90,7 +104,7 @@ python sdlc/scripts/harness.py check <RQ>
    ├─ CURRENT → 현재 문서를 보여주거나 명시적 요청 시 재생성
    ├─ PENDING_REVIEW → 최신 내용 확인 후 검토 대기 상태로 보여줌
    ├─ MANUAL_EDIT_DETECTED → 자동 덮어쓰기 금지, 수정 의미 분류
-   └─ FINAL_REVIEW + 이후 변경 → 기존 문구 보존, 재검토 필요
+   └─ FINAL_REVIEW + 이후 변경 → 기존 문구 보존, 필요하면 --out 비교 초안
 → 생성 초안의 고객 본문을 같은 사실 기준으로 쉬운 한국어 문장으로 재작성
 → 기술 식별자/내부 상태/코드 조각 노출 여부 자체검토
 → 재작성된 파일을 Projection generated로 다시 등록
@@ -104,7 +118,17 @@ python sdlc/scripts/harness.py check <RQ>
 
 사용자가 지정한 RQ가 기준 정보에 없으면 고객문서를 임의 생성하지 않는다.
 
-새 요구사항이면 먼저 Requirement Intake가 필요하다.
+신규 요구사항이면 다음처럼 구분한다.
+
+```text
+새 요구사항 한두 건 / 자연어 요청
+→ rq-add
+
+대량 요구사항 / 고객 XLSX 파일
+→ intake
+```
+
+실제 RQ가 생성된 뒤 반환된 RQ ID로 고객문서를 만든다.
 
 ### 5.2 현재 Customer Profile 확인
 
@@ -319,6 +343,8 @@ python sdlc/scripts/harness.py projection generated \
   --manual-edit-policy FINAL_REVIEW_ONLY
 ```
 
+`--out` 미리보기의 경우에는 `customer-view` 결과가 반환한 **별도 `artifact_id`와 `artifact_path`**를 그대로 사용한다. 정식 artifact id를 추측해 다시 등록하지 않는다.
+
 그 다음:
 
 ```bash
@@ -348,7 +374,7 @@ python sdlc/scripts/harness.py customer-view \
 먼저 기존 metadata의 `lifecycle`을 확인한다.
 
 - 일반 초안/검토중 문서: 현재 기준 정보/검증 근거를 이용해 다시 생성할 수 있다.
-- `FINAL_REVIEW`: 자동 재생성하지 않는다. 기존 사람 문구를 보존하고 `재검토 필요`로 안내한다.
+- `FINAL_REVIEW`: 정식 파일을 자동 재생성하지 않는다. 기존 사람 문구를 보존하고 `재검토 필요`로 안내한다. 현재 기준 초안이 필요하면 `--out`으로 별도 미리보기를 생성한다.
 
 ### 7.3 CURRENT
 
@@ -364,7 +390,7 @@ python sdlc/scripts/harness.py customer-view \
 
 ### 7.5 MANUAL_EDIT_DETECTED
 
-자동 덮어쓰지 않는다.
+자동 덮어쓰지 않는다. 공식 `harness.py customer-view`도 정식 경로 생성을 차단한다.
 
 사람 수정 내용을 다음 중 하나로 분류한다.
 
@@ -372,7 +398,7 @@ python sdlc/scripts/harness.py customer-view \
 - `Requirement/Business Rule/Scope/TO-BE 의미 변경`: `/change`
 - `Source/DB/Program/AS-IS/Test 근거 수정`: `/work`
 
-의미가 불명확하면 사람에게 짧게 확인한 뒤 처리한다.
+의미가 불명확하면 사람에게 짧게 확인한 뒤 처리한다. 비교 초안이 필요하면 `--out`을 사용한다.
 
 ### 7.6 FINAL_REVIEW
 
@@ -384,14 +410,51 @@ FINAL_REVIEW + 현재 기준 정보 동일
 → 현재 문서로 보여줌
 
 FINAL_REVIEW + 이후 기준 정보 변경
-→ STALE_VIEW
-→ 기존 파일 자동 덮어쓰기 금지
+→ 기존 정식 파일 자동 덮어쓰기 금지
+→ 필요하면 --out 비교 초안 생성
 → 무엇이 달라졌는지 확인
 → /change 또는 /work 반영 여부 결정
 → 고객문서 재검토
 ```
 
-## 8. 현재 Source/Test까지 반영해 달라는 요청
+## 8. 고객 검토 결과 기록
+
+고객/업무담당자가 생성 문서를 확인한 결과는 Lifecycle에 명시적으로 기록할 수 있다.
+
+일반 승인:
+
+```bash
+python sdlc/scripts/harness.py projection review \
+  --target RQ-001 \
+  --artifact-id solution_agreement \
+  --reviewer "고객담당자" \
+  --accept
+```
+
+최종 합의 문구:
+
+```bash
+python sdlc/scripts/harness.py projection review \
+  --target RQ-001 \
+  --artifact-id solution_agreement \
+  --reviewer "고객담당자" \
+  --accept \
+  --final-review
+```
+
+실제 업무정책 변경 요청이 검토 과정에서 나오면:
+
+```bash
+python sdlc/scripts/harness.py projection review \
+  --target RQ-001 \
+  --artifact-id solution_agreement \
+  --reviewer "고객담당자" \
+  --business-policy-edit "승인 후에는 관리자만 수정 가능"
+```
+
+이 명령은 변경 후보를 기록할 뿐 업무 기준을 자동 변경하지 않는다. 이후 `/change`를 사용한다.
+
+## 9. 현재 Source/Test까지 반영해 달라는 요청
 
 `customer-view` 자체가 Source를 다시 분석하거나 Test를 실행하는 것은 아니다.
 
@@ -410,23 +473,25 @@ Agent는 먼저 관련 `/work` 결과와 실제 검증 근거가 최신인지 �
 
 고객문서를 만들기 위해 Source 사실을 추측하지 않는다.
 
-## 9. 관련 Engineering/Test 근거를 추가할 때
+## 10. 관련 Engineering/Test 근거를 추가할 때
 
 Target과 실제 관련된 검증 파일만 선택한다. 전체 `docs/10_engineering`을 무조건 입력하지 않는다.
 
-예:
+기본 `ENGINEERING_SDD_COMPACT` 예:
 
 ```bash
 python sdlc/scripts/harness.py customer-view \
   --target RQ-001 \
   --type delivery_scope \
-  --input docs/10_engineering/RQ-001/01_업무정의서.md \
-  --input docs/10_engineering/RQ-001/02_작업지시서.md
+  --input docs/10_engineering/RQ-001/00_work-map.md \
+  --input docs/10_engineering/RQ-001/specs/RQ-001.md
 ```
+
+HRIS처럼 Project Custom Profile이 `01_업무정의서.md`, `02_작업지시서.md`를 생성하는 경우에는 해당 프로젝트의 실제 출력 파일을 입력한다.
 
 추가 입력이 Customer 문서에 통째로 복사되는 것은 아니다. Customer Projection Contract와 Profile에서 허용된 내용만 조립한다.
 
-## 10. 기본 CUSTOMER_STANDARD_3 사용 예
+## 11. 기본 CUSTOMER_STANDARD_3 사용 예
 
 ### A01 요구·업무·기능 합의서
 
@@ -458,18 +523,19 @@ python sdlc/scripts/harness.py customer-view \
 docs/20_고객/RQ-001/
 ```
 
-## 11. `전체 고객문서 최신화` 요청
+## 12. `전체 고객문서 최신화` 요청
 
 고정 3종 명령을 무조건 실행하지 않는다.
 
 1. 프로젝트 Customer Profile을 읽는다.
 2. Profile `artifacts`를 순서대로 확인한다.
 3. 각 artifact의 현재 Projection 상태를 확인한다.
-4. FINAL_REVIEW/MANUAL_EDIT_DETECTED는 자동 덮어쓰기 대상에서 제외한다.
+4. FINAL_REVIEW/MANUAL_EDIT_DETECTED는 정식 경로 자동 덮어쓰기 대상에서 제외한다.
 5. 나머지 필요한 artifact만 `customer-view --type <artifact-id>`로 초안 생성/현행화한다.
 6. 생성된 파일마다 6장의 고객 문장 작성 단계를 수행한다.
 7. 재작성된 파일을 `projection generated`로 다시 등록한다.
 8. 마지막에 `projection status --target <RQ>`를 다시 실행한다.
+9. 최종검토 문서에 새 기준과의 비교가 필요하면 정식 파일을 덮지 않고 `--out` 미리보기를 사용한다.
 
 결과는 다음처럼 간결하게 보여준다.
 
@@ -481,7 +547,7 @@ RQ-001 고객문서 현행화
 - 최종검토 문서: 자동 덮어쓰기 없음
 ```
 
-## 12. 고객문서에서 수정 요청을 받은 경우
+## 13. 고객문서에서 수정 요청을 받은 경우
 
 고객이나 사용자가 문서의 특정 부분을 바꿔달라고 요청하면 파일부터 고치지 않는다.
 
@@ -499,7 +565,7 @@ A01 표현을 "신청" 대신 "요청"으로 통일해줘.
 
 업무 의미가 변하지 않는 문구 변경이라면 생성 문서 표현 수정으로 다룰 수 있다. FINAL_REVIEW 문구라면 사람 수정 이력을 보존한다.
 
-## 13. 사람에게 보여줄 결과
+## 14. 사람에게 보여줄 결과
 
 작업 완료 보고는 다음만 우선한다.
 
@@ -510,7 +576,8 @@ A01 표현을 "신청" 대신 "요청"으로 통일해줘.
 - 근거 부족 또는 사람 확인 필요 항목
 - 고객 용어집 적용 여부
 - 고객용 자연어 문장 자체검토 완료 여부
-- FINAL_REVIEW 자동 덮어쓰기 여부
+- 최종검토/사람수정 정식 문서 자동 덮어쓰기 여부
+- `--out` 미리보기 사용 시 정식 문서 Lifecycle 보존 여부
 
 Machine Runtime JSON 전체를 그대로 사용자에게 출력하지 않는다.
 
