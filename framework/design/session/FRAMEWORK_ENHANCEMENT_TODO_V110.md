@@ -1,4 +1,4 @@
-# Framework Enhancement TODO — Unit Knowledge / AS-IS Canonical Bootstrap / E2E Suite / Multi-writer RQ
+# Framework Enhancement TODO — Unit Knowledge / AS-IS Canonical Bootstrap / E2E Suite / Multi-writer RQ / Late Reference Ingest
 
 > 상태: **TODO / 후순위**  
 > 범위: **Framework 설계 Backlog 전용**  
@@ -7,12 +7,13 @@
 
 ## 0. 목적
 
-현재 v1.10 Harness에서 당장 구현하지 않고 후속 Framework 고도화로 남길 네 영역을 명확히 고정한다.
+현재 v1.10 Harness에서 당장 구현하지 않고 후속 Framework 고도화로 남길 다섯 영역을 명확히 고정한다.
 
 1. KB 형성과 연계한 Work Unit 누적·고도화
 2. AS-IS 시스템 현행 분석을 통한 Canonical Bootstrap
 3. Project-wide E2E 통합테스트 Scenario Suite
 4. 여러 사용자/Agent가 동시에 RQ를 생성할 수 있는 RQ ID/Sequence Allocation
+5. 프로젝트 진행 중 늦게 들어온 인터뷰/회의록/업무자료를 기존 RQ에 간단히 등록·연결하는 Late Reference Ingest UX
 
 기존 `framework/design/session/KB_LIFECYCLE_TODO.md`의 Knowledge Lifecycle은 이 Backlog와 연계하지만, 이번 범위에서 상태 전이 Runtime을 구현하지 않는다.
 
@@ -213,7 +214,83 @@ User/Agent C ─┘
 
 ---
 
-## 5. 우선순위
+## TODO-5. Late Reference Ingest / 기존 RQ 참고자료 추가 UX
+
+### 현재 문제
+
+프로젝트 진행 중 고객 인터뷰, 회의록, 정책 설명, 화면 캡처 설명, 운영 담당자 메모 등 요구사항 이해에 필요한 자료가 뒤늦게 들어올 수 있다.
+
+현재 Runtime은 `intake_reference_draft.py`를 통해 기존 RQ와 새 참고문서를 받아 다음 작업을 수행할 수 있다.
+
+- `br-input/manifest.yaml` 문서 등록
+- 지원 형식 Evidence 추출
+- 기존 RQ와 참고문서 연결 후보 생성
+- `제안` 상태의 Review Surface 생성
+
+또한 `rq-ref link`로 Manifest에 이미 등록된 문서를 기존 RQ에 직접 연결할 수 있다.
+
+하지만 공식 Harness UX에는 **새 참고문서를 등록하면서 기존 RQ에 연결 초안까지 만드는 단일 사용자 명령**이 없다. 따라서 사용자가 저수준 Runtime을 직접 알아야 하는 Gap이 있다.
+
+### 목표 방향
+
+```text
+고객 인터뷰 / 회의록 / 추가 업무자료
+              ↓
+        rq-ref add/ingest
+              ↓
+      Manifest 문서 등록
+              ↓
+        Evidence 추출
+              ↓
+   기존 RQ Reference 제안
+              ↓
+      Agent/사람 검토
+              ↓
+       확정 / 제외
+              ↓
+ /work에서 실제 사용한 사실만 Provenance
+```
+
+예상 사용자 UX:
+
+```bash
+python sdlc/scripts/harness.py rq-ref add \
+  --target RQ-001 \
+  --reference br-input/originals/고객인터뷰.md
+```
+
+자연어 Skill UX:
+
+```text
+오늘 받은 고객 인터뷰 결과를 RQ-001 참고자료로 추가해줘.
+```
+
+### 후속 설계 항목
+
+- `rq-ref add` 또는 `rq-ref ingest` 공식 subcommand 명칭 확정
+- 기존 `intake_reference_draft.py`의 등록/추출/제안 기능을 재사용하는 Facade 설계
+- 여러 `--target`과 여러 `--reference`를 한 번에 받을 수 있는 many-to-many 입력
+- 새 문서를 특정 RQ에 바로 `확정` 연결할지 기본 `제안`으로 둘지 정책
+- 문서가 프로젝트 밖에 있을 때 `br-input/originals/` 복사 정책 유지
+- 동일 path/hash 재등록 시 idempotency
+- 문서 교체/새 버전 도착 시 lifecycle/version 처리
+- 인터뷰/회의록처럼 특정 발언 위치가 중요한 문서의 locator 표현
+- 신규 자료가 기존 Requirement/BR과 충돌할 때 `/change`로 넘기는 경계
+- 신규 자료에서 완전히 새로운 요구가 발견될 때 `rq-add`로 넘기는 경계
+- `rq-ref` Skill과 13번 사용자 가이드의 자연어 Flow 통합
+
+### 완료 조건 후보
+
+- 기존 RQ를 다시 Requirement Intake하지 않고 새 참고자료를 등록할 수 있다.
+- 하나의 RQ에 여러 참고문서를 연결할 수 있다.
+- 하나의 참고문서를 여러 RQ에 연결할 수 있다.
+- Reference 연결만으로 Canonical Business Truth가 자동 변경되지 않는다.
+- 실제 `/work`에서 사용한 근거만 Canonical Provenance로 승격된다.
+- 같은 문서를 다시 등록해도 Manifest/Reference가 불필요하게 중복되지 않는다.
+
+---
+
+## 6. 우선순위
 
 현재 우선순위는 다음과 같이 둔다.
 
@@ -221,6 +298,8 @@ User/Agent C ─┘
 현재 v1.10 사용성/실행 안정화
         ↓
 RQ Intake / Reference / PM 운영 UX 안정화
+        ↓
+TODO-5 Late Reference Ingest UX
         ↓
 TODO-4 Multi-writer RQ Allocation
         ↓
@@ -233,9 +312,9 @@ TODO-3 E2E Scenario Suite
 KB Lifecycle 완성/통합
 ```
 
-단, 실제 Pilot 결과에서 Brownfield Bootstrap, E2E 또는 동시 RQ 생성 문제가 더 큰 장애로 확인되면 순서를 재조정할 수 있다.
+단, 실제 Pilot 결과에서 Brownfield Bootstrap, E2E, 동시 RQ 생성 또는 진행 중 Reference 추가 문제가 더 큰 장애로 확인되면 순서를 재조정할 수 있다.
 
-## 6. 이번 작업에서 하지 않는 것
+## 7. 이번 작업에서 하지 않는 것
 
 - Stable Unit History Runtime 구현
 - Canonical Event Sourcing 도입
@@ -243,6 +322,7 @@ KB Lifecycle 완성/통합
 - Project-wide E2E Registry Runtime 구현
 - KB Publish/Supersede/Retire Runtime 구현
 - Multi-writer RQ Sequence/Reservation Runtime 구현
+- Late Reference Ingest 공식 `rq-ref add/ingest` Runtime 구현
 - 기존 테스트/문서를 근거 없이 `VALIDATED` 또는 `PRODUCTION READY`로 승격
 
 이 문서는 구현 완료 선언이 아니라 후속 설계를 위한 명시적 Framework Backlog다.
