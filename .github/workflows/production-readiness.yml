@@ -42,6 +42,7 @@ jobs:
             sdlc/scripts/run_check.py \
             sdlc/scripts/apply_canonical_delta.py \
             sdlc/scripts/customer_projection_runtime.py \
+            sdlc/scripts/customer_view_safe.py \
             sdlc/scripts/projection_lifecycle_runtime.py \
             sdlc/scripts/validate_canonical_projection_invariant.py \
             sdlc/scripts/validate_human_facing_language.py \
@@ -64,7 +65,8 @@ jobs:
           python -m unittest \
             tests.test_projection_separation_v110 \
             tests.test_canonical_projection_invariant_v19 \
-            tests.test_projection_visibility_hygiene_v110 -v
+            tests.test_projection_visibility_hygiene_v110 \
+            tests.test_customer_view_safety_and_cli_guide_parity_v110 -v
       - name: v1.10 guide, config, RQ management and document encoding regression
         run: |
           python -m unittest \
