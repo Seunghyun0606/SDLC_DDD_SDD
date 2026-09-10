@@ -21,9 +21,10 @@
 1. **PM 계획정보는 업무 기준 정보를 변경하지 않는다.**
    - `rq-list`는 `sdlc/canonical/store.json`의 Requirement/Business Rule/Scope를 수정하지 않는다.
    - 일정·담당자·WBS·우선순위·메모는 `.sdlc/management/rq-planning.json`에만 저장한다.
-2. **RQ 식별자는 Intake가 만든 값을 사용한다.**
+2. **RQ 식별자는 Requirement 등록 기능이 만든 값을 사용한다.**
    - Excel/CSV에서 새 RQ를 임의 생성하지 않는다.
-   - 새 요구사항은 먼저 `harness.py intake`로 등록한다.
+   - 프로젝트 중 새 요구사항 한두 건은 `harness.py rq-add`로 등록한다.
+   - 대량 요구사항이나 고객 요구사항 파일 전체는 `harness.py intake`로 등록한다.
 3. **진행상태는 사람이 수동으로 완료 처리하지 않는다.**
    - 현재 상태, 사람 확인 필요, 검증근거, 생성 문서 상태, 다음 작업은 Runtime 근거로 다시 계산한다.
 4. **일반 PM에게 JSON 편집을 요구하지 않는다.**
@@ -149,7 +150,7 @@ Source/DB/Program 실제 현행을 다시 조사해야 하는 요청은 `/work`�
 
 ## 7. 오류/불일치 처리
 
-- 존재하지 않는 RQ가 있으면 새 RQ를 만들지 말고 Intake 필요를 알려준다.
+- 존재하지 않는 RQ가 있으면 PM 파일에서 새 RQ를 만들지 않는다. 한두 건이면 `/rq-add`, 대량/파일 입력이면 `intake` 경로를 안내한다.
 - 파일의 `요구사항명`이 현재 기준 정보와 달라도 그 값으로 Canonical을 덮어쓰지 않는다.
 - Import 실패 시 `.sdlc/management/rq-planning.json`을 사람이 직접 고치라고 안내하지 않는다. 원인을 설명하고 입력 파일을 수정한다.
 - Runtime에서 계산한 `현재 상태`를 PM 입력값으로 덮어쓰지 않는다.
