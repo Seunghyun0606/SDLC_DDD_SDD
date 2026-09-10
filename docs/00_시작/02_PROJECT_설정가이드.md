@@ -52,6 +52,8 @@ python sdlc/scripts/harness.py check --setup
 
 `--customer`, `--reverse`는 과거 CLI 호환을 위해 남아 있는 인자다. 신규 프로젝트의 사용자 설정 필드로 사용하지 않는다.
 
+`setup --provider-command`도 과거 자동화와의 호환을 위한 편의 경로다. 신규 프로젝트에서 HEADLESS Agent Provider를 설정하려면 이 일회성 인자보다 `.sdlc/project.yaml`의 `agent.execution`과 `agent.provider.command`를 기준으로 관리한다.
+
 ## 3. Project Mode
 
 ```yaml
