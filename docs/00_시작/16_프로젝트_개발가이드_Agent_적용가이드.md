@@ -74,7 +74,9 @@ test-guide.md
 → 단위/통합 테스트와 테스트 데이터 기준
 ```
 
-## 4. `/work`에서 권장하는 읽기 순서
+## 4. Agent가 실제로 읽는 순서
+
+`/work`에서는 다음 순서를 기본 정책으로 사용한다.
 
 ```text
 Core 안전 규칙
@@ -89,7 +91,7 @@ Core 안전 규칙
 
 `rules/`는 존재하면 작업 전에 확인한다.
 
-`standards/`는 매 작업마다 모든 파일을 무조건 읽지 않고 현재 변경에 관련된 문서를 선택한다.
+**모든 개발가이드를 매번 무조건 선로딩하지 않는다.** `standards/`에서는 현재 변경에 실제 관련된 문서를 선택한다.
 
 예:
 
@@ -249,3 +251,4 @@ sdlc/agent/skills/work/references/project-development-context.md
 - Project 설정: `02_PROJECT_설정가이드.md`
 - Input 원본 보관: `11_INPUT_자료_준비가이드.md`
 - 역할별 작업: `05_이해관계자별_작업가이드.md`
+- 전체 CLI 기능: `18_HARNESS_CLI_기능_참조가이드.md`
