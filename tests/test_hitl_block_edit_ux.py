@@ -148,21 +148,19 @@ class HitlBlockEditUxTest(unittest.TestCase):
             for machine_term in ["Human Decision Queue", "Recheck At", "Queue ID", "SOURCE_BLOCK", "ITERATE", "ALERT"]:
                 self.assertNotIn(machine_term, text)
 
-    def test_user_guides_explain_defer_and_block_round_trip_to_canonical(self):
+    def test_user_guides_explain_human_review_without_machine_taxonomy(self):
         template_guide = read("docs/00_시작/04_TEMPLATE_및_산출물_가이드.md")
         stakeholder_guide = read("docs/00_시작/05_이해관계자별_작업가이드.md")
         for text in [template_guide, stakeholder_guide]:
-            self.assertIn("[BLOCK:", text)
-            self.assertIn("Canonical", text)
             self.assertIn("/change", text)
             self.assertIn("/work", text)
-            self.assertIn("Human Decision Queue", text)
-            self.assertIn("Recheck At", text)
-            self.assertIn("다음", text)
-        self.assertIn("Template은 입력 Form이 아니다", template_guide)
-        self.assertIn("Reviewer / Decision Maker", template_guide)
-        self.assertIn("Template 빈칸을 직접 작성하는 사람이 아니다", stakeholder_guide)
-        self.assertIn("지금 바로 답할 수 없을 때", stakeholder_guide)
+            self.assertIn("보류", text)
+            for machine_term in ["[BLOCK:", "Human Decision Queue", "Recheck At", "SOURCE_BLOCK", "ITERATE"]:
+                self.assertNotIn(machine_term, visible_text(text))
+        self.assertIn("Template은 빈 입력 Form이 아니다", template_guide)
+        self.assertIn("사람 판단이 필요한 항목만 질문", template_guide)
+        self.assertIn("프로젝트 참여자는 빈 Template을 처음부터 채우는 사람이 아니다", stakeholder_guide)
+        self.assertIn("질문에 지금 답할 수 없을 때", stakeholder_guide)
 
 
 if __name__ == "__main__":
