@@ -1,5 +1,5 @@
 {
-  "schema_version": 16,
+  "schema_version": 17,
   "contract_id": "PROJECT_SCAFFOLD_V110_ASSET_BOUNDARY",
   "source_package_contract": "sdlc/design/contracts/harness-package-contract.json",
   "purpose": "v1.10 Framework에서 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide/Skill만 배포하고 Framework 개발/검증 자산은 제외한다.",
@@ -54,6 +54,7 @@
     "docs/00_시작/15_고객문서_미리보기_가이드.md",
     "docs/00_시작/16_프로젝트_개발가이드_Agent_적용가이드.md",
     "docs/00_시작/17_RQ_간편추가_가이드.md",
+    "docs/00_시작/18_HARNESS_CLI_기능_참조가이드.md",
     "sdlc/custom/project/README.md",
     "sdlc/custom/project/standards/README.md",
     "sdlc/custom/project/rules/project-rule.example.mdc",
@@ -145,6 +146,7 @@
       "Change Level control contract/reference",
       "Human-facing plain Korean language contract/reference",
       "Project Config option reference",
+      "Complete Harness CLI command reference",
       "Project development rules/standards context reference and guide",
       "Incremental prompt-based RQ add runtime, rq-add skill and guide",
       "Project RQ spreadsheet planning/worklist runtime, PM rq-list skill and guide",
