@@ -8,8 +8,8 @@
 
 | 상황 | 기본 기능 |
 |---|---|
-| 최초 요구사항 Excel/CSV | `intake` |
-| 대량 요구사항을 파일로 추가 | `intake` |
+| 최초 정형 요구사항 XLSX | `intake` |
+| 대량 요구사항을 XLSX 파일로 추가 | `intake` |
 | 프로젝트 중 새 요구사항 한두 건 | `rq-add` |
 | 기존 RQ의 업무 의미/정책/범위 변경 | `/change` |
 | 담당자/일정/WBS/메모 | `rq-list` |
@@ -17,13 +17,15 @@
 
 소수 신규 RQ 상세는 `17_RQ_간편추가_가이드.md`를 본다.
 
-## 2. 정형 요구사항 Excel/CSV
+## 2. 정형 요구사항 XLSX
 
-원본 요구사항 파일을 그대로 Intake한다.
+현재 공식 Requirement Intake의 **주 입력 형식은 구조화된 XLSX**다.
 
 ```bash
 python sdlc/scripts/harness.py intake 요구사항목록.xlsx
 ```
+
+CSV는 요구사항의 주 Intake 파일로 직접 넣는 형식이 아니다. CSV 자료는 PPTX/DOCX/PDF/MD/TXT 등과 마찬가지로 참고자료·근거 추출 대상으로 사용할 수 있다.
 
 Harness는 다음을 보존한다.
 
@@ -102,6 +104,8 @@ Requirement 파일 자체는 참고문서 후보에서 제외한다.
 ```text
 PPTX / XLSX / DOCX / PDF / CSV / MD / TXT
 ```
+
+즉 **XLSX는 Requirement Intake 주 입력과 참고자료 양쪽에 사용할 수 있고, CSV는 현재 참고자료 쪽에서 지원**된다.
 
 PDF에 텍스트 레이어가 없으면 자동 추출이 충분하지 않을 수 있으며 별도 수동 추출/OCR이 필요할 수 있다.
 
@@ -205,7 +209,7 @@ python sdlc/scripts/harness.py rq-add \
 
 상세: `17_RQ_간편추가_가이드.md`
 
-### 대량 / 고객 파일 전달
+### 대량 / 고객 XLSX 전달
 
 ```bash
 python sdlc/scripts/harness.py intake 추가요구사항.xlsx
