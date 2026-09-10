@@ -84,27 +84,27 @@ def _target_freshness(root: Path, rq_id: str, canonical_revision: int) -> dict[s
 
 def _working_state(delivery: dict[str, Any], opens: list[dict[str, str]], freshness: dict[str, Any]) -> str:
     if delivery.get("as_built_reconciled"): return "완료·현행화"
-    if delivery.get("deployment_completed"): return "배포완료·AS-BUILT 대기"
+    if delivery.get("deployment_completed"): return "배포완료·실제 구현결과 확인 대기"
     if delivery.get("customer_acceptance") == "ACCEPTED": return "배포 대기"
     if delivery.get("technical_verification_passed"): return "고객 인수 대기"
     if delivery.get("development_started"): return "개발·검증 진행"
     if opens: return "사람 결정 대기"
-    if freshness.get("stale"): return "View 현행화 필요"
+    if freshness.get("stale"): return "생성 문서 현행화 필요"
     return "작업 준비"
 
 
 def _next_action(delivery: dict[str, Any], opens: list[dict[str, str]], freshness: dict[str, Any]) -> str:
-    if opens: return "업무 의미/권위가 필요한 미확정 항목을 결정한다."
-    if freshness.get("stale"): return "STALE_VIEW를 재생성하고 필요한 Human/Customer Review를 수행한다."
-    if not delivery.get("development_started"): return "Change Level의 최소 Semantic Work Plan으로 개발을 시작한다."
-    if not delivery.get("build_passed"): return "Source 변경과 Build Evidence를 확인한다."
-    if not delivery.get("test_passed"): return "Test Evidence를 확보한다."
-    if not delivery.get("regression_passed"): return "Regression 범위를 실행하고 결과를 기록한다."
-    if not delivery.get("technical_verification_passed"): return "기술 검증을 완료한다."
-    if delivery.get("customer_acceptance") != "ACCEPTED": return "Customer Acceptance 결정을 받는다."
-    if not delivery.get("deployment_completed"): return "배포 Evidence를 기록한다."
-    if not delivery.get("as_built_reconciled"): return "Accepted Delta를 AS-BUILT에 Reconcile한다."
-    return "다음 변경에서 Historical Impact Evidence를 재사용한다."
+    if opens: return "업무 의미나 권한 있는 판단이 필요한 미확정 항목을 결정한다."
+    if freshness.get("stale"): return "현재 기준에 맞게 생성 문서를 다시 만들고 필요한 사람 또는 고객 검토를 진행한다."
+    if not delivery.get("development_started"): return "현재 변경에 필요한 최소 분석·근거·검토를 마친 뒤 개발을 시작한다."
+    if not delivery.get("build_passed"): return "소스 변경 내용을 확인하고 빌드 성공 근거를 확보한다."
+    if not delivery.get("test_passed"): return "테스트를 실행하고 성공 근거를 확보한다."
+    if not delivery.get("regression_passed"): return "영향 범위에 맞는 회귀 테스트를 실행하고 결과를 기록한다."
+    if not delivery.get("technical_verification_passed"): return "기술 검증을 완료하고 결과 근거를 기록한다."
+    if delivery.get("customer_acceptance") != "ACCEPTED": return "고객에게 인수 결과를 확인받는다."
+    if not delivery.get("deployment_completed"): return "배포 완료 근거를 기록한다."
+    if not delivery.get("as_built_reconciled"): return "승인된 실제 구현 결과를 현재 기술 상태에 반영한다."
+    return "다음 변경에서 과거 영향 이력을 참고 후보로 활용한다."
 
 
 def _rq_row(root: Path, rq_id: str, entity: dict[str, Any], canonical_revision: int, *, debug_stage: bool) -> dict[str, Any]:
@@ -140,7 +140,7 @@ def _project_view(root: Path, store: dict[str, Any], *, debug_stage: bool) -> di
     freshness = TAILOR.projection_freshness(root, revision)
     return {
         "view": "PROJECT_HUMAN_CONTROL_PLANE",
-        "questions": ["What changed?", "What is uncertain?", "What blocks release?", "Who must decide?", "What evidence passed?", "What remains stale?", "What is next?"],
+        "questions": ["무엇이 바뀌었는가?", "무엇이 아직 불확실한가?", "배포를 막는 것은 무엇인가?", "누가 결정해야 하는가?", "어떤 검증 근거가 확보되었는가?", "어떤 생성 문서가 현행화가 필요한가?", "다음 작업은 무엇인가?"],
         "rq_count": len(rows),
         "release_blocked_count": sum(1 for x in rows if x["what_blocks_release"]["delivery_gate_blocked"] or x["what_blocks_release"]["human_decisions"] or x["what_blocks_release"]["stale_views"]),
         "human_decision_required_total": sum(int(x["what_blocks_release"]["human_decisions"]) for x in rows),
@@ -178,7 +178,7 @@ def check(root: Path, *, target: str | None, setup_only: bool, debug_stage: bool
     else: base["project_view"] = _project_view(root, store, debug_stage=debug_stage)
     reverse = BASE_CHECK._latest_reverse(root)
     if reverse:
-        data = reverse["data"]; base["brownfield_reconciliation"] = {"latest_reverse_path": reverse["path"], "review_required": bool(data.get("review_required") or data.get("reverse_candidates") or data.get("candidate_updates")), "coverage_gaps": data.get("coverage_gaps", []), "authority_rule": "Source observation never auto-rewrites confirmed Business Truth."}
+        data = reverse["data"]; base["brownfield_reconciliation"] = {"latest_reverse_path": reverse["path"], "review_required": bool(data.get("review_required") or data.get("reverse_candidates") or data.get("candidate_updates")), "coverage_gaps": data.get("coverage_gaps", []), "authority_rule": "현재 소스에서 관찰한 내용만으로 확정된 업무 기준을 자동 변경하지 않는다."}
     return base
 
 
