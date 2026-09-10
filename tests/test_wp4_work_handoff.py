@@ -90,8 +90,6 @@ class WP4WorkHandoffTest(unittest.TestCase):
             self.assertTrue(artifact.startswith("docs/10_산출물/"), artifact)
             self.assertNotIn("sdlc/runtime/work/", artifact)
             self.assertIn("BUSINESS_POLICY", result["plan"]["human_handoff_policy"]["human_decision_categories"])
-            # v1.9 plan-only is an INTERACTIVE prepare boundary. A completed user_handoff is
-            # created only after Agent work/finalize, not before execution.
             self.assertNotIn("user_handoff", result)
             self.assertTrue(result["plan"]["tailoring"]["stage_preserved"])
             self.assertTrue(result["plan"]["execution_policy"]["required_semantic_work"])
@@ -181,13 +179,14 @@ class WP4WorkHandoffTest(unittest.TestCase):
             self.assertIn("승인 주체는 팀장", provenance["note"])
             self.assertIn("harness.py work --target RQ-001", result["next_command"])
 
-    def test_completed_requirement_example_is_not_placeholder_form(self):
+    def test_legacy_requirement_example_is_not_active_completed_form(self):
         text = (ROOT / "docs/00_시작/examples/요구사항_정의_완성예시.md").read_text(encoding="utf-8")
         self.assertNotIn("{{", text)
-        self.assertIn("REQ_TM_FL001", text)
-        self.assertIn("탄력근로제 근무계획 저장", text)
-        self.assertIn("OPEN", text)
-        self.assertIn("발명하지", text)
+        self.assertIn("Compatibility Notice", text)
+        self.assertIn("Work Map + Work Unit SDD", text)
+        self.assertIn("신규 Project 산출물 Template으로 사용하지 않는다", text)
+        self.assertNotIn("REQ_TM_FL001", text)
+        self.assertNotIn("OPEN", text)
 
 
 if __name__ == "__main__":
