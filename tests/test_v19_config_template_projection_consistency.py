@@ -35,7 +35,7 @@ FAST_PRECONDITIONS = [
 
 
 class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
-    """Cross-version consistency: preserve v1.9 contracts without freezing v1.9 topology as v1.10 default."""
+    """Cross-version consistency without exposing compatibility machine taxonomy as user guidance."""
 
     def read(self, rel: str) -> str:
         return (ROOT / rel).read_text(encoding="utf-8")
@@ -76,7 +76,7 @@ class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
         self.assertIn("PM_STANDARD", start)
         self.assertIn("PM_STANDARD", project_guide)
 
-    def test_fast_path_preconditions_match_policy_runtime_skill_and_guide(self):
+    def test_fast_path_preconditions_match_policy_runtime_skill_and_human_guide(self):
         policy = self.json("sdlc/config/change-execution-policy.json")
         for level in ["L1", "L2"]:
             self.assertEqual(FAST_PRECONDITIONS, policy["levels"][level]["source_write_preconditions"])
@@ -91,14 +91,18 @@ class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
         self.assertIn("if not source_changed", runtime)
 
         skill = self.read("sdlc/agent/skills/work/SKILL.md")
-        guide = self.read("docs/00_시작/04_TEMPLATE_및_산출물_가이드.md")
         for key in FAST_PRECONDITIONS:
             self.assertIn(key, skill)
-            self.assertIn(key, guide)
+
+        guide = self.read("docs/00_시작/04_TEMPLATE_및_산출물_가이드.md")
+        for phrase in ["요구 의도 확인", "현재 Source 확인", "영향 범위 확인"]:
+            self.assertIn(phrase, guide)
+        for key in FAST_PRECONDITIONS:
+            self.assertNotIn(key, guide)
 
         start = self.read("docs/00_시작/START_HERE.md")
         project_guide = self.read("docs/00_시작/02_PROJECT_설정가이드.md")
-        for phrase in ["Requirement Intent Decomposition", "AS-IS Source Analysis", "Impact Check"]:
+        for phrase in ["요구 의도 확인", "현재 Source 확인", "영향 범위 확인"]:
             self.assertIn(phrase, project_guide)
         self.assertIn("AS-IS Source", start)
         self.assertIn("Impact", start)
@@ -118,8 +122,10 @@ class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
 
         self.assertIn("Core Required 6개", template)
         self.assertIn("LEGACY_FULL_17", template)
-        self.assertIn("Core Required 6 + Risk-triggered Conditional", guide)
-        self.assertIn("LEGACY_FULL_17", guide)
+        self.assertIn("6개 핵심 정보", guide)
+        self.assertIn("해당 위험이 있는 변경에서만 추가 확인", guide)
+        self.assertIn("17개 전체 항목 체계", guide)
+        self.assertNotIn("LEGACY_FULL_17", guide)
         for row in readiness["conditional_fields"]:
             self.assertIn(row["trigger"], template, row["field_id"])
 
@@ -175,9 +181,9 @@ class V19ConfigTemplateProjectionConsistencyTest(unittest.TestCase):
         self.assertTrue(all(row["authoring"] == "GENERATED_VIEW" for row in profile["artifacts"].values()))
         self.assertIn('"business_truth_authority": False', runtime)
         self.assertIn('"customer_edit_auto_updates_canonical": False', runtime)
-        self.assertIn("Engineering Profile ID", guide)
+        self.assertIn("Customer Profile은 Engineering 문서 수나 순번을 따라가지 않는다", guide)
+        self.assertIn("고객문서에는 개발 내부 식별자와 Runtime 상태를 기본 노출하지 않고", guide)
         self.assertIn("Business Truth", skill)
-        self.assertIn("Customer Runtime", guide)
         self.assertNotIn("internal_profile_id", runtime)
         self.assertNotIn("_internal_expected_paths", runtime)
         self.assertNotIn("_annotate_profile_stages", runtime)
