@@ -41,6 +41,8 @@ python sdlc/scripts/harness.py intake 요구사항목록.xlsx \
   --reference 현행업무정리.xlsx
 ```
 
+기준 정보에 반영하기 전에 후보만 보고 싶다면 `--candidate-only`를 사용할 수 있다.
+
 상세: `11_INPUT_자료_준비가이드.md`
 
 ### 2.3 프로젝트 중 새 요구사항 한두 건 추가
@@ -75,6 +77,12 @@ Cursor에서는 `/rq-list`를 사용할 수 있다.
 
 요구사항과 참고문서를 같이 Intake했다면 Harness가 RQ↔문서 연결 초안을 만들 수 있다. 연결 자체는 업무 사실 확정이 아니며 실제 작업에서 문서를 읽고 확인한 내용만 근거로 사용한다.
 
+참고문서 연결을 직접 관리할 때는 공식 `rq-ref` 명령을 사용한다.
+
+```bash
+python sdlc/scripts/harness.py rq-ref --help
+```
+
 상세: `13_RQ_참고문서_레지스트리_가이드.md`
 
 ### 2.6 설계·개발·테스트 진행
@@ -94,7 +102,16 @@ python sdlc/scripts/harness.py check RQ-001
 → /change
 ```
 
-작은 변경이라도 Source를 수정하기 전에는 **요구 의도 → 현재 Source → 영향 범위**를 확인한다.
+작은 변경이라도 Source를 수정하기 전에는 **요구 의도 → 현재 AS-IS Source → Impact(영향 범위)**를 확인한다.
+
+`/work`가 사람의 판단을 요청했다면 Agent에게 답하거나 `review` 명령으로 결정 근거를 기록한다. 승인·답변 기록 자체가 업무 기준을 조용히 자동 변경하지는 않는다.
+
+```bash
+python sdlc/scripts/harness.py review \
+  --target RQ-001 \
+  --by "업무담당자" \
+  --answer "승인 후에는 일반 사용자가 수정할 수 없습니다."
+```
 
 ## 3. 기본 개발자용 문서
 
@@ -130,7 +147,13 @@ python sdlc/scripts/harness.py customer-view --target RQ-001 --type delivery_sco
 python sdlc/scripts/harness.py customer-view --target RQ-001 --type acceptance_handover
 ```
 
-Cursor에서는 `/customer-view`를 사용할 수 있다. 고객 문서는 없는 사실을 임의로 채우지 않고 현재 확인된 내용만 고객이 읽기 쉬운 표현으로 작성한다.
+Cursor에서는 `/customer-view`를 사용할 수 있다. 계속 현행화해서 보고 싶으면 다음처럼 요청한다.
+
+```text
+/customer-view refresh RQ-001
+```
+
+고객 문서는 없는 사실을 임의로 채우지 않고 현재 확인된 내용만 고객이 읽기 쉬운 표현으로 작성한다.
 
 상세: `15_고객문서_미리보기_가이드.md`
 
@@ -170,7 +193,8 @@ MD/TXT/CSV 및 Build/Test/외부 Tool 출력은 OS 기본 인코딩만 믿지 �
 7. `04_TEMPLATE_및_산출물_가이드.md`
 8. `05_이해관계자별_작업가이드.md`
 9. 필요할 때 `03`, `07`, `14`, `15`, `16`
-10. Config Key를 정확히 확인해야 할 때만 `02A`
+10. 전체 Harness 명령을 확인할 때 `18_HARNESS_CLI_기능_참조가이드.md`
+11. Config Key를 정확히 확인해야 할 때만 `02A`
 
 `01_STANDARD_SCAFFOLD_사용가이드.md`와 `06_CUSTOM_SCAFFOLD_적용가이드.md`는 과거 링크 호환을 위해 Framework Repository에만 남아 있는 Compatibility Notice이며 **신규 Project Scaffold에는 배포되지 않고 읽기 순서에도 포함하지 않는다.**
 
