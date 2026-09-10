@@ -200,12 +200,27 @@ documents:
         ]:
             self.assertIn(marker, guide, marker)
 
-    def test_harness_scaffold_and_check_output_use_current_safe_boundaries(self):
+    def test_harness_scaffold_check_and_package_use_current_safe_boundaries(self):
         harness = self.read("sdlc/scripts/harness.py")
         scaffold = json.loads(self.read("sdlc/design/contracts/project-scaffold-contract.json"))
+        package = json.loads(self.read("sdlc/design/contracts/harness-package-contract.json"))
         check = self.read("sdlc/scripts/tailored_check.py")
+        safe_rel = "sdlc/scripts/customer_view_safe.py"
+
         self.assertIn('"customer_view_safe.py"', harness)
-        self.assertIn("sdlc/scripts/customer_view_safe.py", scaffold["add_required_files"])
+        self.assertIn(safe_rel, scaffold["add_required_files"])
+        self.assertIn(safe_rel, package["deployment_sets"]["CUSTOMER_EXTENSION"])
+        self.assertNotIn(safe_rel, package["core_required_files"])
+        self.assertIn("customer-view는 CUSTOMER_EXTENSION이 필요", package["deployment_sets"]["MINIMUM_EXECUTABLE_CORE"]["notes"])
+
+        experience = package["document_experience"]
+        self.assertEqual(safe_rel, experience["customer_view_safe_facade"])
+        self.assertEqual("sdlc/scripts/customer_projection_runtime.py", experience["customer_projection_runtime"])
+        self.assertEqual("sdlc/scripts/harness.py customer-view", experience["official_customer_view_entrypoint"])
+        self.assertTrue(experience["customer_official_generation_uses_safe_facade"])
+        self.assertTrue(experience["customer_final_review_overwrite_blocked"])
+        self.assertTrue(experience["customer_preview_lifecycle_isolated_from_official_artifact"])
+
         for old in [
             "STALE_VIEW를 재생성",
             "Semantic Work Plan으로 개발",
