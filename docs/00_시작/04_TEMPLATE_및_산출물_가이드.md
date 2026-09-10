@@ -56,16 +56,34 @@ docs/00_관리/
 
 일반 사용자가 Template 파일을 열어 처음부터 모든 표를 채우는 것이 기본 절차가 아니다.
 
-기본 흐름:
+Engineering 기본 흐름:
 
 ```text
-/work 또는 /change 요청
+/work 요청
 → Agent가 요구사항·기존 문서·Source·DB·Config·근거를 먼저 조사
 → 확인 가능한 내용으로 초안 작성
 → 사람 판단이 필요한 항목만 질문
 → 사람 답변 또는 보류
-→ 기준 정보와 근거 갱신
-→ Engineering / Customer 생성 문서 최신화
+→ 기준 정보와 기술 근거 갱신
+→ 선택 Engineering Profile의 필수 생성 문서 현행화
+```
+
+업무 의미 자체가 바뀌는 경우에는 먼저 `/change` 경계를 사용한다.
+
+```text
+/change
+→ 변경할 요구·업무규칙·범위·목표 동작을 안전하게 반영
+→ 필요하면 /work 재실행
+→ 현재 근거 기준으로 Engineering 생성 문서 현행화
+```
+
+**Customer 문서는 `/work`나 `/change`만 실행했다고 자동 재작성되는 문서가 아니다.** 고객용 표현과 검토상태는 별도이므로 현재 근거를 반영하려면 `/customer-view refresh <RQ>` 또는 `customer-view` 기능을 사용한다.
+
+```text
+Engineering 작업 완료/갱신
+→ 고객문서도 최신화할 필요가 있는지 확인
+→ /customer-view refresh RQ-001
+→ 고객 친화 문장·용어·검토상태 확인
 ```
 
 Source에서 확인 가능한 Java Class/Method, JSP/XML 경로, Query/Table/Column, 호출관계 같은 기술 사실을 사람에게 다시 입력시키지 않는다.
@@ -179,7 +197,7 @@ Agent는 내용에 따라 다음 흐름을 선택한다.
 
 생성 문서를 직접 수정했다고 프로젝트 기준 정보가 자동 변경되지는 않는다.
 
-## 9. Customer 문서는 별도 표현을 사용한다
+## 9. Customer 문서는 별도 표현과 Lifecycle을 사용한다
 
 Engineering의 Java Method/Table/Query 같은 기술 세부를 Customer 문서에 그대로 복사하지 않는다.
 
@@ -194,6 +212,8 @@ WorkPlanService.savePlan()에서 EMP_WORK_PLAN 저장
 ```
 
 업무 의미를 확정할 수 없으면 추측하지 않고 추가 확인이 필요하다고 표시한다.
+
+Customer 문서는 Engineering 문서와 별도 최신성·검토상태를 가지므로 `/work` 완료 여부만으로 최신이라고 간주하지 않는다.
 
 상세: `15_고객문서_미리보기_가이드.md`
 
