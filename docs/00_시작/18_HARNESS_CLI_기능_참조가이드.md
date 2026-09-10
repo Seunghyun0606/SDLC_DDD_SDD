@@ -11,7 +11,7 @@
 | 명령 | 용도 | 상세 가이드 |
 |---|---|---|
 | `setup` | 프로젝트 초기 설정 | `02_PROJECT_설정가이드.md` |
-| `intake` | Excel/CSV 요구사항 일괄 인입 | `11_INPUT_자료_준비가이드.md` |
+| `intake` | 구조화된 XLSX 요구사항 일괄 인입 | `11_INPUT_자료_준비가이드.md` |
 | `rq-add` | 소수 신규 RQ 자연어 추가 | `17_RQ_간편추가_가이드.md` |
 | `rq-list` | PM 작업목록 조회/Excel 관리 | `12_RQ_작업목록_운영가이드.md` |
 | `rq-ref` | RQ와 참고문서 연결 관리 | `13_RQ_참고문서_레지스트리_가이드.md` |
@@ -52,25 +52,29 @@ python sdlc/scripts/harness.py check --setup
 
 사람이 관리하는 설정의 기준은 `.sdlc/project.yaml`이다.
 
-추가 옵션 중 다음 두 개는 주의해서 사용한다.
+주요 옵션:
 
 ```text
+--name <프로젝트명>
+--mode AUTO|GREENFIELD|BROWNFIELD|HYBRID
+--delivery FAST|STANDARD|FULL
 --force
-→ 이미 존재하는 사용자 설정을 덮어쓸 수 있다. 일반 재실행 기본값으로 사용하지 않는다.
-
 --no-validate
-→ Setup 후 Harness 구조 검증을 생략한다. 정상 프로젝트 초기 설정이 아니라 문제 진단/관리 목적에서만 사용한다.
 ```
 
-`--customer`, `--reverse`는 과거 CLI 호환용 인자이며 신규 프로젝트 설정의 기준 필드로 사용하지 않는다.
+`--force`는 기존 사용자 설정을 덮어쓸 수 있고, `--no-validate`는 Setup 뒤 Harness 구조 검증을 생략하므로 일반 기본값으로 사용하지 않는다.
+
+`--customer`, `--reverse`, `--provider-command`는 과거 자동화와의 호환을 위해 남아 있는 편의 경로다. 신규 프로젝트에서 Agent Provider는 `.sdlc/project.yaml`의 `agent.execution`과 `agent.provider.command`로 관리한다.
 
 ## 3. intake
 
-기본 일괄 인입:
+현재 Requirement Intake의 주 입력은 **구조화된 XLSX**다.
 
 ```bash
 python sdlc/scripts/harness.py intake 요구사항목록.xlsx
 ```
+
+CSV는 현재 Requirement 주 입력이 아니라 참고자료/근거 추출 형식으로 지원된다.
 
 참고자료 포함:
 
@@ -78,6 +82,13 @@ python sdlc/scripts/harness.py intake 요구사항목록.xlsx
 python sdlc/scripts/harness.py intake 요구사항목록.xlsx \
   --reference 기능개선안.pptx \
   --reference 운영회의결정.docx
+```
+
+폴더 단위 참고자료:
+
+```bash
+python sdlc/scripts/harness.py intake 요구사항목록.xlsx \
+  --reference-dir br-input/originals
 ```
 
 기준 정보를 쓰기 전에 후보만 먼저 확인하고 싶다면:
@@ -93,7 +104,15 @@ python sdlc/scripts/harness.py intake 요구사항목록.xlsx \
   --profile sdlc/config/requirement-intake-columns.example.yaml
 ```
 
-`--json-out`, `--report-out`, `--manifest-json`, `--manifest-report`는 Runtime 결과 위치를 별도로 지정해야 하는 고급 출력 옵션이다.
+고급 출력 위치 옵션:
+
+```text
+--json-out
+--report-out
+--manifest-json
+--manifest-report
+--store
+```
 
 ## 4. work / review / change
 
@@ -131,12 +150,15 @@ python sdlc/scripts/harness.py change \
   --change "승인 완료 후에는 관리자만 수정할 수 있도록 변경"
 ```
 
+`work`와 `change`의 `--stage`, `--artifact`, `--plan-only`, `--dry-run`, `--finalize` 같은 옵션은 Agent/Runtime 실행 경계를 제어하는 고급 옵션이다. 일반 사용자는 Skill이 만든 handoff/finalize 명령을 그대로 사용하는 것을 권장한다.
+
 ## 5. check / execution-plan
 
 현재 작업 상태:
 
 ```bash
 python sdlc/scripts/harness.py check RQ-001
+python sdlc/scripts/harness.py check project
 ```
 
 프로젝트 최초 설정 확인:
@@ -144,6 +166,8 @@ python sdlc/scripts/harness.py check RQ-001
 ```bash
 python sdlc/scripts/harness.py check --setup
 ```
+
+내부 작업 단계를 진단할 때만 `--debug-stage`를 사용할 수 있다. 기본 사람용 상태에서는 내부 Stage를 숨긴다.
 
 현재 Change Level과 필요한 작업 계획을 진단할 때:
 
@@ -155,12 +179,33 @@ python sdlc/scripts/harness.py execution-plan --target RQ-001
 
 ## 6. rq-add / rq-list / rq-ref
 
-소수 신규 RQ:
+### rq-add
 
 ```bash
 python sdlc/scripts/harness.py rq-add \
   --title "승인 후 수정 제한" \
   --request "승인 완료된 근무계획은 일반 사용자가 수정할 수 없게 해줘."
+```
+
+주요 선택 옵션:
+
+```text
+--background
+--desired-result
+--scope
+--external-id
+--allow-duplicate
+```
+
+### rq-list
+
+지원 subcommand:
+
+```text
+refresh
+assign
+import
+export
 ```
 
 PM Excel:
@@ -171,11 +216,38 @@ python sdlc/scripts/harness.py rq-list export \
   --output docs/00_관리/RQ_작업관리.xlsx
 ```
 
-참고문서 연결은 `rq-ref`를 사용한다. 실제 subcommand와 컬럼은 `13_RQ_참고문서_레지스트리_가이드.md`를 따른다. 참고문서 연결만으로 업무 사실이 확정되지는 않는다.
+일부 컬럼만 합칠 때:
+
+```bash
+python sdlc/scripts/harness.py rq-list import 일부수정.csv --merge-columns
+```
+
+### rq-ref
+
+지원 subcommand:
+
+```text
+refresh
+link
+unlink
+import
+export
+```
+
+참고문서 직접 연결 예:
+
+```bash
+python sdlc/scripts/harness.py rq-ref link \
+  --target RQ-001 \
+  --document-id DOC-001 \
+  --purpose "현재 업무규정 확인"
+```
+
+연결만으로 업무 사실이 확정되지는 않는다.
 
 ## 7. customer-view / projection
 
-고객문서 한 종류 생성:
+### 고객문서 생성
 
 ```bash
 python sdlc/scripts/harness.py customer-view \
@@ -183,21 +255,94 @@ python sdlc/scripts/harness.py customer-view \
   --type solution_agreement
 ```
 
-Agent Skill을 사용하는 경우 계속 최신화하려면 다음처럼 요청할 수 있다.
+공식 Harness 경로는 기존 정식 고객문서가 최종 검토됐거나 사람이 수정된 경우 자동 덮어쓰지 않는다.
+
+별도 비교 미리보기:
+
+```bash
+python sdlc/scripts/harness.py customer-view \
+  --target RQ-001 \
+  --type solution_agreement \
+  --out docs/20_고객/RQ-001/미리보기_A01.md
+```
+
+정식 Profile 경로와 다른 `--out`은 별도 미리보기 Lifecycle로 기록되므로 정식 문서의 검토상태를 대체하지 않는다.
+
+추가 입력 및 일회성 설정:
+
+```text
+--input <검증된 추가 근거>       # 반복 가능
+--short-name <표시명>
+--tailoring-profile <Profile ID>
+--contract <Customer Contract 경로>
+--profile <Customer Projection Config 경로>
+```
+
+Agent Skill을 사용하는 경우 계속 최신화하려면:
 
 ```text
 /customer-view refresh RQ-001
 ```
 
-생성 문서 Lifecycle 확인:
+### 생성 문서 상태
 
 ```bash
 python sdlc/scripts/harness.py projection status --target RQ-001
 ```
 
-`projection`은 생성 문서의 최신성·수동 수정·검토 상태를 관리한다. 생성 문서를 사람이 수정했다고 프로젝트의 업무 기준이 자동 변경되는 기능은 아니다.
+`projection`의 공식 subcommand는 다음과 같다.
+
+```text
+generated
+status
+review
+```
+
+`generated`는 Runtime/Agent가 생성 문서를 Lifecycle에 등록하는 저수준 경계다. 일반 사용자는 보통 `work` 또는 `customer-view`가 대신 등록한다.
+
+### 고객 검토 기록
+
+일반 승인:
+
+```bash
+python sdlc/scripts/harness.py projection review \
+  --target RQ-001 \
+  --artifact-id solution_agreement \
+  --reviewer "고객담당자" \
+  --accept
+```
+
+최종 합의 문구 보호:
+
+```bash
+python sdlc/scripts/harness.py projection review \
+  --target RQ-001 \
+  --artifact-id solution_agreement \
+  --reviewer "고객담당자" \
+  --accept \
+  --final-review
+```
+
+검토 중 실제 업무정책 변경이 제안되면:
+
+```bash
+python sdlc/scripts/harness.py projection review \
+  --target RQ-001 \
+  --artifact-id solution_agreement \
+  --reviewer "고객담당자" \
+  --business-policy-edit "승인 완료 후에는 관리자만 수정 가능"
+```
+
+이 경우 변경 후보만 기록하고 업무 기준을 자동 변경하지 않는다. `/change`가 필요하다.
 
 ## 8. delivery
+
+지원 subcommand:
+
+```text
+status
+mark
+```
 
 현재 배포/인수 상태 조회:
 
@@ -205,7 +350,21 @@ python sdlc/scripts/harness.py projection status --target RQ-001
 python sdlc/scripts/harness.py delivery status --target RQ-001
 ```
 
-명시적인 Evidence가 있는 이벤트를 기록할 때:
+현재 지원 이벤트:
+
+```text
+DEVELOPMENT_STARTED
+SOURCE_CHANGED
+BUILD_PASSED
+TEST_PASSED
+REGRESSION_PASSED
+TECHNICAL_VERIFICATION_PASSED
+CUSTOMER_ACCEPTED
+DEPLOYMENT_COMPLETED
+AS_BUILT_RECONCILED
+```
+
+`DEVELOPMENT_STARTED`를 제외한 이벤트는 근거가 필요하다.
 
 ```bash
 python sdlc/scripts/harness.py delivery mark \
@@ -215,9 +374,11 @@ python sdlc/scripts/harness.py delivery mark \
   --actor "테스터"
 ```
 
-`DEVELOPMENT_STARTED`를 제외한 상태 이벤트는 Evidence가 필요하다. 기술 검증 완료를 고객 인수 완료로 자동 간주하지 않는다.
+기술 검증 완료를 고객 인수 완료로 자동 간주하지 않는다.
 
 ## 9. discover-impact / impact-history
+
+### discover-impact
 
 Brownfield 개발 중 예상하지 못한 Component를 발견했을 때:
 
@@ -227,25 +388,80 @@ python sdlc/scripts/harness.py discover-impact \
   --component LEGACY-COMPONENT-A
 ```
 
+선택적으로 변경 식별자와 업무 Key를 함께 기록할 수 있다.
+
+```text
+--change <change-id>
+--key <business-key>    # 반복 가능
+```
+
 이 기능은 테스트 범위와 재검토 필요성을 확장하지만, 발견한 Source를 업무 기준으로 자동 확정하지 않는다.
 
-`impact-history`는 과거의 예상 영향과 확인된 실제 영향을 분리해 저장한다.
+### impact-history
+
+지원 subcommand:
+
+```text
+record
+recommend
+discover
+metrics
+```
+
+과거 영향 기록:
 
 ```bash
-python sdlc/scripts/harness.py impact-history recommend --key <업무키>
+python sdlc/scripts/harness.py impact-history record \
+  --change CHG-001 \
+  --target RQ-001 \
+  --key 급여마감 \
+  --predicted PAY-SVC \
+  --actual PAY-SVC
+```
+
+과거 이력에서 현재 조사 후보 추천:
+
+```bash
+python sdlc/scripts/harness.py impact-history recommend --key 급여마감
+```
+
+예상하지 못한 실제 Component 추가 기록:
+
+```bash
+python sdlc/scripts/harness.py impact-history discover \
+  --change CHG-001 --target RQ-001 --component LEGACY-BATCH
+```
+
+기존 기록의 영향분석 지표 조회:
+
+```bash
+python sdlc/scripts/harness.py impact-history metrics \
+  --change CHG-001 --target RQ-001
 ```
 
 과거 이력의 추천은 현재 영향의 확정값이 아니라 **현재 근거를 찾기 위한 후보**다.
 
 ## 10. component
 
-기술 Component의 baseline + 승인된 delta로 현재 AS-BUILT 기술 상태를 재구성하는 고급 기능이다.
+기술 Component의 baseline + 승인된 delta로 현재 기술 상태를 재구성하는 고급 기능이다.
+
+지원 subcommand와 주요 입력:
+
+| subcommand | 주요 입력 |
+|---|---|
+| `baseline` | `--component --revision --state-json` (`--replace` 선택) |
+| `release` | `--release --release-seq` |
+| `delta` | `--component --change --base-revision --release --operations-json` |
+| `current` | `--component` (`--release` 선택) |
+| `compact` | `--component --release` |
+
+현재 상태 조회:
 
 ```bash
 python sdlc/scripts/harness.py component current --component <component-id>
 ```
 
-이 저장소는 완전한 Event Sourcing이 아니며, Component 기술 상태도 업무 기준의 권위가 아니다.
+`delta`에는 선택적으로 `--status`, `--supersedes`, `--revert-of`를 사용할 수 있다. 이 저장소는 완전한 Event Sourcing이 아니며, Component 기술 상태도 업무 기준의 권위가 아니다.
 
 ## 11. arch-check
 
@@ -257,17 +473,44 @@ python sdlc/scripts/harness.py arch-check \
   --source-root src/main/java
 ```
 
+`--source-root`는 반복할 수 있고, 결과를 파일로 보존하려면 `--out`을 지정한다.
+
 위반 결과는 기술 Finding이며 업무정책을 자동 변경하지 않는다. 실제 프로젝트 Rule을 적용하려면 프로젝트 개발가이드/Rule 정책과 함께 사용한다.
 
 ## 12. metrics
 
 실제 프로젝트에서 Harness 투입비용과 효과를 측정할 때만 사용한다.
 
+지원 subcommand:
+
+```text
+init
+record
+summary
+```
+
+측정 시작:
+
 ```bash
 python sdlc/scripts/harness.py metrics init \
   --run PILOT-001 \
   --case CASE_A_L1_LOCAL \
   --target RQ-001
+```
+
+실제 측정값 기록:
+
+```bash
+python sdlc/scripts/harness.py metrics record \
+  --run PILOT-001 \
+  --metric human_review_minutes \
+  --value 12
+```
+
+요약:
+
+```bash
+python sdlc/scripts/harness.py metrics summary --run PILOT-001
 ```
 
 측정값이 없으면 임의의 ROI나 PASS를 만들지 않으며 `INSUFFICIENT_EVIDENCE`로 남는다.
@@ -277,9 +520,10 @@ python sdlc/scripts/harness.py metrics init \
 `harness.py`에 공식 명령을 추가하거나 제거할 때는 최소 다음을 함께 확인한다.
 
 1. 이 문서의 전체 명령 목록
-2. 해당 기능의 상세 사용자 가이드 또는 고급 기능 설명
-3. Project Scaffold 배포 대상 여부
-4. Runtime/Contract/Test
-5. 사람에게 직접 노출되는 표현이 쉬운 한국어인지
+2. 해당 명령의 실제 subcommand와 필수 입력
+3. 해당 기능의 상세 사용자 가이드 또는 고급 기능 설명
+4. Project Scaffold 배포 대상 여부
+5. Runtime/Contract/Test
+6. 사람에게 직접 노출되는 표현이 쉬운 한국어인지
 
 공식 명령은 코드에만 존재하고 가이드에서 완전히 사라지지 않게 하고, 반대로 가이드에서 실행 가능한 것처럼 설명한 명령이 실제 Harness에 없는 상태도 허용하지 않는다.
