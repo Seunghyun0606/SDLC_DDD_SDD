@@ -286,12 +286,21 @@ def finalize(
 
     run_rel = _repo_rel(root, run_dir)
     exact = {artifact_rel}
+    for row in plan.get("required_projection_targets") or []:
+        if not isinstance(row, dict):
+            continue
+        output_raw = str(row.get("output_path") or "").strip()
+        if not output_raw:
+            continue
+        _, output_rel = WORK.safe_repo_path(root, output_raw)
+        exact.add(output_rel)
     prefixes = ([run_rel] if run_rel else []) + (["sdlc/runtime"] if stage != "DEVELOPMENT" else ["sdlc/runtime", *allowed_source_roots])
     outside = sorted(path for path in interactive_changes if not WORK._path_allowed(path, prefixes, exact))
     if outside:
         return _failure(
             "FAIL_INTERACTIVE_WRITE_SCOPE",
             interactive_changed_files=sorted(interactive_changes),
+            allowed_projection_files=sorted(exact),
             outside_write_scope=outside,
         )
 
