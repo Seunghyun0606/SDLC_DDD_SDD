@@ -147,6 +147,15 @@ class ProcessRunnerV110Test(unittest.TestCase):
         self.assertIn("core.quotepath=false", source)
         self.assertIn("--name-only\", \"-z", source)
 
+    def test_setup_validation_uses_same_bytes_first_process_runner(self):
+        source = (SCRIPT_DIR / "bootstrap_project.py").read_text(encoding="utf-8")
+        self.assertIn('PROCESS = _load("setup_process", SCRIPT_DIR / "process_runner.py")', source)
+        self.assertIn("PROCESS.run_process", source)
+        self.assertNotIn("subprocess.run(", source)
+        self.assertNotIn("text=True", source)
+        for marker in ["output_decode_ok", "stdout_decode", "stderr_decode", "resolved_command", "execution_mode"]:
+            self.assertIn(marker, source)
+
     def test_process_execution_contract_is_fail_closed_and_shell_explicit(self):
         contract = json.loads(
             (ROOT / "sdlc/design/contracts/process-execution-contract.json").read_text(encoding="utf-8")
