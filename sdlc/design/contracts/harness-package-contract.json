@@ -1,6 +1,6 @@
 {
-  "schema_version": 20,
-  "candidate_design": "v1.10.1-process-execution-encoding",
+  "schema_version": 21,
+  "candidate_design": "v1.10.1-customer-view-safe-boundary",
   "core_required_files": [
     ".cursor/rules/00-core.mdc",
     ".cursor/rules/10-project.mdc",
@@ -97,7 +97,7 @@
   "deployment_sets": {
     "MINIMUM_EXECUTABLE_CORE": {
       "required": "core_required_files",
-      "notes": "setup/intake/work/review/change/check와 Change-Level semantic Fast Path, 기본 Engineering Projection lifecycle, cross-platform subprocess encoding runtime을 실행하는 최소 배포 묶음. Pilot/Test/Sample과 고급 운영 도구는 별도 Extension이다."
+      "notes": "setup/intake/work/review/change/check와 Change-Level semantic Fast Path, 기본 Engineering Projection lifecycle, cross-platform subprocess encoding runtime을 실행하는 최소 배포 묶음. customer-view는 CUSTOMER_EXTENSION이 필요하며 Pilot/Test/Sample과 그 밖의 고급 운영 도구는 별도 Extension이다."
     },
     "ENHANCEMENT_EXTENSION": [
       "sdlc/scripts/component_state_runtime.py",
@@ -120,6 +120,7 @@
       "sdlc/design/contracts/customer-document-contract.json",
       "sdlc/scripts/render_customer_document.py",
       "sdlc/scripts/customer_projection_runtime.py",
+      "sdlc/scripts/customer_view_safe.py",
       "sdlc/templates/customer/standard/A01_요구_업무_기능_합의서.md",
       "sdlc/templates/customer/standard/A02_영향_개발범위_공유서.md",
       "sdlc/templates/customer/standard/A03_테스트_인수_운영_결과서.md"
@@ -200,12 +201,18 @@
     "machine_metadata_hidden_in_comments_or_frontmatter": true,
     "customer_document_contract": "sdlc/design/contracts/customer-document-contract.json",
     "customer_projection_script": "sdlc/scripts/render_customer_document.py",
+    "customer_projection_runtime": "sdlc/scripts/customer_projection_runtime.py",
+    "customer_view_safe_facade": "sdlc/scripts/customer_view_safe.py",
+    "official_customer_view_entrypoint": "sdlc/scripts/harness.py customer-view",
     "customer_decision_round_trip_script": "sdlc/scripts/capture_customer_decision.py",
     "active_customer_view_count": 3,
     "active_customer_views": ["solution_agreement", "delivery_scope", "acceptance_handover"],
     "legacy_customer_document_ids_are_aliases": true,
     "customer_projection_accepts_internal_markdown_and_canonical_json": true,
     "customer_projection_must_not_invent_missing_business_facts": true,
+    "customer_official_generation_uses_safe_facade": true,
+    "customer_final_review_overwrite_blocked": true,
+    "customer_preview_lifecycle_isolated_from_official_artifact": true,
     "br_candidate_schema": "sdlc/design/contracts/br-candidate.schema.json",
     "br_document_extraction_contract": "sdlc/design/contracts/br-document-extraction-contract.json",
     "sop_extraction_contract": "sdlc/design/contracts/sop-extraction-contract.json",
