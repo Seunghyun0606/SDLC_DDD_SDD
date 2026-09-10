@@ -12,6 +12,14 @@ Runtime이 만드는 `.sdlc/runtime/effective/*` 파일은 결과 파일이므�
 
 ## 2. 최초 설정
 
+가장 짧은 형태:
+
+```bash
+python sdlc/scripts/harness.py setup --name <project-name> --mode AUTO
+```
+
+일반 권장 예:
+
 ```bash
 python sdlc/scripts/harness.py setup \
   --name <project-name> \
@@ -29,6 +37,20 @@ python sdlc/scripts/harness.py check --setup
 - Language/Framework/DB 후보
 
 확인할 수 없는 값은 추측하지 않고 `unresolved`로 남긴다. 생성된 `.sdlc/project.yaml`을 프로젝트 실제 상황에 맞게 검토한다.
+
+### 주의해서 사용할 Setup 옵션
+
+```text
+--force
+→ 이미 존재하는 .sdlc/project.yaml을 포함한 사용자 설정을 덮어쓸 수 있다.
+→ 일반적인 재실행 옵션으로 사용하지 않는다.
+
+--no-validate
+→ Setup 뒤 Harness 구조 검증을 생략한다.
+→ 정상적인 최초 설정보다 Framework 문제 진단/관리 목적에서만 사용한다.
+```
+
+`--customer`, `--reverse`는 과거 CLI 호환을 위해 남아 있는 인자다. 신규 프로젝트의 사용자 설정 필드로 사용하지 않는다.
 
 ## 3. Project Mode
 
@@ -183,7 +205,15 @@ Change Level → 분석·근거·검토 깊이
 Profile     → 사람이 보는 문서 구성
 ```
 
-작은 변경도 Source 수정 전 **요구 의도, 현재 Source, 영향 범위** 확인은 생략하지 않는다.
+작은 변경도 Source 수정 전 다음 세 가지는 확인한다.
+
+```text
+요구 의도 확인
+→ 현재 Source 확인
+→ 영향 범위 확인
+```
+
+내부 Runtime에는 이 확인을 기계적으로 검증하는 상태 코드가 있지만 일반 사용자가 그 코드를 외우거나 문서에 직접 입력할 필요는 없다.
 
 ## 9. 프로젝트 Custom 위치
 
@@ -240,3 +270,4 @@ Config Key의 정확한 분류와 오류 조건은 `02A_PROJECT_CONFIG_옵션_�
 - Input: `11_INPUT_자료_준비가이드.md`
 - 소수 신규 RQ: `17_RQ_간편추가_가이드.md`
 - RQ 관리: `12_RQ_작업목록_운영가이드.md`
+- 전체 CLI 기능: `18_HARNESS_CLI_기능_참조가이드.md`
