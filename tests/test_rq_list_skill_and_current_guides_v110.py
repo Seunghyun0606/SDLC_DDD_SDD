@@ -89,15 +89,21 @@ class RqListSkillAndCurrentGuidesV110Test(unittest.TestCase):
             ".cursor/skills/rq-list/SKILL.md",
             "sdlc/agent/skills/customer-view/SKILL.md",
             ".cursor/skills/customer-view/SKILL.md",
+            "sdlc/scripts/customer_view_safe.py",
             "docs/00_시작/14_한글_인코딩_및_외부명령_가이드.md",
             "docs/00_시작/15_고객문서_미리보기_가이드.md",
             "docs/00_시작/18_HARNESS_CLI_기능_참조가이드.md",
         ]:
             self.assertIn(rel, required, rel)
             self.assertTrue((ROOT / rel).is_file(), rel)
-        self.assertIn(
-            "Customer Projection runtime, continuous customer-view skill and customer document guide",
-            contract["distribution_boundary"]["PROJECT_REQUIRED"],
+        project_required = contract["distribution_boundary"]["PROJECT_REQUIRED"]
+        self.assertTrue(
+            any(
+                "Customer Projection runtime" in row
+                and "safe customer-view facade" in row
+                and "continuous customer-view skill" in row
+                for row in project_required
+            )
         )
 
     def test_start_here_exposes_customer_preview_refresh_without_machine_states(self):
