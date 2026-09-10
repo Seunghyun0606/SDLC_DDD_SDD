@@ -87,11 +87,32 @@ Extension이 없는 프로젝트에서는 “명령 실패 = Drift 없음”으�
 
 Drift 결과는 자동 Business Truth 수정 지시가 아니라 **Reconciliation Candidate**다.
 
+### 자동 감지 범위 주의
+
+현재 Core에는 Repository 안에서 발생할 수 있는 **모든 외부 Source 변경을 하나의 공통 Source Fingerprint 엔진이 항상 자동 감지해 모든 관련 문서를 현행화 대상으로 표시하는 기능은 아직 없다.**
+
+현재 자동화되는 대표 경로는 다음처럼 구분한다.
+
+```text
+/work 안에서 조사·수정한 Source
+→ 현재 작업의 Source/영향 근거로 검증
+
+python sdlc/scripts/harness.py discover-impact ...
+→ 예상 밖 Legacy Component 발견 기록
+→ 해당 RQ의 테스트 범위 확대
+→ 이미 등록된 관련 생성 문서를 현행화 대상으로 표시
+
+Brownfield Reverse/Drift Extension
+→ Baseline과 현재 Source를 비교해 재검토 후보 생성
+```
+
+따라서 Harness 밖에서 Source가 바뀌었거나 어떤 변경이 관련 RQ에 영향을 주는지 불분명하다면 “자동으로 잡혔을 것”이라고 가정하지 않는다. `/work`를 다시 실행하거나 Brownfield Extension의 Drift 검사를 명시적으로 실행해 현재 근거를 확인한다.
+
 ## 5. Reconciliation 판단
 
 ### Source만 바뀐 경우
 
-Source Hash/Locator와 기술 Evidence를 갱신하고 관련 Engineering Projection을 `STALE_VIEW`로 표시한다. 업무 의미가 그대로라면 Business Truth는 변경하지 않는다.
+현재 Source Hash/Locator와 기술 Evidence를 다시 확인하고 관련 Engineering Projection의 최신성을 재검증한다. `discover-impact`처럼 명시적으로 연결된 Runtime은 관련 생성 문서를 자동으로 현행화 대상으로 표시할 수 있지만, 모든 외부 Source Drift가 자동으로 같은 처리를 거친다고 가정하지 않는다. 업무 의미가 그대로라면 Business Truth는 변경하지 않는다.
 
 ### Source와 설계가 충돌하는 경우
 
@@ -151,11 +172,11 @@ python sdlc/scripts/harness.py check RQ-001
 PM/Reviewer가 확인할 핵심은 다음이다.
 
 - Change Level과 판정/Override 사유
-- Impact Coverage
-- Source Drift / Technical Gap
+- 영향 범위가 충분히 확인되었는지
+- Source 변경/기술 Gap
 - 사람 결정 필요 항목
-- 오래된 Engineering/Customer Projection 수
-- Next Action / Owner
+- 오래된 Engineering/Customer 생성 문서 수
+- 다음 작업 / 담당자
 
 내부 Stage는 기본적으로 숨긴다.
 
@@ -165,8 +186,9 @@ PM/Reviewer가 확인할 핵심은 다음이다.
 - 과거 설계 문서가 있다고 현재 Source보다 기술적 사실 권위가 높다고 가정하지 않는다.
 - Drift 검출 결과로 Functional/Business 의미를 자동 rewrite하지 않는다.
 - 고객용 Generated Projection에서 직접 수정한 문장을 SSOT로 간주하지 않는다.
-- `STALE_VIEW`를 승인 기준 문서로 사용하지 않는다.
+- 현행화가 필요한 생성 문서를 승인 기준 문서로 사용하지 않는다.
 - Brownfield Extension이 없는 프로젝트에서 Reverse Script가 있다고 가정하지 않는다.
+- Harness 밖의 모든 Source Drift가 자동으로 감지·연결·현행화 처리됐다고 가정하지 않는다.
 - AUTO Level이 내려갔다고 기존 Effective Level이 자동 강등됐다고 가정하지 않는다.
 - 사람의 명시적 Level 변경 후 `/work` 재실행 없이 문서가 새 깊이로 갱신됐다고 가정하지 않는다.
 
@@ -176,6 +198,7 @@ PM/Reviewer가 확인할 핵심은 다음이다.
 - Drift는 Candidate/Gap으로 기록되고 자동 역갱신하지 않는다.
 - Reconciliation에 Human Authority가 필요한 경우 Next Action으로 노출된다.
 - Source/Canonical 변경 후 관련 Engineering/Customer Projection freshness를 재검증한다.
+- 자동 Source Drift 감지 범위 밖의 변경은 `/work` 또는 Brownfield Extension으로 명시적으로 재확인한다.
 - 변경 영향이 커지면 Change Level Escalation Evidence가 남는다.
 - 명시적 Level 강등은 이유/이력이 남고 Safety Floor를 우회하지 않는다.
 - Optional Brownfield Extension의 설치 여부와 기본 Harness 기능을 혼동하지 않는다.
