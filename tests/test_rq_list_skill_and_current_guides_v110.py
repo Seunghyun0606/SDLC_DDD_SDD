@@ -21,10 +21,13 @@ class RqListSkillAndCurrentGuidesV110Test(unittest.TestCase):
             "rq-list import",
             "rq-list assign",
             "업무 기준 정보를 변경하지 않는다",
-            "새 요구사항은 먼저 `harness.py intake`",
+            "harness.py rq-add",
+            "harness.py intake",
             "Excel/CSV",
         ]:
             self.assertIn(marker, text, marker)
+        self.assertIn("한두 건", text)
+        self.assertIn("대량", text)
 
     def test_cursor_rq_list_adapter_points_to_core_skill(self):
         rel = ".cursor/skills/rq-list/SKILL.md"
@@ -78,7 +81,7 @@ class RqListSkillAndCurrentGuidesV110Test(unittest.TestCase):
         self.assertIn("고객 관점의 짧고 자연스러운 한국어 문장", text)
         self.assertIn("projection generated", text)
 
-    def test_project_scaffold_distributes_pm_and_customer_skills_and_new_guides(self):
+    def test_project_scaffold_distributes_pm_customer_and_current_guides(self):
         contract = json.loads(self.read("sdlc/design/contracts/project-scaffold-contract.json"))
         required = set(contract["add_required_files"])
         for rel in [
@@ -88,6 +91,7 @@ class RqListSkillAndCurrentGuidesV110Test(unittest.TestCase):
             ".cursor/skills/customer-view/SKILL.md",
             "docs/00_시작/14_한글_인코딩_및_외부명령_가이드.md",
             "docs/00_시작/15_고객문서_미리보기_가이드.md",
+            "docs/00_시작/18_HARNESS_CLI_기능_참조가이드.md",
         ]:
             self.assertIn(rel, required, rel)
             self.assertTrue((ROOT / rel).is_file(), rel)
@@ -96,22 +100,20 @@ class RqListSkillAndCurrentGuidesV110Test(unittest.TestCase):
             contract["distribution_boundary"]["PROJECT_REQUIRED"],
         )
 
-    def test_start_here_exposes_customer_preview_refresh_skill_and_current_guides(self):
+    def test_start_here_exposes_customer_preview_refresh_without_machine_states(self):
         start = self.read("docs/00_시작/START_HERE.md")
         for marker in [
             "customer-view --target RQ-001 --type solution_agreement",
             "customer-view --target RQ-001 --type delivery_scope",
             "customer-view --target RQ-001 --type acceptance_handover",
             "/customer-view refresh RQ-001",
-            "/customer-view status RQ-001",
-            "sdlc/agent/skills/customer-view/SKILL.md",
-            "FINAL_REVIEW",
-            "MANUAL_EDIT_DETECTED",
             "14_한글_인코딩_및_외부명령_가이드.md",
             "15_고객문서_미리보기_가이드.md",
-            "sdlc/agent/skills/rq-list/SKILL.md",
+            "18_HARNESS_CLI_기능_참조가이드.md",
         ]:
             self.assertIn(marker, start, marker)
+        for machine_term in ["FINAL_REVIEW", "MANUAL_EDIT_DETECTED"]:
+            self.assertNotIn(machine_term, start)
 
     def test_customer_preview_guide_matches_customer_standard_3_and_continuous_refresh_policy(self):
         guide = self.read("docs/00_시작/15_고객문서_미리보기_가이드.md")
@@ -123,15 +125,15 @@ class RqListSkillAndCurrentGuidesV110Test(unittest.TestCase):
             "/customer-view refresh RQ-001",
             "/customer-view status RQ-001",
             "projection status --target RQ-001",
-            "Custom Customer Profile",
-            "FINAL_REVIEW",
-            "MANUAL_EDIT_DETECTED",
+            "Project Custom Profile",
             "자동 덮어쓰기 금지",
             "br-input/glossary.csv",
-            "고객이 읽기 쉬운 한국어 문장",
+            "고객이 읽기 쉬운 한국어",
             "Java Method/Table/Query",
         ]:
             self.assertIn(marker, guide, marker)
+        for machine_term in ["FINAL_REVIEW", "MANUAL_EDIT_DETECTED"]:
+            self.assertNotIn(machine_term, guide)
         self.assertIn("docs/20_고객/{target}", profile)
         self.assertIn("docs/20_고객/RQ-001", guide)
 
