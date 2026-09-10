@@ -9,7 +9,7 @@
 | 상황 | 기본 기능 |
 |---|---|
 | 최초 요구사항 Excel/CSV | `intake` |
-| 많은 요구사항을 파일로 추가 | `intake` |
+| 대량 요구사항을 파일로 추가 | `intake` |
 | 프로젝트 중 새 요구사항 한두 건 | `rq-add` |
 | 기존 RQ의 업무 의미/정책/범위 변경 | `/change` |
 | 담당자/일정/WBS/메모 | `rq-list` |
@@ -32,15 +32,38 @@ Harness는 다음을 보존한다.
 - 원문
 - 원본 위치와 Hash
 
-비슷한 문구를 임의로 확정 병합하거나 원문에 없는 업무규칙을 새로 만들지 않는다.
+비슷한 문구를 임의로 확정 병합하거나 원문에 없는 업무규칙을 새로 만들지 않는다. 서로 충돌하거나 의미가 다른 입력을 Harness가 자동으로 하나의 업무 사실로 정리했다고 가정하지 않는다.
+
+### 기준 정보에 반영하기 전에 후보만 확인
+
+먼저 후보만 검토하고 기준 정보는 바꾸지 않으려면 `--candidate-only`를 사용한다.
+
+```bash
+python sdlc/scripts/harness.py intake 요구사항목록.xlsx --candidate-only
+```
+
+이 모드에서는 후보/검토 결과를 만들 수 있지만 Canonical Store는 변경하지 않는다.
+
+### 비표준 컬럼 Mapping
 
 표준 컬럼을 인식하기 어려운 비표준 Excel만 선택적으로 Column Mapping을 사용한다.
+
+예시 Profile:
 
 ```text
 sdlc/config/requirement-intake-columns.example.yaml
 ```
 
-이 파일은 모든 프로젝트가 복사해야 하는 필수 설정이 아니라 비표준 입력용 예시다.
+적용 예:
+
+```bash
+python sdlc/scripts/harness.py intake 요구사항목록.xlsx \
+  --profile sdlc/config/requirement-intake-columns.example.yaml
+```
+
+이 Profile은 모든 프로젝트가 복사해야 하는 필수 설정이 아니라 비표준 입력용 예시다.
+
+`--json-out`, `--report-out`, `--manifest-json`, `--manifest-report`는 Runtime/보고서 출력 위치를 별도로 지정해야 할 때 쓰는 고급 옵션이다. 전체 CLI 옵션의 위치는 `18_HARNESS_CLI_기능_참조가이드.md`를 본다.
 
 ## 3. 요구사항과 참고자료를 같이 받은 경우
 
@@ -147,7 +170,7 @@ documents:
 
 모르는 값은 임의로 만들지 않는다.
 
-## 7. 개발표준 / Agent Rule / 업무원본을 구분한다
+## 7. 개발표준 / Agent Rule / 업무원본 / 용어집을 구분한다
 
 ```text
 sdlc/custom/project/standards/
@@ -163,7 +186,7 @@ br-input/context.md
 → 프로젝트/업무 배경 설명
 
 br-input/glossary.csv
-→ 고객/프로젝트 업무 용어집
+→ 프로젝트/고객 용어집
 ```
 
 고객에게 받은 개발표준 PDF 원본은 `br-input/originals/`에 보존하고, 실제 개발 때 반복 사용할 정리본이 필요하면 `sdlc/custom/project/standards/`에 현재 적용 기준을 정리한다.
@@ -182,7 +205,7 @@ python sdlc/scripts/harness.py rq-add \
 
 상세: `17_RQ_간편추가_가이드.md`
 
-### 여러 건 / 고객 파일 전달
+### 대량 / 고객 파일 전달
 
 ```bash
 python sdlc/scripts/harness.py intake 추가요구사항.xlsx
@@ -241,3 +264,4 @@ python sdlc/scripts/harness.py work --target RQ-001
 - 소수 신규 RQ: `17_RQ_간편추가_가이드.md`
 - 개발표준/Rule: `16_프로젝트_개발가이드_Agent_적용가이드.md`
 - 한글/인코딩: `14_한글_인코딩_및_외부명령_가이드.md`
+- 전체 CLI 기능: `18_HARNESS_CLI_기능_참조가이드.md`
