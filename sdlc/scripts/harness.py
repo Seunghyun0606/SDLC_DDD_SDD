@@ -111,7 +111,7 @@ def main(argv: list[str] | None = None) -> int:
     if command == "impact-history": return _load("harness_impact_history", "impact_learning_runtime.py").main(args)
     if command == "component": return _load("harness_component_state", "component_state_runtime.py").main(args)
     if command == "delivery": return _load("harness_delivery_status", "delivery_status_runtime.py").main(args)
-    if command == "customer-view": return _load("harness_customer_projection", "customer_projection_runtime.py").main(args)
+    if command == "customer-view": return _load("harness_customer_view_safe", "customer_view_safe.py").main(args)
     if command == "projection": return _load("harness_projection_lifecycle", "projection_lifecycle_runtime.py").main(args)
     if command == "arch-check": return _load("harness_architecture_check", "architecture_check.py").main(args)
     if command == "metrics": return _load("harness_metrics", "sdlc_metrics_runtime.py").main(args)
