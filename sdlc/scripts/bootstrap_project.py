@@ -16,7 +16,6 @@ import json
 import os
 import re
 import shlex
-import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +32,7 @@ def _load(name: str, path: Path):
 
 APPLY = _load("setup_apply", SCRIPT_DIR / "apply_canonical_delta.py")
 CONFIG = _load("setup_config", SCRIPT_DIR / "project_config.py")
+PROCESS = _load("setup_process", SCRIPT_DIR / "process_runner.py")
 
 
 def _read(path: Path) -> str:
@@ -346,14 +346,21 @@ def bootstrap(
     validation = None
     validator = root / "sdlc/scripts/validate_harness_structure.py"
     if validate and validator.is_file():
-        cp = subprocess.run(
+        cp = PROCESS.run_process(
             [os.environ.get("PYTHON", "python"), str(validator), str(root)],
             cwd=root,
-            text=True,
-            capture_output=True,
-            check=False,
+            timeout=120,
         )
-        validation = {"exit_code": cp.returncode, "stdout": cp.stdout[-4000:], "stderr": cp.stderr[-4000:]}
+        validation = {
+            "exit_code": cp.returncode,
+            "stdout": cp.stdout[-4000:],
+            "stderr": cp.stderr[-4000:],
+            "output_decode_ok": cp.output_decode_ok,
+            "stdout_decode": cp.stdout_decode.metadata(),
+            "stderr_decode": cp.stderr_decode.metadata(),
+            "resolved_command": cp.resolved_command,
+            "execution_mode": cp.execution_mode,
+        }
     structure_ok = validation is None or validation["exit_code"] == 0
 
     agent_runtime = CONFIG.resolve_agent_runtime(project, legacy_provider=provider)
