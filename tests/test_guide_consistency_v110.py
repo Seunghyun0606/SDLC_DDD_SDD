@@ -37,9 +37,20 @@ class GuideConsistencyV110Test(unittest.TestCase):
     def test_start_here_covers_primary_user_entrypoints(self):
         start = self.read("docs/00_시작/START_HERE.md")
         harness = self.read("sdlc/scripts/harness.py")
-        for command in ["setup", "intake", "rq-add", "rq-list", "rq-ref", "work", "change", "check", "customer-view"]:
-            self.assertIn(f'command == "{command}"', harness if command not in {"work", "change"} else harness.replace('command in {"work", "change"}', 'command == "work"\ncommand == "change"'))
+        for command in ["setup", "intake", "rq-add", "rq-list", "rq-ref", "work", "review", "change", "check", "customer-view"]:
+            self.assertIn(command, harness, command)
             self.assertIn(command, start, command)
+
+    def test_cli_reference_covers_every_official_harness_command(self):
+        harness = self.read("sdlc/scripts/harness.py")
+        guide = self.read("docs/00_시작/18_HARNESS_CLI_기능_참조가이드.md")
+        command_line = next(line for line in harness.splitlines() if "Commands: setup |" in line)
+        commands = command_line.split("Commands:", 1)[1].split('"', 1)[0].strip().split(" | ")
+        self.assertGreaterEqual(len(commands), 10)
+        for command in commands:
+            self.assertIn(f"`{command}`", guide, command)
+        scaffold = self.json("sdlc/design/contracts/project-scaffold-contract.json")
+        self.assertIn("docs/00_시작/18_HARNESS_CLI_기능_참조가이드.md", scaffold["add_required_files"])
 
     def test_guides_use_current_template_roots(self):
         active = [
@@ -57,6 +68,7 @@ class GuideConsistencyV110Test(unittest.TestCase):
             "15_고객문서_미리보기_가이드.md",
             "16_프로젝트_개발가이드_Agent_적용가이드.md",
             "17_RQ_간편추가_가이드.md",
+            "18_HARNESS_CLI_기능_참조가이드.md",
         ]
         removed_stage_template_path = "sdlc/templates/" + "core"
         for name in active:
@@ -111,6 +123,8 @@ class GuideConsistencyV110Test(unittest.TestCase):
         self.assertIn("ENGINEERING_SDD_COMPACT", setup)
         self.assertIn("CUSTOMER_STANDARD_3", setup)
         self.assertIn("--include-legacy-compatibility", setup)
+        self.assertIn("--force", setup)
+        self.assertIn("--no-validate", setup)
         self.assertNotIn("## 7. Level 이력은 어디에 남는가", setup)
 
     def test_tailoring_guide_matches_default_and_legacy_distribution(self):
@@ -150,6 +164,8 @@ class GuideConsistencyV110Test(unittest.TestCase):
             self.assertIn("17_RQ_간편추가_가이드.md", text)
         self.assertIn("대량", input_guide)
         self.assertIn("소수", input_guide)
+        self.assertIn("--candidate-only", input_guide)
+        self.assertIn("--profile", input_guide)
         self.assertIn("PM Excel에서 새 RQ ID를 임의 생성하지 않는다", worklist_guide)
 
     def test_rq_add_guide_matches_runtime_duplicate_semantics(self):
@@ -171,6 +187,7 @@ class GuideConsistencyV110Test(unittest.TestCase):
         self.assertIn("00_work-map.md", guide)
         self.assertIn("specs/RQ-001.md", guide)
         self.assertIn("HRIS Custom Profile", guide)
+        self.assertIn("/customer-view refresh RQ-001", guide)
 
     def test_project_development_guide_states_policy_vs_runtime_audit_boundary(self):
         guide = self.read("docs/00_시작/16_프로젝트_개발가이드_Agent_적용가이드.md")
@@ -178,6 +195,7 @@ class GuideConsistencyV110Test(unittest.TestCase):
         self.assertIn("Agent Policy / Skill Contract", guide)
         self.assertIn("Deterministic Runtime Audit", guide)
         self.assertIn("모든 Guide read event", guide)
+        self.assertIn("모든 개발가이드를 매번 무조건 선로딩하지 않는다", guide)
         self.assertIn("sdlc/custom/project/rules", reference)
         self.assertIn("sdlc/custom/project/standards", reference)
 
@@ -190,7 +208,7 @@ class GuideConsistencyV110Test(unittest.TestCase):
         self.assertIn("powershell", guide)
         self.assertIn("ExecutionPolicy Bypass", guide)
         self.assertIn("shell=True", guide)
-        self.assertEqual(contract["capture"]["mode"], "BYTES_FIRST")
+        self.assertEqual(contract["capture_policy"]["capture_mode"], "BYTES_FIRST")
 
     def test_config_reference_is_distributed_in_project_scaffold(self):
         scaffold = self.json("sdlc/design/contracts/project-scaffold-contract.json")
@@ -243,6 +261,7 @@ class GuideConsistencyV110Test(unittest.TestCase):
         self.assertIn("Compatibility Notice", guide)
         self.assertIn("Work Unit", guide)
         self.assertIn("신규 Project 산출물 Template으로 사용하지 않는다", guide)
+        self.assertNotIn("REQ_TM_FL001", guide)
 
 
 if __name__ == "__main__":
