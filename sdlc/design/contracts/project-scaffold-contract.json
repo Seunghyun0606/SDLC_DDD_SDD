@@ -1,5 +1,5 @@
 {
-  "schema_version": 17,
+  "schema_version": 18,
   "contract_id": "PROJECT_SCAFFOLD_V110_ASSET_BOUNDARY",
   "source_package_contract": "sdlc/design/contracts/harness-package-contract.json",
   "purpose": "v1.10 Framework에서 실제 프로젝트 실행에 필요한 Runtime/Template/Profile/Config/User Guide/Skill만 배포하고 Framework 개발/검증 자산은 제외한다.",
@@ -21,6 +21,7 @@
     "sdlc/scripts/unexpected_discovery_runtime.py",
     "sdlc/scripts/projection_lifecycle_runtime.py",
     "sdlc/scripts/customer_projection_runtime.py",
+    "sdlc/scripts/customer_view_safe.py",
     "sdlc/scripts/render_customer_document.py",
     "sdlc/design/contracts/customer-document-contract.json",
     "sdlc/design/contracts/projection-visibility-contract.json",
@@ -150,7 +151,7 @@
       "Project development rules/standards context reference and guide",
       "Incremental prompt-based RQ add runtime, rq-add skill and guide",
       "Project RQ spreadsheet planning/worklist runtime, PM rq-list skill and guide",
-      "Customer Projection runtime, continuous customer-view skill and customer document guide",
+      "Customer Projection runtime, safe customer-view facade, continuous customer-view skill and customer document guide",
       "RQ-reference intake draft + document extraction + registry runtime and guide",
       "Korean encoding and CMD/PowerShell execution guide",
       "Project standards/rules skeleton and BR intake manifest example",
