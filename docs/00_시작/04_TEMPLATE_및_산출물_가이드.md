@@ -72,6 +72,8 @@ Source에서 확인 가능한 Java Class/Method, JSP/XML 경로, Query/Table/Col
 
 사람에게 물어야 하는 것은 정책·범위·예외·승인·인수 기준처럼 실제 권한 있는 판단이 필요한 내용이다.
 
+사람의 답변을 명시적으로 기록해야 할 때는 `review`를 사용할 수 있다. 답변 기록 자체가 업무 기준을 자동 변경하지 않으며, 실제 정책 변경은 `/change`로 반영한다.
+
 ## 4. Work Map
 
 목적은 상세설계를 반복하는 것이 아니라 한 화면에서 다음을 연결하는 것이다.
@@ -114,6 +116,21 @@ Program Spec  → 어떤 Source에 어떤 차이를 구현할 것인가
 
 표준 Compact Profile에서는 Program Spec이 항상 필요한 것은 아니다. 기본 Profile의 현재 정의에서는 `min_change_level: L3`가 적용되어 L3 이상에서 생성 대상이 되며, Project Custom Profile은 별도 규칙을 정의할 수 있다.
 
+### 개발 시작 전 기본 확인 6가지
+
+현재 표준 Readiness는 과거처럼 17개 항목을 모든 변경에 무조건 채우는 방식이 아니다. 먼저 다음 **6개 핵심 정보**를 확인하고, 위험이 실제로 있을 때만 추가 항목을 본다.
+
+1. 기능 의도·설계 기준
+2. 실제 구현 대상
+3. 실제 Source 근거
+4. 개발 작업과 변경 Source
+5. 인수조건·테스트 연결
+6. 아직 남은 미확정 사항과 실행 차단 여부
+
+그리고 데이터 Mapping, DB/Schema, 공통코드, Transaction, 동시성, Interface, 오류처리, 보안, 로그/감사, 성능·Migration, Architecture 표준 같은 항목은 **해당 위험이 있는 변경에서만 추가 확인**한다.
+
+과거 Formal 계약의 17개 전체 항목 체계는 호환성 검증에 남아 있지만 신규 프로젝트의 기본 작성 방식은 아니다.
+
 Program Spec에는 실제 개발에 필요한 경우 다음 기술정보를 유지한다.
 
 - File/Class/Method
@@ -133,6 +150,8 @@ L1/L2는 문서 내용을 간결하게 할 수 있지만 Source를 수정하기 
 → 현재 Source 확인
 → 영향 범위 확인
 ```
+
+내부 Runtime은 이 세 가지가 확인되었는지를 기계적으로 검증하지만, 사람이 내부 상태 코드 이름을 문서에 직접 쓰거나 외울 필요는 없다.
 
 문서 존재 여부는 Change Level 하나로 정하지 않고 선택 Profile이 결정한다.
 
@@ -224,3 +243,4 @@ python sdlc/scripts/tailoring_runtime.py validate-profile --profile <PROFILE_ID>
 - 역할별 사용법: `05_이해관계자별_작업가이드.md`
 - 고객문서: `15_고객문서_미리보기_가이드.md`
 - 프로젝트 개발가이드: `16_프로젝트_개발가이드_Agent_적용가이드.md`
+- 전체 CLI 기능: `18_HARNESS_CLI_기능_참조가이드.md`
