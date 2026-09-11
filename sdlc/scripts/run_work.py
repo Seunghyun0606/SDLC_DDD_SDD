@@ -287,6 +287,29 @@ def _path_allowed(path: str, prefixes: list[str], exact: set[str]) -> bool:
     return any(normalized == prefix or normalized.startswith(prefix.rstrip("/") + "/") for prefix in prefixes if prefix)
 
 
+def allowed_artifact_write_paths(root: Path, plan: dict[str, Any]) -> set[str]:
+    """Return exact document paths that this work plan explicitly authorizes.
+
+    The selected artifact remains the primary editing surface. Tailored PROFILE_PRIMARY_SET plans may
+    additionally require multiple Engineering projections; those exact output paths are allowed too.
+    Invalid or repository-escaping paths fail closed through ``safe_repo_path``.
+    """
+    exact: set[str] = set()
+    selected = str((plan.get("selection") or {}).get("artifact_path") or "").strip()
+    if selected:
+        _, selected_rel = safe_repo_path(root, selected)
+        exact.add(selected_rel)
+    for row in plan.get("required_projection_targets") or []:
+        if not isinstance(row, dict):
+            continue
+        output_raw = str(row.get("output_path") or "").strip()
+        if not output_raw:
+            continue
+        _, output_rel = safe_repo_path(root, output_raw)
+        exact.add(output_rel)
+    return exact
+
+
 def _source_changed_paths(changed_paths: set[str], source_roots: list[str]) -> list[str]:
     """Return only actual Source-root changes; docs/runtime files do not trigger build/test."""
     return sorted(path for path in changed_paths if _path_allowed(path, source_roots, set()))
@@ -599,7 +622,7 @@ def execute_plan(
                 if current.get("head") != git_before.get("head"):
                     execution["current_git"] = current
                     return _execution_failure(execution, "FAIL_PROVIDER_CHANGED_GIT_HEAD", root=root, provider_changes=provider_changes)
-                exact = {artifact_rel}
+                exact = allowed_artifact_write_paths(root, plan)
                 run_rel = None
                 try:
                     run_rel = run_dir.relative_to(root).as_posix()
@@ -608,6 +631,7 @@ def execute_plan(
                 prefixes = ([run_rel] if run_rel else []) + (["sdlc/runtime"] if stage != "DEVELOPMENT" else ["sdlc/runtime", *allowed_source_roots])
                 outside = sorted(path for path in provider_changes if not _path_allowed(path, prefixes, exact))
                 if outside:
+                    execution["allowed_projection_files"] = sorted(exact)
                     execution["outside_write_scope"] = outside
                     return _execution_failure(execution, "FAIL_PROVIDER_WRITE_SCOPE", root=root, provider_changes=provider_changes)
 
